@@ -1,0 +1,382 @@
+<app-navbar></app-navbar>
+<section class="max-w-[1100px] mt-12 mx-auto px-4">
+
+  <!-- Contenedor Flex: Cambia de columna a fila en pantallas medianas (md) -->
+  <div class="flex flex-col md:flex-row min-h-[550px]">
+
+    <!-- CARD IZQUIERDA: INFORMACIÓN Y REDES -->
+    <div
+      class="bg-[#548AF7] flex flex-col justify-center md:p-16 md:w-1/2 p-12 relative rounded-[2.5rem] shadow-xl w-full">
+
+      <!-- Muesca (Semicírculo) Superior Decorativa -->
+      <div class="-translate-x-1/2 absolute bg-[#FAFAFA] h-8 left-1/2 rounded-b-full top-0 w-16"></div>
+
+      <!-- Título -->
+      <h2 class="font-bold mb-8 mt-4 md:text-4xl md:text-left text-3xl text-center text-white">
+        ¿Quiénes somos?
+      </h2>
+
+      <!-- Texto descriptivo -->
+      <div class="font-normal leading-relaxed md:text-left opacity-95 space-y-6 text-[15px] text-justify text-white">
+        <p>
+          VIAJERO SV es una plataforma digital que promueve el turismo nacional con la diáspora salvadoreña a través de
+          beneficios por medio de cupones promocionales en restaurantes, hoteles, tiendas, lugares turísticos, entre
+          otros.
+        </p>
+        <p>
+          VIAJERO SV es un programa liderado por el Ministerio de Relaciones Exteriores, a través de la Dirección de
+          Diáspora y Desarrollo, en coordinación con el Ministerio de Turismo y la Corporación Salvadoreña de Turismo.
+        </p>
+      </div>
+
+      <!-- Línea separadora decorativa -->
+      <div class="bg-blue-300/80 h-[3px] mb-6 mt-auto rounded-full w-full"></div>
+
+      <!-- Redes Sociales -->
+      <div>
+        <p class="font-bold mb-3 text-white text-xs">Síguenos en:</p>
+        <div class="flex gap-4 items-center">
+          <!-- Icono: Facebook -->
+          <img src="assets/icons/fb.png" class="cursor-pointer h-6 hover:scale-110 transition w-6"
+            alt="Facebook">
+          <!-- Icono: X (Twitter) -->
+          <img src="assets/icons/x.png" class="cursor-pointer h-6 hover:scale-110 transition w-6" alt="X">
+          <!-- Icono: Instagram -->
+          <img src="assets/icons/instagram.png" class="cursor-pointer h-6 hover:scale-110 transition w-6"
+            alt="Instagram">
+          <!-- Icono: Youtube -->
+          <img src="assets/icons/youtube.png" class="cursor-pointer h-6 hover:scale-110 transition w-6"
+            alt="Youtube">
+        </div>
+      </div>
+    </div>
+
+    <!-- CARD DERECHA: IMAGEN -->
+    <div class="h-80 md:h-auto md:w-1/2 overflow-hidden relative rounded-[2.5rem] shadow-xl w-full">
+      <!-- Muesca (Semicírculo) Superior -->
+      <div class="-translate-x-1/2 absolute bg-[#FAFAFA] h-8 left-1/2 rounded-b-full top-0 w-16 z-20"></div>
+
+      <img src="assets/img/bannerquien.png" alt="Turismo El Salvador" class="h-full object-cover w-full">
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SECCIÓN 2: CÓMO FUNCIONA (PASOS 1-5)         -->
+<!-- ============================================ -->
+<section class="max-w-[1200px] mt-24 mx-auto px-4">
+  <h2 class="font-bold mb-16 text-[#1E2E5C] text-4xl text-center">¿Cómo funciona?</h2>
+
+  <!-- Grid responsivo: 1 col (móvil) -> 2 cols (tablet) -> 5 cols (desktop) -->
+  <div class="gap-6 grid grid-cols-1 md:grid-cols-5 sm:grid-cols-2">
+
+    <!-- PASO 1 -->
+    <div
+      class="bg-white duration-300 flex flex-col group h-full hover:-translate-y-2 relative rounded-[2.5rem] shadow-xl transition-transform">
+      <!-- Muesca Superior -->
+      <div class="absolute bg-[#FAFAFA] h-6 left-0 mx-auto right-0 rounded-b-full top-0 w-12 z-20"></div>
+
+      <!-- Parte Superior: Icono y Número -->
+      <div class="flex h-48 items-center justify-center relative rounded-t-[2.5rem] z-10">
+        <div
+          class="bg-[#FFDEDE] flex h-24 items-center justify-center rounded-full shadow-sm transition w-24 group-hover:scale-110 duration-300">
+          <img src="assets/icons/globe-pointer.png" class="h-10 object-contain opacity-90 w-10">
+        </div>
+        <!-- Badge del número -->
+        <div
+          class="-bottom-6 absolute bg-white flex font-bold h-12 items-center justify-center left-0 mx-auto right-0 rounded-full shadow-md text-[#548AF7] text-xl w-12 z-30">
+          1
+        </div>
+      </div>
+
+      <!-- Parte Inferior: Texto y Link -->
+      <div
+        class="bg-[#538CFF] flex flex-1 flex-col items-center justify-start p-4 pb-8 pt-12 relative rounded-b-[2.5rem] text-center z-0">
+        <span class="block font-medium mb-4 text-[15px] text-white">Ingrese al sitio web</span>
+        <a href="#"
+          class="bg-[#377AFF] border border-blue-300/30 font-bold hover:bg-[#4b7de0] px-5 py-2 rounded-full shadow-sm text-[11px] text-white transition">
+          viajerosv.rree.gob.sv
+        </a>
+      </div>
+    </div>
+
+    <!-- PASO 2 -->
+    <div
+      class="bg-white duration-300 flex flex-col group h-full hover:-translate-y-2 relative rounded-[2.5rem] shadow-xl transition-transform">
+      <div class="absolute bg-[#FAFAFA] h-6 left-0 mx-auto right-0 rounded-b-full top-0 w-12 z-20"></div>
+
+      <div class="flex h-48 items-center justify-center relative rounded-t-[2.5rem] z-10">
+        <div
+          class="bg-[#FFF9C4] flex h-24 items-center justify-center rounded-full shadow-sm transition w-24 group-hover:scale-110 duration-300">
+          <img src="assets/icons/login.png" class="h-10 object-contain opacity-90 w-10">
+        </div>
+        <div
+          class="-bottom-6 absolute bg-white flex font-bold h-12 items-center justify-center left-0 mx-auto right-0 rounded-full shadow-md text-[#548AF7] text-xl w-12 z-30">
+          2</div>
+      </div>
+
+      <div
+        class="bg-[#538CFF] flex flex-1 items-center justify-center p-4 pb-8 pt-12 relative rounded-b-[2.5rem] text-center z-0">
+        <p class="font-medium leading-snug px-2 text-[13px] text-white">
+          Registrarse como usuario o empresa en la sección correspondiente
+        </p>
+      </div>
+    </div>
+
+    <!-- PASO 3 -->
+    <div
+      class="bg-white duration-300 flex flex-col group h-full hover:-translate-y-2 relative rounded-[2.5rem] shadow-xl transition-transform">
+      <div class="absolute bg-[#FAFAFA] h-6 left-0 mx-auto right-0 rounded-b-full top-0 w-12 z-20"></div>
+
+      <div class="flex h-48 items-center justify-center relative rounded-t-[2.5rem] z-10">
+        <div
+          class="bg-[#C2F0FC] flex h-24 items-center justify-center rounded-full shadow-sm transition w-24 group-hover:scale-110 duration-300">
+          <img src="assets/icons/ticket.png" class="h-10 object-contain opacity-90 w-10">
+        </div>
+        <div
+          class="-bottom-6 absolute bg-white flex font-bold h-12 items-center justify-center left-0 mx-auto right-0 rounded-full shadow-md text-[#548AF7] text-xl w-12 z-30">
+          3</div>
+      </div>
+
+      <div
+        class="bg-[#538CFF] flex flex-1 items-center justify-center p-4 pb-8 pt-12 relative rounded-b-[2.5rem] text-center z-0">
+        <p class="font-medium leading-snug px-2 text-[13px] text-white">
+          Entrar a la sección de cupones
+        </p>
+      </div>
+    </div>
+
+    <!-- PASO 4 -->
+    <div
+      class="bg-white duration-300 flex flex-col group h-full hover:-translate-y-2 relative rounded-[2.5rem] shadow-xl transition-transform">
+      <div class="absolute bg-[#FAFAFA] h-6 left-0 mx-auto right-0 rounded-b-full top-0 w-12 z-20"></div>
+
+      <div class="flex h-48 items-center justify-center relative rounded-t-[2.5rem] z-10">
+        <div
+          class="bg-[#E0E7FF] flex h-24 items-center justify-center rounded-full shadow-sm transition w-24 group-hover:scale-110 duration-300">
+          <img src="assets/icons/down-to-line.png" class="h-10 object-contain opacity-90 w-10">
+        </div>
+        <div
+          class="-bottom-6 absolute bg-white flex font-bold h-12 items-center justify-center left-0 mx-auto right-0 rounded-full shadow-md text-[#548AF7] text-xl w-12 z-30">
+          4</div>
+      </div>
+
+      <div
+        class="bg-[#538CFF] flex flex-1 items-center justify-center p-4 pb-8 pt-12 relative rounded-b-[2.5rem] text-center z-0">
+        <p class="font-medium leading-snug px-2 text-[13px] text-white">
+          Seleccionar y descargar el cupón o cupones de preferencia
+        </p>
+      </div>
+    </div>
+
+    <!-- PASO 5 -->
+    <div
+      class="bg-white duration-300 flex flex-col group h-full hover:-translate-y-2 relative rounded-[2.5rem] shadow-xl transition-transform">
+      <div class="absolute bg-[#FAFAFA] h-6 left-0 mx-auto right-0 rounded-b-full top-0 w-12 z-20"></div>
+
+      <div class="flex h-48 items-center justify-center relative rounded-t-[2.5rem] z-10">
+        <div
+          class="bg-[#DCFCE7] flex h-24 items-center justify-center rounded-full shadow-sm transition w-24 group-hover:scale-110 duration-300">
+          <img src="assets/icons/qr2.png" class="h-10 object-contain opacity-90 w-10">
+        </div>
+        <div
+          class="-bottom-6 absolute bg-white flex font-bold h-12 items-center justify-center left-0 mx-auto right-0 rounded-full shadow-md text-[#548AF7] text-xl w-12 z-30">
+          5</div>
+      </div>
+
+      <div
+        class="bg-[#538CFF] flex flex-1 items-center justify-center p-4 pb-8 pt-12 relative rounded-b-[2.5rem] text-center z-0">
+        <p class="font-medium leading-snug px-2 text-[13px] text-white">
+          Presentar en los establecimientos participantes la promoción
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SECCIÓN BANNER INTERMEDIO (¿QUIÉNES PUEDEN?) -->
+<!-- ============================================ -->
+<section class="max-w-[1100px] mt-20 mx-auto px-4">
+  <div
+    class="bg-[#548AF7] flex flex-col gap-12 items-center md:flex-row md:text-center px-12 py-14 rounded-[2.5rem] shadow-xl text-center text-white">
+    <div class="md:w-1/3">
+      <h2 class="justify-center leading-tight text-3xl">¿Quiénes pueden utilizarlo?</h2>
+    </div>
+    <div class="font-normal leading-relaxed md:w-1/2 opacity-95 text-[18px] text-left">
+      Los salvadoreños residentes en el exterior para uso personal, familiar o amistades en El Salvador. Para realizar
+      el canje, muestra el código QR de los cupones que adquieras en el comercio.
+    </div>
+  </div>
+
+  <div class="flex justify-center mb-8 mt-12">
+    <button
+      class="bg-[#1E2E5C] hover:bg-opacity-90 px-12 py-3 rounded-full shadow-lg text-[18px] text-white tracking-wide transition">
+      Explorar cupones
+    </button>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SECCIÓN 3: LISTADO DE CUPONES                -->
+<!-- ============================================ -->
+<section class="max-w-[1100px] mt-6 mx-auto px-4">
+  <h2 class="mb-8 text-[#1E2E5C] text-3xl text-center">¡No te los pierdas!</h2>
+
+  <!-- Filtros Superiores -->
+  <div class="flex font-bold gap-8 items-center justify-center mb-10 text-[10px] tracking-widest">
+    <button class="hover:text-blue-700 text-[#548AF7] transition uppercase">MÁS RECIENTES</button>
+    <button class="bg-[#548AF7] hover:bg-blue-600 px-8 py-2 rounded-full shadow-md text-white transition uppercase">POR
+      VENCER</button>
+  </div>
+
+  <!-- Grid de Cupones -->
+  <div class="gap-6 grid grid-cols-1 md:grid-cols-3">
+
+    <!-- Cupón 1 -->
+    <div
+      class="bg-white border border-gray-100 flex h-32 hover:shadow-lg overflow-hidden rounded-2xl shadow transition">
+      <div class="h-full w-[35%]">
+        <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5" class="h-full object-cover w-full">
+      </div>
+      <div class="flex flex-col justify-between p-3 pl-4 w-[65%]">
+        <div>
+          <span class="font-bold text-[9px] text-gray-400 uppercase">El Salvador Tours</span>
+          <h4 class="font-bold leading-snug mt-1 text-[13px] text-gray-800">Avistamiento de Ballenas</h4>
+          <span class="bg-red-100 font-bold inline-block mt-1.5 px-2 py-0.5 rounded text-[9px] text-red-500">10%
+            OFF</span>
+        </div>
+        <div class="flex flex-col gap-1 text-[9px] text-gray-400">
+          <div class="flex gap-1 items-center"><i class="fas fa-map-marker-alt text-[#548AF7]"></i> Los Cóbanos</div>
+          <div class="flex gap-1 items-center"><i class="far fa-clock text-[#548AF7]"></i> Vence: 31/12/2025</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cupón 2 -->
+    <div
+      class="bg-white border border-gray-100 flex h-32 hover:shadow-lg overflow-hidden rounded-2xl shadow transition">
+      <div class="h-full w-[35%]">
+        <img src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874" class="h-full object-cover w-full">
+      </div>
+      <div class="flex flex-col justify-between p-3 pl-4 w-[65%]">
+        <div>
+          <span class="font-bold text-[9px] text-gray-400 uppercase">Clínica Fisioterapia</span>
+          <h4 class="font-bold leading-snug mt-1 text-[13px] text-gray-800">Sesión de masaje relajante</h4>
+          <span class="bg-red-100 font-bold inline-block mt-1.5 px-2 py-0.5 rounded text-[9px] text-red-500">15%
+            OFF</span>
+        </div>
+        <div class="flex flex-col gap-1 text-[9px] text-gray-400">
+          <div class="flex gap-1 items-center"><i class="fas fa-map-marker-alt text-[#548AF7]"></i> Escalón, San
+            Salvador</div>
+          <div class="flex gap-1 items-center"><i class="far fa-clock text-[#548AF7]"></i> Vence: 31/12/2025</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cupón 3 -->
+    <div
+      class="bg-white border border-gray-100 flex h-32 hover:shadow-lg overflow-hidden rounded-2xl shadow transition">
+      <div class="h-full w-[35%]">
+        <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38" class="h-full object-cover w-full">
+      </div>
+      <div class="flex flex-col justify-between p-3 pl-4 w-[65%]">
+        <div>
+          <span class="font-bold text-[9px] text-gray-400 uppercase">Crepe Lovers</span>
+          <h4 class="font-bold leading-snug mt-1 text-[13px] text-gray-800">Descuento en crepas</h4>
+          <span class="bg-red-100 font-bold inline-block mt-1.5 px-2 py-0.5 rounded text-[9px] text-red-500">20%
+            OFF</span>
+        </div>
+        <div class="flex flex-col gap-1 text-[9px] text-gray-400">
+          <div class="flex gap-1 items-center"><i class="fas fa-map-marker-alt text-[#548AF7]"></i> Los Cóbanos</div>
+          <div class="flex gap-1 items-center"><i class="far fa-clock text-[#548AF7]"></i> Vence: 31/12/2025</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botones de Paginación -->
+  <div class="flex gap-3 justify-center mt-8">
+    <button
+      class="bg-white border border-blue-400 flex font-bold h-7 hover:bg-blue-50 items-center justify-center pb-0.5 rounded-full shadow-sm text-base text-blue-500 transition w-7">‹</button>
+    <button
+      class="bg-white border border-blue-400 flex font-bold h-7 hover:bg-blue-50 items-center justify-center pb-0.5 rounded-full shadow-sm text-base text-blue-500 transition w-7">›</button>
+  </div>
+</section>
+
+<!-- ============================================ -->
+<!-- SECCIÓN 4: CONTÁCTANOS (FORMULARIO)          -->
+<!-- ============================================ -->
+<section class="flex items-center justify-center mt-20 py-20 relative w-full">
+
+  <!-- Imagen de Fondo Absoluta -->
+  <div class="absolute inset-0 z-0">
+    <img src="assets/img/contacBanner.png" class="h-full object-cover w-full" alt="Fondo Contacto">
+  </div>
+
+  <!-- Contenedor Flex: Tarjeta Info (Izq) y Formulario (Der) -->
+  <div
+    class="flex flex-col gap-8 items-start justify-center max-w-[1200px] md:flex-row md:gap-12 px-4 relative w-full z-10">
+
+    <!-- CARD INFO (AZUL) -->
+    <div
+      class="bg-[#538CFF] flex flex-col md:h-fit md:p-12 md:w-[470px] p-10 relative rounded-[2.5rem] shadow-2xl text-white w-full">
+
+      <!-- Botón flotante circular (flecha) -->
+      <div
+        class="-right-5 absolute bg-[#0E225C] cursor-pointer duration-300 hidden hover:scale-110 items-center justify-center md:flex rounded-full shadow-lg top-[20%] transform transition w-10 z-30 h-10">
+        <i class="fas fa-chevron-right text-lg text-white"></i>
+      </div>
+
+      <h2 class="mb-4 md:text-4xl text-3xl">Contáctanos</h2>
+
+      <p class="font-normal leading-relaxed mb-8 opacity-95 text-[14px]">
+        ¡Nos encantaría saber de ti! Déjanos tus datos y estaremos encantados de poder apoyarte con las dudas o
+        inconvenientes.
+      </p>
+
+      <button
+        class="bg-white hover:bg-gray-100 hover:scale-105 px-10 py-3 rounded-full shadow-md text-[#1E2E5C] text-sm transform transition w-max">
+        Contacto
+      </button>
+    </div>
+
+    <!-- CARD FORMULARIO (BLANCA) -->
+    <div class="bg-white md:p-14 md:w-[550px] p-8 rounded-[3rem] shadow-2xl w-full">
+      <form class="flex flex-col gap-6">
+
+        <!-- Campo: Nombre -->
+        <div>
+          <label class="block font-semibold mb-2 pl-1 text-[#1E2E5C] text-sm">Nombre completo</label>
+          <input type="text" placeholder="Ingresa tus nombres y apellidos"
+            class="bg-[#F2F6FD] border-none focus:ring-2 focus:ring-blue-200 outline-none placeholder:text-gray-400 px-6 py-4 rounded-2xl text-gray-700 text-sm transition w-full">
+        </div>
+
+        <!-- Campo: Correo -->
+        <div>
+          <label class="block font-semibold mb-2 pl-1 text-[#1E2E5C] text-sm">Correo electrónico</label>
+          <input type="email" placeholder="Ingresa tu correo electrónico"
+            class="bg-[#F2F6FD] border-none focus:ring-2 focus:ring-blue-200 outline-none placeholder:text-gray-400 px-6 py-4 rounded-2xl text-gray-700 text-sm transition w-full">
+        </div>
+
+        <!-- Campo: Mensaje -->
+        <div>
+          <label class="block font-semibold mb-2 pl-1 text-[#1E2E5C] text-sm">Mensaje</label>
+          <textarea rows="5" placeholder="Escribe tu mensaje"
+            class="bg-[#F2F6FD] border-none focus:ring-2 focus:ring-blue-200 min-h-[140px] outline-none placeholder:text-gray-400 px-6 py-4 resize-none rounded-2xl text-gray-700 text-sm transition w-full"></textarea>
+        </div>
+
+        <!-- Botón Enviar -->
+        <div class="flex justify-end mt-4">
+          <button type="button"
+            class="bg-[#548AF7] font-medium hover:-translate-y-0.5 hover:bg-blue-600 hover:shadow-xl px-14 py-3 rounded-full shadow-lg text-sm text-white transform transition">
+            Enviar
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</section>
+<app-related-pages></app-related-pages>
+<app-footer></app-footer>

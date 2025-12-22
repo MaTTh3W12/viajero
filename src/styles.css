@@ -1,1 +1,15 @@
 /* You can add global styles to this file, and also import other style files */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.hero-coupon {
+  --r: 26px; /* tamaño de la mordida */
+
+  mask:
+    radial-gradient(circle var(--r) at 0 50%, transparent 99%, black 100%),
+    radial-gradient(circle var(--r) at 100% 50%, transparent 99%, black 100%),
+    linear-gradient(black 0 0);
+  mask-composite: exclude, exclude;
+}
+

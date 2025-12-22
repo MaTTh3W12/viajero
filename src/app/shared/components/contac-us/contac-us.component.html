@@ -1,0 +1,74 @@
+<section class="relative w-full py-20 flex items-center justify-center">
+
+    <!-- IMAGEN DE FONDO -->
+    <div class="absolute inset-0 z-0">
+      <img src="assets/img/bannerContac.png"
+           class="w-full h-full object-cover"
+           alt="Fondo Contacto">
+    </div>
+
+    <!-- Contenedor Principal - ALTURA DIFERENTE -->
+    <div class="relative z-10 max-w-[1200px] w-full px-4 flex flex-col md:flex-row items-start justify-center gap-8 md:gap-12">
+
+        <!-- ======================================================= -->
+        <!-- TARJETA AZUL (IZQUIERDA) - MÁS CORTA -->
+        <!-- ======================================================= -->
+        <div class="bg-[#538CFF] text-white p-10 md:p-12 w-full md:w-[470px] rounded-[2.5rem] flex flex-col shadow-2xl md:h-fit relative">
+
+          <!-- FLECHA CIRCULAR (LIGERAMENTE MÁS ARRIBA, SOBRESALIENDO) -->
+          <div class="hidden md:flex absolute top-[20%] -right-5 transform bg-[#0E225C] w-10 h-10 rounded-full items-center justify-center z-30 cursor-pointer shadow-lg hover:scale-110 transition duration-300">
+              <i class="fas fa-chevron-right text-white text-lg"></i>
+          </div>
+
+          <h2 class="text-3xl md:text-4xl mb-4">Contáctanos</h2>
+
+          <p class="text-[14px] leading-relaxed opacity-95 mb-8 font-normal">
+            ¡Nos encantaría saber de ti! Déjanos tus datos y estaremos encantados de poder apoyarte con las dudas o inconvenientes.
+          </p>
+
+          <button class="bg-white text-[#1E2E5C] px-10 py-3 rounded-full text-sm w-max shadow-md hover:bg-gray-100 transition transform hover:scale-105">
+            Contacto
+          </button>
+        </div>
+
+        <!-- ======================================================= -->
+        <!-- TARJETA BLANCA (DERECHA) - ALTURA COMPLETA -->
+        <!-- ======================================================= -->
+        <div class="bg-white p-8 md:p-14 w-full md:w-[550px] rounded-[3rem] shadow-2xl">
+           <form class="flex flex-col gap-6">
+
+             <!-- Input Nombre -->
+             <div>
+               <label class="block text-sm text-[#1E2E5C] mb-2 pl-1 font-semibold">Nombre completo</label>
+               <input type="text"
+                      placeholder="Ingresa tus nombres y apellidos"
+                      class="w-full bg-[#F2F6FD] border-none rounded-2xl px-6 py-4 text-sm outline-none text-gray-700 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-200 transition">
+             </div>
+
+             <!-- Input Correo -->
+             <div>
+              <label class="block text-sm text-[#1E2E5C] mb-2 pl-1 font-semibold">Correo electrónico</label>
+              <input type="email"
+                     placeholder="Ingresa tu correo electrónico"
+                     class="w-full bg-[#F2F6FD] border-none rounded-2xl px-6 py-4 text-sm outline-none text-gray-700 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-200 transition">
+            </div>
+
+            <!-- Input Mensaje -->
+            <div>
+              <label class="block text-sm text-[#1E2E5C] mb-2 pl-1 font-semibold">Mensaje</label>
+              <textarea rows="5"
+                        placeholder="Escribe tu mensaje"
+                        class="w-full bg-[#F2F6FD] border-none rounded-2xl px-6 py-4 text-sm outline-none text-gray-700 placeholder:text-gray-400 resize-none min-h-[140px] focus:ring-2 focus:ring-blue-200 transition"></textarea>
+            </div>
+
+            <!-- Botón Enviar -->
+            <div class="flex justify-end mt-4">
+              <button type="button" class="bg-[#548AF7] text-white px-14 py-3 rounded-full text-sm hover:bg-blue-600 transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium">
+                 Enviar
+              </button>
+            </div>
+
+           </form>
+        </div>
+    </div>
+  </section>
