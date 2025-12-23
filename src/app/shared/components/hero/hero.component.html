@@ -1,0 +1,48 @@
+<section class="max-w-[1280px] mx-auto px-4 mt-12 relative">
+
+  <!-- CUPÓN (Contenedor principal con relative para que nada se salga) -->
+  <div class="relative h-[480px] flex rounded-[40px] overflow-hidden bg-white hero-coupon shadow-lg z-[100]">
+
+    <!-- Columna izquierda: Azul Oscuro -->
+    <!-- flex-shrink-0 evita que la columna se achique o se estire raro -->
+    <div class="w-[440px] flex-shrink-0 bg-[#0E225C] text-white p-14 flex flex-col justify-center relative z-10">
+      <h1 class="text-[52px] font-bold leading-[1.1] mb-6">
+        ¡El Salvador<br />te espera!
+      </h1>
+
+      <p class="text-lg leading-relaxed opacity-90 mb-10 max-w-[320px]">
+        Adquiere cupones exclusivos para la <span class="text-[#538CFF] font-semibold">diáspora</span> y disfruta de la belleza de tu país
+      </p>
+
+      <button
+        class="bg-[#538CFF] hover:bg-blue-400 transition-colors px-10 py-4 rounded-full text-base font-bold w-fit shadow-md"
+      >
+        Explorar cupones
+      </button>
+    </div>
+
+    <!-- Columna derecha: Imagen -->
+    <div class="relative flex-1 overflow-hidden">
+      <img
+        src="assets/img/volcanes.png"
+        alt="Volcanes"
+        class="w-full h-full object-cover"
+      />
+
+      <!-- Texto "Tours a" -->
+      <div class="absolute top-[90px] left-[60px] text-white pointer-events-none">
+        <p class="text-[26px] font-light tracking-wide drop-shadow-lg">
+          Tours a
+        </p>
+      </div>
+    </div>
+
+    <!-- HASHTAG - Posicionado abajo a la derecha como una pestaña -->
+
+  </div>
+  <div class="hashtag-wrapper">
+      <img src="assets/img/hashtag-tab.svg" alt="" />
+      <span>#DiásporaSV</span>
+  </div>
+
+</section>

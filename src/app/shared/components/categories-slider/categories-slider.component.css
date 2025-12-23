@@ -1,0 +1,44 @@
+/* Flechas */
+.slider-arrow {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid #538CFF;
+  color: #538CFF;
+  font-size: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+  cursor: pointer;
+}
+
+/* Pastilla */
+.category-pill {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 22px;
+  background: #F4F7FD;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #0E225C;
+  white-space: nowrap;
+}
+
+/* Círculo del ícono */
+.icon-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* SVG */
+.icon-circle img {
+  width: 24px;
+  height: 24px;
+}
