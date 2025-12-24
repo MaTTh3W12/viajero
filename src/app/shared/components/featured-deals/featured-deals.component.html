@@ -1,166 +1,82 @@
-<section class="max-w-[1280px] mx-auto px-4 mt-20 text-center">
+<section class="max-w-[1100px] mt-10 mb-16 md:mb-24 mx-auto px-4 overflow-hidden md:overflow-visible">
+  <h2 class="mb-8 text-[#1E2E5C] text-3xl text-center font-bold">¡No te los pierdas!</h2>
 
-  <!-- TÍTULO -->
-  <h2 class="text-[36px] font-semibold text-[#0E225C] mb-6">
-    ¡No te los pierdas!
-  </h2>
-
-  <!-- TABS -->
-  <div class="flex justify-center gap-4 mb-10">
-    <button
-      class="px-6 py-2 rounded-full
-             bg-[#F4F7FB]
-             text-[#538CFF]
-             text-sm font-medium">
+  <!-- 
+     FILTROS
+  -->
+  <div class="flex flex-wrap gap-2 md:gap-8 items-center justify-center mb-8 font-bold tracking-widest">
+    <button class="text-[#548AF7] hover:text-blue-700 transition uppercase px-4 py-2 text-[12px] md:text-[13px]">
       MÁS RECIENTES
     </button>
-
-    <button
-      class="px-6 py-2 rounded-full
-             bg-[#538CFF]
-             text-white
-             text-sm font-medium">
+    <button class="bg-[#548AF7] hover:bg-blue-600 px-8 py-3 rounded-full shadow-md text-white transition uppercase text-[12px] md:text-[13px]">
       POR VENCER
     </button>
   </div>
 
-  <!-- CARDS -->
-  <div class="grid grid-cols-3 gap-8 mb-10">
+  <!-- 
+     CONTENEDOR DE CUPONES (CARRUSEL)
+  -->
+  <div class="flex md:grid md:grid-cols-3 gap-4 md:gap-6 overflow-x-auto pb-8 px-1 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden">
 
-    <!-- CARD -->
-    <div
-      class="flex gap-4 p-4
-             bg-[#F6F9FF]
-             rounded-[20px]
-             text-left">
-
-      <!-- Imagen -->
-      <img
-        src="assets/img/ballena.png"
-        alt="Avistamiento"
-        class="w-[120px] h-[140px]
-               object-cover
-               rounded-[14px]" />
-
-      <!-- Contenido -->
-      <div class="flex flex-col justify-between">
-
+    <!-- Cupón 1 -->
+    <div class="min-w-[85%] md:min-w-0 snap-center bg-white border border-gray-100 flex min-h-[8rem] md:h-32 hover:shadow-lg overflow-hidden rounded-2xl shadow transition cursor-pointer">
+      <div class="w-[35%] relative">
+        <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5" class="absolute inset-0 h-full object-cover w-full">
+      </div>
+      <div class="flex flex-col justify-between p-3 pl-4 w-[65%]">
         <div>
-          <p class="text-xs text-gray-400 mb-1">
-            El Salvador Tours
-          </p>
-
-          <h3 class="text-[#0E225C] font-semibold leading-tight mb-2">
-            Avistamiento de Ballenas
-          </h3>
-
-          <span
-            class="inline-block
-                   bg-[#FFD6D6]
-                   text-[#FF3B3B]
-                   text-xs font-bold
-                   px-3 py-1
-                   rounded-full">
-            10% OFF
-          </span>
+          <span class="font-bold text-[10px] text-gray-400 uppercase tracking-wide">El Salvador Tours</span>
+          <h4 class="font-bold leading-tight mt-1 text-[14px] text-gray-800 line-clamp-2">Avistamiento de Ballenas</h4>
+          <span class="bg-red-100 font-bold inline-block mt-2 px-2 py-0.5 rounded text-[10px] text-red-500">10% OFF</span>
         </div>
-
-        <!-- Info -->
-        <div class="mt-3 text-xs text-[#0E225C] space-y-1">
-
-          <div class="flex items-center gap-2">
-            <img src="assets/icons/location.svg" class="w-4 h-4" />
-            <span>Los Cóbanos, Sonsonate</span>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <img src="assets/icons/clock.svg" class="w-4 h-4" />
-            <span>Vence: 31 diciembre 2025</span>
-          </div>
-
+        <div class="flex flex-col gap-1 text-[10px] text-gray-500 mt-2 md:mt-0">
+          <div class="flex gap-1 items-center truncate"><i class="fas fa-map-marker-alt text-[#548AF7]"></i> Los Cóbanos</div>
+          <div class="flex gap-1 items-center"><i class="far fa-clock text-[#548AF7]"></i> Vence: 31/12/2025</div>
         </div>
       </div>
     </div>
 
-    <!-- DUPLICA LA CARD 2 -->
-    <div class="flex gap-4 p-4 bg-[#F6F9FF] rounded-[20px] text-left">
-      <img src="assets/img/masaje.png" class="w-[120px] h-[140px] object-cover rounded-[14px]" />
-
-      <div class="flex flex-col justify-between">
+    <!-- Cupón 2 -->
+    <div class="min-w-[85%] md:min-w-0 snap-center bg-white border border-gray-100 flex min-h-[8rem] md:h-32 hover:shadow-lg overflow-hidden rounded-2xl shadow transition cursor-pointer">
+      <div class="w-[35%] relative">
+        <img src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874" class="absolute inset-0 h-full object-cover w-full">
+      </div>
+      <div class="flex flex-col justify-between p-3 pl-4 w-[65%]">
         <div>
-          <p class="text-xs text-gray-400 mb-1">Clínica fisioterapia</p>
-          <h3 class="text-[#0E225C] font-semibold mb-2">
-            Sesión de masaje relajante
-          </h3>
-
-          <span class="bg-[#FFD6D6] text-[#FF3B3B] text-xs font-bold px-3 py-1 rounded-full">
-            15% OFF
-          </span>
+          <span class="font-bold text-[10px] text-gray-400 uppercase tracking-wide">Clínica Fisioterapia</span>
+          <h4 class="font-bold leading-tight mt-1 text-[14px] text-gray-800 line-clamp-2">Sesión de masaje relajante</h4>
+          <span class="bg-red-100 font-bold inline-block mt-2 px-2 py-0.5 rounded text-[10px] text-red-500">15% OFF</span>
         </div>
-
-        <div class="mt-3 text-xs space-y-1">
-          <div class="flex items-center gap-2">
-            <img src="assets/icons/location.svg" class="w-4 h-4" />
-            <span>Escalón, San Salvador</span>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <img src="assets/icons/clock.svg" class="w-4 h-4" />
-            <span>Vence: 31 diciembre 2025</span>
-          </div>
+        <div class="flex flex-col gap-1 text-[10px] text-gray-500 mt-2 md:mt-0">
+          <div class="flex gap-1 items-center truncate"><i class="fas fa-map-marker-alt text-[#548AF7]"></i> Escalón, SS</div>
+          <div class="flex gap-1 items-center"><i class="far fa-clock text-[#548AF7]"></i> Vence: 31/12/2025</div>
         </div>
       </div>
     </div>
 
-    <!-- CARD 3 -->
-    <div class="flex gap-4 p-4 bg-[#F6F9FF] rounded-[20px] text-left">
-      <img src="assets/img/crepa.png" class="w-[120px] h-[140px] object-cover rounded-[14px]" />
-
-      <div class="flex flex-col justify-between">
+    <!-- Cupón 3 -->
+    <div class="min-w-[85%] md:min-w-0 snap-center bg-white border border-gray-100 flex min-h-[8rem] md:h-32 hover:shadow-lg overflow-hidden rounded-2xl shadow transition cursor-pointer">
+      <div class="w-[35%] relative">
+        <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38" class="absolute inset-0 h-full object-cover w-full">
+      </div>
+      <div class="flex flex-col justify-between p-3 pl-4 w-[65%]">
         <div>
-          <p class="text-xs text-gray-400 mb-1">Crepe Lovers</p>
-          <h3 class="text-[#0E225C] font-semibold mb-2">
-            Descuento en crepas y postres
-          </h3>
-
-          <span class="bg-[#FFD6D6] text-[#FF3B3B] text-xs font-bold px-3 py-1 rounded-full">
-            20% OFF
-          </span>
+          <span class="font-bold text-[10px] text-gray-400 uppercase tracking-wide">Crepe Lovers</span>
+          <h4 class="font-bold leading-tight mt-1 text-[14px] text-gray-800 line-clamp-2">Descuento en crepas</h4>
+          <span class="bg-red-100 font-bold inline-block mt-2 px-2 py-0.5 rounded text-[10px] text-red-500">20% OFF</span>
         </div>
-
-        <div class="mt-3 text-xs space-y-1">
-          <div class="flex items-center gap-2">
-            <img src="assets/icons/location.svg" class="w-4 h-4" />
-            <span>Los Cóbanos, Sonsonate</span>
-          </div>
-
-          <div class="flex items-center gap-2">
-            <img src="assets/icons/clock.svg" class="w-4 h-4" />
-            <span>Vence: 31 diciembre 2025</span>
-          </div>
+        <div class="flex flex-col gap-1 text-[10px] text-gray-500 mt-2 md:mt-0">
+          <div class="flex gap-1 items-center truncate"><i class="fas fa-map-marker-alt text-[#548AF7]"></i> Multiplaza</div>
+          <div class="flex gap-1 items-center"><i class="far fa-clock text-[#548AF7]"></i> Vence: 31/12/2025</div>
         </div>
       </div>
     </div>
 
   </div>
 
-  <!-- FLECHAS -->
-  <div class="flex justify-center gap-4">
-    <button
-      class="w-10 h-10 rounded-full
-             border border-[#538CFF]
-             text-[#538CFF] text-lg
-             flex items-center justify-center">
-      ‹
-    </button>
-
-    <button
-      class="w-10 h-10 rounded-full
-             border border-[#538CFF]
-             text-[#538CFF] text-lg
-             flex items-center justify-center">
-      ›
-    </button>
+  <!-- Botones de Paginación (Solo Desktop) -->
+  <div class="hidden md:flex gap-3 justify-center">
+    <button class="bg-white border border-blue-400 flex font-bold h-8 hover:bg-blue-50 items-center justify-center pb-0.5 rounded-full shadow-sm text-lg text-blue-500 transition w-8">‹</button>
+    <button class="bg-white border border-blue-400 flex font-bold h-8 hover:bg-blue-50 items-center justify-center pb-0.5 rounded-full shadow-sm text-lg text-blue-500 transition w-8">›</button>
   </div>
-
 </section>
