@@ -4,9 +4,12 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        primary: "#3B82F6",
-        darkblue: "#0F2A56",
+        primary: "#538CFF",
+        darkblue: "#0E225C",
       },
+      fontFamily: {
+        museo: ['Montserrat', 'sans-serif'],
+      }
     },
   },
   plugins: [],

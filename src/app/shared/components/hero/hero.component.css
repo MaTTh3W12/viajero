@@ -1,14 +1,16 @@
 .hashtag-wrapper {
-  position: absolute;
-  right: 17px;
-  bottom: -68px;
-  width: 395px;
-  height: 104px;
+    position: absolute;
+    right: -5px;
+    bottom: -56px;
+    width: 380px;
+    height: 90px;
+    z-index: 50;
 }
 
 .hashtag-wrapper img {
   width: 100%;
   height: 100%;
+  object-fit: contain;
   display: block;
 }
 
@@ -22,6 +24,6 @@
     font-size: 30px;
     font-weight: 500;
     pointer-events: none;
-    top: 26px;
-    left: 40px;
+    padding-top: 30px;
+    padding-left: 20px;
 }
