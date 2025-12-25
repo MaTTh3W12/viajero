@@ -1,0 +1,18 @@
+.badge-descuento {
+	width: 106px;
+	height: 45px;
+	border-radius: 8px;
+	padding: 10px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	opacity: 1;
+	/* Si necesitas usar top/left exactamente como en el diseño,
+		 pon el contenedor en position: relative y descomenta estas líneas
+		 junto con position: absolute en este badge. */
+	/* position: absolute; */
+	/* top: 291px; */
+	/* left: 178px; */
+}
+
