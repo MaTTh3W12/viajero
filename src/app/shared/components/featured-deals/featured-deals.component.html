@@ -1,82 +1,261 @@
 <section class="max-w-[1100px] mt-10 mb-16 md:mb-24 mx-auto px-4 overflow-hidden md:overflow-visible font-museo">
   <h2 class="mb-8 text-[#1E2E5C] text-3xl text-center font-bold">¡No te los pierdas!</h2>
 
-  <!--
-     FILTROS
-  -->
-  <div class="flex flex-wrap gap-2 md:gap-8 items-center justify-center mb-8 font-bold tracking-widest">
-    <button class="text-[#548AF7] hover:text-blue-700 transition uppercase px-4 py-2 text-[12px] md:text-[13px]">
+  <!-- BOTONES DE FILTRO -->
+  <div class="flex flex-wrap gap-4 items-center justify-center mb-8 font-bold tracking-widest">
+    <button 
+      (click)="setFilter('recent')"
+      class="min-w-[180px] px-6 py-3 rounded-full uppercase text-[12px] md:text-[13px] transition-all duration-300 border border-transparent"
+      [class]="activeFilter() === 'recent' 
+        ? 'bg-[#548AF7] text-white shadow-md shadow-blue-200' 
+        : 'bg-transparent text-[#548AF7] hover:bg-blue-50 hover:text-blue-600'">
       MÁS RECIENTES
     </button>
-    <button class="bg-[#548AF7] hover:bg-blue-600 px-8 py-3 rounded-full shadow-md text-white transition uppercase text-[12px] md:text-[13px]">
+
+    <button 
+      (click)="setFilter('expiring')"
+      class="min-w-[180px] px-6 py-3 rounded-full uppercase text-[12px] md:text-[13px] transition-all duration-300 border border-transparent"
+      [class]="activeFilter() === 'expiring' 
+        ? 'bg-[#548AF7] text-white shadow-md shadow-blue-200' 
+        : 'bg-transparent text-[#548AF7] hover:bg-blue-50 hover:text-blue-600'">
       POR VENCER
     </button>
   </div>
 
-  <!--
-     CONTENEDOR DE CUPONES (CARRUSEL)
-  -->
-  <div class="flex md:grid md:grid-cols-3 gap-4 md:gap-6 overflow-x-auto pb-8 px-1 snap-x snap-mandatory [&::-webkit-scrollbar]:hidden">
+  <!-- ======================================================= -->
+  <!-- VISTA 1: MÁS RECIENTES                                  -->
+  <!-- ======================================================= -->
+  @if (activeFilter() === 'recent') {
+    
+    <!-- 
+      AGREGADO: (mouseenter) y (mouseleave) para pausar/reanudar 
+    -->
+    <div 
+      #recentContainer 
+      (mouseenter)="stopAutoScroll()" 
+      (mouseleave)="startAutoScroll()"
+      class="flex gap-6 overflow-x-auto pb-4 md:pb-8 no-scrollbar scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] animate-fade-in snap-x snap-mandatory">
 
-    <!-- Cupón 1 -->
-    <div class="min-w-[85%] md:min-w-0 snap-center bg-white border border-gray-100 flex min-h-[8rem] md:h-32 hover:shadow-lg overflow-hidden rounded-2xl shadow transition cursor-pointer">
-      <div class="w-[35%] relative">
-        <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5" class="absolute inset-0 h-full object-cover w-full">
-      </div>
-      <div class="flex flex-col justify-between p-3 pl-4 w-[65%]">
-        <div>
-          <span class="font-bold text-[10px] text-gray-400 uppercase tracking-wide">El Salvador Tours</span>
-          <h4 class="font-bold leading-tight mt-1 text-[14px] text-gray-800 line-clamp-2">Avistamiento de Ballenas</h4>
-          <span class="bg-red-100 font-bold inline-block mt-2 px-2 py-0.5 rounded text-[10px] text-red-500">10% OFF</span>
+      <!-- CARD 1 -->
+      <div class="snap-center flex-shrink-0 w-[340px] md:w-[400px] flex gap-4 p-4 bg-[#F6F9FF] rounded-[24px] text-left border border-transparent hover:border-blue-100 transition-all">
+        <img src="assets/img/ballena.png" alt="Avistamiento" class="w-[120px] h-[150px] object-cover rounded-[18px] flex-shrink-0" />
+        <div class="flex flex-col justify-between py-1 w-full">
+          <div>
+            <p class="text-[11px] text-gray-400 font-museo uppercase tracking-wide mb-1">El Salvador Tours</p>
+            <h3 class="text-[#0E225C] text-[16px] font-bold leading-tight mb-3 font-museo">Avistamiento de Ballenas</h3>
+            <span class="inline-block bg-[#FFD6D6] text-[#FF3B3B] text-[12px] font-extrabold px-3 py-1.5 rounded-lg">10% OFF</span>
+          </div>
+          <div class="text-[12px] text-[#0E225C] space-y-2 opacity-80">
+            <div class="flex items-center gap-2"><img src="assets/icons/location.svg" class="w-3.5 h-3.5" /><span class="truncate">Los Cóbanos, Sonsonate</span></div>
+            <div class="flex items-center gap-2"><img src="assets/icons/clock.svg" class="w-3.5 h-3.5" /><span>Vence: 31 dic. 2025</span></div>
+          </div>
         </div>
-        <div class="flex flex-col gap-1 text-[10px] text-gray-500 mt-2 md:mt-0">
-          <div class="flex gap-1 items-center truncate"><i class="fas fa-map-marker-alt text-[#548AF7]"></i> Los Cóbanos</div>
-          <div class="flex gap-1 items-center"><i class="far fa-clock text-[#548AF7]"></i> Vence: 31/12/2025</div>
+      </div>
+  
+      <!-- CARD 2 -->
+      <div class="snap-center flex-shrink-0 w-[340px] md:w-[400px] flex gap-4 p-4 bg-[#F6F9FF] rounded-[24px] text-left border border-transparent hover:border-blue-100 transition-all">
+        <img src="assets/img/masaje.png" alt="Masaje" class="w-[120px] h-[150px] object-cover rounded-[18px] flex-shrink-0" />
+        <div class="flex flex-col justify-between py-1 w-full">
+          <div>
+            <p class="text-[11px] text-gray-400 font-museo uppercase mb-1">Clínica fisioterapia</p>
+            <h3 class="text-[#0E225C] text-[16px] font-bold leading-tight mb-3 font-museo">Sesión de masaje relajante</h3>
+            <span class="bg-[#FFD6D6] text-[#FF3B3B] text-[12px] font-extrabold px-3 py-1.5 rounded-lg">15% OFF</span>
+          </div>
+          <div class="text-[12px] text-[#0E225C] space-y-2 opacity-80">
+            <div class="flex items-center gap-2"><img src="assets/icons/location.svg" class="w-3.5 h-3.5" /><span>Escalón, San Salvador</span></div>
+            <div class="flex items-center gap-2"><img src="assets/icons/clock.svg" class="w-3.5 h-3.5" /><span>Vence: 31 dic. 2025</span></div>
+          </div>
         </div>
       </div>
+  
+      <!-- CARD 3 -->
+      <div class="snap-center flex-shrink-0 w-[340px] md:w-[400px] flex gap-4 p-4 bg-[#F6F9FF] rounded-[24px] text-left border border-transparent hover:border-blue-100 transition-all">
+        <img src="assets/img/crepa.png" alt="Crepa" class="w-[120px] h-[150px] object-cover rounded-[18px] flex-shrink-0" />
+        <div class="flex flex-col justify-between py-1 w-full">
+          <div>
+            <p class="text-[11px] text-gray-400 font-museo uppercase mb-1">Crepe Lovers</p>
+            <h3 class="text-[#0E225C] text-[16px] font-bold leading-tight mb-3 font-museo">Descuento en crepas y postres</h3>
+            <span class="bg-[#FFD6D6] text-[#FF3B3B] text-[12px] font-extrabold px-3 py-1.5 rounded-lg">20% OFF</span>
+          </div>
+          <div class="text-[12px] text-[#0E225C] space-y-2 opacity-80">
+            <div class="flex items-center gap-2"><img src="assets/icons/location.svg" class="w-3.5 h-3.5" /><span>Multiplaza, San Salvador</span></div>
+            <div class="flex items-center gap-2"><img src="assets/icons/clock.svg" class="w-3.5 h-3.5" /><span>Vence: 31 dic. 2025</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="snap-center flex-shrink-0 w-[340px] md:w-[400px] flex gap-4 p-4 bg-[#F6F9FF] rounded-[24px] text-left border border-transparent hover:border-blue-100 transition-all">
+        <img src="assets/img/ballena.png" alt="Avistamiento" class="w-[120px] h-[150px] object-cover rounded-[18px] flex-shrink-0" />
+        <div class="flex flex-col justify-between py-1 w-full">
+          <div>
+            <p class="text-[11px] text-gray-400 font-museo uppercase tracking-wide mb-1">El Salvador Tours</p>
+            <h3 class="text-[#0E225C] text-[16px] font-bold leading-tight mb-3 font-museo">Avistamiento de Ballenas</h3>
+            <span class="inline-block bg-[#FFD6D6] text-[#FF3B3B] text-[12px] font-extrabold px-3 py-1.5 rounded-lg">10% OFF</span>
+          </div>
+          <div class="text-[12px] text-[#0E225C] space-y-2 opacity-80">
+            <div class="flex items-center gap-2"><img src="assets/icons/location.svg" class="w-3.5 h-3.5" /><span class="truncate">Los Cóbanos, Sonsonate</span></div>
+            <div class="flex items-center gap-2"><img src="assets/icons/clock.svg" class="w-3.5 h-3.5" /><span>Vence: 31 dic. 2025</span></div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- CARD 2 -->
+      <div class="snap-center flex-shrink-0 w-[340px] md:w-[400px] flex gap-4 p-4 bg-[#F6F9FF] rounded-[24px] text-left border border-transparent hover:border-blue-100 transition-all">
+        <img src="assets/img/masaje.png" alt="Masaje" class="w-[120px] h-[150px] object-cover rounded-[18px] flex-shrink-0" />
+        <div class="flex flex-col justify-between py-1 w-full">
+          <div>
+            <p class="text-[11px] text-gray-400 font-museo uppercase mb-1">Clínica fisioterapia</p>
+            <h3 class="text-[#0E225C] text-[16px] font-bold leading-tight mb-3 font-museo">Sesión de masaje relajante</h3>
+            <span class="bg-[#FFD6D6] text-[#FF3B3B] text-[12px] font-extrabold px-3 py-1.5 rounded-lg">15% OFF</span>
+          </div>
+          <div class="text-[12px] text-[#0E225C] space-y-2 opacity-80">
+            <div class="flex items-center gap-2"><img src="assets/icons/location.svg" class="w-3.5 h-3.5" /><span>Escalón, San Salvador</span></div>
+            <div class="flex items-center gap-2"><img src="assets/icons/clock.svg" class="w-3.5 h-3.5" /><span>Vence: 31 dic. 2025</span></div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- CARD 3 -->
+      <div class="snap-center flex-shrink-0 w-[340px] md:w-[400px] flex gap-4 p-4 bg-[#F6F9FF] rounded-[24px] text-left border border-transparent hover:border-blue-100 transition-all">
+        <img src="assets/img/crepa.png" alt="Crepa" class="w-[120px] h-[150px] object-cover rounded-[18px] flex-shrink-0" />
+        <div class="flex flex-col justify-between py-1 w-full">
+          <div>
+            <p class="text-[11px] text-gray-400 font-museo uppercase mb-1">Crepe Lovers</p>
+            <h3 class="text-[#0E225C] text-[16px] font-bold leading-tight mb-3 font-museo">Descuento en crepas y postres</h3>
+            <span class="bg-[#FFD6D6] text-[#FF3B3B] text-[12px] font-extrabold px-3 py-1.5 rounded-lg">20% OFF</span>
+          </div>
+          <div class="text-[12px] text-[#0E225C] space-y-2 opacity-80">
+            <div class="flex items-center gap-2"><img src="assets/icons/location.svg" class="w-3.5 h-3.5" /><span>Multiplaza, San Salvador</span></div>
+            <div class="flex items-center gap-2"><img src="assets/icons/clock.svg" class="w-3.5 h-3.5" /><span>Vence: 31 dic. 2025</span></div>
+          </div>
+        </div>
+      </div>
+      
     </div>
 
-    <!-- Cupón 2 -->
-    <div class="min-w-[85%] md:min-w-0 snap-center bg-white border border-gray-100 flex min-h-[8rem] md:h-32 hover:shadow-lg overflow-hidden rounded-2xl shadow transition cursor-pointer">
-      <div class="w-[35%] relative">
-        <img src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874" class="absolute inset-0 h-full object-cover w-full">
-      </div>
-      <div class="flex flex-col justify-between p-3 pl-4 w-[65%]">
-        <div>
-          <span class="font-bold text-[10px] text-gray-400 uppercase tracking-wide">Clínica Fisioterapia</span>
-          <h4 class="font-bold leading-tight mt-1 text-[14px] text-gray-800 line-clamp-2">Sesión de masaje relajante</h4>
-          <span class="bg-red-100 font-bold inline-block mt-2 px-2 py-0.5 rounded text-[10px] text-red-500">15% OFF</span>
-        </div>
-        <div class="flex flex-col gap-1 text-[10px] text-gray-500 mt-2 md:mt-0">
-          <div class="flex gap-1 items-center truncate"><i class="fas fa-map-marker-alt text-[#548AF7]"></i> Escalón, SS</div>
-          <div class="flex gap-1 items-center"><i class="far fa-clock text-[#548AF7]"></i> Vence: 31/12/2025</div>
-        </div>
-      </div>
+    <!-- FLECHAS -->
+    <div class="hidden md:flex gap-3 justify-center mt-4 animate-fade-in">
+      <button (click)="scrollContainer(recentContainer, 'left')" class="bg-white border border-blue-400 flex font-bold h-8 hover:bg-blue-50 items-center justify-center pb-0.5 rounded-full shadow-sm text-lg text-blue-500 transition w-8 cursor-pointer select-none">‹</button>
+      <button (click)="scrollContainer(recentContainer, 'right')" class="bg-white border border-blue-400 flex font-bold h-8 hover:bg-blue-50 items-center justify-center pb-0.5 rounded-full shadow-sm text-lg text-blue-500 transition w-8 cursor-pointer select-none">›</button>
     </div>
 
-    <!-- Cupón 3 -->
-    <div class="min-w-[85%] md:min-w-0 snap-center bg-white border border-gray-100 flex min-h-[8rem] md:h-32 hover:shadow-lg overflow-hidden rounded-2xl shadow transition cursor-pointer">
-      <div class="w-[35%] relative">
-        <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38" class="absolute inset-0 h-full object-cover w-full">
-      </div>
-      <div class="flex flex-col justify-between p-3 pl-4 w-[65%]">
-        <div>
-          <span class="font-bold text-[10px] text-gray-400 uppercase tracking-wide">Crepe Lovers</span>
-          <h4 class="font-bold leading-tight mt-1 text-[14px] text-gray-800 line-clamp-2">Descuento en crepas</h4>
-          <span class="bg-red-100 font-bold inline-block mt-2 px-2 py-0.5 rounded text-[10px] text-red-500">20% OFF</span>
+  } @else {
+
+    <!-- ======================================================= -->
+    <!-- VISTA 2: POR VENCER                                     -->
+    <!-- ======================================================= -->
+    
+    <!-- 
+      AGREGADO: (mouseenter) y (mouseleave) 
+    -->
+    <div 
+      #expiringContainer 
+      (mouseenter)="stopAutoScroll()" 
+      (mouseleave)="startAutoScroll()"
+      class="flex gap-6 overflow-x-auto pb-4 md:pb-8 no-scrollbar scroll-smooth [&::-webkit-scrollbar]:hidden [-ms-overflow-style:'none'] [scrollbar-width:'none'] animate-fade-in snap-x snap-mandatory">
+      
+      <!-- CUPÓN ORIGINAL 1 -->
+      <div class="snap-center flex-shrink-0 w-[340px] md:w-[400px] flex gap-4 p-4 bg-[#F6F9FF] rounded-[24px] text-left border border-transparent hover:border-blue-100 transition-all">
+        <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5" alt="Avistamiento" class="w-[120px] h-[150px] object-cover rounded-[18px] flex-shrink-0" />
+        <div class="flex flex-col justify-between py-1 w-full">
+          <div>
+            <p class="text-[11px] text-gray-400 font-museo uppercase tracking-wide mb-1">El Salvador Tours</p>
+            <h3 class="text-[#0E225C] text-[16px] font-bold leading-tight mb-3 font-museo">Avistamiento de Ballenas</h3>
+            <span class="inline-block bg-[#FFD6D6] text-[#FF3B3B] text-[12px] font-extrabold px-3 py-1.5 rounded-lg">10% OFF</span>
+          </div>
+          <div class="text-[12px] text-[#0E225C] space-y-2 opacity-80">
+            <div class="flex items-center gap-2"><img src="assets/icons/location.svg" class="w-3.5 h-3.5" /><span class="truncate">Los Cóbanos</span></div>
+            <div class="flex items-center gap-2"><img src="assets/icons/clock.svg" class="w-3.5 h-3.5" /><span>Vence: 31/12/2025</span></div>
+          </div>
         </div>
-        <div class="flex flex-col gap-1 text-[10px] text-gray-500 mt-2 md:mt-0">
-          <div class="flex gap-1 items-center truncate"><i class="fas fa-map-marker-alt text-[#548AF7]"></i> Multiplaza</div>
-          <div class="flex gap-1 items-center"><i class="far fa-clock text-[#548AF7]"></i> Vence: 31/12/2025</div>
+      </div>
+
+      <!-- CUPÓN ORIGINAL 2 -->
+      <div class="snap-center flex-shrink-0 w-[340px] md:w-[400px] flex gap-4 p-4 bg-[#F6F9FF] rounded-[24px] text-left border border-transparent hover:border-blue-100 transition-all">
+        <img src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874" alt="Masaje" class="w-[120px] h-[150px] object-cover rounded-[18px] flex-shrink-0" />
+        <div class="flex flex-col justify-between py-1 w-full">
+          <div>
+            <p class="text-[11px] text-gray-400 font-museo uppercase mb-1">Clínica Fisioterapia</p>
+            <h3 class="text-[#0E225C] text-[16px] font-bold leading-tight mb-3 font-museo">Sesión de masaje relajante</h3>
+            <span class="bg-[#FFD6D6] text-[#FF3B3B] text-[12px] font-extrabold px-3 py-1.5 rounded-lg">15% OFF</span>
+          </div>
+          <div class="text-[12px] text-[#0E225C] space-y-2 opacity-80">
+            <div class="flex items-center gap-2"><img src="assets/icons/location.svg" class="w-3.5 h-3.5" /><span>Escalón, SS</span></div>
+            <div class="flex items-center gap-2"><img src="assets/icons/clock.svg" class="w-3.5 h-3.5" /><span>Vence: 31/12/2025</span></div>
+          </div>
         </div>
       </div>
+
+      <!-- CUPÓN ORIGINAL 3 -->
+      <div class="snap-center flex-shrink-0 w-[340px] md:w-[400px] flex gap-4 p-4 bg-[#F6F9FF] rounded-[24px] text-left border border-transparent hover:border-blue-100 transition-all">
+        <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38" alt="Crepa" class="w-[120px] h-[150px] object-cover rounded-[18px] flex-shrink-0" />
+        <div class="flex flex-col justify-between py-1 w-full">
+          <div>
+            <p class="text-[11px] text-gray-400 font-museo uppercase mb-1">Crepe Lovers</p>
+            <h3 class="text-[#0E225C] text-[16px] font-bold leading-tight mb-3 font-museo">Descuento en crepas</h3>
+            <span class="bg-[#FFD6D6] text-[#FF3B3B] text-[12px] font-extrabold px-3 py-1.5 rounded-lg">20% OFF</span>
+          </div>
+          <div class="text-[12px] text-[#0E225C] space-y-2 opacity-80">
+            <div class="flex items-center gap-2"><img src="assets/icons/location.svg" class="w-3.5 h-3.5" /><span>Multiplaza</span></div>
+            <div class="flex items-center gap-2"><img src="assets/icons/clock.svg" class="w-3.5 h-3.5" /><span>Vence: 31/12/2025</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CUPÓN ORIGINAL 1 -->
+      <div class="snap-center flex-shrink-0 w-[340px] md:w-[400px] flex gap-4 p-4 bg-[#F6F9FF] rounded-[24px] text-left border border-transparent hover:border-blue-100 transition-all">
+        <img src="https://images.unsplash.com/photo-1544551763-46a013bb70d5" alt="Avistamiento" class="w-[120px] h-[150px] object-cover rounded-[18px] flex-shrink-0" />
+        <div class="flex flex-col justify-between py-1 w-full">
+          <div>
+            <p class="text-[11px] text-gray-400 font-museo uppercase tracking-wide mb-1">El Salvador Tours</p>
+            <h3 class="text-[#0E225C] text-[16px] font-bold leading-tight mb-3 font-museo">Avistamiento de Ballenas</h3>
+            <span class="inline-block bg-[#FFD6D6] text-[#FF3B3B] text-[12px] font-extrabold px-3 py-1.5 rounded-lg">10% OFF</span>
+          </div>
+          <div class="text-[12px] text-[#0E225C] space-y-2 opacity-80">
+            <div class="flex items-center gap-2"><img src="assets/icons/location.svg" class="w-3.5 h-3.5" /><span class="truncate">Los Cóbanos</span></div>
+            <div class="flex items-center gap-2"><img src="assets/icons/clock.svg" class="w-3.5 h-3.5" /><span>Vence: 31/12/2025</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CUPÓN ORIGINAL 2 -->
+      <div class="snap-center flex-shrink-0 w-[340px] md:w-[400px] flex gap-4 p-4 bg-[#F6F9FF] rounded-[24px] text-left border border-transparent hover:border-blue-100 transition-all">
+        <img src="https://images.unsplash.com/photo-1544161515-4ab6ce6db874" alt="Masaje" class="w-[120px] h-[150px] object-cover rounded-[18px] flex-shrink-0" />
+        <div class="flex flex-col justify-between py-1 w-full">
+          <div>
+            <p class="text-[11px] text-gray-400 font-museo uppercase mb-1">Clínica Fisioterapia</p>
+            <h3 class="text-[#0E225C] text-[16px] font-bold leading-tight mb-3 font-museo">Sesión de masaje relajante</h3>
+            <span class="bg-[#FFD6D6] text-[#FF3B3B] text-[12px] font-extrabold px-3 py-1.5 rounded-lg">15% OFF</span>
+          </div>
+          <div class="text-[12px] text-[#0E225C] space-y-2 opacity-80">
+            <div class="flex items-center gap-2"><img src="assets/icons/location.svg" class="w-3.5 h-3.5" /><span>Escalón, SS</span></div>
+            <div class="flex items-center gap-2"><img src="assets/icons/clock.svg" class="w-3.5 h-3.5" /><span>Vence: 31/12/2025</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CUPÓN ORIGINAL 3 -->
+      <div class="snap-center flex-shrink-0 w-[340px] md:w-[400px] flex gap-4 p-4 bg-[#F6F9FF] rounded-[24px] text-left border border-transparent hover:border-blue-100 transition-all">
+        <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38" alt="Crepa" class="w-[120px] h-[150px] object-cover rounded-[18px] flex-shrink-0" />
+        <div class="flex flex-col justify-between py-1 w-full">
+          <div>
+            <p class="text-[11px] text-gray-400 font-museo uppercase mb-1">Crepe Lovers</p>
+            <h3 class="text-[#0E225C] text-[16px] font-bold leading-tight mb-3 font-museo">Descuento en crepas</h3>
+            <span class="bg-[#FFD6D6] text-[#FF3B3B] text-[12px] font-extrabold px-3 py-1.5 rounded-lg">20% OFF</span>
+          </div>
+          <div class="text-[12px] text-[#0E225C] space-y-2 opacity-80">
+            <div class="flex items-center gap-2"><img src="assets/icons/location.svg" class="w-3.5 h-3.5" /><span>Multiplaza</span></div>
+            <div class="flex items-center gap-2"><img src="assets/icons/clock.svg" class="w-3.5 h-3.5" /><span>Vence: 31/12/2025</span></div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
-  </div>
-
-  <!-- Botones de Paginación (Solo Desktop) -->
-  <div class="hidden md:flex gap-3 justify-center">
-    <button class="bg-white border border-blue-400 flex font-bold h-8 hover:bg-blue-50 items-center justify-center pb-0.5 rounded-full shadow-sm text-lg text-blue-500 transition w-8">‹</button>
-    <button class="bg-white border border-blue-400 flex font-bold h-8 hover:bg-blue-50 items-center justify-center pb-0.5 rounded-full shadow-sm text-lg text-blue-500 transition w-8">›</button>
-  </div>
+    <!-- FLECHAS -->
+    <div class="hidden md:flex gap-3 justify-center mt-4 animate-fade-in">
+      <button (click)="scrollContainer(expiringContainer, 'left')" class="bg-white border border-blue-400 flex font-bold h-8 hover:bg-blue-50 items-center justify-center pb-0.5 rounded-full shadow-sm text-lg text-blue-500 transition w-8 cursor-pointer select-none">‹</button>
+      <button (click)="scrollContainer(expiringContainer, 'right')" class="bg-white border border-blue-400 flex font-bold h-8 hover:bg-blue-50 items-center justify-center pb-0.5 rounded-full shadow-sm text-lg text-blue-500 transition w-8 cursor-pointer select-none">›</button>
+    </div>
+  }
 </section>
