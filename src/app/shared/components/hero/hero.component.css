@@ -1,14 +1,67 @@
+/* Limpieza para que nada se corte */
+section {
+  overflow: visible !important;
+}
+
+.hero-coupon {
+    overflow: visible !important;
+}
+
+/* 🎟️ MORDIDAS TICKET */
+.hero-coupon::before,
+.hero-coupon::after {
+  content: '';
+  position: absolute;
+  background: #f8fafc; /* Color de fondo de tu web */
+  border-radius: 50%;
+  z-index: 30;
+}
+
+/* Desktop: Mordidas laterales */
+@media (min-width: 768px) {
+  .hero-coupon::before,
+  .hero-coupon::after {
+    top: 50%;
+    transform: translateY(-50%);
+    width: 48px;
+    height: 48px;
+  }
+  .hero-coupon::before { left: -24px; }
+  .hero-coupon::after { right: -24px; }
+}
+
+/* Móvil: Mordidas arriba y abajo */
+@media (max-width: 767px) {
+  .hero-coupon::before,
+  .hero-coupon::after {
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 50px;
+  }
+  .hero-coupon::before { top: -25px; }
+  .hero-coupon::after { bottom: -25px; }
+}
+
+/* ESTILO HASHTAG (Original que tenías) */
 .hashtag-wrapper {
   position: absolute;
-  right: 17px;
-  bottom: -68px;
-  width: 395px;
-  height: 104px;
+  right: 28px;
+  bottom: -55px;
+  width: 320px;
+  height: 85px;
+}
+
+@media (max-width: 767px) {
+    .hashtag-wrapper {
+        display: none; /* Ocultar en móvil si prefieres el estilo de Figma móvil */
+    }
 }
 
 .hashtag-wrapper img {
   width: 100%;
   height: 100%;
+  object-fit: contain;
   display: block;
 }
 
@@ -19,9 +72,8 @@
     align-items: center;
     justify-content: center;
     color: #fff;
-    font-size: 30px;
-    font-weight: 500;
-    pointer-events: none;
-    top: 26px;
-    left: 40px;
+    font-size: 26px;
+    font-weight: 600;
+    padding-top: 25px;
+    padding-left: 10px;
 }

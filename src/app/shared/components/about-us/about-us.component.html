@@ -1,30 +1,39 @@
-<!-- QUIÉNES SOMOS - SECCIÓN FULL WIDTH -->
-<section class="w-full bg-[#F5F8FC] mt-20 py-20">
+<!-- SECCIÓN QUIÉNES SOMOS -->
+<section class="w-full bg-[#F5F8FC] mt-12 md:mt-24 py-12 md:py-20 font-museo">
+  <div class="max-w-[1320px] mx-auto px-4">
 
-  <!-- CONTENEDOR CENTRADO -->
-  <div class="max-w-[1280px] mx-auto px-4">
-
-    <h2 class="text-3xl font-semibold text-center text-[#0E225C] mb-12">
+    <h2 class="text-[28px] md:text-[36px] font-medium text-center text-[#0E225C] mb-8 md:mb-14">
       ¿Quiénes somos?
     </h2>
 
-    <!-- TARJETA PRINCIPAL -->
-    <div class="relative rounded-[32px] overflow-hidden">
+    <!-- CONTENEDOR TICKET PRINCIPAL -->
+    <!-- h-[580px] en móvil para dar espacio a la imagen vertical -->
+    <div class="about-ticket-wrapper relative rounded-[40px] overflow-hidden shadow-xl bg-white h-[580px] md:h-[480px]">
 
-      <!-- Imagen de fondo -->
+      <!-- Imagen de fondo móvil -->
       <img
-        src="assets/img/about-us.png"
-        alt="Quiénes somos"
-        class="w-full h-[420px] object-cover"
+        src="assets/img/about.png"
+        alt="Quiénes somos móvil"
+        class="block md:hidden w-full h-full object-cover"
       />
 
-      <!-- Caja azul tipo ticket -->
-      <div class="absolute left-12 top-1/2 -translate-y-1/2
-                  bg-[#538CFF] text-white
-                  max-w-[420px] p-8 rounded-[24px]
-                  shadow-xl">
+      <!-- Imagen de fondo desktop -->
+      <img
+        src="assets/img/about-us.png"
+        alt="Quiénes somos desktop"
+        class="hidden md:block w-full h-full object-cover"
+      />
 
-        <p class="text-sm leading-relaxed">
+      <!-- CAJA CELESTE (Ticket pequeño) -->
+      <!-- En móvil: absoluta, abajo y centrada. En Desktop: absoluta a la izquierda centrada verticalmente -->
+      <div class="about-info-ticket absolute
+                  bottom-6 left-1/2 -translate-x-1/2 w-[90%]
+                  md:bottom-auto md:translate-x-0 md:left-12 md:top-1/2 md:-translate-y-1/2 md:w-[420px]
+                  bg-[#538CFF] text-white
+                  p-6 md:p-10
+                  rounded-[24px] z-20">
+
+        <p class="text-[14px] md:text-[16px] leading-relaxed font-light">
           VIAJERO SV es una plataforma digital que promueve el turismo nacional
           con la diáspora salvadoreña a través de beneficios por medio de cupones
           promocionales en restaurantes, hoteles, tiendas, lugares turísticos,
@@ -32,16 +41,24 @@
         </p>
       </div>
 
-      <!-- Botón (FUERA de la caja azul) -->
+      <!-- BOTÓN DESKTOP (Solo visible en md: en adelante) -->
       <button
-        class="absolute bottom-10 right-12
-               bg-white text-[#0E225C]
-               px-8 py-3 rounded-full
-               font-semibold shadow-md"
+        class="hidden md:block absolute bottom-10 right-12
+               bg-white text-[#0E225C] hover:bg-[#f0f5ff]
+               hover:shadow-xl transform hover:-translate-y-0.5
+               px-10 py-3 rounded-full
+               font-bold shadow-lg transition z-20"
       >
         Conocer más
       </button>
 
+    </div>
+
+    <!-- BOTÓN MÓVIL (Fuera del contenedor principal para quedar debajo) -->
+    <div class="flex justify-center mt-8 md:hidden">
+      <button class="w-[70%] bg-[#538CFF] text-white py-4 rounded-full font-medium transition transform hover:-translate-y-0.5 shadow-md">
+        Conocer más
+      </button>
     </div>
 
   </div>

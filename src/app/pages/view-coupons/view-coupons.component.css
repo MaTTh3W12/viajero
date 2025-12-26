@@ -1,0 +1,12 @@
+.badge-descuento {
+	width: 106px;
+	height: 45px;
+	border-radius: 8px;
+	padding: 10px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	opacity: 1;
+}
+
