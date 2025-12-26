@@ -37,8 +37,10 @@
           Quiénes somos
         </a>
 
-        <!-- CONTACTO (Sin routerLink aún, pero preparado) -->
-        <a class="px-4 py-2 rounded-full text-[#0E225C] bg-[#F4F7FD] hover:bg-gray-100 transition-all duration-300 text-sm font-medium font-museo cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md">
+        <!-- CONTACTO -->
+        <a routerLink="/contact"
+            routerLinkActive="!bg-[#0E225C] !text-white shadow-md"
+            class="px-4 py-2 rounded-full text-[#0E225C] bg-[#F4F7FD] hover:bg-gray-100 transition-all duration-300 text-sm font-medium font-museo cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md">
           Contacto
         </a>
 
@@ -120,7 +122,8 @@
           <div class="w-[234px] h-0 border-t-[3px] border-[#E6EDFF] mx-auto"></div>
 
           <a class="w-full text-center py-3.5 hover:bg-white/40 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer"
-            (click)="open = false">
+             routerLinkActive="bg-[#E6EDFF] font-bold text-[#4F8CFF]"
+             routerLink="/contact" (click)="open = false">
             Contacto
           </a>
 

@@ -17,8 +17,8 @@ export const routes: Routes = [
     path: 'view-coupons',
     loadComponent: () => import('./pages/view-cupon/view-cupon').then(m => m.ViewCupon)
   },
-  /*{
+  {
     path: 'contact',
-    loadComponent: () => import('./pages/contact/contact.component').then(m => m.ContactComponent)
-  }*/
+    loadComponent: () => import('./pages/contact/contact').then(m => m.Contact)
+  }
 ];
