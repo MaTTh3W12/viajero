@@ -1,0 +1,34 @@
+/* Efecto de mordida del Banner */
+.hero-ticket-notches::before,
+.hero-ticket-notches::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 60px;
+    height: 60px;
+    /* IMPORTANTE: Debe ser el color exacto del fondo de tu sitio tras el banner */
+    background: #F9FBFF;
+    border-radius: 50%;
+    z-index: 20;
+}
+
+/* Las mordidas se posicionan relativas al section de 1530px, no a la pantalla entera */
+.hero-ticket-notches::before {
+    left: -14px; /* Ajustado para que "muerda" el borde del contenedor de 1530px */
+}
+
+.hero-ticket-notches::after {
+    right: -14px;
+}
+
+/* Ajuste para móvil: mordidas más pequeñas para que no tapen texto */
+@media (max-width: 768px) {
+    .hero-ticket-notches::before,
+    .hero-ticket-notches::after {
+        width: 40px;
+        height: 40px;
+    }
+    .hero-ticket-notches::before { left: -6px; }
+    .hero-ticket-notches::after { right: -6px; }
+}

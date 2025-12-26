@@ -1,77 +1,128 @@
-<section class="max-w-[1280px] mx-auto mt-24 text-center">
+<section class="max-w-[1320px] mx-auto mt-12 md:mt-24 text-center px-4">
 
-  <!-- Título -->
-  <h2 class="text-[28px] font-semibold text-[#0E225C] mb-12">
+  <!-- Título: Más pequeño en móvil (text-2xl) y original en escritorio -->
+  <h2 class="text-2xl md:text-[32px] font-medium text-[#0E225C] mb-8 md:mb-14 font-museo">
     Explorar categorías
   </h2>
 
-  <!-- Slider -->
-  <div class="flex items-center justify-center gap-6 mt-10">
+  <!-- Slider Container -->
+  <div class="flex items-center justify-center gap-4 md:gap-8">
 
-    <!-- Flecha izquierda -->
-    <button class="w-9 h-9 flex items-center justify-center
-         rounded-full border border-[#538CFF]
-         text-[#538CFF] text-lg">
-      ‹
+    <!-- Flecha izquierda: Se oculta en móviles muy pequeños si prefieres scroll táctil, o se hace más pequeña -->
+    <button (click)="prev()" class="hidden sm:flex w-9 h-9 md:w-11 md:h-11 items-center justify-center rounded-full border border-[#538CFF] text-[#538CFF] hover:bg-blue-50 transition-colors">
+      <span class="text-xl md:text-2xl leading-none -mt-1">‹</span>
     </button>
 
-    <!-- Categorías -->
-    <div class="flex gap-6">
+        <!-- Contenedor de Categorías: scroll horizontal en móvil; en desktop ocultamos overflow
+          y limitamos el ancho para mostrar un carrusel centrado como en Figma -->
+        <div #sliderContainer class="flex gap-4 md:gap-8 overflow-x-auto md:overflow-hidden pb-4 md:pb-0 no-scrollbar md:w-[920px]" (mouseenter)="pauseAutoplay()" (mouseleave)="resumeAutoplay()" (touchstart)="pauseAutoplay()">
 
       <!-- Alojamiento -->
-      <div class="flex items-center h-16 bg-[#F4F7FB]
-         rounded-full pr-8 gap-4">
-
-        <!-- ICONO (ocupa TODO el alto) -->
-        <div class="w-16 h-16 rounded-full
-           bg-[#FFF8D2]
-           flex items-center justify-center">
-          <img src="assets/icons/double-bed.svg" class="w-7 h-7" />
+      <div class="flex items-center h-[60px] md:h-[86px] bg-[#F4F7FB] rounded-full pr-6 md:pr-10 gap-3 md:gap-5 shadow-sm flex-shrink-0">
+        <!-- Círculo: 60px móvil / 86px desktop -->
+        <div class="w-[60px] h-[60px] md:w-[86px] md:h-[86px] rounded-full bg-[#FFF8D2] flex items-center justify-center flex-shrink-0">
+          <img src="assets/icons/double-bed.svg" class="w-[35px] h-[35px] md:w-[50px] md:h-[50px] object-contain" />
         </div>
-
-        <!-- TEXTO -->
-        <span class="text-[#0E225C] text-sm font-medium">
+        <span class="text-[#0E225C] text-sm md:text-[18px] font-medium font-museo whitespace-nowrap">
           Alojamiento
         </span>
       </div>
 
-      <!-- Alimentos -->
-      <div class="flex items-center h-16 bg-[#F4F7FB]
-         rounded-full pr-8 gap-4">
-
-        <div class="w-16 h-16 rounded-full
-           bg-[#ABE9FF]
-           flex items-center justify-center">
-          <img src="assets/icons/dinner.svg" class="w-7 h-7" />
+      <!-- Alimentos y bebidas -->
+      <div class="flex items-center h-[60px] md:h-[86px] bg-[#F4F7FB] rounded-full pr-6 md:pr-10 gap-3 md:gap-5 shadow-sm flex-shrink-0">
+        <div class="w-[60px] h-[60px] md:w-[86px] md:h-[86px] rounded-full bg-[#ABE9FF] flex items-center justify-center flex-shrink-0">
+          <img src="assets/icons/dinner.svg" class="w-[35px] h-[35px] md:w-[50px] md:h-[50px] object-contain" />
         </div>
-
-        <span class="text-[#0E225C] text-sm font-medium">
+        <span class="text-[#0E225C] text-sm md:text-[18px] font-medium font-museo whitespace-nowrap">
           Alimentos y bebidas
         </span>
       </div>
 
       <!-- Turismo -->
-      <div class="flex items-center h-16 bg-[#F4F7FB]
-         rounded-full pr-8 gap-4">
-
-        <div class="w-16 h-16 rounded-full
-           bg-[#D8D7FF]
-           flex items-center justify-center">
-          <img src="assets/icons/sunbed.svg" class="w-7 h-7" />
+      <div class="flex items-center h-[60px] md:h-[86px] bg-[#F4F7FB] rounded-full pr-6 md:pr-10 gap-3 md:gap-5 shadow-sm flex-shrink-0">
+        <div class="w-[60px] h-[60px] md:w-[86px] md:h-[86px] rounded-full bg-[#D8D7FF] flex items-center justify-center flex-shrink-0">
+          <img src="assets/icons/sunbed.svg" class="w-[35px] h-[35px] md:w-[50px] md:h-[50px] object-contain" />
         </div>
-
-        <span class="text-[#0E225C] text-sm font-medium">
+        <span class="text-[#0E225C] text-sm md:text-[18px] font-medium font-museo whitespace-nowrap">
           Turismo
+        </span>
+      </div>
+
+      <!-- Todos los cupones -->
+      <div class="flex items-center h-[60px] md:h-[86px] bg-[#F4F7FB] rounded-full pr-6 md:pr-10 gap-3 md:gap-5 shadow-sm flex-shrink-0">
+        <div class="w-[60px] h-[60px] md:w-[86px] md:h-[86px] rounded-full bg-[#1438A0] flex items-center justify-center flex-shrink-0">
+          <img src="assets/icons/coupon1.svg" class="w-[35px] h-[35px] md:w-[50px] md:h-[50px] object-contain" />
+        </div>
+        <span class="text-[#0E225C] text-sm md:text-[18px] font-medium font-museo whitespace-nowrap">
+          Todos los cupones
+        </span>
+      </div>
+
+      <!-- Clínicas -->
+      <div class="flex items-center h-[60px] md:h-[86px] bg-[#F4F7FB] rounded-full pr-6 md:pr-10 gap-3 md:gap-5 shadow-sm flex-shrink-0">
+        <div class="w-[60px] h-[60px] md:w-[86px] md:h-[86px] rounded-full bg-[#D7DFFF] flex items-center justify-center flex-shrink-0">
+          <img src="assets/icons/hospital1.svg" class="w-[35px] h-[35px] md:w-[50px] md:h-[50px] object-contain" />
+        </div>
+        <span class="text-[#0E225C] text-sm md:text-[18px] font-medium font-museo whitespace-nowrap">
+          Clínicas
+        </span>
+      </div>
+
+      <!-- Cuidado personal -->
+      <div class="flex items-center h-[60px] md:h-[86px] bg-[#F4F7FB] rounded-full pr-6 md:pr-10 gap-3 md:gap-5 shadow-sm flex-shrink-0">
+        <div class="w-[60px] h-[60px] md:w-[86px] md:h-[86px] rounded-full bg-[#D3F6D2] flex items-center justify-center flex-shrink-0">
+          <img src="assets/icons/lotus1.svg" class="w-[35px] h-[35px] md:w-[50px] md:h-[50px] object-contain" />
+        </div>
+        <span class="text-[#0E225C] text-sm md:text-[18px] font-medium font-museo whitespace-nowrap">
+          Cuidado personal
+        </span>
+      </div>
+
+      <!-- Productos nostálgicos -->
+      <div class="flex items-center h-[60px] md:h-[86px] bg-[#F4F7FB] rounded-full pr-6 md:pr-10 gap-3 md:gap-5 shadow-sm flex-shrink-0">
+        <div class="w-[60px] h-[60px] md:w-[86px] md:h-[86px] rounded-full bg-[#FFD5D6] flex items-center justify-center flex-shrink-0">
+          <img src="assets/icons/product-quality1.svg" class="w-[35px] h-[35px] md:w-[50px] md:h-[50px] object-contain" />
+        </div>
+        <span class="text-[#0E225C] text-sm md:text-[18px] font-medium font-museo whitespace-nowrap">
+          Productos nostálgicos
+        </span>
+      </div>
+
+      <!-- Productos y servicios -->
+      <div class="flex items-center h-[60px] md:h-[86px] bg-[#F4F7FB] rounded-full pr-6 md:pr-10 gap-3 md:gap-5 shadow-sm flex-shrink-0">
+        <div class="w-[60px] h-[60px] md:w-[86px] md:h-[86px] rounded-full bg-[#FFC6B3] flex items-center justify-center flex-shrink-0">
+          <img src="assets/icons/gift-bag1.svg" class="w-[35px] h-[35px] md:w-[50px] md:h-[50px] object-contain" />
+        </div>
+        <span class="text-[#0E225C] text-sm md:text-[18px] font-medium font-museo whitespace-nowrap">
+          Productos y servicios
+        </span>
+      </div>
+
+      <!-- Tour operadores -->
+      <div class="flex items-center h-[60px] md:h-[86px] bg-[#F4F7FB] rounded-full pr-6 md:pr-10 gap-3 md:gap-5 shadow-sm flex-shrink-0">
+        <div class="w-[60px] h-[60px] md:w-[86px] md:h-[86px] rounded-full bg-[#CAFFFB] flex items-center justify-center flex-shrink-0">
+          <img src="assets/icons/traveler1.svg" class="w-[35px] h-[35px] md:w-[50px] md:h-[50px] object-contain" />
+        </div>
+        <span class="text-[#0E225C] text-sm md:text-[18px] font-medium font-museo whitespace-nowrap">
+          Tour operadores
+        </span>
+      </div>
+
+      <!-- Transporte -->
+      <div class="flex items-center h-[60px] md:h-[86px] bg-[#F4F7FB] rounded-full pr-6 md:pr-10 gap-3 md:gap-5 shadow-sm flex-shrink-0">
+        <div class="w-[60px] h-[60px] md:w-[86px] md:h-[86px] rounded-full bg-[#CAFFDC] flex items-center justify-center flex-shrink-0">
+          <img src="assets/icons/bus1.svg" class="w-[35px] h-[35px] md:w-[50px] md:h-[50px] object-contain" />
+        </div>
+        <span class="text-[#0E225C] text-sm md:text-[18px] font-medium font-museo whitespace-nowrap">
+          Transporte
         </span>
       </div>
 
     </div>
 
     <!-- Flecha derecha -->
-    <button class="w-9 h-9 flex items-center justify-center
-         rounded-full border border-[#538CFF]
-         text-[#538CFF] text-lg">
-      ›
+    <button (click)="next()" class="hidden sm:flex w-9 h-9 md:w-11 md:h-11 items-center justify-center rounded-full border border-[#538CFF] text-[#538CFF] hover:bg-blue-50 transition-colors">
+      <span class="text-xl md:text-2xl leading-none -mt-1">›</span>
     </button>
 
   </div>
