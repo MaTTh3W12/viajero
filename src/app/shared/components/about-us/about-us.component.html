@@ -7,25 +7,29 @@
     </h2>
 
     <!-- CONTENEDOR TICKET PRINCIPAL -->
-    <!-- h-auto en móvil para que crezca con el texto, h-[480px] en desktop -->
-    <div class="about-ticket-wrapper relative rounded-[32px] md:rounded-[40px] overflow-hidden shadow-xl bg-white h-auto md:h-[480px] flex flex-col md:block">
+    <!-- h-[580px] en móvil para dar espacio a la imagen vertical -->
+    <div class="about-ticket-wrapper relative rounded-[40px] overflow-hidden shadow-xl bg-white h-[580px] md:h-[480px]">
 
-      <!-- Imagen de fondo -->
-      <div class="h-[250px] md:h-full w-full">
-        <img
-          src="assets/img/about-us.png"
-          alt="Quiénes somos"
-          class="w-full h-full object-cover"
-        />
-      </div>
+      <!-- Imagen de fondo móvil -->
+      <img
+        src="assets/img/about.png"
+        alt="Quiénes somos móvil"
+        class="block md:hidden w-full h-full object-cover"
+      />
 
-      <!-- CAJA AZUL (Ticket pequeño) -->
-      <!-- En móvil: relativa y centrada. En Desktop: absoluta a la izquierda -->
-      <div class="about-info-ticket relative md:absolute md:left-12 md:top-1/2 md:-translate-y-1/2
+      <!-- Imagen de fondo desktop -->
+      <img
+        src="assets/img/about-us.png"
+        alt="Quiénes somos desktop"
+        class="hidden md:block w-full h-full object-cover"
+      />
+
+      <!-- CAJA CELESTE (Ticket pequeño) -->
+      <!-- En móvil: absoluta, abajo y centrada. En Desktop: absoluta a la izquierda centrada verticalmente -->
+      <div class="about-info-ticket absolute
+                  bottom-6 left-1/2 -translate-x-1/2 w-[90%]
+                  md:bottom-auto md:translate-x-0 md:left-12 md:top-1/2 md:-translate-y-1/2 md:w-[420px]
                   bg-[#538CFF] text-white
-                  w-[90%] md:w-[420px]
-                  mx-auto md:mx-0
-                  -mt-12 md:mt-0
                   p-6 md:p-10
                   rounded-[24px] z-20">
 
@@ -35,16 +39,9 @@
           promocionales en restaurantes, hoteles, tiendas, lugares turísticos,
           entre otros.
         </p>
-
-        <!-- En móvil el botón queda mejor dentro o justo debajo si el diseño es vertical -->
-        <div class="block md:hidden mt-6">
-           <button class="w-full bg-white text-[#0E225C] py-3 rounded-full font-bold shadow-md">
-             Conocer más
-           </button>
-        </div>
       </div>
 
-      <!-- BOTÓN DESKTOP -->
+      <!-- BOTÓN DESKTOP (Solo visible en md: en adelante) -->
       <button
         class="hidden md:block absolute bottom-10 right-12
                bg-white text-[#0E225C] hover:bg-[#f0f5ff]
@@ -55,5 +52,13 @@
       </button>
 
     </div>
+
+    <!-- BOTÓN MÓVIL (Fuera del contenedor principal para quedar debajo) -->
+    <div class="flex justify-center mt-8 md:hidden">
+      <button class="w-[70%] bg-[#538CFF] text-white py-4 rounded-full font-medium shadow-md">
+        Conocer más
+      </button>
+    </div>
+
   </div>
 </section>

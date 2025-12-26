@@ -9,29 +9,29 @@
 
       <!-- Desktop Menu -->
       <nav class="hidden md:flex items-center gap-3">
-        <!-- 
+        <!--
            NOTA: routerLinkActive agrega las clases cuando la ruta coincide.
-           He usado !bg-[#0E225C] y !text-white con el signo de exclamación (!) 
+           He usado !bg-[#0E225C] y !text-white con el signo de exclamación (!)
            para forzar que sobrescriban el color base de Tailwind.
         -->
-        
+
         <!-- INICIO (Necesita exact: true) -->
-          <a routerLink="/" 
-            routerLinkActive="!bg-[#0E225C] !text-white shadow-md" 
+          <a routerLink="/"
+            routerLinkActive="!bg-[#0E225C] !text-white shadow-md"
             [routerLinkActiveOptions]="{exact: true}"
             class="px-4 py-2 rounded-full text-[#0E225C] bg-[#F4F7FD] hover:bg-gray-100 transition-all duration-300 text-sm font-medium font-museo cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md">
           Inicio
         </a>
 
         <!-- CUPONES -->
-          <a routerLink="/view-cupon" 
+          <a routerLink="/coupons"
             routerLinkActive="!bg-[#0E225C] !text-white shadow-md"
             class="px-4 py-2 rounded-full text-[#0E225C] bg-[#F4F7FD] hover:bg-gray-100 transition-all duration-300 text-sm font-medium font-museo cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md">
           Cupones
         </a>
 
         <!-- QUIENES SOMOS -->
-          <a routerLink="/about-us" 
+          <a routerLink="/about-us"
             routerLinkActive="!bg-[#0E225C] !text-white shadow-md"
             class="px-4 py-2 rounded-full text-[#0E225C] bg-[#F4F7FD] hover:bg-gray-100 transition-all duration-300 text-sm font-medium font-museo cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md">
           Quiénes somos
@@ -55,8 +55,8 @@
       </nav>
 
       <!-- Botón Hamburguesa -->
-      <button 
-        class="md:hidden text-[#0F2A56] p-2 rounded-md hover:bg-gray-100 transition-opacity duration-200" 
+      <button
+        class="md:hidden text-[#0F2A56] p-2 rounded-md hover:bg-gray-100 transition-opacity duration-200"
         [class.opacity-0]="open"
         (click)="open = !open">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -72,7 +72,7 @@
     <div class="absolute inset-0 bg-black/20 backdrop-blur-[2px] transition-opacity" (click)="open = false"></div>
 
     <div class="relative shadow-2xl overflow-hidden transition-all duration-300 ease-out h-auto border-b border-white/20">
-      
+
       <!-- Cabecera Mobile -->
       <div class="relative bg-white flex items-center justify-end h-16 px-4 z-20">
           <div class="absolute left-1/2 -translate-x-1/2">
@@ -90,7 +90,7 @@
       <!-- Cuerpo Mobile -->
       <div class="relative bg-white/60 backdrop-blur-xl z-10">
         <nav class="flex flex-col items-center py-2 text-[#0E225C] font-museo text-base">
-          
+
           <!-- Inicio Mobile -->
           <a class="w-full text-center py-3.5 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer"
              [routerLinkActiveOptions]="{exact: true}"
@@ -98,38 +98,38 @@
              routerLink="/" (click)="open = false">
             Inicio
           </a>
-          
+
           <div class="w-[234px] h-0 border-t-[3px] border-[#E6EDFF] mx-auto"></div>
-          
+
           <!-- Cupones Mobile -->
           <a class="w-full text-center py-3.5 hover:bg-white/40 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer"
              routerLinkActive="bg-[#E6EDFF] font-bold text-[#4F8CFF]"
-             routerLink="/view-cupon" (click)="open = false">
+             routerLink="/coupons" (click)="open = false">
             Cupones
           </a>
-          
+
           <div class="w-[234px] h-0 border-t-[3px] border-[#E6EDFF] mx-auto"></div>
-          
+
           <!-- Quiénes somos Mobile -->
           <a class="w-full text-center py-3.5 hover:bg-white/40 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer"
              routerLinkActive="bg-[#E6EDFF] font-bold text-[#4F8CFF]"
              routerLink="/about-us" (click)="open = false">
             Quiénes somos
           </a>
-          
+
           <div class="w-[234px] h-0 border-t-[3px] border-[#E6EDFF] mx-auto"></div>
-          
+
           <a class="w-full text-center py-3.5 hover:bg-white/40 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer"
             (click)="open = false">
             Contacto
           </a>
-          
+
           <div class="w-[234px] h-0 border-t-[3px] border-[#E6EDFF] mx-auto"></div>
 
           <a class="w-full text-center py-3.5 hover:bg-white/40 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer">
              Iniciar sesión
           </a>
-          
+
           <div class="w-[234px] h-0 border-t-[3px] border-[#E6EDFF] mx-auto"></div>
 
            <a class="w-full text-center py-3.5 hover:bg-white/40 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer font-medium">

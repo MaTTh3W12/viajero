@@ -21,7 +21,7 @@
     right: -22px;
   }
 
-  /* 🎟️ MORDIDA DE LA CAJA AZUL (Izquierda) */
+  /* 🎟️ MORDIDA DE LA CAJA AZUL (Izquierda) - Solo Desktop */
   .about-info-ticket::before {
     content: '';
     position: absolute;
@@ -36,11 +36,16 @@
   }
 }
 
-/* Ajuste sutil para móvil: quitamos las mordidas si el diseño es apilado */
+/* Ajustes para móvil */
 @media (max-width: 767px) {
     .about-ticket-wrapper {
-        overflow: visible; /* Para que la caja azul pueda sobresalir hacia arriba */
-        background: transparent;
-        box-shadow: none;
+        /* En móvil el contenedor debe ser rígido para que la imagen se vea bien */
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    /* Aseguramos que no haya mordidas en el ticket azul en móvil */
+    .about-info-ticket::before {
+        display: none;
     }
 }

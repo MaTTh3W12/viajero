@@ -10,7 +10,15 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/about-us/about-us.component').then(m => m.AboutUsComponent)
   },
   {
-    path: 'view-cupon',
+    path: 'coupons',
+    loadComponent: () => import('./pages/coupons/coupons.component').then(m => m.CouponsComponent)
+  },
+  {
+    path: 'view-coupons',
     loadComponent: () => import('./pages/view-cupon/view-cupon').then(m => m.ViewCupon)
-  }
+  },
+  /*{
+    path: 'contact',
+    loadComponent: () => import('./pages/contact/contact.component').then(m => m.ContactComponent)
+  }*/
 ];
