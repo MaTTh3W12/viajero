@@ -81,6 +81,11 @@ export class CategoriesSliderComponent implements OnInit, AfterViewInit, OnDestr
     const item = this.items[index];
     if (!item) return;
 
+    if (index === 0) {
+      el.scrollTo({ left: 0, behavior: 'smooth' });
+      return;
+    }
+
     // center the item inside the visible container (works for desktop width-limited carousel)
     const containerWidth = el.clientWidth;
     const itemWidth = item.clientWidth;
