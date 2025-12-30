@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { RenderMode } from '@angular/ssr';
 
 export const routes: Routes = [
   // 🌐 Público
@@ -23,7 +24,8 @@ export const routes: Routes = [
         path: ':id',
         loadComponent: () =>
           import('./Public/pages/view-coupons/view-coupons.component')
-            .then(m => m.ViewCouponsComponent)
+            .then(m => m.ViewCouponsComponent),
+          data: { RenderMode: 'client' }
       }
     ]
   },
