@@ -1,18 +1,12 @@
-<section class="max-w-[1320px] mx-auto px-4 md:px-6 mt-20 mb-20">
+<!-- Contenedor de ahorros: limita el ancho, centra las cards y deja espacio inferior respecto a otros componentes -->
+<section class="max-w-[1320px] mx-auto px-4 md:px-6 mb-12 md:mb-16">
 
-  <!-- TÍTULO -->
-  <h2 class="text-2xl md:text-[32px] font-medium text-[#0E225C] text-center mb-10 md:mb-12 font-museo">
-    Comienza a Ahorrar
-  </h2>
-
-  <!-- GRID: 2 columnas en móvil (grid-cols-2), 4 en escritorio (lg:grid-cols-4) -->
-  <!-- gap-3 en móvil para ahorrar espacio, gap-8 en desktop -->
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-8">
 
     <!-- CARD 1 -->
     <div
-      [routerLink]="['/view-coupons']"
-      class="cursor-pointer cursor-pointer bg-white rounded-[16px] md:rounded-[24px] shadow-md border border-gray-50 overflow-hidden flex flex-col h-full hover:shadow-xl transition-shadow duration-300">
+      [routerLink]="['/coupons', 123]"
+      class="cursor-pointer bg-white rounded-[16px] md:rounded-[24px] shadow-md border border-gray-50 overflow-hidden flex flex-col h-full hover:shadow-xl transition-shadow duration-300">
       <div class="relative h-[110px] md:h-[180px] flex-shrink-0">
         <img src="assets/img/card1.png" alt="" class="w-full h-full object-cover" />
         <!-- MORDIDA SUPERIOR: Ajustada para móvil -->
@@ -53,7 +47,7 @@
 
     <!-- CARD 2 -->
     <div
-      [routerLink]="['/view-coupons']"
+      [routerLink]="['/coupons', 123]"
       class="cursor-pointer bg-white rounded-[16px] md:rounded-[24px] shadow-md border border-gray-50 overflow-hidden flex flex-col h-full hover:shadow-xl transition-shadow duration-300">
       <div class="relative h-[110px] md:h-[180px] flex-shrink-0">
         <img src="assets/img/card2.png" alt="" class="w-full h-full object-cover" />
@@ -84,7 +78,7 @@
 
     <!-- CARD 3 -->
     <div
-      [routerLink]="['/view-coupons']"
+      [routerLink]="['/coupons', 123]"
       class="cursor-pointer bg-white rounded-[16px] md:rounded-[24px] shadow-md border border-gray-50 overflow-hidden flex flex-col h-full hover:shadow-xl transition-shadow duration-300">
       <div class="relative h-[110px] md:h-[180px] flex-shrink-0">
         <img src="assets/img/card3.png" alt="" class="w-full h-full object-cover" />
@@ -115,7 +109,7 @@
 
     <!-- CARD 4 -->
     <div
-      [routerLink]="['/view-coupons']"
+      [routerLink]="['/coupons', 123]"
       class="cursor-pointer bg-white rounded-[16px] md:rounded-[24px] shadow-md border border-gray-50 overflow-hidden flex flex-col h-full hover:shadow-xl transition-shadow duration-300">
       <div class="relative h-[110px] md:h-[180px] flex-shrink-0">
         <img src="assets/img/card4.png" alt="" class="w-full h-full object-cover" />
@@ -144,14 +138,6 @@
       </div>
     </div>
 
-  </div>
-
-  <!-- BOTÓN VER MÁS -->
-  <div class="flex justify-center mt-12 px-[7.5rem] md:px-0">
-    <button
-      class="w-full md:w-fit md:px-24 h-[45px] rounded-xl border-2 border-[#538CFF] text-[#538CFF] text-sm md:text-[15px] font-bold hover:bg-[#538CFF] hover:text-white transition-all duration-300 font-museo active:scale-95">
-      Ver más
-    </button>
   </div>
 
 </section>
