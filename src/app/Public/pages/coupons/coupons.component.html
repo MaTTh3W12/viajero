@@ -37,130 +37,152 @@
 
         <!-- 1. Todos los cupones (ACTIVO) -->
         <div
-          class="flex items-center h-[54px] md:h-[64px] bg-[#F4F7FB] rounded-full pr-4 md:pr-6 gap-2 md:gap-3 shadow-md flex-shrink-0 transition-all cursor-pointer">
+          (click)="selectCategory('all')"
+          [ngClass]="{ 'shadow-md ring-4 ring-[#DDE9FF]': isActive('all'), 'hover:bg-gray-100': !isActive('all') }"
+          class="flex items-center h-[54px] md:h-[64px] rounded-full pr-4 bg-[#F4F7FB] md:pr-6 gap-2 md:gap-3 flex-shrink-0 transition-all cursor-pointer">
           <div
             class="w-[54px] h-[54px] md:w-[64px] md:h-[64px] rounded-full bg-[#1438A0] flex items-center justify-center flex-shrink-0">
             <img src="assets/icons/coupon1.svg"
-              class="w-[28px] h-[28px] md:w-[32px] md:h-[32px] object-contain brightness-0 invert" alt="Icon" />
+              [ngClass]="{ 'brightness-0 invert': isActive('all') }"
+              class="w-[28px] h-[28px] md:w-[32px] md:h-[32px] object-contain" alt="Icon" />
           </div>
-          <span class="text-[#0E225C] text-[12px] md:text-[15px] font-medium font-museo leading-tight">
+          <span class="text-[12px] md:text-[15px] text-[#0E225C] font-medium font-museo leading-tight">
             Todos los cupones
           </span>
         </div>
 
         <!-- 2. Alojamiento -->
         <div
-          class="flex items-center h-[54px] md:h-[64px] bg-[#F4F7FB] rounded-full pr-4 md:pr-6 gap-2 md:gap-3 shadow-sm flex-shrink-0 hover:bg-gray-100 transition-all cursor-pointer">
+          (click)="selectCategory('alojamiento')"
+          [ngClass]="{ 'shadow-md ring-4 ring-[#DDE9FF]': isActive('alojamiento'), 'hover:bg-gray-100': !isActive('alojamiento') }"
+          class="flex items-center h-[54px] md:h-[64px] bg-[#F4F7FB] rounded-full pr-4 md:pr-6 gap-2 md:gap-3 flex-shrink-0 transition-all cursor-pointer">
           <div
-            class="w-[54px] h-[54px] md:w-[64px] md:h-[64px] rounded-full bg-[#FFF8D2] flex items-center justify-center flex-shrink-0">
+            class="w-[54px] h-[54px] md:w-[64px] md:h-[64px] bg-[#FFF8D2] rounded-full flex items-center justify-center flex-shrink-0">
             <img src="assets/icons/double-bed.svg" class="w-[28px] h-[28px] md:w-[32px] md:h-[32px] object-contain"
               alt="Icon" />
           </div>
-          <span class="text-[#0E225C] text-[12px] md:text-[15px] font-medium font-museo leading-tight">
+          <span class="text-[12px] md:text-[15px] font-medium font-museo leading-tight text-[#0E225C]">
             Alojamiento
           </span>
         </div>
 
         <!-- 3. Alimentos y bebidas -->
         <div
-          class="flex items-center h-[54px] md:h-[64px] bg-[#F4F7FB] rounded-full pr-4 md:pr-6 gap-2 md:gap-3 shadow-sm flex-shrink-0 hover:bg-gray-100 transition-all cursor-pointer">
+          (click)="selectCategory('alimentos')"
+          [ngClass]="{ 'shadow-md ring-4 ring-[#DDE9FF]': isActive('alimentos'), 'hover:bg-gray-100': !isActive('alimentos') }"
+          class="flex items-center h-[54px] md:h-[64px] rounded-full pr-4 md:pr-6 bg-[#F4F7FB] gap-2 md:gap-3 flex-shrink-0 transition-all cursor-pointer">
           <div
-            class="w-[54px] h-[54px] md:w-[64px] md:h-[64px] rounded-full bg-[#ABE9FF] flex items-center justify-center flex-shrink-0">
+            class="w-[54px] h-[54px] bg-[#ABE9FF] md:w-[64px] md:h-[64px] rounded-full flex items-center justify-center flex-shrink-0">
             <img src="assets/icons/dinner.svg" class="w-[28px] h-[28px] md:w-[32px] md:h-[32px] object-contain"
               alt="Icon" />
           </div>
-          <span class="text-[#0E225C] text-[12px] md:text-[15px] font-medium font-museo leading-tight">
+          <span class="text-[12px] md:text-[15px] font-medium font-museo leading-tight text-[#0E225C]">
             Alimentos y bebidas
           </span>
         </div>
 
         <!-- 4. Clínicas -->
         <div
-          class="flex items-center h-[54px] md:h-[64px] bg-[#F4F7FB] rounded-full pr-4 md:pr-6 gap-2 md:gap-3 shadow-sm flex-shrink-0 hover:bg-gray-100 transition-all cursor-pointer">
+          (click)="selectCategory('clinicas')"
+          [ngClass]="{ 'shadow-md ring-4 ring-[#DDE9FF]': isActive('clinicas'), 'hover:bg-gray-100': !isActive('clinicas') }"
+          class="flex items-center h-[54px] md:h-[64px] bg-[#F4F7FB] rounded-full pr-4 md:pr-6 gap-2 md:gap-3 flex-shrink-0 transition-all cursor-pointer">
           <div
-            class="w-[54px] h-[54px] md:w-[64px] md:h-[64px] rounded-full bg-[#D7DFFF] flex items-center justify-center flex-shrink-0">
+            class="w-[54px] bg-[#D7DFFF] h-[54px] md:w-[64px] md:h-[64px] rounded-full flex items-center justify-center flex-shrink-0">
             <img src="assets/icons/hospital1.svg" class="w-[28px] h-[28px] md:w-[32px] md:h-[32px] object-contain"
               alt="Icon" />
           </div>
-          <span class="text-[#0E225C] text-[12px] md:text-[15px] font-medium font-museo leading-tight">
+          <span class="text-[12px] md:text-[15px] font-medium font-museo leading-tight text-[#0E225C]">
             Clínicas
           </span>
         </div>
 
         <!-- 5. Cuidado personal -->
         <div
-          class="flex items-center h-[54px] md:h-[64px] bg-[#F4F7FB] rounded-full pr-4 md:pr-6 gap-2 md:gap-3 shadow-sm flex-shrink-0 hover:bg-gray-100 transition-all cursor-pointer">
+          (click)="selectCategory('cuidado')"
+          [ngClass]="{ 'shadow-md ring-4 ring-[#DDE9FF]': isActive('cuidado'), 'hover:bg-gray-100': !isActive('cuidado') }"
+          class="flex items-center h-[54px] md:h-[64px] rounded-full pr-4 bg-[#F4F7FB] md:pr-6 gap-2 md:gap-3 flex-shrink-0 transition-all cursor-pointer">
           <div
-            class="w-[54px] h-[54px] md:w-[64px] md:h-[64px] rounded-full bg-[#D3F6D2] flex items-center justify-center flex-shrink-0">
+            class="w-[54px] h-[54px] bg-[#D3F6D2] md:w-[64px] md:h-[64px] rounded-full flex items-center justify-center flex-shrink-0">
             <img src="assets/icons/lotus1.svg" class="w-[28px] h-[28px] md:w-[32px] md:h-[32px] object-contain"
               alt="Icon" />
           </div>
-          <span class="text-[#0E225C] text-[12px] md:text-[15px] font-medium font-museo leading-tight">
+          <span class="text-[12px] md:text-[15px] font-medium font-museo leading-tight text-[#0E225C]">
             Cuidado personal
           </span>
         </div>
 
         <!-- 6. Productos nostálgicos -->
         <div
-          class="flex items-center h-[54px] md:h-[64px] bg-[#F4F7FB] rounded-full pr-4 md:pr-6 gap-2 md:gap-3 shadow-sm flex-shrink-0 hover:bg-gray-100 transition-all cursor-pointer">
+          (click)="selectCategory('nostalgicos')"
+          [ngClass]="{ 'shadow-md ring-4 ring-[#DDE9FF]': isActive('nostalgicos'), 'hover:bg-gray-100': !isActive('nostalgicos') }"
+          class="flex items-center h-[54px] md:h-[64px] rounded-full pr-4 md:pr-6 bg-[#F4F7FB] gap-2 md:gap-3 flex-shrink-0 transition-all cursor-pointer">
           <div
-            class="w-[54px] h-[54px] md:w-[64px] md:h-[64px] rounded-full bg-[#FFD5D6] flex items-center justify-center flex-shrink-0">
+            class="w-[54px] h-[54px] md:w-[64px] md:h-[64px] bg-[#FFD5D6] rounded-full flex items-center justify-center flex-shrink-0">
             <img src="assets/icons/product-quality1.svg"
-              class="w-[28px] h-[28px] md:w-[32px] md:h-[32px] object-contain" alt="Icon" />
+              class="w-[28px] h-[28px] md:w-[32px] md:h-[32px] object-contain"
+              alt="Icon" />
           </div>
-          <span class="text-[#0E225C] text-[12px] md:text-[15px] font-medium font-museo leading-tight">
+          <span class="text-[12px] md:text-[15px] text-[#0E225C] font-medium font-museo leading-tight">
             Productos nostálgicos
           </span>
         </div>
 
         <!-- 7. Productos y servicios -->
         <div
-          class="flex items-center h-[54px] md:h-[64px] bg-[#F4F7FB] rounded-full pr-4 md:pr-6 gap-2 md:gap-3 shadow-sm flex-shrink-0 hover:bg-gray-100 transition-all cursor-pointer">
+          (click)="selectCategory('productos')"
+          [ngClass]="{ 'shadow-md ring-4 ring-[#DDE9FF]': isActive('productos'), 'hover:bg-gray-100': !isActive('productos') }"
+          class="flex items-center h-[54px] md:h-[64px] rounded-full pr-4 md:pr-6 bg-[#F4F7FB] gap-2 md:gap-3 flex-shrink-0 transition-all cursor-pointer">
           <div
-            class="w-[54px] h-[54px] md:w-[64px] md:h-[64px] rounded-full bg-[#FFC6B3] flex items-center justify-center flex-shrink-0">
+            class="w-[54px] h-[54px] md:w-[64px] md:h-[64px] bg-[#FFC6B3] rounded-full flex items-center justify-center flex-shrink-0">
             <img src="assets/icons/gift-bag1.svg" class="w-[28px] h-[28px] md:w-[32px] md:h-[32px] object-contain"
               alt="Icon" />
           </div>
-          <span class="text-[#0E225C] text-[12px] md:text-[15px] font-medium font-museo leading-tight">
+          <span class="text-[12px] md:text-[15px] font-medium font-museo leading-tight text-[#0E225C]">
             Productos y servicios
           </span>
         </div>
 
         <!-- 8. Tour operadores -->
         <div
-          class="flex items-center h-[54px] md:h-[64px] bg-[#F4F7FB] rounded-full pr-4 md:pr-6 gap-2 md:gap-3 shadow-sm flex-shrink-0 hover:bg-gray-100 transition-all cursor-pointer">
+          (click)="selectCategory('tour')"
+          [ngClass]="{ 'shadow-md ring-4 ring-[#DDE9FF]': isActive('tour'), 'hover:bg-gray-100': !isActive('tour') }"
+          class="flex items-center h-[54px] md:h-[64px] rounded-full bg-[#F4F7FB] pr-4 md:pr-6 gap-2 md:gap-3 flex-shrink-0 transition-all cursor-pointer">
           <div
-            class="w-[54px] h-[54px] md:w-[64px] md:h-[64px] rounded-full bg-[#CAFFFB] flex items-center justify-center flex-shrink-0">
+            class="w-[54px] h-[54px] md:w-[64px] md:h-[64px] bg-[#CAFFFB] rounded-full flex items-center justify-center flex-shrink-0">
             <img src="assets/icons/traveler1.svg" class="w-[28px] h-[28px] md:w-[32px] md:h-[32px] object-contain"
               alt="Icon" />
           </div>
-          <span class="text-[#0E225C] text-[12px] md:text-[15px] font-medium font-museo leading-tight">
+          <span class="text-[12px] md:text-[15px] font-medium font-museo leading-tight text-[#0E225C]">
             Tour operadores
           </span>
         </div>
 
         <!-- 9. Transporte -->
         <div
-          class="flex items-center h-[54px] md:h-[64px] bg-[#F4F7FB] rounded-full pr-4 md:pr-6 gap-2 md:gap-3 shadow-sm flex-shrink-0 hover:bg-gray-100 transition-all cursor-pointer">
+          (click)="selectCategory('transporte')"
+          [ngClass]="{ 'shadow-md ring-4 ring-[#DDE9FF]': isActive('transporte'), 'hover:bg-gray-100': !isActive('transporte') }"
+          class="flex items-center h-[54px] md:h-[64px] rounded-full pr-4 md:pr-6 bg-[#F4F7FB] gap-2 md:gap-3 flex-shrink-0 transition-all cursor-pointer">
           <div
-            class="w-[54px] h-[54px] md:w-[64px] md:h-[64px] rounded-full bg-[#CAFFDC] flex items-center justify-center flex-shrink-0">
+            class="w-[54px] h-[54px] md:w-[64px] md:h-[64px] bg-[#CAFFDC] rounded-full flex items-center justify-center flex-shrink-0">
             <img src="assets/icons/bus1.svg" class="w-[28px] h-[28px] md:w-[32px] md:h-[32px] object-contain"
               alt="Icon" />
           </div>
-          <span class="text-[#0E225C] text-[12px] md:text-[15px] font-medium font-museo leading-tight">
+          <span class="text-[12px] md:text-[15px] font-medium font-museo leading-tight text-[#0E225C]">
             Transporte
           </span>
         </div>
 
         <!-- 10. Turismo -->
         <div
-          class="flex items-center h-[54px] md:h-[64px] bg-[#F4F7FB] rounded-full pr-4 md:pr-6 gap-2 md:gap-3 shadow-sm flex-shrink-0 hover:bg-gray-100 transition-all cursor-pointer">
+          (click)="selectCategory('turismo')"
+          [ngClass]="{ 'shadow-md ring-4 ring-[#DDE9FF]': isActive('turismo'), 'hover:bg-gray-100': !isActive('turismo') }"
+          class="flex items-center h-[54px] md:h-[64px] rounded-full pr-4 md:pr-6 bg-[#F4F7FB] gap-2 md:gap-3 flex-shrink-0 transition-all cursor-pointer">
           <div
-            class="w-[54px] h-[54px] md:w-[64px] md:h-[64px] rounded-full bg-[#D8D7FF] flex items-center justify-center flex-shrink-0">
+            class="w-[54px] h-[54px] md:w-[64px] md:h-[64px] bg-[#D8D7FF] rounded-full flex items-center justify-center flex-shrink-0">
             <img src="assets/icons/sunbed.svg" class="w-[28px] h-[28px] md:w-[32px] md:h-[32px] object-contain"
               alt="Icon" />
           </div>
-          <span class="text-[#0E225C] text-[12px] md:text-[15px] font-medium font-museo leading-tight">
+          <span class="text-[12px] md:text-[15px] font-medium font-museo leading-tighttext-[#0E225C]">
             Turismo
           </span>
         </div>
@@ -210,7 +232,9 @@
   </section>
 
   <!-- LISTA DE CUPONES (Aquí iría tu otro componente) -->
-  <app-savings></app-savings>
+  <section class="mt-6 md:mt-8">
+    <app-savings></app-savings>
+  </section>
 
 </section>
 <app-contac-us></app-contac-us>

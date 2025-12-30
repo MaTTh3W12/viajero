@@ -1,0 +1,19 @@
+.admin-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f4f4f5;
+  color: #111827;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.admin-header {
+  padding: 1rem 2rem;
+  background-color: #111827;
+  color: #f9fafb;
+}
+
+.admin-main {
+  flex: 1;
+  padding: 2rem;
+}
