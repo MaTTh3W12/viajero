@@ -23,10 +23,12 @@
         </a>
 
         <!-- CUPONES -->
-        <a routerLink="/coupons" routerLinkActive="!bg-[#0E225C] !text-white shadow-md"
-          class="px-4 py-2 rounded-full text-[#0E225C] bg-[#F4F7FD] hover:bg-gray-100 transition-all duration-300 text-sm font-medium font-museo cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md">
+        <a routerLink="/coupons" [ngClass]="{
+    '!bg-[#0E225C] !text-white shadow-md': isCouponsActive()
+  }" class="px-4 py-2 rounded-full text-[#0E225C] bg-[#F4F7FD] hover:bg-gray-100 transition-all duration-300 text-sm font-medium font-museo cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md">
           Cupones
         </a>
+
 
         <!-- QUIENES SOMOS -->
         <a routerLink="/about-us" routerLinkActive="!bg-[#0E225C] !text-white shadow-md"
@@ -104,7 +106,9 @@
 
           <!-- Cupones Mobile -->
           <a class="w-full text-center py-3.5 hover:bg-white/40 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer"
-            routerLink="/coupons" routerLinkActive="bg-[#E6EDFF] font-bold text-[#4F8CFF]" (click)="open = false">
+            routerLink="/coupons" [ngClass]="{
+    'bg-[#E6EDFF] font-bold text-[#4F8CFF]': isCouponsActive()
+  }" (click)="open = false">
             Cupones
           </a>
 

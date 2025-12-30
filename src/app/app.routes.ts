@@ -1,52 +1,58 @@
 import { Routes } from '@angular/router';
-import { RenderMode } from '@angular/ssr';
 
 export const routes: Routes = [
-  // 🌐 Público
+
+  // 🌐 PÚBLICO
   {
     path: '',
-    loadComponent: () => import('./Public/pages/home/home.component').then(m => m.HomeComponent)
+    loadComponent: () =>
+      import('./Public/pages/home/home.component')
+        .then(m => m.HomeComponent),
   },
   {
     path: 'about-us',
-    loadComponent: () => import('./Public/pages/about-us/about-us.component').then(m => m.AboutUsComponent)
+    loadComponent: () =>
+      import('./Public/pages/about-us/about-us.component')
+        .then(m => m.AboutUsComponent),
   },
   {
     path: 'coupons',
-    children: [
-      {
-        path: '',
-        loadComponent: () =>
-          import('./Public/pages/coupons/coupons.component')
-            .then(m => m.CouponsComponent)
-      },
-      {
-        path: ':id',
-        loadComponent: () =>
-          import('./Public/pages/view-coupons/view-coupons.component')
-            .then(m => m.ViewCouponsComponent),
-          data: { RenderMode: 'client' }
-      }
-    ]
+    loadComponent: () =>
+      import('./Public/pages/coupons/coupons.component')
+        .then(m => m.CouponsComponent),
+  },
+  {
+    path: 'view-coupons/:id',
+    loadComponent: () =>
+      import('./Public/pages/view-coupons/view-coupons.component')
+        .then(m => m.ViewCouponsComponent),
   },
   {
     path: 'contact',
-    loadComponent: () => import('./Public/pages/contact/contact.component').then(m => m.ContactComponent)
+    loadComponent: () =>
+      import('./Public/pages/contact/contact.component')
+        .then(m => m.ContactComponent),
   },
 
-  // 🔐 Auth
+  // 🔐 AUTH
   {
     path: 'login',
-    loadComponent: () => import('./auth/login/login.component').then(m => m.LoginComponent)
+    loadComponent: () =>
+      import('./auth/login/login.component')
+        .then(m => m.LoginComponent),
   },
   {
     path: 'register',
-    loadComponent: () => import('./auth/register/register.component').then(m => m.RegisterComponent)
+    loadComponent: () =>
+      import('./auth/register/register.component')
+        .then(m => m.RegisterComponent),
   },
 
-  // 📊 Private
+  // 📊 DASHBOARD
   {
     path: 'dashboard',
-    loadChildren: () => import('./Private/private.routes').then(m => m.DASHBOARD_ROUTES)
+    loadChildren: () =>
+      import('./Private/private.routes')
+        .then(m => m.DASHBOARD_ROUTES),
   }
 ];
