@@ -1,0 +1,64 @@
+<section class="max-w-[1530px] mx-auto mt-12 px-6 relative overflow-visible">
+
+  <!-- CONTENEDOR PRINCIPAL (Ticket) -->
+  <!-- md:overflow-visible es clave para que los redondeados y mordidas se vean bien -->
+  <div class="hero-coupon relative flex flex-col md:flex-row h-auto md:h-[520px] overflow-visible">
+
+    <!-- COLUMNA AZUL (Izquierda) -->
+    <!-- md:rounded-[40px] para redondear las 4 esquinas en desktop -->
+    <div class="relative order-2 md:order-1 w-full md:w-[500px] flex-shrink-0 bg-[#0E225C] text-white p-10 md:p-16 flex flex-col justify-center z-20 rounded-b-[40px] md:rounded-[40px]">
+
+      <h1 class="text-[38px] md:text-[54px] font-bold leading-[1.1] mb-6 tracking-tight font-museo text-center md:text-left">
+        ¡El Salvador<br />te espera!
+      </h1>
+
+      <p class="text-base md:text-xl leading-relaxed opacity-90 text-center md:text-left max-w-[340px] mx-auto md:mx-0 font-museo mb-8 md:mb-10">
+        Adquiere cupones exclusivos para la <span class="text-[#538CFF] font-semibold">diáspora</span> y disfruta de la belleza de tu país
+      </p>
+
+      <!-- BOTÓN DESKTOP -->
+      <button class="hidden md:block bg-[#538CFF] hover:bg-blue-400 transition-all px-10 py-4 rounded-full text-lg font-medium w-fit shadow-lg active:scale-95 font-museo">
+        Explorar cupones
+      </button>
+
+      <!-- BOTÓN MÓVIL (Se mantiene igual) -->
+      <div class="absolute md:hidden top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30">
+        <button class="bg-[#538CFF] px-8 py-3 rounded-full text-base font-medium shadow-xl whitespace-nowrap active:scale-95 font-museo">
+          Explorar cupones
+        </button>
+      </div>
+    </div>
+
+    <!-- COLUMNA IMAGEN (Derecha) -->
+    <!-- md:ml-[-60px] hace que la imagen se meta bajo la caja azul -->
+    <!-- redondeamos la esquina superior y inferior derecha en desktop -->
+    <div class="relative order-1 md:order-2 flex-1 h-[350px] md:h-full overflow-hidden rounded-t-[40px] md:rounded-tr-[40px] md:rounded-br-[40px] md:ml-[-60px] z-10">
+      <img
+        src="assets/img/volcanes.png"
+        alt="Volcanes"
+        class="w-full h-full object-cover"
+      />
+
+      <!-- Texto "Tours a" - Ajustado por el nuevo margen de la imagen -->
+      <div class="absolute top-[13%] left-[13%] md:top-[18%] md:left-[13%] text-white pointer-events-none">
+        <p class="text-2xl md:text-4xl font-medium tracking-wide drop-shadow-md font-museo">
+          Tours a
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- HASHTAG (Pestaña) -->
+  <!-- Versión móvil: visible en small, flotando a la derecha arriba -->
+  <div class="hashtag-wrapper-mobile font-museo block md:hidden absolute right-[3rem] top-4 z-[30]">
+    <span class="text-white text-xs font-semibold drop-shadow-md">#DiásporaSV</span>
+  </div>
+
+  <!-- Versión desktop: oculta en móvil, se mantiene abajo como antes -->
+  <div class="hashtag-wrapper font-museo hidden md:block">
+      <img src="assets/img/hashtag-tab.svg" alt="" />
+      <span>#DiásporaSV</span>
+  </div>
+
+</section>

@@ -1,0 +1,257 @@
+<!-- Navbar principal del sitio -->
+<app-navbar></app-navbar>
+
+<!-- CONTENEDOR PRINCIPAL DE FONDO -->
+<div class="min-h-screen bg-[#F4F7FE] flex items-center justify-center p-4 md:p-10 font-sans">
+
+  <!-- WRAPPER CENTRAL -->
+  <div class="w-full max-w-[1220px] mx-auto">
+        <!-- ========================================== -->
+        <!-- VISTA MÓVIL (Visible < md)                 -->
+        <!-- Tarjeta vertical como el diseño            -->
+        <!-- ========================================== -->
+        <div class="md:hidden flex justify-center">
+          <div class="w-full max-w-[360px] bg-white rounded-[40px] shadow-sm overflow-hidden flex flex-col">
+
+            <!-- PARTE SUPERIOR: AZUL / IMAGEN -->
+            <div class="bg-[#2B6FF4] h-[300px] relative flex flex-col px-6 pt-8 pb-10 justify-between overflow-hidden">
+              <!-- Imagen de fondo -->
+              <img src="assets/img/card1.png" class="absolute inset-0 w-full h-full  object-center pointer-events-none" alt="Fondo">
+              <!-- Degradado inferior sobre la imagen -->
+              <div class="absolute inset-x-0 bottom-0 h-1/2 pointer-events-none" style="background: linear-gradient(180deg, rgba(83, 140, 255, 0) 43.68%, #538CFF 100%);"></div>
+
+              <!-- Notch superior -->
+              <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 w-[60px] h-[60px] bg-[#F4F7FE] rounded-b-full z-10"></div>
+
+              <!-- Título y badge centrados, más pegados hacia abajo -->
+              <div class="absolute inset-x-0 bottom-4 z-10 text-center">
+                <h3 class="text-white text-[32px] font-medium leading-none mb-4">
+                  Avistamiento de Ballenas
+                </h3>
+                <div class="inline-flex bg-white text-[#0E225C] font-bold text-[20px] px-3 py-2 rounded-[10px]">
+                  10% OFF
+                </div>
+              </div>
+            </div>
+
+            <!-- CONTENIDO INFERIOR -->
+            <div class="px-6 py-6 space-y-6">
+              <!-- Botón principal -->
+              <button class="bg-[#111C44] hover:bg-[#1B2559] text-white font-bold py-3 px-8 rounded-[12px] shadow-md text-center mx-auto block">
+                Adquirir cupón
+              </button>
+
+              <!-- Ubicación y fecha -->
+              <div class="space-y-2 flex flex-col items-center">
+                <div class="flex items-center gap-2 text-[#0E225C] text-sm">
+                  <img src="assets/icons/location.svg" alt="Ubicación" class="h-4 w-4" />
+                  <span>Los Cóbanos, Sonsonate</span>
+                </div>
+                <div class="flex items-center gap-2 text-[#0E225C] text-sm">
+                  <img src="assets/icons/clock.svg" alt="Fecha límite" class="h-4 w-4" />
+                  <span>Vence: 31 diciembre 2025</span>
+                </div>
+              </div>
+
+              <!-- Texto descriptivo -->
+              <div class="text-[#0E225C] text-[13px] leading-relaxed space-y-3">
+                <p>
+                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas vel tellus vulputate, molestie leo non, venenatis mi. Ut elementum sem ut risus lacinia mattis.
+                </p>
+                <ul class="list-disc pl-5 space-y-1">
+                  <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                  <li>Suspendisse vestibulum massa sed pulvinar vehicula.</li>
+                  <li>Phasellus nec augue tempor, tristique massa nec, scelerisque mi.</li>
+                  <li>Donec scelerisque velit sed ligula condimentum, quis tincidunt risus pretium.</li>
+                  <li>Aenean aliquam quam blandit lectus sagittis, in tempus mi mattis.</li>
+                </ul>
+              </div>
+
+              <!-- Botones secundarios -->
+              <div class="flex flex-col gap-3 items-center">
+                <button class="inline-flex items-center justify-center gap-2 border border-[#538CFF] text-[#538CFF] px-3 py-2 rounded-[10px] text-sm font-bold mx-auto">
+                  <img src="assets/icons/location.svg" alt="Ubicación" class="h-5 w-5" />
+                  Ver ubicación
+                </button>
+                <button class="inline-flex items-center justify-center gap-2 border border-[#538CFF] text-[#538CFF] px-4 py-2 rounded-[10px] text-sm font-bold mx-auto">
+                  <img src="assets/icons/phone.png" alt="Contacto" class="h-5 w-5" />
+                  Contacto: 7000-0000
+                </button>
+              </div>
+
+              <!-- Footer logo y redes (sin línea superior en móvil) -->
+              <div class="pt-4 flex flex-col items-center">
+                <div class="flex flex-row items-center gap-3 mb-6">
+                  <div class="w-14 h-14 bg-[#FCD34D] rounded-full flex items-center justify-center shrink-0">
+                    <img src="assets/img/Mapa-El-Salvador.png" class="w-17 h-auto object-contain" alt="Mapa">
+                  </div>
+                  <div class="text-[#2B6FF4] text-sm leading-tight text-left">
+                    El Salvador<br>Tours
+                  </div>
+                </div>
+                <div class="flex flex-col items-center gap-2">
+                  <span class="text-[#538CFF] text-sm">Síguenos en:</span>
+                  <div class="flex gap-3">
+                    <a href="#" class="opacity-40 hover:opacity-100"><img src="assets/icons/fb.png" class="w-5 h-5" alt="FB"></a>
+                    <a href="#" class="opacity-40 hover:opacity-100"><img src="assets/icons/x.png" class="w-5 h-5" alt="X"></a>
+                    <a href="#" class="opacity-40 hover:opacity-100"><img src="assets/icons/instagram.png" class="w-5 h-5" alt="IG"></a>
+                    <a href="#" class="opacity-40 hover:opacity-100"><img src="assets/icons/youtube.png" class="w-5 h-5" alt="YT"></a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- VISTA ESCRITORIO (Visible >= md)           -->
+        <!-- Aquí está el diseño IDÉNTICO a la imagen   -->
+        <!-- ========================================== -->
+        <div class="hidden md:flex flex-row justify-center items-stretch gap-8 h-auto min-h-[600px]">
+
+          <!-- ================================================= -->
+          <!-- TARJETA IZQUIERDA (Detalles - BLANCA)             -->
+          <!-- ================================================= -->
+          <div class="flex-1 bg-white rounded-[40px] shadow-sm p-12 relative flex flex-col w-[718px]">
+
+            <!-- Muesca (Notch) Superior -->
+            <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 w-[60px] h-[60px] bg-[#F4F7FE] rounded-b-full z-10"></div>
+
+            <!-- Header Pequeño -->
+            <div class="text-[#BBBBBB] text-[16px] font-medium mb-4 mt-2">El Salvador Tours</div>
+
+            <!-- Título y Badge -->
+            <div class="flex flex-row items-center gap-4 mb-6">
+              <div class="bg-[#538CFF] text-white font-bold text-[20px] badge-descuento">
+                10% OFF
+              </div>
+              <h1 class="text-[#0E225C] text-[2.5rem] font-medium leading-none">
+                Avistamiento de Ballenas
+              </h1>
+            </div>
+
+            <!-- Ubicación y Fecha -->
+            <div class="space-y-3 mb-8">
+              <div class="flex items-center gap-3 text-[#0E225C]">
+                <img src="assets/icons/location.svg" alt="Ubicación" class="h-5 w-5" />
+                <span class="text-[16px]">Los Cóbanos, Sonsonate</span>
+              </div>
+              <div class="flex items-center gap-3 text-[#0E225C]">
+                <img src="assets/icons/clock.svg" alt="Fecha límite" class="h-5 w-5" />
+                <span class="text-[16px]">Vence: 31 diciembre 2025</span>
+              </div>
+            </div>
+
+            <!-- Texto Descriptivo -->
+            <div class="text-[#0E225C] text-[14px] leading-relaxed text-left mb-auto">
+              <p class="mb-4">
+                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas vel tellus vulputate, molestie leo non, venenatis mi. Ut elementum sem ut risus lacinia mattis. Fusce eleifend ullamcorper mi, at dictum odio volutpat sed. Curabitur ultrices sed justo ut finibus. Vivamus tempor est at enim commodo aliquam. Quisque quis eros dictum, feugiat arcu eu, suscipit lectus. Vivamus eget semper purus, sed porta tellus. Nam vel pulvinar est, in mollis libero.
+              </p>
+              <ul class="list-disc pl-5 space-y-1 mb-6">
+                <li>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</li>
+                <li>Suspendisse vestibulum massa sed pulvinar vehicula.</li>
+                <li>Phasellus nec augue tempor, tristique massa nec, scelerisque mi.</li>
+                <li>Donec scelerisque velit sed ligula condimentum, quis tincidunt risus pretium.</li>
+                <li>Aenean aliquam quam blandit lectus sagittis, in tempus mi mattis.</li>
+              </ul>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="flex gap-4 mb-10 mt-6 justify-center">
+              <button class="inline-flex items-center justify-center gap-2 border border-[#538CFF] text-[#538CFF] px-6 py-2 rounded-full hover:bg-blue-50 transition font-bold">
+                <img src="assets/icons/location.svg" alt="Ubicación" class="h-6 w-6" />
+                Ver ubicación
+              </button>
+              <button class="inline-flex items-center justify-center gap-2 border border-[#538CFF] text-[#538CFF] px-6 py-2 rounded-full hover:bg-blue-50 transition font-bold">
+                <img src="assets/icons/phone.png" alt="Ubicación" class="h-6 w-6" />
+                Contacto: 7000-0000
+              </button>
+            </div>
+
+            <!-- Footer Separador -->
+            <div class="w-full h-[5px] bg-[#F4F7FD] mb-8 rounded-full"></div>
+
+            <!-- Footer Info -->
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-4">
+                <div class="w-14 h-14 bg-[#FCD34D] rounded-full flex items-center justify-center overflow-hidden shrink-0">
+                  <img src="assets/img/Mapa-El-Salvador.png" class="w-17 h-auto object-contain" alt="Mapa">
+                </div>
+                <div class="text-[#538CFF] leading-tight">
+                  El Salvador<br>Tours
+                </div>
+              </div>
+
+              <div class="flex flex-col items-center gap-1">
+                <span class="text-[#538CFF] text-sm text-center">Síguenos en:</span>
+                <div class="flex gap-3">
+                    <a href="#" class="opacity-60 hover:opacity-100"><img src="assets/icons/fb.png" class="w-5 h-5" alt="FB"></a>
+                    <a href="#" class="opacity-60 hover:opacity-100"><img src="assets/icons/x.png" class="w-5 h-5" alt="X"></a>
+                    <a href="#" class="opacity-60 hover:opacity-100"><img src="assets/icons/instagram.png" class="w-5 h-5" alt="IG"></a>
+                    <a href="#" class="opacity-60 hover:opacity-100"><img src="assets/icons/youtube.png" class="w-5 h-5" alt="YT"></a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ================================================= -->
+          <!-- TARJETA DERECHA (Visual + Compra)                 -->
+          <!-- Corrección: Se divide en Parte Azul y Parte Blanca-->
+          <!-- ================================================= -->
+          <div class="w-[466px] h-[500px] shrink-0 flex flex-col rounded-[40px] overflow-hidden shadow-sm">
+            <!-- PARTE SUPERIOR: AZUL / IMAGEN -->
+            <div class="bg-[#2B6FF4] h-[100%] relative flex flex-col p-8 justify-between overflow-hidden">
+              <!-- Imagen de fondo adaptada a todo el área azul -->
+              <img src="assets/img/card1.png" class="absolute inset-0 w-full h-full object-center pointer-events-none" alt="Fondo">
+              <!-- Degradado inferior sobre la imagen -->
+              <div class="absolute inset-x-0 bottom-0 h-1/2 pointer-events-none" style="background: linear-gradient(180deg, rgba(83, 140, 255, 0) 43.68%, #538CFF 100%);"></div>
+
+                <!-- Notch Muesca Superior -->
+                <div class="absolute -top-8 left-1/2 transform -translate-x-1/2 w-[60px] h-[60px] bg-[#F4F7FE] rounded-b-full z-10"></div>
+
+                <!-- QR Icon -->
+                <div class="absolute top-8 right-8 z-20 text-white">
+                  <img src="assets/icons/qr_blanco.png" alt="Ubicación" class="h-10 w-10"/>
+                </div>
+
+                <!-- Badge y título juntos sobre la imagen -->
+                <div class="relative z-10 mt-auto mb-0">
+                   <!-- Badge Blanco con texto azul -->
+                   <div class="bg-[#FFFFFF] text-[#538CFF] font-bold text-[20px] badge-descuento">
+                    10% OFF
+                  </div>
+                  <!-- Título justo debajo del badge -->
+                  <h2 class="text-white text-[2.5rem] font-medium leading-tight mt-4">
+                     Avistamiento de Ballenas
+                  </h2>
+                </div>
+            </div>
+
+            <!-- PARTE INFERIOR: BLANCA / BOTÓN -->
+            <div class="bg-white h-[30%] p-8 flex items-center justify-between">
+                <!-- Logo Izquierda -->
+                <div class="flex items-center gap-3">
+                   <div class="w-14 h-14 bg-[#FCD34D] rounded-full flex items-center justify-center shrink-0">
+                      <img src="assets/img/Mapa-El-Salvador.png" class="w-17 h-auto object-contain" alt="Mapa">
+                   </div>
+                   <div class="text-[#2B6FF4] text-sm leading-tight">
+                      El Salvador<br>Tours
+                   </div>
+                </div>
+
+                <!-- Botón Derecha -->
+                <button class="bg-[#111C44] hover:bg-[#1B2559] text-white font-bold py-2 px-3 rounded-[10px] transition shadow-lg">
+                  Adquirir cupón
+                </button>
+            </div>
+
+          </div>
+        </div>
+  </div>
+</div>
+
+<app-featured-deals></app-featured-deals>
+<app-contac-us></app-contac-us>
+<app-related-pages></app-related-pages>
+<app-footer></app-footer>
