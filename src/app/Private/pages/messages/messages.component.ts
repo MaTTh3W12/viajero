@@ -2,14 +2,13 @@ import { Component } from '@angular/core';
 import { TopbarComponent } from '../../../shared/dashboard/topbar/topbar.component';
 
 @Component({
-  selector: 'app-home',
+  selector: 'app-messages',
   imports: [
     TopbarComponent
   ],
-  standalone: true,
-  templateUrl: './home.component.html',
-  styleUrl: './home.component.css',
+  templateUrl: './messages.component.html',
+  styleUrl: './messages.component.css',
 })
-export class HomeComponent {
+export class MessagesComponent {
 
 }
