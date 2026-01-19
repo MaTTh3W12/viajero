@@ -1,1 +1,204 @@
-<p>topbar works!</p>
+<div class="rounded-t-[30px] px-6 py-5 flex items-center" [class]="bgClass">
+
+  @if (variant === 'dashboard') {
+  <div class="w-full flex justify-end">
+    <h1 class="text-3xl font-medium text-white">
+      Bienvenido,
+      <span class="text-[#0E225C]">{{ userName }}</span>
+    </h1>
+  </div>
+  }
+
+  @if (variant === 'coupons') {
+  <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-8">
+
+    <!-- ===================== -->
+    <!-- COLUMNA IZQUIERDA 50% -->
+    <!-- ===================== -->
+    <div class="flex flex-col gap-4">
+
+      <!-- FILA 1: Empresa / Tipo -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="text-sm text-[#0E225C] mb-1 block">Empresa</label>
+          <select class="w-full bg-white rounded-xl px-4 py-3 pr-10 text-[#0E225C]
+                   appearance-none
+                   bg-[url('/assets/icons/select-arrow.png')]
+                   bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
+                   focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40">
+            <option>Seleccionar</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-sm text-[#0E225C] mb-1 block">Tipo</label>
+          <select class="w-full bg-white rounded-xl px-4 py-3 pr-10 text-[#0E225C]
+                   appearance-none
+                   bg-[url('/assets/icons/select-arrow.png')]
+                   bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
+                   focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40">
+            <option>Seleccionar</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- FILA 2: Título (50%) / Botón (50%) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-end">
+
+        <!-- Título -->
+        <div>
+          <label class="text-sm text-[#0E225C] mb-1 block">Título</label>
+          <input type="text" placeholder="Buscar título de cupón" class="w-full bg-white rounded-xl px-4 py-3 text-[#0E225C]
+                   focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40" />
+        </div>
+
+        <!-- Botón filtrar -->
+        <button class="w-full flex items-center justify-center gap-2
+                 bg-[#538CFF] text-white rounded-full
+                 px-8 py-3
+                 transition-all duration-300 ease-out
+                 hover:bg-[#3F7BFF] hover:shadow-lg hover:-translate-y-[1px]
+                 active:scale-95
+                 focus:outline-none focus:ring-4 focus:ring-[#538CFF]/30">
+          <img src="assets/icons/search.png" class="w-4 h-4" />
+          Filtrar
+        </button>
+
+      </div>
+    </div>
+
+    <!-- ===================== -->
+    <!-- COLUMNA DERECHA 50% -->
+    <!-- ===================== -->
+    <div class="flex items-end justify-end">
+      <div class="flex items-center gap-3">
+        <span class="text-sm text-[#0E225C] whitespace-nowrap">
+          Ordenar por:
+        </span>
+        <select class="bg-white rounded-xl px-4 py-2 pr-10 text-[#0E225C]
+                 appearance-none
+                 bg-[url('/assets/icons/select-arrow2.png')]
+                 bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
+                 focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40">
+          <option selected>Fecha</option>
+        </select>
+      </div>
+    </div>
+
+  </div>
+  }
+
+  @if (variant === 'messages') {
+  <div class="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
+
+    <!-- Categoría -->
+    <div>
+      <label class="text-sm text-[#0E225C] mb-1 block">Categoría</label>
+      <select class="w-full bg-white rounded-xl px-4 py-3 pr-10 text-[#0E225C]
+               appearance-none
+               bg-[url('/assets/icons/select-arrow.png')]
+               bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
+               focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40">
+        <option>Seleccionar</option>
+      </select>
+    </div>
+
+    <!-- Empresa -->
+    <div>
+      <label class="text-sm text-[#0E225C] mb-1 block">Nombre de la empresa</label>
+      <select class="w-full bg-white rounded-xl px-4 py-3 pr-10 text-[#0E225C]
+               appearance-none
+               bg-[url('/assets/icons/select-arrow.png')]
+               bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
+               focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40">
+        <option>Seleccionar</option>
+      </select>
+    </div>
+
+    <!-- Botón filtrar -->
+    <button class="w-full flex items-center justify-center gap-2
+             bg-[#538CFF] text-white rounded-full
+             px-6 py-3
+             transition-all duration-300 ease-out
+             hover:bg-[#3F7BFF] hover:shadow-lg hover:-translate-y-[1px]
+             active:scale-95
+             focus:outline-none focus:ring-4 focus:ring-[#538CFF]/30">
+      <img src="assets/icons/search.png" class="w-4 h-4" />
+      Filtrar
+    </button>
+
+    <!-- Ordenar -->
+    <div class="flex items-center gap-3 justify-start lg:justify-end">
+      <span class="text-sm text-[#0E225C] whitespace-nowrap">
+        Ordenar por:
+      </span>
+      <select class="bg-white rounded-xl px-4 py-2 pr-10 text-[#0E225C]
+               appearance-none
+               bg-[url('/assets/icons/select-arrow2.png')]
+               bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
+               focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40">
+        <option selected>Fecha</option>
+      </select>
+    </div>
+
+  </div>
+  }
+
+
+  @if (variant === 'companies') {
+  <div class="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
+
+    <!-- Categoría -->
+    <div>
+      <label class="text-sm text-[#0E225C] mb-1 block">Categoría</label>
+      <select class="w-full bg-white rounded-xl px-4 py-3 pr-10 text-[#0E225C]
+               appearance-none
+               bg-[url('/assets/icons/select-arrow.png')]
+               bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
+               focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40">
+        <option>Seleccionar</option>
+      </select>
+    </div>
+
+    <!-- Empresa -->
+    <div>
+      <label class="text-sm text-[#0E225C] mb-1 block">Nombre de la empresa</label>
+      <select class="w-full bg-white rounded-xl px-4 py-3 pr-10 text-[#0E225C]
+               appearance-none
+               bg-[url('/assets/icons/select-arrow.png')]
+               bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
+               focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40">
+        <option>Seleccionar</option>
+      </select>
+    </div>
+
+    <!-- Botón filtrar -->
+    <button class="w-full flex items-center justify-center gap-2
+             bg-[#538CFF] text-white rounded-full
+             px-6 py-3
+             transition-all duration-300 ease-out
+             hover:bg-[#3F7BFF] hover:shadow-lg hover:-translate-y-[1px]
+             active:scale-95
+             focus:outline-none focus:ring-4 focus:ring-[#538CFF]/30">
+      <img src="assets/icons/search.png" class="w-4 h-4" />
+      Filtrar
+    </button>
+
+    <!-- Ordenar -->
+    <div class="flex items-center gap-3 justify-start lg:justify-end">
+      <span class="text-sm text-[#0E225C] whitespace-nowrap">
+        Ordenar por:
+      </span>
+      <select class="bg-white rounded-xl px-4 py-2 pr-10 text-[#0E225C]
+               appearance-none
+               bg-[url('/assets/icons/select-arrow2.png')]
+               bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
+               focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40">
+        <option selected>Fecha</option>
+      </select>
+    </div>
+
+  </div>
+  }
+
+</div>

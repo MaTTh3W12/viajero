@@ -1,0 +1,143 @@
+<div class="bg-white p-6 shadow-sm overflow-x-auto">
+
+  <!-- DESKTOP TABLE -->
+  <div class="hidden md:block">
+    <table class="w-full border-separate border-spacing-y-3">
+
+      <!-- HEADER -->
+      <thead>
+        <tr class="text-center text-sm text-[#0E225C]">
+          @for (col of config.columns; track trackColumn($index, col)) {
+          <th class="px-3">{{ col.label }}</th>
+          }
+
+          @if (config.actions?.length) {
+          <th class="px-3">Opciones</th>
+          }
+        </tr>
+      </thead>
+
+      <!-- BODY -->
+      <tbody class="text-center">
+        @for (row of data; track trackRow($index, row)) {
+        <tr class="
+          bg-white rounded-xl shadow-sm
+          transition-all duration-300 ease-out
+          hover:shadow-md hover:-translate-y-[1px]
+          hover:bg-[#F9FBFF]
+        ">
+
+          @for (col of config.columns; track trackColumn($index, col)) {
+          <td class="px-3 py-3 transition-colors duration-200">
+
+            <!-- BADGE -->
+            @if (col.type === 'badge') {
+            <span class="px-4 py-2 rounded-lg text-sm font-medium
+              transition-all duration-200
+              hover:brightness-105" [ngClass]="getBadgeClass(asString(row[col.key]))">
+              {{ row[col.key] }}
+            </span>
+            }
+
+            <!-- BOX -->
+            @else if (col.type === 'box') {
+            <span class="inline-block min-w-[80px] px-4 py-2 rounded-lg text-sm font-medium
+              transition-transform transition-shadow duration-200
+              hover:scale-[1.04] hover:shadow-sm" [ngClass]="
+                col.boxStyle === 'expiration'
+                  ? getExpirationBoxClass(asString(row[col.key]))
+                  : col.boxStyle === 'blue'
+                    ? 'bg-[#538CFF] text-white'
+                    : 'bg-[#F4F7FD] text-[#0E225C]'
+              ">
+              {{ row[col.key] }}
+            </span>
+            }
+
+            <!-- TEXT -->
+            @else {
+            <span class="text-[#0E225C] text-sm break-words max-w-[260px] block">
+              {{ row[col.key] }}
+            </span>
+            }
+
+          </td>
+          }
+
+          <!-- ACTIONS -->
+          @if (config.actions?.length) {
+          <td class="px-3 py-3 transition-colors duration-200">
+            <div class="flex items-center justify-center gap-2">
+              @for (action of config.actions; track trackAction($index, action)) {
+              <button (click)="action.action(row)"
+                class="w-8 h-8 flex items-center justify-center rounded-full
+                  transition-all duration-200 ease-out
+                  hover:scale-110 hover:shadow-md
+                  active:scale-95
+                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                [ngClass]="action.bgClass">
+                <img [src]="action.icon" class="w-4 h-4" />
+              </button>
+              }
+            </div>
+          </td>
+          }
+
+        </tr>
+        }
+      </tbody>
+
+    </table>
+  </div>
+
+  <!-- MOBILE -->
+  <div class="block md:hidden space-y-4">
+    @for (row of data; track trackRow($index, row)) {
+    <div class="bg-white rounded-xl shadow-sm p-4 space-y-3
+        transition-all duration-300 ease-out
+        animate-[fadeInUp_.35s_ease-out]">
+
+      @for (col of config.columns; track trackColumn($index, col)) {
+      <div class="flex justify-between text-sm transition-transform duration-150 active:scale-[0.98]">
+        <span class="text-gray-400">{{ col.label }}</span>
+
+        @if (col.type === 'badge') {
+        <span class="px-3 py-1 rounded-lg text-sm" [ngClass]="getBadgeClass(asString(row[col.key]))">
+          {{ row[col.key] }}
+        </span>
+        }
+
+        @else if (col.type === 'box') {
+        <span class="px-3 py-1 rounded-lg text-sm" [ngClass]="
+                col.boxStyle === 'expiration'
+                  ? getExpirationBoxClass(asString(row[col.key]))
+                  : col.boxStyle === 'blue'
+                    ? 'bg-[#538CFF] text-white'
+                    : 'bg-[#F4F7FD] text-[#0E225C]'
+              ">
+          {{ row[col.key] }}
+        </span>
+        }
+
+        @else {
+        <span class="text-[#0E225C] font-medium text-right">
+          {{ row[col.key] }}
+        </span>
+        }
+      </div>
+      }
+
+      <!-- ACTIONS -->
+      <div class="flex justify-end gap-2 pt-2">
+        @for (action of config.actions; track trackAction($index, action)) {
+        <button (click)="action.action(row)" class="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-150 active:scale-90"
+          [ngClass]="action.bgClass">
+          <img [src]="action.icon" class="w-4 h-4" />
+        </button>
+        }
+      </div>
+
+    </div>
+    }
+  </div>
+</div>

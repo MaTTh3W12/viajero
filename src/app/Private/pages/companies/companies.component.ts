@@ -2,14 +2,13 @@ import { Component } from '@angular/core';
 import { TopbarComponent } from '../../../shared/dashboard/topbar/topbar.component';
 
 @Component({
-  selector: 'app-home',
+  selector: 'app-companies',
   imports: [
     TopbarComponent
   ],
-  standalone: true,
-  templateUrl: './home.component.html',
-  styleUrl: './home.component.css',
+  templateUrl: './companies.component.html',
+  styleUrl: './companies.component.css',
 })
-export class HomeComponent {
+export class CompaniesComponent {
 
 }
