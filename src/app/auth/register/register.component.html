@@ -1,0 +1,210 @@
+<div class="flex items-center justify-center min-h-screen px-8 bg-white">
+	<div class="flex items-stretch w-full max-w-6xl">
+		<!-- Lado izquierdo: logo -->
+		<div class="items-center justify-center hidden w-1/2 pr-8 md:flex">
+			<a routerLink="/" class="flex items-center gap-3 transition-transform duration-300 transform cursor-pointer hover:scale-105">
+				<img src="assets/img/logo.png" alt="ViajeroSV" class="h-[113px] w-[385px]" />
+			</a>
+		</div>
+
+		<!-- Lado derecho: card de registro -->
+		<div class="flex items-center justify-center w-full md:w-1/2">
+			<div class="flex flex-col items-center w-full">
+				<!-- Logo móvil, fuera del contenedor azul -->
+				<a routerLink="/" class="flex justify-center mb-4 cursor-pointer md:hidden">
+					<img src="assets/img/logo.png" alt="ViajeroSV" class="w-auto h-10" />
+				</a>
+
+				<div class="w-full bg-[#F4F7FD] rounded-[40px] py-10 md:py-12 px-6 md:px-10 lg:px-14 shadow-sm">
+					<div class="w-full max-w-[360px] mx-auto">
+					<!-- Encabezado -->
+					<div class="mb-8">
+						<p class="text-3xl md:text-4xl font-semibold text-[#538CFF] leading-tight">Bienvenido</p>
+						<p class="mt-1 text-2xl font-semibold text-[#111E60]">Registro de empresa</p>
+					</div>
+
+					<!-- Formulario -->
+					<form class="space-y-4">
+					<!-- Nombre comercial -->
+					<div>
+						<label class="block text-sm font-medium text-[#1A2440] mb-1">Nombre comercial</label>
+						<input
+							type="text"
+							placeholder="Ingresar nombre"
+							class="w-full rounded-[10px] border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+						/>
+					</div>
+
+					<!-- NIT -->
+					<div>
+						<label class="block text-sm font-medium text-[#1A2440] mb-1">NIT</label>
+						<input
+							type="text"
+							placeholder="0000-000000-000-0"
+							class="w-full rounded-[10px] border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+						/>
+					</div>
+
+					<!-- Correo empresarial -->
+					<div>
+						<label class="block text-sm font-medium text-[#1A2440] mb-1">Correo empresarial</label>
+						<input
+							type="email"
+							placeholder="Ingresar correo"
+							class="w-full rounded-[10px] border border-slate-200 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+						/>
+					</div>
+
+					<!-- Teléfono -->
+					<div>
+						<label class="block text-sm font-medium text-[#1A2440] mb-1">Teléfono</label>
+						<div class="flex w-full rounded-[10px] border border-[#E0E7FF] bg-white overflow-hidden shadow-[0_1px_0_rgba(15,23,42,0.04)] focus-within:ring-2 focus-within:ring-blue-400 focus-within:border-transparent">
+							<!-- Selector de país -->
+							<button
+								type="button"
+								class="flex items-center gap-2 bg-[#E5EDFF] px-4 py-2.5 text-sm border-r border-[#E0E7FF] rounded-[10px]"
+							>
+								<div class="h-6 w-8 rounded-[6px] overflow-hidden border border-[#1A2C60]/10 shadow-sm flex-shrink-0">
+									<img
+										src="assets/icons/banderaSalvador.png"
+										alt="Bandera de El Salvador"
+										class="object-cover w-full h-full"
+									/>
+								</div>
+								<span class="text-sm font-semibold text-[#538CFF]">+503</span>
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 20 20"
+									fill="currentColor"
+									class="w-4 h-4 text-[#538CFF]"
+								>
+									<path
+										fill-rule="evenodd"
+										d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
+										clip-rule="evenodd"
+									/>
+								</svg>
+							</button>
+
+							<!-- Número -->
+							<input
+								type="tel"
+								placeholder="0000-0000"
+								class="flex-1 bg-white px-4 py-2.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none"
+							/>
+						</div>
+					</div>
+
+					<!-- Crear contraseña -->
+					<div>
+						<label class="block text-sm font-medium text-[#1A2440] mb-1">Crear contraseña</label>
+						<div class="relative">
+							<input
+								[type]="showPassword ? 'text' : 'password'"
+								placeholder="Crea una contraseña"
+								class="w-full rounded-md border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+							/>
+							<button
+								type="button"
+								(click)="togglePasswordVisibility('password')"
+								class="absolute inset-y-0 right-0 flex items-center pr-3 transition-transform duration-150 text-slate-400 hover:text-slate-600 active:scale-90"
+								aria-label="Mostrar u ocultar contraseña"
+							>
+								<!-- Ojo cerrado -->
+								<svg
+									*ngIf="!showPassword"
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1.8"
+									class="w-5 h-5 transition-opacity duration-150"
+								>
+									<path d="M2 12s3-6 10-6 10 6 10 6-3 6-10 6S2 12 2 12Z" />
+									<circle cx="12" cy="12" r="3" />
+								</svg>
+								<!-- Ojo abierto con línea (ocultando) -->
+								<svg
+									*ngIf="showPassword"
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1.8"
+									class="w-5 h-5 transition-opacity duration-150"
+								>
+									<path d="M2 12s3-6 10-6 10 6 10 6-3 6-10 6S2 12 2 12Z" />
+									<circle cx="12" cy="12" r="3" />
+									<path d="M4 4l16 16" />
+								</svg>
+							</button>
+						</div>
+					</div>
+
+					<!-- Confirmar contraseña -->
+					<div>
+						<label class="block text-sm font-medium text-[#1A2440] mb-1">Confirmar contraseña</label>
+						<div class="relative">
+							<input
+								[type]="showConfirmPassword ? 'text' : 'password'"
+								placeholder="Confirma la contraseña"
+								class="w-full rounded-[10px] border border-slate-200 bg-white px-4 py-2.5 pr-10 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+							/>
+							<button
+								type="button"
+								(click)="togglePasswordVisibility('confirm')"
+								class="absolute inset-y-0 right-0 flex items-center pr-3 transition-transform duration-150 text-slate-400 hover:text-slate-600 active:scale-90"
+								aria-label="Mostrar u ocultar contraseña"
+							>
+								<!-- Ojo cerrado -->
+								<svg
+									*ngIf="!showConfirmPassword"
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1.8"
+									class="w-5 h-5 transition-opacity duration-150"
+								>
+									<path d="M2 12s3-6 10-6 10 6 10 6-3 6-10 6S2 12 2 12Z" />
+									<circle cx="12" cy="12" r="3" />
+								</svg>
+								<!-- Ojo abierto con línea (ocultando) -->
+								<svg
+									*ngIf="showConfirmPassword"
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1.8"
+									class="w-5 h-5 transition-opacity duration-150"
+								>
+									<path d="M2 12s3-6 10-6 10 6 10 6-3 6-10 6S2 12 2 12Z" />
+									<circle cx="12" cy="12" r="3" />
+									<path d="M4 4l16 16" />
+								</svg>
+							</button>
+						</div>
+					</div>
+
+					<!-- Botón registrar -->
+					<div class="pt-2">
+						<button
+							type="submit"
+							class="w-full rounded-full bg-[#538CFF] py-3 text-sm md:text-base font-semibold text-white shadow-md shadow-blue-500/30 hover:bg-blue-700 transition-colors"
+						>
+							Registrarse
+						</button>
+					</div>
+					</form>
+
+					<!-- Enlace iniciar sesión -->
+					<p class="mt-6 text-xs text-center md:text-sm text-slate-500">
+						¿Ya tiene una cuenta?
+						<a href="/login" class="font-semibold text-[#538CFF] hover:text-[#3A78F0]">Iniciar sesión</a>
+					</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

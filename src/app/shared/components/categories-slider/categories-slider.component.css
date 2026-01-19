@@ -1,0 +1,18 @@
+/* Ocultar barra de scroll para Chrome, Safari y Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Ocultar barra de scroll para IE, Edge y Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.slider-arrow {
+  transition: all 0.2s ease;
+}
+.slider-arrow:hover {
+  background-color: #f0f7ff;
+  transform: scale(1.05);
+}

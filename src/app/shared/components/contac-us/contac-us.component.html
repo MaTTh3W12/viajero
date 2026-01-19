@@ -1,0 +1,86 @@
+<section class="relative w-full min-h-screen flex flex-col md:flex-row items-center justify-center pt-10 pb-0 md:py-20 bg-white overflow-hidden font-museo">
+
+    <!-- IMAGEN DE FONDO -->
+    <!-- MÓVIL: h-[35%] y bottom-0 (Tu ajuste sin zoom y abajo) -->
+    <!-- DESKTOP (md): inset-0 y h-full (Tu código original: cubre todo) -->
+    <div class="absolute inset-x-0 bottom-0 h-[50%] md:inset-0 md:h-full z-0">
+      <img src="assets/img/contacBanner.png"
+           class="w-full h-full object-cover object-center"
+           alt="Fondo Contacto">
+    </div>
+
+    <!-- Contenedor Principal -->
+    <!-- MÓVIL: flex-col, items-center -->
+    <!-- DESKTOP (md): flex-row, items-start, gap-12 (Tu original) -->
+    <div class="relative z-10 max-w-[1200px] w-full px-4 flex flex-col md:flex-row items-center md:items-start justify-center md:gap-12 h-full">
+
+        <!-- ======================================================= -->
+        <!-- TARJETA AZUL (IZQUIERDA) -->
+        <!-- ======================================================= -->
+        <!-- MÓVIL: w-[85%], pb-32 (espacio para traslape), texto centrado -->
+        <!-- DESKTOP (md): w-[470px], p-12 (padding original), texto izquierda, altura fit -->
+        <div class="bg-[#538CFF] text-white pt-10 px-6 pb-32 md:p-12 w-[85%] md:w-[470px] rounded-[2.5rem] flex flex-col shadow-2xl relative z-10 text-center md:text-left md:h-fit">
+
+          <!-- FLECHA CIRCULAR (Restaurada del original - Solo Desktop) -->
+          <div class="hidden md:flex absolute top-[20%] -right-5 transform bg-[#0E225C] w-10 h-10 rounded-full items-center justify-center z-30 cursor-pointer shadow-lg hover:scale-110 transition duration-300">
+              <i class="fas fa-chevron-right text-white text-lg"></i>
+          </div>
+
+          <h2 class="text-3xl md:text-4xl mb-4 font-bold">Contáctanos</h2>
+
+          <p class="text-[14px] leading-relaxed opacity-95 mb-0 md:mb-8 font-normal px-2 md:px-0">
+            ¡Nos encantaría saber de ti! Déjanos tus datos y estaremos encantados de poder apoyarte con las dudas o inconvenientes.
+          </p>
+
+          <!-- BOTÓN AZUL "CONTACTO" (Restaurado del original - Solo Desktop) -->
+          <!-- En móvil no se ve en tu imagen, así que lo ocultamos con hidden md:block -->
+          <button class="hidden md:block bg-white text-[#1E2E5C] px-10 py-3 rounded-full text-sm w-max shadow-md hover:bg-gray-100 transition transform hover:scale-105 mt-4 md:mt-0">
+            Contacto
+          </button>
+        </div>
+
+        <!-- ======================================================= -->
+        <!-- TARJETA BLANCA (DERECHA/FORMULARIO) -->
+        <!-- ======================================================= -->
+        <!-- MÓVIL: w-[90%], -mt-24 (traslape), z-20 -->
+        <!-- DESKTOP (md): w-[550px], mt-0, p-14 (original) -->
+        <div class="bg-white p-6 md:p-14 w-[90%] md:w-[550px] rounded-[2rem] md:rounded-[3rem] shadow-2xl relative z-20 -mt-24 md:mt-0 mb-10 md:mb-0">
+           <form class="flex flex-col gap-5 md:gap-6">
+
+             <!-- Input Nombre -->
+             <!-- MÓVIL: text-center. DESKTOP: text-left (por defecto) -->
+             <div class="text-center md:text-left">
+               <label class="block text-sm text-[#1E2E5C] mb-2 pl-1 font-bold md:font-semibold">Nombre completo</label>
+               <input type="text"
+                      placeholder="Ingresa tus nombres y apellidos"
+                      class="w-full bg-[#F2F6FD] border-none rounded-2xl px-6 py-4 text-xs md:text-sm outline-none text-gray-700 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-200 transition text-center md:text-left">
+             </div>
+
+             <!-- Input Correo -->
+             <div class="text-center md:text-left">
+              <label class="block text-sm text-[#1E2E5C] mb-2 pl-1 font-bold md:font-semibold">Correo electrónico</label>
+              <input type="email"
+                     placeholder="Ingresa tu correo electrónico"
+                     class="w-full bg-[#F2F6FD] border-none rounded-2xl px-6 py-4 text-xs md:text-sm outline-none text-gray-700 placeholder:text-gray-400 focus:ring-2 focus:ring-blue-200 transition text-center md:text-left">
+            </div>
+
+            <!-- Input Mensaje -->
+            <div class="text-center md:text-left">
+              <label class="block text-sm text-[#1E2E5C] mb-2 pl-1 font-bold md:font-semibold">Mensaje</label>
+              <textarea rows="5"
+                        placeholder="Escribe tu mensaje"
+                        class="w-full bg-[#F2F6FD] border-none rounded-2xl px-6 py-4 text-xs md:text-sm outline-none text-gray-700 placeholder:text-gray-400 resize-none min-h-[120px] md:min-h-[140px] focus:ring-2 focus:ring-blue-200 transition text-center md:text-left"></textarea>
+            </div>
+
+            <!-- Botón Enviar -->
+            <!-- MÓVIL: Centrado (justify-center). DESKTOP: A la derecha (md:justify-end) - Como tu original -->
+            <div class="flex justify-center md:justify-end mt-2 md:mt-4">
+              <button type="button" class="bg-[#548AF7] text-white px-12 md:px-14 py-3 rounded-full text-sm hover:bg-blue-600 transition shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 font-medium w-max">
+                 Enviar
+              </button>
+            </div>
+
+           </form>
+        </div>
+    </div>
+</section>

@@ -1,0 +1,56 @@
+<footer class="bg-[#0E225C] text-white font-museo">
+  <div
+    class="max-w-[1280px] mx-auto px-10 py-12
+           flex flex-col items-center gap-8
+           md:grid md:grid-cols-4 md:gap-10 md:items-start"
+  >
+
+    <!-- LOGO GOBIERNO -->
+    <!-- En móvil se centra con 'mx-auto' implícito por el flex-col parent, en desktop se alinea a la izquierda -->
+    <div class="w-full flex justify-center md:justify-start">
+      <img
+        src="assets/img/logoSV.png"
+        alt="Gobierno de El Salvador"
+        class="w-24 h-auto md:w-20"
+      />
+    </div>
+
+    <!-- MENÚ IZQUIERDO (Oculto en móvil 'hidden', visible en desktop 'md:block') -->
+    <ul class="space-y-3 text-sm hidden md:block">
+      <li><a href="#" class="hover:underline">Inicio</a></li>
+      <li><a href="#" class="hover:underline">Cupones</a></li>
+      <li><a href="#" class="hover:underline">Quiénes somos</a></li>
+    </ul>
+
+    <!-- MENÚ DERECHO (Oculto en móvil 'hidden', visible en desktop 'md:block') -->
+    <ul class="space-y-3 text-sm hidden md:block">
+      <li><a href="#" class="hover:underline">Contacto</a></li>
+      <li><a href="#" class="hover:underline">Iniciar sesión</a></li>
+      <li><a href="#" class="hover:underline">Registrarse</a></li>
+    </ul>
+
+    <!-- CONTACTO -->
+    <!-- Móvil: Texto centrado, con línea separadora arriba. Desktop: Texto izquierda, borde izquierdo -->
+    <div class="text-sm space-y-3 w-full text-center md:text-left
+                md:border-l md:border-white/30 md:pl-6">
+
+      <!-- Línea separadora SOLO para móvil (simulando la imagen 1) -->
+      <div class="h-[1px] bg-blue-400/50 w-16 mx-auto mb-4 md:hidden"></div>
+
+      <p class="font-semibold leading-snug">
+        Departamento de Inversiones<br />
+        y Negocios con la Diáspora
+      </p>
+
+      <p class="opacity-90">
+        inversionesynegocios@rree.gob.sv
+      </p>
+
+      <div class="flex flex-col md:block">
+        <span class="opacity-90">+503 2231-1049</span>
+        <span class="opacity-90 md:mt-1 block">+503 2231-1084</span>
+      </div>
+    </div>
+
+  </div>
+</footer>

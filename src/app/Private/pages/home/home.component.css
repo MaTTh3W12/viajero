@@ -1,0 +1,13 @@
+.zoom-container {
+  /* Fallback for browsers that don't support zoom (like Firefox) */
+  transform: scale(1.30);
+  transform-origin: top center;
+}
+
+@supports (zoom: 1) {
+  .zoom-container {
+    /* Use zoom for browsers that support it (Chrome, Edge, Safari) as it handles layout better */
+    zoom: 1.30;
+    transform: none;
+  }
+}

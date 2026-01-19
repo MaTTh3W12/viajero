@@ -1,0 +1,51 @@
+/* 🎟️ MORDIDAS DEL CONTENEDOR PRINCIPAL (Solo visibles en Desktop) */
+@media (min-width: 768px) {
+  .about-ticket-wrapper::before,
+  .about-ticket-wrapper::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    background: #F5F8FC; /* Mismo color que el fondo de la sección */
+    border-radius: 50%;
+    z-index: 30;
+  }
+
+  .about-ticket-wrapper::before {
+    left: -22px;
+  }
+
+  .about-ticket-wrapper::after {
+    right: -22px;
+  }
+
+  /* 🎟️ MORDIDA DE LA CAJA AZUL (Izquierda) - Solo Desktop */
+  .about-info-ticket::before {
+    content: '';
+    position: absolute;
+    left: -22px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 44px;
+    height: 44px;
+    background: #538CFF;
+    border-radius: 50%;
+    z-index: 10;
+  }
+}
+
+/* Ajustes para móvil */
+@media (max-width: 767px) {
+    .about-ticket-wrapper {
+        /* En móvil el contenedor debe ser rígido para que la imagen se vea bien */
+        overflow: hidden;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    /* Aseguramos que no haya mordidas en el ticket azul en móvil */
+    .about-info-ticket::before {
+        display: none;
+    }
+}
