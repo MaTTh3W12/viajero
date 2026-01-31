@@ -14,6 +14,7 @@ import { RouterModule, Router } from '@angular/router';
 })
 export class NavbarComponent implements OnInit {
   open = false;
+  isRegisterDropdownOpen = false;
 
   constructor(private router: Router) { }
 
