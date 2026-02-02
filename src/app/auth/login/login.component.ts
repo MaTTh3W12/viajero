@@ -28,10 +28,6 @@ export class LoginComponent {
     private ngZone: NgZone
   ) {}
 
-  get demoUsers(): AuthUser[] {
-    return this.auth.getAllUsers();
-  }
-
   onSubmit() {
     console.log('onSubmit: Iniciando proceso de login');
     this.errorMessage = '';

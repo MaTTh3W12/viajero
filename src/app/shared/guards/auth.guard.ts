@@ -4,16 +4,18 @@ import { AuthService } from '../../service/auth.service';
 
 // Guard que permite solo administradores en /admin
 export const adminGuard: CanActivateFn = () => {
-  const auth = inject(AuthService);
+const auth = inject(AuthService);
   const router = inject(Router);
 
-  const user = auth.getCurrentUser();
+  if (!auth.isLoggedIn()) {
+    router.navigate(['/login']);
+    return false;
+  }
 
-  if (user && user.role === 'admin') {
+  if (auth.isAdmin()) {
     return true;
   }
 
-  // Si no está logueado o no es admin, lo mandamos al login
-  router.navigate(['/login']);
+  router.navigate(['/dashboard']); // o página no autorizada
   return false;
 };

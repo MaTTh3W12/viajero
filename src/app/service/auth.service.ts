@@ -1,86 +1,89 @@
 import { Injectable } from '@angular/core';
 
-export type UserRole = 'admin' | 'user';
+export type UserRole = 'admin' | 'empresa';
 
 export interface AuthUser {
   username: string;
-  password: string;
   role: UserRole;
+  companyName?: string;
 }
 
 const STORAGE_KEY = 'viajero_current_user';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  // Usuarios de ejemplo para probar los flujos
-  private users: AuthUser[] = [
+  // 🔧 usuarios mock
+  private users: (AuthUser & { password: string })[] = [
     { username: 'admin', password: 'admin123', role: 'admin' },
-    { username: 'carlos', password: 'carlos123', role: 'user' },
-    { username: 'maria', password: 'maria123', role: 'user' }
+    {
+      username: 'empresa1',
+      password: 'empresa123',
+      role: 'empresa',
+      companyName: 'AO MEDIA'
+    }
   ];
 
   private currentUser: AuthUser | null = this.loadFromStorage();
 
-  getAllUsers(): AuthUser[] {
-    return this.users;
-  }
+  /* ======================
+     GETTERS
+  ====================== */
 
   getCurrentUser(): AuthUser | null {
     return this.currentUser;
+  }
+
+  getRole(): UserRole | null {
+    return this.currentUser?.role ?? null;
   }
 
   isLoggedIn(): boolean {
     return !!this.currentUser;
   }
 
-  logout(): void {
-    this.currentUser = null;
-    try {
-      localStorage.removeItem(STORAGE_KEY);
-    } catch {
-      // ignoramos errores de storage (modo SSR, etc.)
-    }
+  isAdmin(): boolean {
+    return this.currentUser?.role === 'admin';
   }
+
+  isEmpresa(): boolean {
+    return this.currentUser?.role === 'empresa';
+  }
+
+  /* ======================
+     AUTH ACTIONS
+  ====================== */
 
   login(username: string, password: string): AuthUser | null {
     const found = this.users.find(
-      (u) => u.username === username && u.password === password
+      u => u.username === username && u.password === password
     );
 
-    if (!found) {
-      return null;
-    }
+    if (!found) return null;
 
-    this.currentUser = found;
-    this.saveToStorage(found);
-    return found;
+    // ❌ no guardamos password
+    const { password: _, ...safeUser } = found;
+
+    this.currentUser = safeUser;
+    this.saveToStorage(safeUser);
+
+    return safeUser;
   }
 
-  register(username: string, password: string, role: UserRole): AuthUser {
-    const newUser: AuthUser = { username, password, role };
-    this.users.push(newUser);
-    this.currentUser = newUser;
-    this.saveToStorage(newUser);
-    return newUser;
+  logout(): void {
+    this.currentUser = null;
+    localStorage.removeItem(STORAGE_KEY);
   }
+
+  /* ======================
+     STORAGE
+  ====================== */
 
   private saveToStorage(user: AuthUser): void {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
-    } catch {
-      // ignoramos errores de storage
-    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
   }
 
   private loadFromStorage(): AuthUser | null {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) {
-        return null;
-      }
-      return JSON.parse(raw) as AuthUser;
-    } catch {
-      return null;
-    }
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as AuthUser) : null;
   }
 }
