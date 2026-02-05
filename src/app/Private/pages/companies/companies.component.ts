@@ -9,6 +9,7 @@ import { AuthService, UserRole } from '../../../service/auth.service';
 
 @Component({
   selector: 'app-companies',
+  standalone: true,
   imports: [
     TopbarComponent,
     DataTableComponent,

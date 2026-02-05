@@ -9,6 +9,7 @@ import { FilterBarComponent } from '../../../shared/dashboard/filter-bar/filter-
 
 @Component({
   selector: 'app-messages',
+  standalone: true,
   imports: [
     TopbarComponent,
     DataTableComponent,
