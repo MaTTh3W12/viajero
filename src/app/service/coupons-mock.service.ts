@@ -3,6 +3,8 @@ import { Observable, of } from 'rxjs';
 import { Coupon } from './coupon.interface';
 import { Message } from './message.interface';
 import { Company } from './companies.interface';
+import { User } from './user.interface';
+import { Category } from './category.interface';
 
 @Injectable({
   providedIn: 'root',
@@ -12,52 +14,62 @@ export class CouponsMockService {
     return of<Coupon[]>([
       {
         id: 1,
-        empresa: 'Empresa 1',
-        titulo: 'Descuento en servicios',
-        descuento: '10%',
-        disponibles: 150,
-        adquiridos: 1,
-        expiracion: '01-08-2026',
-        estado: 'Publicado',
+        titulo: 'Descuento en tipo sedán',
+        descripcion: 'Obtén un excelente descuento para tu carro sedán.',
+        categoria: 'Turismo',
+        fechaInicio: '12/12/2025',
+        fechaFin: '22/01/2026',
+        disponibles: 21,
+        estado: 'Borrador',
       },
       {
         id: 2,
-        empresa: 'Empresa 2',
-        titulo: 'Descuento especial en tratamiento para pacientes',
-        descuento: '$25.00',
-        disponibles: 150,
-        adquiridos: 1,
-        expiracion: 'Expirado',
-        estado: 'No publicado',
-      },
-      {
-        id: 3,
-        empresa: 'Empresa 3',
         titulo: 'Descuento en servicios',
-        descuento: '10%',
-        disponibles: 150,
-        adquiridos: 1,
-        expiracion: 'Indefinido',
+        descripcion: 'Empresa 1',
+        categoria: 'Turismo',
+        fechaInicio: '12/12/2025',
+        fechaFin: '22/01/2026',
+        disponibles: 4,
         estado: 'Publicado',
       },
       {
+        id: 3,
+        titulo: 'Descuento en tipo sedán',
+        descripcion: 'Obtén un excelente descuento para tu carro sedán.',
+        categoria: 'Turismo',
+        fechaInicio: '12/12/2025',
+        fechaFin: '22/01/2026',
+        disponibles: 21,
+        estado: 'Borrador',
+      },
+      {
         id: 4,
-        empresa: 'Empresa 4',
         titulo: 'Descuento en servicios',
-        descuento: '15%',
-        disponibles: 150,
-        adquiridos: 1,
-        expiracion: '01-08-2026',
+        descripcion: 'Empresa 1',
+        categoria: 'Turismo',
+        fechaInicio: '12/12/2025',
+        fechaFin: '22/01/2026',
+        disponibles: 4,
         estado: 'Publicado',
       },
       {
         id: 5,
-        empresa: 'Empresa 5',
+        titulo: 'Descuento en tipo sedán',
+        descripcion: 'Obtén un excelente descuento para tu carro sedán.',
+        categoria: 'Turismo',
+        fechaInicio: '12/12/2025',
+        fechaFin: '22/01/2026',
+        disponibles: 21,
+        estado: 'Borrador',
+      },
+      {
+        id: 6,
         titulo: 'Descuento en servicios',
-        descuento: '30%',
-        disponibles: 150,
-        adquiridos: 1,
-        expiracion: '01-08-2026',
+        descripcion: 'Empresa 1',
+        categoria: 'Turismo',
+        fechaInicio: '12/12/2025',
+        fechaFin: '22/01/2026',
+        disponibles: 4,
         estado: 'Publicado',
       },
     ]);
@@ -109,43 +121,124 @@ export class CouponsMockService {
     return of<Company[]>([
       {
         id: 1,
-        empresa: 'Empresa 1',
-        categoria: 'Alojamiento',
-        telefono: '0000-0000',
-        coreo: 'ejemplo@correo.com',
-        direccion: 'Dirección completa',
+        empresa: 'Consultores empresa S.A. de C. V.',
+        documentoLegal: '8624-654321-789-0',
+        coreo: 'consultores.empresa@sadecv.com.sv',
+        estado: 'Pendiente',
       },
       {
-        id: 1,
-        empresa: 'Empresa 2',
-        categoria: 'Transporte',
-        telefono: '0000-0000',
-        coreo: 'ejemplo@correo.com',
-        direccion: 'Dirección completa',
+        id: 2,
+        empresa: 'Fábrica de ejemplos',
+        documentoLegal: '7893-654321-789-0',
+        coreo: 'fabrica.de.ejemplos@hotmail.com.sv',
+        estado: 'Activa',
       },
       {
-        id: 1,
-        empresa: 'Empresa 3',
-        categoria: 'Alimentos y Bebidas',
-        telefono: '0000-0000',
-        coreo: 'ejemplo@correo.com',
-        direccion: 'Dirección completa',
+        id: 3,
+        empresa: 'Sociedad de empresas',
+        documentoLegal: '1234-654321-789-0',
+        coreo: 'sociedad.de.empresas@sadecv.com.sv',
+        estado: 'No activa',
       },
       {
-        id: 1,
-        empresa: 'Empresa 4',
-        categoria: 'Productos',
-        telefono: '0000-0000',
-        coreo: 'ejemplo@correo.com',
-        direccion: 'Dirección completa',
+        id: 4,
+        empresa: 'Fábrica de ejemplos',
+        documentoLegal: '7893-654321-789-0',
+        coreo: 'fabrica.de.ejemplos@hotmail.com.sv',
+        estado: 'Pendiente',
       },
       {
+        id: 5,
+        empresa: 'Fábrica de ejemplos',
+        documentoLegal: '7893-654321-789-0',
+        coreo: 'fabrica.de.ejemplos@hotmail.com.sv',
+        estado: 'Activa',
+      },
+    ]);
+  }
+
+  getUsers(): Observable<User[]> {
+    return of<User[]>([
+      {
         id: 1,
-        empresa: 'Empresa 5',
-        categoria: 'Productos y Servicios',
-        telefono: '0000-0000',
-        coreo: 'ejemplo@correo.com',
-        direccion: 'Dirección completa',
+        nombre: 'Consultores empresa S.A. de C. V.',
+        tipoCuenta: 'Usuario',
+        email: 'consultores.empresa@sadecv.com.sv',
+        estado: 'No activa',
+      },
+      {
+        id: 2,
+        nombre: 'Fábrica de ejemplos',
+        tipoCuenta: 'Empresa',
+        email: 'fabrica.de.ejemplos@hotmail.com.sv',
+        estado: 'Activa',
+      },
+      {
+        id: 3,
+        nombre: 'Sociedad de empresas',
+        tipoCuenta: 'Usuario',
+        email: 'sociedad.de.empresas@sadecv.com.sv',
+        estado: 'No activa',
+      },
+      {
+        id: 4,
+        nombre: 'Fábrica de ejemplos',
+        tipoCuenta: 'Empresa',
+        email: 'fabrica.de.ejemplos@hotmail.com.sv',
+        estado: 'Activa',
+      },
+    ]);
+  }
+
+  getCategories(): Observable<Category[]> {
+    return of<Category[]>([
+      {
+        id: 1,
+        categoria: 'Turismo',
+        descripcion: 'Viajes, experiencias únicas y destinos inolvidables.',
+        estado: 'No activa',
+      },
+      {
+        id: 2,
+        categoria: 'Gastronomía',
+        descripcion: 'Sabores auténticos, restaurantes y experiencias culinarias.',
+        estado: 'Activa'
+      },
+      {
+        id: 3,
+        categoria: 'Belleza',
+        descripcion: 'Cuidado personal, estética y tratamientos especializados.',
+        estado: 'No activa',
+      },
+      {
+        id: 4,
+        categoria: 'Educación',
+        descripcion: 'Cursos, talleres y aprendizaje continuo accesible.',
+        estado: 'Activa'
+      },
+      {
+        id: 5,
+        categoria: 'Mascotas',
+        descripcion: 'Productos, servicios y bienestar para animales.',
+        estado: 'No activa',
+      },
+      {
+        id: 6,
+        categoria: 'Servicios financieros',
+        descripcion: 'Soluciones, asesorías y beneficios económicos confiables.',
+        estado: 'Activa',
+      },
+      {
+        id: 7,
+        categoria: 'Salud',
+        descripcion: 'Bienestar físico, prevención y atención médica.',
+        estado: 'Activa',
+      },
+      {
+        id: 8,
+        categoria: 'Decoración',
+        descripcion: 'Estilo, diseño y detalles para tu espacio.',
+        estado: 'Activa',
       },
     ]);
   }

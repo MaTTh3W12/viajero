@@ -1,6 +1,7 @@
-export type UserRole = 'admin' | 'empresa';
-
 export type FilterVariant =
+  | 'users'
+  | 'audit'
+  | 'category'
   | 'coupons'
   | 'messages'
   | 'companies';

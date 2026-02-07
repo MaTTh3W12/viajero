@@ -4,11 +4,17 @@ import { UserRole } from '../../../service/auth.service';
 
 const FILTER_BG_MAP: Record<UserRole, Record<FilterVariant, string>> = {
   admin: {
+    users:     'bg-[#D4FFF1]', // Todos los usuarios
+    audit:     'bg-[#FFE3C1]', // Auditoría
+    category:  'bg-[#FFE2DB]', // Categorías
     coupons:   'bg-[#C8E7FF]', // Todos los cupones
     messages:  'bg-[#D4FFF1]', // Mensajes
     companies: 'bg-[#D4D6FF]', // Empresas
   },
   empresa: {
+    users:     'bg-[#D4FFF1]', // Todos los usuarios
+    audit:     'bg-[#FFE3C1]', // Auditoría
+    category:  'bg-[#FFE2DB]', // Categorías
     coupons:   'bg-[#C8E7FF]', // Todos los cupones
     messages:  'bg-[#D4FFF1]', // Mensajes
     companies: 'bg-[#D4D6FF]', // Empresas
@@ -25,6 +31,22 @@ const FILTER_BG_MAP: Record<UserRole, Record<FilterVariant, string>> = {
 export class FilterBarComponent {
   @Input({ required: true }) variant!: FilterVariant;
   @Input({ required: true }) role!: UserRole;
+
+  auditTypeOpen = false;
+  auditTypeSelected = 'Seleccionar tipo';
+  auditTypeOptions = ['Desactivación', 'Aprobación'];
+
+  selectAuditType(option: string): void {
+    this.auditTypeSelected = option;
+    this.auditTypeOpen = false;
+  }
+
+  openDatePicker(input: HTMLInputElement): void {
+    if (typeof input.showPicker === 'function') {
+      input.showPicker();
+    }
+    input.focus();
+  }
 
   get bgClass(): string {
     return FILTER_BG_MAP[this.role]?.[this.variant] ?? 'bg-[#E6EFFF]';

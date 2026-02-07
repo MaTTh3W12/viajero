@@ -6,7 +6,7 @@
 
       <!-- HEADER -->
       <thead>
-        <tr class="text-center text-sm text-[#0E225C]">
+        <tr class="text-left text-sm text-[#0E225C]">
           @for (col of config.columns; track trackColumn($index, col)) {
           <th class="px-3">{{ col.label }}</th>
           }
@@ -18,7 +18,7 @@
       </thead>
 
       <!-- BODY -->
-      <tbody class="text-center">
+      <tbody class="text-left">
         @for (row of data; track trackRow($index, row)) {
         <tr class="
           bg-white rounded-xl shadow-sm
@@ -28,12 +28,12 @@
         ">
 
           @for (col of config.columns; track trackColumn($index, col)) {
-          <td class="px-3 py-3 transition-colors duration-200">
+          <td class="px-3 py-3 text-left transition-colors duration-200">
 
             <!-- BADGE -->
             @if (col.type === 'badge') {
               <span
-                class="px-4 py-2 rounded-lg text-sm font-medium
+                class="px-5 py-2 rounded-full text-sm font-medium
                       transition-all duration-200
                       hover:brightness-105"
                 [ngClass]="getBadgeClass(
@@ -71,15 +71,24 @@
           <!-- ACTIONS -->
           @if (config.actions?.length) {
           <td class="px-3 py-3 transition-colors duration-200">
-            <div class="flex items-center justify-center gap-2">
+            <div class="flex items-center justify-start gap-2">
               @for (action of config.actions; track trackAction($index, action)) {
-              <button (click)="action.action(row)" class="w-8 h-8 flex items-center justify-center rounded-full
-                  transition-all duration-200 ease-out
-                  hover:scale-110 hover:shadow-md
-                  active:scale-95
-                  focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" [ngClass]="action.bgClass">
-                <img [src]="action.icon" class="w-4 h-4" />
-              </button>
+              @if (isActionVisible(action, row)) {
+                <button (click)="action.action(row)" class="w-8 h-8 flex items-center justify-center rounded-full
+                    transition-all duration-200 ease-out
+                    hover:scale-110 hover:shadow-md
+                    active:scale-95
+                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" [ngClass]="getActionClass(action, row)">
+                  @if (getActionIconId(action, row)) {
+                    <svg class="w-4 h-4" aria-hidden="true">
+                      <use [attr.href]="'assets/icons/sprite.svg#' + getActionIconId(action, row)"></use>
+                    </svg>
+                  }
+                  @else {
+                    <img [src]="getActionIcon(action, row)" class="w-4 h-4" />
+                  }
+                </button>
+              }
               }
             </div>
           </td>
@@ -105,7 +114,7 @@
 
         @if (col.type === 'badge') {
           <span
-            class="px-3 py-1 rounded-lg text-sm font-medium"
+            class="px-4 py-1 rounded-full text-sm font-medium"
             [ngClass]="getBadgeClass(
               col.render ? col.render(row[col.key], row) : asString(row[col.key])
             )">
@@ -136,11 +145,20 @@
       <!-- ACTIONS -->
       <div class="flex justify-end gap-2 pt-2">
         @for (action of config.actions; track trackAction($index, action)) {
-        <button (click)="action.action(row)"
-          class="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-150 active:scale-90"
-          [ngClass]="action.bgClass">
-          <img [src]="action.icon" class="w-4 h-4" />
-        </button>
+        @if (isActionVisible(action, row)) {
+          <button (click)="action.action(row)"
+            class="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-150 active:scale-90"
+            [ngClass]="getActionClass(action, row)">
+            @if (getActionIconId(action, row)) {
+              <svg class="w-4 h-4" aria-hidden="true">
+                <use [attr.href]="'assets/icons/sprite.svg#' + getActionIconId(action, row)"></use>
+              </svg>
+            }
+            @else {
+              <img [src]="getActionIcon(action, row)" class="w-4 h-4" />
+            }
+          </button>
+        }
         }
       </div>
 

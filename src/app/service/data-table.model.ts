@@ -8,8 +8,13 @@ export interface TableColumn<T, V = T[keyof T]> {
   subLabel?: (value: V, row: T) => string | null;
 }
 export interface TableAction<T> {
-  icon: string;
+  icon?: string;
+  iconId?: string;
+  iconForRow?: (row: T) => string | null;
+  iconIdForRow?: (row: T) => string | null;
   bgClass: string;
+  bgClassForRow?: (row: T) => string;
+  show?: (row: T) => boolean;
   action: (row: T) => void;
 }
 

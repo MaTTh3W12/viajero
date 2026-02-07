@@ -3,7 +3,7 @@ import { AuthService } from '../../../service/auth.service';
 import { CurrentUser } from '../../../service/current-user.interface';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
-import { UiService } from '../../service/ui.service';
+import { UiService } from '../../../service/ui.service';
 
 type TopbarVariant =
   | 'dashboard'

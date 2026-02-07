@@ -16,7 +16,7 @@ export class DataTableComponent<T extends { id: number }> {
   // ✅ TRACK BY (OBLIGATORIO con @for)
   trackRow = (_: number, row: any) => row.id ?? row;
   trackColumn = (_: number, col: any) => col.key;
-  trackAction = (_: number, action: any) => action.icon;
+  trackAction = (_: number, action: any) => action.iconId ?? action.icon;
 
   // ✅ CAST SEGURO PARA TEMPLATES
   asString(value: unknown): string {
@@ -27,20 +27,34 @@ export class DataTableComponent<T extends { id: number }> {
   getBadgeClass(value: string): string {
     switch (value) {
       case 'Publicado':
-        return 'bg-[#59D9A6] text-white';
-      case 'No publicado':
-        return 'bg-[#FFD6C9] text-[#FF6A3D]';
-      case 'Expirado':
-        return 'bg-[#FFE1D9] text-[#FF6A3D]';
-      case 'Indefinido':
-        return 'bg-[#E6EEFF] text-[#4D7CFF]';
-      case 'Nuevo':
-        return 'bg-[#538CFF] text-white';
-      case 'Revisado':
-        return 'bg-[#E6EFFF] text-[#0E225C]';
+        return 'bg-[#D4EDDA] text-[#155724]';
+      case 'Borrador':
+        return 'bg-[#FFF3CD] text-[#856404]';
+      case 'Pendiente':
+        return 'bg-[#FFF3CD] text-[#856404]';
+      case 'Activa':
+        return 'bg-[#D4EDDA] text-[#155724]';
+      case 'No activa':
+        return 'bg-[#F8D7DA] text-[#C82333]';
       default:
-        return 'bg-[#F4F7FD] text-[#0E225C]';
+        return 'bg-[#CCE5FF] text-[#004085]';
     }
+  }
+
+  getActionIconId(action: any, row: any): string | null {
+    return action.iconIdForRow?.(row) ?? action.iconId ?? null;
+  }
+
+  getActionIcon(action: any, row: any): string | null {
+    return action.iconForRow?.(row) ?? action.icon ?? null;
+  }
+
+  getActionClass(action: any, row: any): string {
+    return action.bgClassForRow?.(row) ?? action.bgClass;
+  }
+
+  isActionVisible(action: any, row: any): boolean {
+    return action.show ? action.show(row) : true;
   }
 
   // 📅 EXPIRACIÓN

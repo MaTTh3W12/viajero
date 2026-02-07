@@ -9,11 +9,10 @@ import { AuthService, UserRole } from '../../../service/auth.service';
 
 @Component({
   selector: 'app-companies',
-  standalone: true,
   imports: [
     TopbarComponent,
-    DataTableComponent,
-    FilterBarComponent
+    FilterBarComponent,
+    DataTableComponent
   ],
   templateUrl: './companies.component.html',
   styleUrl: './companies.component.css',
@@ -25,30 +24,28 @@ export class CompaniesComponent {
     columns: [
       { key: 'empresa', label: 'Empresa' },
       {
-        key: 'categoria',
-        label: 'Categoría',
-        type: 'box',
-        boxStyle: 'blue'
-      },
-      { key: 'telefono', label: 'Teléfono' },
+        key: 'documentoLegal', label: 'Documento Legal'},
       { key: 'coreo', label: 'Correo' },
-      { key: 'direccion', label: 'Dirección' },
+      { key: 'estado', label: 'Estado', type: 'badge' },
     ],
     actions: [
       {
-        icon: 'assets/icons/eye.svg',
-        bgClass: 'bg-[#E6FFF4]',
-        action: row => console.log('Ver', row),
+        iconId: 'tick-square',
+        bgClass: 'bg-[#E6EEFF] text-[#538CFF]',
+        show: row => row.estado === 'Pendiente',
+        action: row => console.log('Aprobar', row),
       },
       {
-        icon: 'assets/icons/edit-2.svg',
-        bgClass: 'bg-[#E6EEFF]',
+        iconId: 'close-circle',
+        bgClass: 'bg-[#E6EEFF] text-[#1A2440]',
+        show: row => row.estado === 'Pendiente',
+        action: row => console.log('Rechazar', row),
+      },
+      {
+        iconId: 'edit',
+        bgClass: 'bg-[#E6EEFF] text-[#538CFF]',
+        show: row => row.estado === 'Activa',
         action: row => console.log('Editar', row),
-      },
-      {
-        icon: 'assets/icons/trash.png',
-        bgClass: 'bg-[#FFE6E0]',
-        action: row => console.log('Eliminar', row),
       },
     ],
   };

@@ -1,15 +1,10 @@
 <!-- Overlay Backdrop -->
-<div
-  *ngIf="isSidebarOpen"
-  (click)="toggleSidebar()"
-  class="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
-></div>
+<div *ngIf="isSidebarOpen" (click)="toggleSidebar()" class="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"></div>
 
 <!-- Sidebar Container -->
 <aside
-  class="fixed inset-y-0 left-0 z-50 h-screen overflow-hidden bg-gray-50 transition-transform duration-300 transform lg:static w-64 md:w-72 shadow-none border-r border-gray-100"
-  [class.translate-x-0]="isSidebarOpen"
-  [class.-translate-x-full]="!isSidebarOpen"
+  class="fixed inset-y-0 left-0 z-50 h-screen overflow-hidden bg-gray-50 transition-transform duration-300 transform lg:static w-64 md:w-72 shadow-none"
+  [class.translate-x-0]="isSidebarOpen" [class.-translate-x-full]="!isSidebarOpen"
   [ngClass]="{ 'lg:w-0 lg:border-0': !isSidebarOpen }">
 
   <!-- Content Wrapper -->
@@ -18,79 +13,79 @@
     <div class="flex-1">
       <!-- Logo -->
       <div class="hidden lg:flex items-center justify-start gap-2 px-3 mb-6">
-        <a routerLink="" class="flex items-center gap-3 transition-transform duration-300 transform cursor-pointer hover:scale-105">
+        <a routerLink=""
+          class="flex items-center gap-3 transition-transform duration-300 transform cursor-pointer hover:scale-105">
           <img src="assets/img/logo.png" alt="ViajeroSV" class="h-[3rem]" />
         </a>
-    </div>
+      </div>
 
       <!-- Dashboard -->
-      <a routerLink="/dashboard"
-         routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
-         [routerLinkActiveOptions]="{exact: true}"
-         #rlaDashboard="routerLinkActive"
+      <a routerLink="/dashboard" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+        [routerLinkActiveOptions]="{exact: true}" #rlaDashboard="routerLinkActive"
         class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3 lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
-        <img src="assets/icons/dashboard.png" alt="Dashboard Icon" class="w-5 h-5" [class.filter]="rlaDashboard.isActive" [class.invert]="rlaDashboard.isActive" [class.brightness-0]="rlaDashboard.isActive" />
+        <img src="assets/icons/dashboard.png" alt="Dashboard Icon" class="w-5 h-5"
+          [class.filter]="rlaDashboard.isActive" [class.invert]="rlaDashboard.isActive"
+          [class.brightness-0]="rlaDashboard.isActive" />
         <span class="text-sm font-medium">Dashboard</span>
       </a>
 
       <!-- Usuario -->
-      <a class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
+      <a routerLink="users-list" class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
             lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
         <img src="assets/icons/usuarios.png" alt="Usuarios Icon" class="w-5 h-5" />
         <span class="text-sm font-medium">Usuarios</span>
       </a>
 
       <!-- Auditoría -->
-      <a class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
+      <a routerLink="audit-list" class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
             lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
         <img src="assets/icons/auditoria.png" alt="Usuarios Icon" class="w-5 h-5" />
         <span class="text-sm font-medium">Auditoría</span>
       </a>
 
       <!-- Categorías -->
-      <a class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-2 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200
+      <a routerLink="category-list"
+        class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-2 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200
                 lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300 lg:mb-3">
         <img src="assets/icons/category.png" alt="Usuarios Icon" class="w-5 h-5" />
         <span class="text-sm font-medium">Categoría</span>
       </a>
 
       <!-- Mensajes -->
-      <a routerLink="messages"
-         routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
-         #rlaMessages="routerLinkActive"
-        class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
+      <a routerLink="messages" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+        #rlaMessages="routerLinkActive" class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
              lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
-        <img src="assets/icons/messages.png" alt="Usuarios Icon" class="w-5 h-5" [class.filter]="rlaMessages.isActive" [class.invert]="rlaMessages.isActive" [class.brightness-0]="rlaMessages.isActive" />
+        <img src="assets/icons/messages.png" alt="Usuarios Icon" class="w-5 h-5" [class.filter]="rlaMessages.isActive"
+          [class.invert]="rlaMessages.isActive" [class.brightness-0]="rlaMessages.isActive" />
         <span class="text-sm font-medium">Mensajes</span>
       </a>
 
       <!-- Todos los cupones -->
-      <a routerLink="coupons-list"
-         routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
-         #rlaCoupons="routerLinkActive"
-        class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
+      <a routerLink="coupons-list" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+        #rlaCoupons="routerLinkActive" class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
              lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
-        <img src="assets/icons/ticket-cupones.png" alt="Usuarios Icon" class="w-5 h-5" [class.filter]="rlaCoupons.isActive" [class.invert]="rlaCoupons.isActive" [class.brightness-0]="rlaCoupons.isActive" />
+        <img src="assets/icons/ticket-cupones.png" alt="Usuarios Icon" class="w-5 h-5"
+          [class.filter]="rlaCoupons.isActive" [class.invert]="rlaCoupons.isActive"
+          [class.brightness-0]="rlaCoupons.isActive" />
         <span class="text-sm font-medium">Todos los cupones</span>
       </a>
 
       <!-- Todas las empresas -->
-      <a routerLink="companies"
-         routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
-         #rlaCompanies="routerLinkActive"
-        class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
+      <a routerLink="companies" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+        #rlaCompanies="routerLinkActive" class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
              lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
-        <img src="assets/icons/buildings.svg" alt="Usuarios Icon" class="w-5 h-5" [class.filter]="rlaCompanies.isActive" [class.invert]="rlaCompanies.isActive" [class.brightness-0]="rlaCompanies.isActive" />
+        <img src="assets/icons/buildings.svg" alt="Usuarios Icon" class="w-5 h-5" [class.filter]="rlaCompanies.isActive"
+          [class.invert]="rlaCompanies.isActive" [class.brightness-0]="rlaCompanies.isActive" />
         <span class="text-sm font-medium">Todas las empresas</span>
       </a>
     </div>
 
     <!-- Configuración (fijo abajo en todas las vistas) -->
-    <div class="mt-2 pt-2 border-t border-gray-200">
-      <a class="flex items-center justify-start gap-3 w-full px-3 py-5 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5
-                lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
+    <div>
+      <a
+        class="flex items-center justify-start gap-3 w-[215px] h-[50px] px-6 mb-3 mx-auto text-[#0E225C] rounded-[20px] cursor-pointer transform transition-transform duration-200 hover:scale-105">
         <img src="assets/icons/setting-2.png" alt="Configuración Icon" class="w-5 h-5" />
-        <span class="text-sm font-medium">Configuración</span>
+        <span class="text-sm font-semibold">Configuración</span>
       </a>
     </div>
   </div>

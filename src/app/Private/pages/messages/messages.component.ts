@@ -9,11 +9,10 @@ import { FilterBarComponent } from '../../../shared/dashboard/filter-bar/filter-
 
 @Component({
   selector: 'app-messages',
-  standalone: true,
   imports: [
     TopbarComponent,
-    DataTableComponent,
-    FilterBarComponent
+    FilterBarComponent,
+    DataTableComponent
   ],
   templateUrl: './messages.component.html',
   styleUrl: './messages.component.css',
@@ -50,13 +49,13 @@ export class MessagesComponent {
         action: row => console.log('Ver mensaje', row),
       },
       {
-        icon: 'assets/icons/check.svg',
-        bgClass: 'bg-[#E6EEFF]',
+        iconId: 'tick-square',
+        bgClass: 'bg-[#E6EEFF] text-[#538CFF]',
         action: row => console.log('Marcar como leído', row),
       },
       {
-        icon: 'assets/icons/trash.png',
-        bgClass: 'bg-[#FFE6E0]',
+        iconId: 'trash',
+        bgClass: 'bg-[#FFE6E0] text-[#C82333]',
         action: row => console.log('Eliminar', row),
       },
     ],

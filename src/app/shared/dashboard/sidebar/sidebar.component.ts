@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { UiService } from '../../service/ui.service';
+import { UiService } from '../../../service/ui.service';
 
 @Component({
   selector: 'app-sidebar',
