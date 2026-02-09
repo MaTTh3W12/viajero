@@ -74,7 +74,9 @@ export class LoginComponent {
 
     // Dependiendo del rol, redirigimos a Public o Private
     if (this.currentUser.role === 'admin') {
-      this.router.navigateByUrl('/dashboard');
+      this.router.navigateByUrl('/admin/dashboard');
+    } else if (this.currentUser.role === 'empresa') {
+      this.router.navigateByUrl('/companies/dashboard');
     } else {
       this.router.navigateByUrl('/');
     }

@@ -1,25 +1,23 @@
-<header class="w-full h-[72px] flex items-center justify-between px-6 rounded-t-[30px]" [ngClass]="bgClass">
+<header class="w-full h-[72px] flex items-center justify-between px-3 md:px-6 rounded-none md:rounded-t-[30px]" [ngClass]="bgClass">
 
   <!-- IZQUIERDA -->
   <div class="flex items-center gap-4 text-white">
     <!-- ☰ Hamburguesa -->
     <button (click)="toggleSidebar()" class="p-2 rounded-md hover:bg-white/10 transition">
-      <svg class="w-6 h-6" viewBox="0 0 24 24">
-        <path d="M3 4.5H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-        <path d="M3 9.5H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-        <path d="M3 14.5H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-        <path d="M3 19.5H21" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
-      </svg>
+      <svg class="w-6 h-6">
+          <use href="assets/icons/sprite.svg#menu"></use>
+        </svg>
     </button>
 
-    <!-- Logo en formato "píldora" (como la referencia) -->
-    <a routerLink="/" class="flex items-center gap-2 bg-white text-[#1A2440] rounded-full px-3 py-1.5 shadow-sm border border-white/60 hover:shadow transition md:hidden">
+    <!-- Logo pill (solo móvil, cuando el sidebar está oculto) -->
+    <a routerLink="/" class="lg:hidden flex items-center gap-3 bg-white text-[#1A2440] rounded-full px-4 py-1.5 shadow-sm border border-white/60 hover:shadow-md transition">
       <img src="assets/img/logo.png" alt="ViajeroSV" class="h-8 w-auto" />
     </a>
 
-    <h1 class="text-lg font-semibold hidden lg:block">
-      {{ location }}
-    </h1>
+    <!-- Título de la página (solo desktop) -->
+    @if (location) {
+      <h1 class="hidden lg:block text-lg font-medium text-white">{{ location }}</h1>
+    }
   </div>
 
   <!-- DERECHA -->
@@ -37,10 +35,15 @@
     <!-- Usuario -->
     <button class="flex items-center gap-2 text-white" (click)="toggleMenu()">
       <img src="assets/img/Male01.png" class="w-9 h-9 rounded-full border-2 border-white" />
-      <div class="text-left hidden sm:block">
-        <p class="text-sm font-medium">{{ user?.username }}</p>
-        <p class="text-xs opacity-80">AO MEDIA</p>
-      </div>
+      <!-- Nombre y empresa (solo desktop) -->
+      @if (user) {
+        <div class="hidden lg:flex flex-col items-start leading-tight">
+          <span class="text-sm font-medium">{{ user.username }}</span>
+          @if (user.companyName) {
+            <span class="text-xs opacity-80">{{ user.companyName }}</span>
+          }
+        </div>
+      }
       <img src="assets/icons/arrow-down.svg" class="w-6 h-6 text-white" />
     </button>
 

@@ -22,7 +22,7 @@ type TopbarVariant =
 export class TopbarComponent {
   @Input() location: string = '';
   user: CurrentUser | null;
-  role: 'admin' | 'empresa' | null;
+  role: 'admin' | 'empresa' | 'usuario' | null;
   menuOpen = false;
   showLogoutModal = false;
   isLoggingOut = false;
