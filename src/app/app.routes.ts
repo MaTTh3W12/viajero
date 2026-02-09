@@ -49,10 +49,18 @@ export const routes: Routes = [
   },
 
   // 📊 DASHBOARD
+  // ADMIN
   {
-    path: 'dashboard',
+    path: 'admin',
     loadChildren: () =>
       import('./Private/private.routes')
-        .then(m => m.DASHBOARD_ROUTES),
+        .then(m => m.ADMIN_ROUTES),
+  },
+  // COMPANY
+  {
+    path: 'companies',
+    loadChildren: () =>
+      import('./Private/private.routes')
+        .then(m => m.COMPANY_ROUTES),
   }
 ];

@@ -16,6 +16,24 @@ const auth = inject(AuthService);
     return true;
   }
 
-  router.navigate(['/dashboard']); // o página no autorizada
+  router.navigate(['/']); // o página no autorizada
+  return false;
+};
+
+// Guard que permite solo empresas en /company
+export const empresaGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (!auth.isLoggedIn()) {
+    router.navigate(['/login']);
+    return false;
+  }
+
+  if (auth.isEmpresa()) {
+    return true;
+  }
+
+  router.navigate(['/']); // o página no autorizada
   return false;
 };

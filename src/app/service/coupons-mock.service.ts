@@ -31,6 +31,7 @@ export class CouponsMockService {
         fechaFin: '22/01/2026',
         disponibles: 4,
         estado: 'Publicado',
+		
       },
       {
         id: 3,
