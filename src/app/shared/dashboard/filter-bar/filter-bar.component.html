@@ -543,9 +543,9 @@
 			<div class="px-6 pb-6 flex-1 overflow-y-auto"
 				[class.opacity-60]="editingCoupon || couponEditSuccess"
 				[class.pointer-events-none]="editingCoupon || couponEditSuccess">
-			<form class="grid grid-cols-1 md:grid-cols-2 gap-5" (submit)="$event.preventDefault(); submitEditCoupon()">
-				<!-- Título del cupón -->
-				<div>
+			<form class="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-5" (submit)="$event.preventDefault(); submitEditCoupon()">
+				<!-- Título del cupón (móvil: 1ro | desktop: col1-fila1) -->
+				<div class="order-1 md:order-none">
 				<label class="text-sm text-[#1A2440] mb-1 block">Título del cupón</label>
 				<input [(ngModel)]="editForm.titulo" name="edit_titulo" type="text" placeholder="Agregar título"
 						class="w-full rounded-xl px-4 py-3 text-[#538CFF] bg-[#F4F7FD]
@@ -553,8 +553,8 @@
 								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
 				</div>
 
-				<!-- Cantidad disponible -->
-				<div>
+				<!-- Cantidad disponible (móvil: 5to | desktop: col2-fila1) -->
+				<div class="order-5 md:order-none">
 				<label class="text-sm text-[#1A2440] mb-1 block">Cantidad disponible</label>
 				<input [(ngModel)]="editForm.cantidad" name="edit_cantidad" type="number" placeholder="Agregar cantidad"
 						class="w-full rounded-xl px-4 py-3 text-[#538CFF] bg-[#F4F7FD]
@@ -562,8 +562,8 @@
 								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
 				</div>
 
-				<!-- Descripción -->
-				<div class="md:col-span-1">
+				<!-- Descripción (móvil: 2do | desktop: col1-fila2) -->
+				<div class="order-2 md:order-none md:col-span-1">
 				<label class="text-sm text-[#1A2440] mb-1 block">Descripción</label>
 				<textarea [(ngModel)]="editForm.descripcion" name="edit_descripcion" placeholder="Agregar descripción"
 							class="w-full rounded-xl px-4 py-3 text-[#538CFF] min-h-44
@@ -571,8 +571,8 @@
 								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
 				</div>
 
-				<!-- Fechas: inicio y fin -->
-				<div class="md:col-span-1 flex flex-col gap-5">
+				<!-- Fechas: inicio y fin (móvil: 6to | desktop: col2-fila2) -->
+				<div class="order-6 md:order-none md:col-span-1 flex flex-col gap-5">
 				<!-- Fecha inicio -->
 				<div>
 					<label class="text-sm text-[#1A2440] mb-1 block">Fecha inicio</label>
@@ -610,8 +610,37 @@
 				</div>
 				</div>
 
-				<!-- Categoría + Estado -->
-				<div class="md:col-span-1 flex flex-col gap-5">
+				<!-- Categoría (móvil: 3ro | desktop: col1-fila3 agrupado con Estado) -->
+				<div class="order-3 md:order-none md:hidden">
+				<label class="text-sm text-[#1A2440] mb-1 block">Categoría</label>
+				<select [(ngModel)]="editForm.categoria" name="edit_categoria_mobile"
+						class="w-full rounded-xl px-4 py-3 pr-10 text-[#538CFF] bg-[#F4F7FD]
+							appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
+							bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
+							focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60">
+				<option value="" disabled hidden>Seleccionar categoría</option>
+				<option>Turismo</option>
+				<option>Comida</option>
+				<option>Entretenimiento</option>
+				</select>
+				</div>
+
+				<!-- Estado (móvil: 4to | desktop: oculto, se muestra agrupado abajo) -->
+				<div class="order-4 md:order-none md:hidden">
+				<label class="text-sm text-[#1A2440] mb-1 block">Estado</label>
+				<select [(ngModel)]="editForm.estado" name="edit_estado_mobile"
+						class="w-full rounded-xl px-4 py-3 pr-10 text-[#538CFF] bg-[#F4F7FD]
+							appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
+							bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
+							focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60">
+				<option value="" disabled hidden>Seleccionar estado</option>
+				<option>Publicado</option>
+				<option>Borrador</option>
+				</select>
+				</div>
+
+				<!-- Categoría + Estado agrupados (solo desktop) -->
+				<div class="hidden md:flex md:order-none md:col-span-1 flex-col gap-5">
 				<div>
 					<label class="text-sm text-[#1A2440] mb-1 block">Categoría</label>
 					<select [(ngModel)]="editForm.categoria" name="edit_categoria"
@@ -640,8 +669,8 @@
 				</div>
 				</div>
 
-				<!-- Términos y condiciones -->
-				<div class="md:col-span-1">
+				<!-- Términos y condiciones (móvil: 7mo | desktop: col2-fila3) -->
+				<div class="order-7 md:order-none md:col-span-1">
 				<label class="text-sm text-[#1A2440] mb-1 block">Términos y condiciones</label>
 				<textarea [(ngModel)]="editForm.terminos" name="edit_terminos" placeholder="Agregar términos y condiciones"
 							class="w-full rounded-xl px-4 py-3 text-[#538CFF] min-h-44 bg-[#F4F7FD]
@@ -649,8 +678,8 @@
 								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
 				</div>
 
-				<!-- Actions -->
-				<div class="md:col-span-2 flex items-center justify-center gap-3 pt-6">
+				<!-- Actions (móvil: último | desktop: última fila) -->
+				<div class="order-8 md:order-none md:col-span-2 flex items-center justify-center gap-3 pt-6">
 				<button type="submit"
 						[disabled]="!isEditFormValid()"
 						class="px-6 py-3 rounded-full text-white
@@ -734,85 +763,176 @@
 				      [class.opacity-60]="deletingCoupon || couponDeleteSuccess">
 			<!-- Resumen con recuadro -->
 			<div class="rounded-lg ring-1 ring-[#E4EAF5] p-6 bg-[#F4F7FD]">
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-[#0E225C]">
-				<div class="space-y-3">
-				<div>
-					<div class="flex items-center gap-2 text-[#808080]">
-					<svg class="w-5 h-5" aria-hidden="true">
-						<use href="assets/icons/sprite.svg#user"></use>
-					</svg>
-					<span>Título del cupón</span>
+				<!-- Desktop: 2 columnas agrupadas | Móvil: grid 2 cols con campos pareados -->
+				
+				<!-- === LAYOUT MÓVIL (visible solo en móvil) === -->
+				<div class="flex flex-col gap-5 text-sm text-[#0E225C] md:hidden">
+					<!-- Fila 1: Título | Cantidad -->
+					<div class="flex gap-4">
+						<div class="flex-1 min-w-0">
+							<div class="flex items-center gap-2 text-[#808080]">
+								<svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="assets/icons/sprite.svg#user"></use></svg>
+								<span>Título del cupón</span>
+							</div>
+							<div class="mt-1 font-medium">{{ deleteTarget.titulo }}</div>
+						</div>
+						<div class="shrink-0">
+							<div class="flex items-center gap-2 text-[#808080]">
+								<svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="assets/icons/sprite.svg#quantity"></use></svg>
+								<span>Cantidad disponible</span>
+							</div>
+							<div class="mt-1">{{ deleteTarget.cantidad }}</div>
+						</div>
 					</div>
-					<div class="mt-1">{{ deleteTarget.titulo }}</div>
-				</div>
-				<div>
-					<div class="flex items-center gap-2 text-[#A0A7BC]">
-					<svg class="w-5 h-5" aria-hidden="true">
-						<use href="assets/icons/sprite.svg#description-text"></use>
-					</svg>
-					<span>Descripción</span>
+
+					<!-- Fila 2: Descripción (ancho completo) -->
+					<div>
+						<div class="flex items-center gap-2 text-[#808080]">
+							<svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="assets/icons/sprite.svg#description-text"></use></svg>
+							<span>Descripción</span>
+						</div>
+						<div class="mt-1">{{ deleteTarget.descripcion }}</div>
 					</div>
-					<div class="mt-1">{{ deleteTarget.descripcion }}</div>
-				</div>
-				<div>
-					<div class="flex items-center gap-2 text-[#A0A7BC]">
-					<svg class="w-5 h-5" aria-hidden="true">
-						<use href="assets/icons/sprite.svg#category"></use>
-					</svg>
-					<span>Categoría</span>
+
+					<!-- Fila 3: Fecha inicio | Fecha fin -->
+					<div class="flex gap-4">
+						<div class="flex-1 min-w-0">
+							<div class="flex items-center gap-2 text-[#808080]">
+								<svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="assets/icons/sprite.svg#calendar"></use></svg>
+								<span>Fecha inicio</span>
+							</div>
+							<div class="mt-1">{{ deleteTarget.fechaInicio }}</div>
+						</div>
+						<div class="flex-1 min-w-0">
+							<div class="flex items-center gap-2 text-[#808080]">
+								<svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="assets/icons/sprite.svg#calendar"></use></svg>
+								<span>Fecha fin</span>
+							</div>
+							<div class="mt-1">{{ deleteTarget.fechaFin }}</div>
+						</div>
 					</div>
-					<div class="mt-1">{{ deleteTarget.categoria }}</div>
-				</div>
-				<div>
-					<div class="flex items-center gap-2 text-[#A0A7BC]">
-					<svg class="w-5 h-5" aria-hidden="true">
-						<use href="assets/icons/sprite.svg#status"></use>
-					</svg>
-					<span>Estado</span>
+
+					<!-- Fila 4: Términos y condiciones (ancho completo) -->
+					<div>
+						<div class="flex items-center gap-2 text-[#808080]">
+							<svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="assets/icons/sprite.svg#terms"></use></svg>
+							<span>Términos y condiciones</span>
+						</div>
+						@if (deleteTarget.terminos && deleteTarget.terminos.length > 0) {
+							<ul class="mt-2 list-disc pl-6 text-[#0E225C] space-y-1">
+								@for (t of deleteTarget.terminos; track t) {
+									<li>{{ t }}</li>
+								}
+							</ul>
+						} @else {
+							<div class="mt-1 text-[#0E225C]">No especificado</div>
+						}
 					</div>
-					<span class="inline-flex items-center rounded-full bg-yellow-100 text-yellow-800 px-3 py-1 text-xs font-medium mt-1">
-					{{ deleteTarget.estado }}
-					</span>
-				</div>
-				</div>
-				<div class="space-y-3">
-				<div>
-					<div class="flex items-center gap-2 text-[#808080]">
-					<svg class="w-5 h-5 text-[#808080]" aria-hidden="true">
-						<use href="assets/icons/sprite.svg#quantity"></use>
-					</svg>
-					<span>Cantidad disponible</span>
+
+					<!-- Fila 5: Categoría | Estado -->
+					<div class="flex gap-4">
+						<div class="flex-1 min-w-0">
+							<div class="flex items-center gap-2 text-[#808080]">
+								<svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="assets/icons/sprite.svg#category"></use></svg>
+								<span>Categoría</span>
+							</div>
+							<div class="mt-1">{{ deleteTarget.categoria }}</div>
+						</div>
+						<div class="flex-1 min-w-0">
+							<div class="flex items-center gap-2 text-[#808080]">
+								<svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="assets/icons/sprite.svg#status"></use></svg>
+								<span>Estado</span>
+							</div>
+							<span class="inline-flex items-center rounded-full bg-yellow-100 text-yellow-800 px-3 py-1 text-xs font-medium mt-1">
+								{{ deleteTarget.estado }}
+							</span>
+						</div>
 					</div>
-					<div class="mt-1">{{ deleteTarget.cantidad }}</div>
 				</div>
-				<div>
-					<div class="flex items-center gap-2 text-[#808080]">
-					<svg class="w-5 h-5" aria-hidden="true">
-						<use href="assets/icons/sprite.svg#calendar"></use>
-					</svg>
-					<span>Fecha inicio</span>
+
+				<!-- === LAYOUT DESKTOP (visible solo en md+) === -->
+				<div class="hidden md:block text-sm text-[#0E225C]">
+					<!-- Fila 1: Título | Cantidad -->
+					<div class="grid grid-cols-2 gap-6">
+						<div>
+							<div class="flex items-center gap-2 text-[#808080]">
+								<svg class="w-5 h-5" aria-hidden="true"><use href="assets/icons/sprite.svg#user"></use></svg>
+								<span>Título del cupón</span>
+							</div>
+							<div class="mt-1">{{ deleteTarget.titulo }}</div>
+						</div>
+						<div>
+							<div class="flex items-center gap-2 text-[#808080]">
+								<svg class="w-5 h-5" aria-hidden="true"><use href="assets/icons/sprite.svg#quantity"></use></svg>
+								<span>Cantidad disponible</span>
+							</div>
+							<div class="mt-1">{{ deleteTarget.cantidad }}</div>
+						</div>
 					</div>
-					<div class="mt-1">{{ deleteTarget.fechaInicio }}</div>
-				</div>
-				<div>
-					<div class="flex items-center gap-2 text-[#808080]">
-					<svg class="w-5 h-5" aria-hidden="true">
-						<use href="assets/icons/sprite.svg#calendar"></use>
-					</svg>
-					<span>Fecha fin</span>
+
+					<!-- Fila 2: Descripción | Fechas -->
+					<div class="grid grid-cols-2 gap-6 mt-5">
+						<div>
+							<div class="flex items-center gap-2 text-[#808080]">
+								<svg class="w-5 h-5" aria-hidden="true"><use href="assets/icons/sprite.svg#description-text"></use></svg>
+								<span>Descripción</span>
+							</div>
+							<div class="mt-1">{{ deleteTarget.descripcion }}</div>
+						</div>
+						<div class="flex flex-col gap-4">
+							<div>
+								<div class="flex items-center gap-2 text-[#808080]">
+									<svg class="w-5 h-5" aria-hidden="true"><use href="assets/icons/sprite.svg#calendar"></use></svg>
+									<span>Fecha inicio</span>
+								</div>
+								<div class="mt-1">{{ deleteTarget.fechaInicio }}</div>
+							</div>
+							<div>
+								<div class="flex items-center gap-2 text-[#808080]">
+									<svg class="w-5 h-5" aria-hidden="true"><use href="assets/icons/sprite.svg#calendar"></use></svg>
+									<span>Fecha fin</span>
+								</div>
+								<div class="mt-1">{{ deleteTarget.fechaFin }}</div>
+							</div>
+						</div>
 					</div>
-					<div class="mt-1">{{ deleteTarget.fechaFin }}</div>
-				</div>
-				<div>
-					<div class="flex items-center gap-2 text-[#808080]">
-					<svg class="w-5 h-5" aria-hidden="true">
-						<use href="assets/icons/sprite.svg#terms"></use>
-					</svg>
-					<span>Términos y condiciones</span>
+
+					<!-- Fila 3: Categoría + Estado | Términos -->
+					<div class="grid grid-cols-2 gap-6 mt-5">
+						<div class="flex flex-col gap-4">
+							<div>
+								<div class="flex items-center gap-2 text-[#808080]">
+									<svg class="w-5 h-5" aria-hidden="true"><use href="assets/icons/sprite.svg#category"></use></svg>
+									<span>Categoría</span>
+								</div>
+								<div class="mt-1">{{ deleteTarget.categoria }}</div>
+							</div>
+							<div>
+								<div class="flex items-center gap-2 text-[#808080]">
+									<svg class="w-5 h-5" aria-hidden="true"><use href="assets/icons/sprite.svg#status"></use></svg>
+									<span>Estado</span>
+								</div>
+								<span class="inline-flex items-center rounded-full bg-yellow-100 text-yellow-800 px-3 py-1 text-xs font-medium mt-1">
+									{{ deleteTarget.estado }}
+								</span>
+							</div>
+						</div>
+						<div>
+							<div class="flex items-center gap-2 text-[#808080]">
+								<svg class="w-5 h-5" aria-hidden="true"><use href="assets/icons/sprite.svg#terms"></use></svg>
+								<span>Términos y condiciones</span>
+							</div>
+							@if (deleteTarget.terminos && deleteTarget.terminos.length > 0) {
+								<ul class="mt-1 list-disc pl-5 text-[#0E225C] space-y-1">
+									@for (t of deleteTarget.terminos; track t) {
+										<li>{{ t }}</li>
+									}
+								</ul>
+							} @else {
+								<div class="mt-1 text-[#0E225C]">No especificado</div>
+							}
+						</div>
 					</div>
-					<div class="mt-1 text-[#0E225C]">No especificado</div>
-				</div>
-				</div>
 				</div>
 			</div>
 
@@ -838,6 +958,8 @@
 				</button>
 			</div>
 
+			</div>
+
 			<!-- Overlay: Eliminando -->
 			@if (deletingCoupon) {
 				<div class="absolute inset-0 bg-white/85 flex flex-col items-center justify-center z-10 rounded-2xl">
@@ -853,7 +975,7 @@
 			
 			<!-- Overlay: Cupón eliminado correctamente -->
 			@if (couponDeleteSuccess) {
-			<div class="absolute inset-0 bg-white/90 flex flex-col items-center justify-center z-10 px-8 rounded-2xl">
+			<div class="absolute inset-0 bg-white/85 flex flex-col items-center justify-center z-10 px-8 rounded-2xl">
 				<div class="mb-2 text-[#155724]">
 				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10">
 					<circle cx="12" cy="12" r="9" />
@@ -868,7 +990,6 @@
 				</button>
 			</div>
 			}
-			</div>
 		</div>
 		</div>
 	}

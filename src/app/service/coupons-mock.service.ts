@@ -21,6 +21,7 @@ export class CouponsMockService {
         fechaFin: '22/01/2026',
         disponibles: 21,
         estado: 'Borrador',
+        terminos: ['Válido únicamente para consumo en el local.', 'No acumulable con otras promociones o descuentos.', 'Un cupón por persona por visita.'],
       },
       {
         id: 2,
@@ -31,7 +32,7 @@ export class CouponsMockService {
         fechaFin: '22/01/2026',
         disponibles: 4,
         estado: 'Publicado',
-		
+        terminos: ['Válido únicamente para consumo en el local.', 'No acumulable con otras promociones o descuentos.'],
       },
       {
         id: 3,
@@ -42,6 +43,7 @@ export class CouponsMockService {
         fechaFin: '22/01/2026',
         disponibles: 21,
         estado: 'Borrador',
+        terminos: ['Válido únicamente para consumo en el local.'],
       },
       {
         id: 4,
@@ -52,6 +54,7 @@ export class CouponsMockService {
         fechaFin: '22/01/2026',
         disponibles: 4,
         estado: 'Publicado',
+        terminos: ['Válido únicamente para consumo en el local.', 'No acumulable con otras promociones o descuentos.', 'Un cupón por persona por visita.'],
       },
       {
         id: 5,
@@ -62,6 +65,7 @@ export class CouponsMockService {
         fechaFin: '22/01/2026',
         disponibles: 21,
         estado: 'Borrador',
+        terminos: ['Válido únicamente para consumo en el local.'],
       },
       {
         id: 6,
@@ -72,6 +76,7 @@ export class CouponsMockService {
         fechaFin: '22/01/2026',
         disponibles: 4,
         estado: 'Publicado',
+        terminos: ['Válido únicamente para consumo en el local.', 'No acumulable con otras promociones o descuentos.'],
       },
     ]);
   }
