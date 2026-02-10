@@ -16,6 +16,24 @@ export const DASHBOARD_ROUTES: Routes = [
             .then(m => m.HomeComponent)
       },
       {
+        path: 'users-list',
+        loadComponent: () =>
+          import('./pages/user-list/user-list.component')
+            .then(m => m.UserListComponent)
+      },
+      {
+        path: 'audit-list',
+        loadComponent: () =>
+          import('./pages/audit-list/audit-list.component')
+            .then(m => m.AuditListComponent)
+      },
+      {
+        path: 'category-list',
+        loadComponent: () =>
+          import('./pages/category-list/category-list.component')
+            .then(m => m.CategoryListComponent)
+      },
+      {
         path: 'coupons-list',
         loadComponent: () =>
           import('./pages/coupons-list/coupons-list.component')
