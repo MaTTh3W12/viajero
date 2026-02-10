@@ -79,6 +79,7 @@ export class CouponsListComponent {
       fechaFin: payload.fechaFin,
       disponibles: payload.cantidad ?? 0,
       estado: payload.estado,
+      terminos: payload.terminos ? payload.terminos.split('\n').filter(t => t.trim() !== '') : [],
     };
     this.coupons = [nuevo, ...this.coupons];
     console.log('Cupón creado', nuevo);

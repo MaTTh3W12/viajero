@@ -7,4 +7,5 @@ export interface Coupon {
   fechaFin: string;
   disponibles: number;
   estado: string;
+  terminos: string[];
 }

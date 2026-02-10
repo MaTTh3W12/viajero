@@ -113,6 +113,7 @@ export class FilterBarComponent {
     fechaFin: string;
     cantidad: number | null;
     estado: string;
+    terminos: string[];
   } = {
     id: null,
     titulo: '',
@@ -122,6 +123,7 @@ export class FilterBarComponent {
     fechaFin: '',
     cantidad: null,
     estado: '',
+    terminos: [],
   };
 
   selectAuditType(option: string): void {
@@ -298,6 +300,7 @@ export class FilterBarComponent {
     fechaFin: string;
     disponibles: number;
     estado: string;
+    terminos: string[];
   }): void {
     this.deletingCoupon = false;
     this.deleteTarget = {
@@ -309,6 +312,7 @@ export class FilterBarComponent {
       fechaFin: this.toDisplayDate(coupon.fechaFin),
       cantidad: coupon.disponibles,
       estado: coupon.estado,
+      terminos: coupon.terminos || [],
     };
     this.deleteCouponOpen = true;
   }
