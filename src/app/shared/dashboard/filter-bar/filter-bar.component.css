@@ -1,0 +1,15 @@
+.calendar-input {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+}
+
+.calendar-input::-webkit-calendar-picker-indicator {
+  opacity: 0;
+  display: none;
+}
+
+.calendar-input::-webkit-inner-spin-button,
+.calendar-input::-webkit-clear-button {
+  display: none;
+}

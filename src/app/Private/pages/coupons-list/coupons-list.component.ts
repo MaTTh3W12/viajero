@@ -4,13 +4,16 @@ import { DataTableComponent } from '../../../shared/dashboard/data-table/data-ta
 import { DataTableConfig } from '../../../service/data-table.model';
 import { CouponsMockService } from '../../../service/coupons-mock.service';
 import { Coupon } from '../../../service/coupon.interface';
+import { FilterBarComponent } from '../../../shared/dashboard/filter-bar/filter-bar.component';
+import { AuthService, UserRole } from '../../../service/auth.service';
 
 @Component({
   selector: 'app-coupons-list',
   standalone: true,
   imports: [
     TopbarComponent,
-    DataTableComponent
+    DataTableComponent,
+    FilterBarComponent
   ],
   templateUrl: './coupons-list.component.html',
   styleUrl: './coupons-list.component.css',
@@ -20,38 +23,39 @@ export class CouponsListComponent {
 
   tableConfig: DataTableConfig<Coupon> = {
     columns: [
-      { key: 'empresa', label: 'Empresa' },
       { key: 'titulo', label: 'Título' },
-      { key: 'descuento', label: 'Porcentaje/Precio', type: 'box', boxStyle: 'blue' },
-      { key: 'disponibles', label: 'Disponibles', type: 'box', boxStyle: 'gray' },
-      { key: 'adquiridos', label: 'Adquiridos', type: 'box', boxStyle: 'gray' },
-      { key: 'expiracion', label: 'Expiración', type: 'box', boxStyle: 'expiration' },
+      { key: 'descripcion', label: 'Empresa' },
+      { key: 'categoria', label: 'Categoría' },
+      { key: 'fechaInicio', label: 'Fecha Inicio' },
+      { key: 'fechaFin', label: 'Fecha Fin' },
+      { key: 'disponibles', label: 'Disponibles' },
       { key: 'estado', label: 'Estado', type: 'badge' },
     ],
     actions: [
       {
-        icon: 'assets/icons/eye.svg',
-        bgClass: 'bg-[#E6FFF4]',
-        action: row => console.log('Ver', row),
-      },
-      {
-        icon: 'assets/icons/edit-2.svg',
-        bgClass: 'bg-[#E6EEFF]',
+        iconId: 'edit',
+        bgClass: 'bg-[#E6EEFF] text-[#538CFF]',
+        show: row => row.estado === 'Publicado' || row.estado === 'Borrador',
         action: row => console.log('Editar', row),
       },
       {
-        icon: 'assets/icons/trash.png',
-        bgClass: 'bg-[#FFE6E0]',
+        iconId: 'trash',
+        bgClass: 'bg-[#F8D7DA] text-[#C82333]',
+        show: row => row.estado === 'Borrador',
         action: row => console.log('Eliminar', row),
       },
     ],
   };
 
-  constructor(private service: CouponsMockService) { }
+  constructor(private service: CouponsMockService, private auth: AuthService) { }
 
   ngOnInit() {
     this.service.getCoupons().subscribe(data => {
       this.coupons = data;
     });
+  }
+
+  get role(): UserRole {
+    return this.auth.getRole()!;
   }
 }

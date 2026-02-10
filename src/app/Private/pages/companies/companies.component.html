@@ -1,2 +1,7 @@
-<app-topbar variant="companies">
+<app-topbar location="Todas las empresas">
 </app-topbar>
+<app-filter-bar
+  variant="companies"
+  [role]="role">
+</app-filter-bar>
+<app-data-table [config]="tableConfig" [data]="companies"></app-data-table>
