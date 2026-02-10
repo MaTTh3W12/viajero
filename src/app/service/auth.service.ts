@@ -56,12 +56,7 @@ export class AuthService {
   // 🔧 usuarios mock
   private users: (AuthUser & { password: string })[] = [
     { username: 'admin', password: 'admin123', role: 'admin' },
-    {
-      username: 'empresa1',
-      password: 'empresa123',
-      role: 'empresa',
-      companyName: 'AO MEDIA'
-    }
+    { username: 'empresa', password: 'empresa123',role: 'empresa', companyName: 'AO MEDIA'},
   ];
 
   private currentUser: AuthUser | null = this.loadFromStorage();
@@ -89,6 +84,11 @@ export class AuthService {
   isEmpresa(): boolean {
     return this.currentUser?.role === 'empresa';
   }
+
+  isUsuario(): boolean {
+    return this.currentUser?.role === 'usuario';
+  }
+
 
   isKeycloakLoggedIn(): boolean {
     return !!this.getKeycloakToken()?.access_token;

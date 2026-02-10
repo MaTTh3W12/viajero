@@ -1,14 +1,14 @@
-<div class="bg-white p-6 shadow-sm overflow-x-auto">
+<div class="bg-white p-0 md:p-6 shadow-sm overflow-x-auto">
 
-  <!-- DESKTOP TABLE -->
-  <div class="hidden md:block">
-    <table class="w-full border-separate border-spacing-y-3">
+  <!-- TABLE (visible en todos los tamaños, scroll horizontal en móvil) -->
+  <div class="overflow-x-auto">
+    <table class="w-full border-separate border-spacing-y-3 min-w-[700px]">
 
       <!-- HEADER -->
       <thead>
         <tr class="text-left text-sm text-[#0E225C]">
           @for (col of config.columns; track trackColumn($index, col)) {
-          <th class="px-3">{{ col.label }}</th>
+          <th class="px-3 whitespace-nowrap">{{ col.label }}</th>
           }
 
           @if (config.actions?.length) {
@@ -28,7 +28,7 @@
         ">
 
           @for (col of config.columns; track trackColumn($index, col)) {
-          <td class="px-3 py-3 text-left transition-colors duration-200">
+          <td class="px-3 py-3 text-left transition-colors duration-200 whitespace-nowrap">
 
             <!-- BADGE -->
             @if (col.type === 'badge') {
@@ -60,7 +60,7 @@
 
             <!-- TEXT -->
             @else {
-            <span class="text-[#0E225C] text-sm break-words max-w-[260px] block">
+            <span class="text-[#0E225C] text-sm">
               {{ row[col.key] }}
             </span>
             }
@@ -101,68 +101,4 @@
     </table>
   </div>
 
-  <!-- MOBILE -->
-  <div class="block md:hidden space-y-4">
-    @for (row of data; track trackRow($index, row)) {
-    <div class="bg-white rounded-xl shadow-sm p-4 space-y-3
-        transition-all duration-300 ease-out
-        animate-[fadeInUp_.35s_ease-out]">
-
-      @for (col of config.columns; track trackColumn($index, col)) {
-      <div class="flex justify-between text-sm transition-transform duration-150 active:scale-[0.98]">
-        <span class="text-gray-400">{{ col.label }}</span>
-
-        @if (col.type === 'badge') {
-          <span
-            class="px-4 py-1 rounded-full text-sm font-medium"
-            [ngClass]="getBadgeClass(
-              col.render ? col.render(row[col.key], row) : asString(row[col.key])
-            )">
-            {{ col.render ? col.render(row[col.key], row) : row[col.key] }}
-          </span>
-        }
-
-        @else if (col.type === 'box') {
-        <span class="px-3 py-1 rounded-lg text-sm" [ngClass]="
-                col.boxStyle === 'expiration'
-                  ? getExpirationBoxClass(asString(row[col.key]))
-                  : col.boxStyle === 'blue'
-                    ? 'bg-[#538CFF] text-white'
-                    : 'bg-[#F4F7FD] text-[#0E225C]'
-              ">
-          {{ row[col.key] }}
-        </span>
-        }
-
-        @else {
-        <span class="text-[#0E225C] font-medium text-right">
-          {{ row[col.key] }}
-        </span>
-        }
-      </div>
-      }
-
-      <!-- ACTIONS -->
-      <div class="flex justify-end gap-2 pt-2">
-        @for (action of config.actions; track trackAction($index, action)) {
-        @if (isActionVisible(action, row)) {
-          <button (click)="action.action(row)"
-            class="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-150 active:scale-90"
-            [ngClass]="getActionClass(action, row)">
-            @if (getActionIconId(action, row)) {
-              <svg class="w-4 h-4" aria-hidden="true">
-                <use [attr.href]="'assets/icons/sprite.svg#' + getActionIconId(action, row)"></use>
-              </svg>
-            }
-            @else {
-              <img [src]="getActionIcon(action, row)" class="w-4 h-4" />
-            }
-          </button>
-        }
-        }
-      </div>
-
-    </div>
-    }
-  </div>
 </div>

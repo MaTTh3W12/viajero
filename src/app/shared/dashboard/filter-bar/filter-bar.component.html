@@ -1,10 +1,10 @@
-<div class="px-6 py-5 flex items-center" [class]="bgClass">
+<div class="px-0 md:px-6 py-5 flex items-center" [class]="bgClass">
 
   @if (variant === 'users') {
   <div class="w-full flex flex-col gap-2">
 
-    <!-- Label -->
-    <label class="text-sm text-[#0E225C]">Buscar</label>
+	<!-- Label -->
+	<label class="text-sm text-[#0E225C] px-3 md:px-0">Buscar</label>
 
     <!-- Fila de controles -->
     <div class="flex items-center gap-3">
@@ -13,18 +13,17 @@
       <input type="text" placeholder="Buscar usuario" class="flex-1 bg-white rounded-xl px-4 py-3 text-[#0E225C]
              focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40" />
 
-      <!-- Botón Buscar -->
-      <button class="flex items-center gap-2 bg-[#538CFF] text-white
-             px-6 py-3 rounded-full
-             transition-all duration-300
-             hover:bg-[#3F7BFF] hover:shadow-md
-             active:scale-95">
-        <img src="assets/icons/search.png" class="w-4 h-4" />
-        Buscar
-      </button>
+			<!-- Botón Buscar circular -->
+			<button class="w-11 h-11 shrink-0 flex items-center justify-center bg-[#538CFF] text-white
+						 rounded-full transition-all duration-300
+						 hover:bg-[#3F7BFF] hover:shadow-md active:scale-95">
+				<svg class="w-5 h-5" aria-hidden="true">
+					<use href="assets/icons/sprite.svg#search"></use>
+				</svg>
+			</button>
 
       <!-- Botón Filtro -->
-      <button class="w-11 h-11 flex items-center justify-center
+			<button class="w-11 h-11 shrink-0 flex items-center justify-center
              rounded-full border border-[#0E225C]
              transition hover:bg-black/5 active:scale-95">
         <img src="assets/icons/filter.svg" class="w-5 h-5" />
@@ -37,8 +36,8 @@
   @if (variant === 'category') {
   <div class="w-full flex flex-col gap-2">
 
-    <!-- Label -->
-    <label class="text-sm text-[#0E225C]">Buscar</label>
+	<!-- Label -->
+	<label class="text-sm text-[#0E225C] px-3 md:px-0">Buscar</label>
 
     <!-- Fila de controles -->
     <div class="flex items-center gap-3">
@@ -47,15 +46,12 @@
       <input type="text" placeholder="Buscar categoría" class="flex-1 bg-white rounded-xl px-4 py-3 text-[#0E225C]
              focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40" />
 
-      <!-- Botón Buscar -->
-      <button class="flex items-center gap-2 bg-[#538CFF] text-white
-             px-6 py-3 rounded-full
-             transition-all duration-300
-             hover:bg-[#3F7BFF] hover:shadow-md
-             active:scale-95">
-        <img src="assets/icons/search.png" class="w-4 h-4" />
-        Buscar
-      </button>
+			<!-- Botón Buscar circular -->
+			<button class="w-11 h-11 shrink-0 flex items-center justify-center bg-[#538CFF] text-white
+						 rounded-full transition-all duration-300
+						 hover:bg-[#3F7BFF] hover:shadow-md active:scale-95">
+				<img src="assets/icons/search.png" class="w-5 h-5" />
+			</button>
 
       <!-- Botón Crear categoría -->
       <button class="flex items-center gap-2 bg-[#0E225C] text-white
@@ -70,7 +66,7 @@
       </button>
 
       <!-- Botón Filtro -->
-      <button class="w-11 h-11 flex items-center justify-center
+			<button class="w-11 h-11 shrink-0 flex items-center justify-center
              rounded-full border border-[#0E225C] text-[#1A2440]
              transition hover:bg-black/5 active:scale-95">
         <svg class="w-6 h-6">
@@ -85,32 +81,30 @@
   @if (variant === 'coupons') {
   <div class="w-full flex flex-col gap-2">
 
-    <!-- Label -->
-    <label class="text-sm text-[#0E225C]">Buscar</label>
+	<!-- Label -->
+	<label class="text-sm text-[#0E225C] px-3 md:px-0 mt-2 md:mt-0">Buscar</label>
 
     <!-- Fila de controles -->
-    <div class="flex items-center gap-3">
+		<div class="flex items-center gap-3 px-3 md:px-0">
 
       <!-- Input -->
       <input type="text" placeholder="Buscar cupón" class="flex-1 bg-white rounded-xl px-4 py-3 text-[#0E225C]
              focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40" />
 
-      <!-- Botón Buscar -->
-      <button class="flex items-center gap-2 bg-[#538CFF] text-white
-             px-6 py-3 rounded-full
-             transition-all duration-300
-             hover:bg-[#3F7BFF] hover:shadow-md
-             active:scale-95">
-        <img src="assets/icons/search.png" class="w-4 h-4" />
-        Buscar
-      </button>
+			<!-- Botón Buscar -->
+			<button class="w-11 md:w-auto h-11 flex items-center justify-center bg-[#538CFF] text-white
+             md:px-6 md:gap-2
+						 rounded-full transition-all duration-300
+						 hover:bg-[#3F7BFF] hover:shadow-md active:scale-95">
+				<img src="assets/icons/search.png" class="w-5 h-5" />
+        <span class="hidden md:block">Buscar</span>
+			</button>
 
-      <!-- Botón Crear categoría -->
-      <button class="flex items-center gap-2 bg-[#0E225C] text-white
-             px-6 py-3 rounded-full
+      <!-- Botón Crear cupón (Desktop) -->
+      <button class="hidden md:flex items-center gap-2 bg-[#0E225C] text-white
+             px-6 h-11 rounded-full shrink-0
              transition-all duration-300
-             hover:bg-[#0B1B4B] hover:shadow-md
-             active:scale-95">
+             hover:bg-[#0B1B4B] hover:shadow-md active:scale-95" (click)="openCreateCoupon()">
         <svg class="w-6 h-6">
           <use href="assets/icons/sprite.svg#add"></use>
         </svg>
@@ -127,6 +121,18 @@
       </button>
 
     </div>
+
+		<!-- Botón Crear cupón ancho (Móvil) -->
+		<div class="mt-4 px-3 md:px-0 md:hidden">
+			<button class="w-full flex items-center justify-center gap-2 bg-[#0E225C] text-white
+						 px-6 py-3 rounded-full transition-all duration-300
+						 hover:bg-[#0B1B4B] hover:shadow-md active:scale-95" (click)="openCreateCoupon()">
+				<svg class="w-6 h-6">
+					<use href="assets/icons/sprite.svg#add"></use>
+				</svg>
+				Crear cupón
+			</button>
+		</div>
   </div>
   }
 
@@ -305,18 +311,15 @@
       <input type="text" placeholder="Buscar cupón" class="flex-1 bg-white rounded-xl px-4 py-3 text-[#0E225C]
              focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40" />
 
-      <!-- Botón Buscar -->
-      <button class="flex items-center gap-2 bg-[#538CFF] text-white
-             px-6 py-3 rounded-full
-             transition-all duration-300
-             hover:bg-[#3F7BFF] hover:shadow-md
-             active:scale-95">
-        <img src="assets/icons/search.png" class="w-4 h-4" />
-        Buscar
-      </button>
+			<!-- Botón Buscar circular -->
+			<button class="w-11 h-11 shrink-0 flex items-center justify-center bg-[#538CFF] text-white
+						 rounded-full transition-all duration-300
+						 hover:bg-[#3F7BFF] hover:shadow-md active:scale-95">
+				<img src="assets/icons/search.png" class="w-5 h-5" />
+			</button>
 
       <!-- Botón Filtro -->
-      <button class="w-11 h-11 flex items-center justify-center
+			<button class="w-11 h-11 shrink-0 flex items-center justify-center
              rounded-full border border-[#0E225C]
              transition hover:bg-black/5 active:scale-95">
         <img src="assets/icons/filter.svg" class="w-5 h-5" />
@@ -327,3 +330,545 @@
   }
 
 </div>
+
+	@if (createCouponOpen) {
+		<!-- Overlay -->
+		<div class="fixed inset-0 bg-black/40 z-40" (click)="closeCreateCoupon()"></div>
+
+		<!-- Modal -->
+		<div class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 w-screen h-screen overflow-x-hidden overscroll-none">
+		<div class="relative w-full md:max-w-3xl bg-white rounded-t-2xl md:rounded-2xl shadow-xl ring-1 ring-black/5 coupon-modal flex flex-col max-h-[92vh] md:max-h-[85vh] overflow-hidden">
+			<!-- Header -->
+			<div class="relative px-6 pt-6 pb-2 flex-none"
+				[class.opacity-60]="creatingCoupon || couponCreateSuccess"
+				[class.pointer-events-none]="creatingCoupon || couponCreateSuccess">
+			<h2 class="text-2xl font-medium text-[#0E225C] text-center">Crear cupón</h2>
+			<button class="absolute right-6 top-6 w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/5"
+					(click)="closeCreateCoupon()" aria-label="Cerrar">
+				<svg class="w-5 h-5 text-[#0E225C]">
+				<use href="assets/icons/sprite.svg#close-circle"></use>
+				</svg>
+			</button>
+			</div>
+
+			<!-- Body -->
+			<div class="px-6 pb-6 flex-1 overflow-y-auto"
+				[class.opacity-60]="creatingCoupon || couponCreateSuccess"
+				[class.pointer-events-none]="creatingCoupon || couponCreateSuccess">
+			<form class="grid grid-cols-1 md:grid-cols-2 gap-5" (submit)="$event.preventDefault(); submitCreateCoupon()">
+				<!-- Título del cupón -->
+				<div>
+				<label class="text-sm text-[#1A2440] mb-1 block">Título del cupón</label>
+				<input [(ngModel)]="couponForm.titulo" name="titulo" type="text" placeholder="Agregar título"
+						class="w-full rounded-xl px-4 py-3 text-[#0E225C] bg-[#F4F7FD]
+								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
+								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
+				</div>
+
+				<!-- Cantidad disponible -->
+				<div>
+				<label class="text-sm text-[#1A2440] mb-1 block">Cantidad disponible</label>
+				<input [(ngModel)]="couponForm.cantidad" name="cantidad" type="number" placeholder="Agregar cantidad"
+						class="w-full rounded-xl px-4 py-3 text-[#0E225C] bg-[#F4F7FD]
+								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
+								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
+				</div>
+
+				<!-- Descripción -->
+				<div class="md:col-span-1">
+				<label class="text-sm text-[#1A2440] mb-1 block">Descripción</label>
+				<textarea [(ngModel)]="couponForm.descripcion" name="descripcion" placeholder="Agregar descripción"
+							class="w-full rounded-xl px-4 py-3 text-[#0E225C] min-h-44
+								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
+								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
+				</div>
+
+				<!-- Fechas: inicio y fin (apiladas en la misma columna) -->
+				<div class="md:col-span-1 flex flex-col gap-5">
+				<!-- Fecha inicio -->
+				<div>
+					<label class="text-sm text-[#1A2440] mb-1 block">Fecha inicio</label>
+					<div class="relative">
+					<input #modalStart type="date" [(ngModel)]="couponForm.fechaInicio" name="fechaInicio" placeholder="dd/mm/aaaa"
+							class="calendar-input w-full rounded-xl px-4 py-3 pr-11 text-[#0E225C]
+									ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
+									focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+							(click)="openDatePicker(modalStart)" />
+					<button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
+							(click)="openDatePicker(modalStart)">
+						<svg class="w-6 h-6" aria-hidden="true">
+						<use href="assets/icons/sprite.svg#calendar"></use>
+						</svg>
+					</button>
+					</div>
+				</div>
+
+				<!-- Fecha fin -->
+				<div>
+					<label class="text-sm text-[#1A2440] mb-1 block">Fecha fin</label>
+					<div class="relative">
+					<input #modalEnd type="date" [(ngModel)]="couponForm.fechaFin" name="fechaFin" placeholder="dd/mm/aaaa"
+							class="calendar-input w-full rounded-xl px-4 py-3 pr-11 text-[#0E225C]
+									ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
+									focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+							(click)="openDatePicker(modalEnd)" />
+					<button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
+							(click)="openDatePicker(modalEnd)">
+						<svg class="w-6 h-6" aria-hidden="true">
+						<use href="assets/icons/sprite.svg#calendar"></use>
+						</svg>
+					</button>
+					</div>
+				</div>
+				</div>
+
+				<!-- Columna izquierda: Categoría + Estado -->
+				<div class="md:col-span-1 flex flex-col gap-5">
+				<!-- Categoría -->
+				<div>
+					<label class="text-sm text-[#1A2440] mb-1 block">Categoría</label>
+					<select [(ngModel)]="couponForm.categoria" name="categoria"
+							class="w-full rounded-xl px-4 py-3 pr-10 text-[#0E225C] bg-[#F4F7FD]
+								appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
+								bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
+								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60">
+					<option value="" disabled selected hidden>Seleccionar categoría</option>
+					<option>Turismo</option>
+					<option>Comida</option>
+					<option>Entretenimiento</option>
+					</select>
+				</div>
+
+				<!-- Estado -->
+				<div>
+					<label class="text-sm text-[#1A2440] mb-1 block">Estado</label>
+					<select [(ngModel)]="couponForm.estado" name="estado"
+							class="w-full rounded-xl px-4 py-3 pr-10 text-[#0E225C] bg-[#F4F7FD]
+								appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
+								bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
+								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60">
+					<option value="" disabled selected hidden>Seleccionar estado</option>
+					<option>Publicado</option>
+					<option>Borrador</option>
+					</select>
+				</div>
+				</div>
+
+				<!-- Términos y condiciones -->
+				<div class="md:col-span-1">
+				<label class="text-sm text-[#1A2440] mb-1 block">Términos y condiciones</label>
+				<textarea [(ngModel)]="couponForm.terminos" name="terminos" placeholder="Agregar términos y condiciones"
+							class="w-full rounded-xl px-4 py-3 text-[#0E225C] min-h-44 bg-[#F4F7FD]
+								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
+								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
+				</div>
+
+				<!-- Actions -->
+				<div class="md:col-span-2 flex items-center justify-center gap-3 pt-6">
+				<button type="submit"
+						[disabled]="!isCouponFormValid()"
+						class="px-6 py-3 rounded-full text-white
+								bg-[#0E225C] hover:bg-[#0B1B4B]
+								disabled:bg-[#C7CBD5] disabled:hover:bg-[#C7CBD5] disabled:cursor-not-allowed">
+					Crear cupón
+				</button>
+				<button type="button" class="px-6 py-3 rounded-full bg-white border border-[#0E225C] text-[#0E225C]"
+						(click)="closeCreateCoupon()">Cancelar</button>
+				
+				</div>
+			</form>
+			</div>
+
+			<!-- Overlay: Creando cupón -->
+			@if (creatingCoupon) {
+			<div class="absolute inset-0 bg-white/85 flex flex-col items-center justify-center z-10">
+				<svg class="animate-spin h-10 w-10 text-black mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+				<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"></path>
+				</svg>
+				<div class="text-center">
+				<h3 class="text-2xl font-normal text-[#1A2440] mb-2">Creando cupón...</h3>
+				<p class="text-base font-normal text-[#1A2440]">Por favor espera, no cierres esta ventana.</p>
+				</div>
+			</div>
+			}
+
+			<!-- Overlay: Cupón creado correctamente -->
+			@if (couponCreateSuccess) {
+			<div class="absolute inset-0 bg-white/85 flex flex-col items-center justify-center z-10 px-8">
+				<div class="mb-2 text-[#155724]">
+					<svg class="w-10 h-10" aria-hidden="true">
+						<use href="assets/icons/sprite.svg#status-check"></use>
+					</svg>
+				</div>
+
+				<h3 class="text-2xl font-normal text-[#1A2440] mb-3 text-center">Cupón creado correctamente.</h3>
+				<div class="text-sm text-[#1A2440] mb-5">
+				Su estado es:
+				<span class="ml-2 inline-flex items-center rounded-full bg-green-100 text-green-800 px-3 py-1 text-xs font-medium">
+					{{ couponForm.estado || 'Publicado' }}
+				</span>
+				</div>
+
+					<button (click)="onSuccessContinue()"
+					class="w-full max-w-md bg-[#5B95FF] hover:bg-blue-600 text-white rounded-full py-3.5 font-normal text-lg shadow-lg shadow-blue-500/30 transition-all transform active:scale-95">
+				Volver a mis cupones
+				</button>
+			</div>
+			}
+		</div>
+		</div>
+	}
+	
+	@if (editCouponOpen) {
+		<!-- Overlay -->
+		<div class="fixed inset-0 bg-black/40 z-40" (click)="closeEditCoupon()"></div>
+
+		<!-- Modal Editar -->
+		<div class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 w-screen h-screen overflow-x-hidden overscroll-none">
+		<div class="relative w-full md:max-w-3xl bg-white rounded-t-2xl md:rounded-2xl shadow-xl ring-1 ring-black/5 coupon-modal flex flex-col max-h-[92vh] md:max-h-[85vh] overflow-hidden">
+			<!-- Header -->
+			<div class="relative px-6 pt-6 pb-2 flex-none"
+				[class.opacity-60]="editingCoupon || couponEditSuccess"
+				[class.pointer-events-none]="editingCoupon || couponEditSuccess">
+			<h2 class="text-2xl font-medium text-[#0E225C] text-center">Editar cupón</h2>
+				<button class="absolute right-6 top-6 w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/5"
+					(click)="closeEditCoupon()" aria-label="Cerrar">
+				<svg class="w-5 h-5 text-[#0E225C]">
+				<use href="assets/icons/sprite.svg#close-circle"></use>
+				</svg>
+			</button>
+			</div>
+
+			<!-- Body -->
+			<div class="px-6 pb-6 flex-1 overflow-y-auto"
+				[class.opacity-60]="editingCoupon || couponEditSuccess"
+				[class.pointer-events-none]="editingCoupon || couponEditSuccess">
+			<form class="grid grid-cols-1 md:grid-cols-2 gap-5" (submit)="$event.preventDefault(); submitEditCoupon()">
+				<!-- Título del cupón -->
+				<div>
+				<label class="text-sm text-[#1A2440] mb-1 block">Título del cupón</label>
+				<input [(ngModel)]="editForm.titulo" name="edit_titulo" type="text" placeholder="Agregar título"
+						class="w-full rounded-xl px-4 py-3 text-[#538CFF] bg-[#F4F7FD]
+								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
+								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
+				</div>
+
+				<!-- Cantidad disponible -->
+				<div>
+				<label class="text-sm text-[#1A2440] mb-1 block">Cantidad disponible</label>
+				<input [(ngModel)]="editForm.cantidad" name="edit_cantidad" type="number" placeholder="Agregar cantidad"
+						class="w-full rounded-xl px-4 py-3 text-[#538CFF] bg-[#F4F7FD]
+								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
+								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
+				</div>
+
+				<!-- Descripción -->
+				<div class="md:col-span-1">
+				<label class="text-sm text-[#1A2440] mb-1 block">Descripción</label>
+				<textarea [(ngModel)]="editForm.descripcion" name="edit_descripcion" placeholder="Agregar descripción"
+							class="w-full rounded-xl px-4 py-3 text-[#538CFF] min-h-44
+								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
+								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
+				</div>
+
+				<!-- Fechas: inicio y fin -->
+				<div class="md:col-span-1 flex flex-col gap-5">
+				<!-- Fecha inicio -->
+				<div>
+					<label class="text-sm text-[#1A2440] mb-1 block">Fecha inicio</label>
+					<div class="relative">
+					<input #editStart type="date" [(ngModel)]="editForm.fechaInicio" name="edit_fechaInicio" placeholder="dd/mm/aaaa"
+							class="calendar-input w-full rounded-xl px-4 py-3 pr-11 text-[#538CFF]
+									ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
+									focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+							(click)="openDatePicker(editStart)" />
+					<button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
+							(click)="openDatePicker(editStart)">
+						<svg class="w-6 h-6" aria-hidden="true">
+						<use href="assets/icons/sprite.svg#calendar"></use>
+						</svg>
+					</button>
+					</div>
+				</div>
+
+				<!-- Fecha fin -->
+				<div>
+					<label class="text-sm text-[#1A2440] mb-1 block">Fecha fin</label>
+					<div class="relative">
+					<input #editEnd type="date" [(ngModel)]="editForm.fechaFin" name="edit_fechaFin" placeholder="dd/mm/aaaa"
+							class="calendar-input w-full rounded-xl px-4 py-3 pr-11 text-[#538CFF]
+									ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
+									focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+							(click)="openDatePicker(editEnd)" />
+					<button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
+							(click)="openDatePicker(editEnd)">
+						<svg class="w-6 h-6" aria-hidden="true">
+						<use href="assets/icons/sprite.svg#calendar"></use>
+						</svg>
+					</button>
+					</div>
+				</div>
+				</div>
+
+				<!-- Categoría + Estado -->
+				<div class="md:col-span-1 flex flex-col gap-5">
+				<div>
+					<label class="text-sm text-[#1A2440] mb-1 block">Categoría</label>
+					<select [(ngModel)]="editForm.categoria" name="edit_categoria"
+							class="w-full rounded-xl px-4 py-3 pr-10 text-[#538CFF] bg-[#F4F7FD]
+								appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
+								bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
+								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60">
+					<option value="" disabled hidden>Seleccionar categoría</option>
+					<option>Turismo</option>
+					<option>Comida</option>
+					<option>Entretenimiento</option>
+					</select>
+				</div>
+
+				<div>
+					<label class="text-sm text-[#1A2440] mb-1 block">Estado</label>
+					<select [(ngModel)]="editForm.estado" name="edit_estado"
+							class="w-full rounded-xl px-4 py-3 pr-10 text-[#538CFF] bg-[#F4F7FD]
+								appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
+								bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
+								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60">
+					<option value="" disabled hidden>Seleccionar estado</option>
+					<option>Publicado</option>
+					<option>Borrador</option>
+					</select>
+				</div>
+				</div>
+
+				<!-- Términos y condiciones -->
+				<div class="md:col-span-1">
+				<label class="text-sm text-[#1A2440] mb-1 block">Términos y condiciones</label>
+				<textarea [(ngModel)]="editForm.terminos" name="edit_terminos" placeholder="Agregar términos y condiciones"
+							class="w-full rounded-xl px-4 py-3 text-[#538CFF] min-h-44 bg-[#F4F7FD]
+								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
+								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
+				</div>
+
+				<!-- Actions -->
+				<div class="md:col-span-2 flex items-center justify-center gap-3 pt-6">
+				<button type="submit"
+						[disabled]="!isEditFormValid()"
+						class="px-6 py-3 rounded-full text-white
+								bg-[#538CFF] hover:bg-[#0B1B4B]
+								disabled:bg-[#C7CBD5] disabled:hover:bg-[#C7CBD5] disabled:cursor-not-allowed">
+					Guardar cambios
+				</button>
+				<button type="button" class="px-6 py-3 rounded-full bg-white border border-[#0E225C] text-[#0E225C]"
+						(click)="closeEditCoupon()">Cancelar</button>
+				</div>
+			</form>
+			</div>
+
+			<!-- Overlay: Guardando -->
+			@if (editingCoupon) {
+			<div class="absolute inset-0 bg-white/85 flex flex-col items-center justify-center z-10">
+				<svg class="animate-spin h-10 w-10 text-black mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+				<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"></path>
+				</svg>
+				<div class="text-center">
+				<h3 class="text-2xl font-normal text-[#1A2440] mb-2">Actualizando cupón...</h3>
+				<p class="text-base font-normal text-[#1A2440]">Por favor espera, no cierres esta ventana.</p>
+				</div>
+			</div>
+			}
+
+			<!-- Overlay: Actualizado -->
+			@if (couponEditSuccess) {
+			<div class="absolute inset-0 bg-white/85 flex flex-col items-center justify-center z-10 px-8">
+				<div class="mb-2 text-[#155724]">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10">
+						<circle cx="12" cy="12" r="9" />
+						<path d="M8 12l2.5 2.5 5.5 -5.5" />
+					</svg>
+				</div>
+
+				@if (editForm.estado === 'Publicado') {
+					<h3 class="text-2xl font-normal text-[#1A2440] mb-3 text-center">Cambios del cupón actualizados correctamente.</h3>
+					<div class="text-sm text-[#1A2440] mb-5 text-center">
+						Su estado es:
+						<span class="ml-2 inline-flex items-center rounded-full bg-green-100 text-green-800 px-3 py-1 text-xs font-medium">
+							{{ editForm.estado }}
+						</span>
+					</div>
+				} @else {
+					<h3 class="text-2xl font-normal text-[#1A2440] mb-3 text-center">Cupón actualizado correctamente.</h3>
+				}
+
+				<button (click)="onEditSuccessContinue()"
+						class="w-full max-w-md bg-[#5B95FF] hover:bg-blue-600 text-white rounded-full py-3.5 font-normal text-lg shadow-lg shadow-blue-500/30 transition-all transform active:scale-95">
+					Volver a mis cupones
+				</button>
+			</div>
+			}
+		</div>
+		</div>
+	}
+
+	@if (deleteCouponOpen) {
+		<!-- Overlay -->
+		<div class="fixed inset-0 bg-black/40 z-40" (click)="closeDeleteCoupon()"></div>
+
+		<!-- Modal Eliminar -->
+		<div class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4">
+		<div class="relative w-full md:max-w-3xl bg-[white] rounded-t-2xl md:rounded-2xl shadow-xl ring-1 ring-black/5 coupon-modal flex flex-col max-h-[92vh] md:max-h-[85vh] overflow-hidden">
+			<!-- Header -->
+			<div class="relative px-6 pt-6 pb-2"
+				[class.opacity-60]="deletingCoupon || couponDeleteSuccess"
+				[class.pointer-events-none]="deletingCoupon || couponDeleteSuccess">
+			<h2 class="text-2xl font-medium text-[#0E225C] text-center">Eliminar cupón</h2>
+			<button class="absolute right-6 top-6 w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/5"
+					(click)="closeDeleteCoupon()" aria-label="Cerrar">
+				<svg class="w-5 h-5 text-[#0E225C]">
+				<use href="assets/icons/sprite.svg#close-circle"></use>
+				</svg>
+			</button>
+			</div>
+
+			<!-- Body -->
+			      <div class="px-6 pb-6 flex-1 overflow-y-auto"
+				      [class.opacity-60]="deletingCoupon || couponDeleteSuccess">
+			<!-- Resumen con recuadro -->
+			<div class="rounded-lg ring-1 ring-[#E4EAF5] p-6 bg-[#F4F7FD]">
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-[#0E225C]">
+				<div class="space-y-3">
+				<div>
+					<div class="flex items-center gap-2 text-[#808080]">
+					<svg class="w-5 h-5" aria-hidden="true">
+						<use href="assets/icons/sprite.svg#user"></use>
+					</svg>
+					<span>Título del cupón</span>
+					</div>
+					<div class="mt-1">{{ deleteTarget.titulo }}</div>
+				</div>
+				<div>
+					<div class="flex items-center gap-2 text-[#A0A7BC]">
+					<svg class="w-5 h-5" aria-hidden="true">
+						<use href="assets/icons/sprite.svg#description-text"></use>
+					</svg>
+					<span>Descripción</span>
+					</div>
+					<div class="mt-1">{{ deleteTarget.descripcion }}</div>
+				</div>
+				<div>
+					<div class="flex items-center gap-2 text-[#A0A7BC]">
+					<svg class="w-5 h-5" aria-hidden="true">
+						<use href="assets/icons/sprite.svg#category"></use>
+					</svg>
+					<span>Categoría</span>
+					</div>
+					<div class="mt-1">{{ deleteTarget.categoria }}</div>
+				</div>
+				<div>
+					<div class="flex items-center gap-2 text-[#A0A7BC]">
+					<svg class="w-5 h-5" aria-hidden="true">
+						<use href="assets/icons/sprite.svg#status"></use>
+					</svg>
+					<span>Estado</span>
+					</div>
+					<span class="inline-flex items-center rounded-full bg-yellow-100 text-yellow-800 px-3 py-1 text-xs font-medium mt-1">
+					{{ deleteTarget.estado }}
+					</span>
+				</div>
+				</div>
+				<div class="space-y-3">
+				<div>
+					<div class="flex items-center gap-2 text-[#808080]">
+					<svg class="w-5 h-5 text-[#808080]" aria-hidden="true">
+						<use href="assets/icons/sprite.svg#quantity"></use>
+					</svg>
+					<span>Cantidad disponible</span>
+					</div>
+					<div class="mt-1">{{ deleteTarget.cantidad }}</div>
+				</div>
+				<div>
+					<div class="flex items-center gap-2 text-[#808080]">
+					<svg class="w-5 h-5" aria-hidden="true">
+						<use href="assets/icons/sprite.svg#calendar"></use>
+					</svg>
+					<span>Fecha inicio</span>
+					</div>
+					<div class="mt-1">{{ deleteTarget.fechaInicio }}</div>
+				</div>
+				<div>
+					<div class="flex items-center gap-2 text-[#808080]">
+					<svg class="w-5 h-5" aria-hidden="true">
+						<use href="assets/icons/sprite.svg#calendar"></use>
+					</svg>
+					<span>Fecha fin</span>
+					</div>
+					<div class="mt-1">{{ deleteTarget.fechaFin }}</div>
+				</div>
+				<div>
+					<div class="flex items-center gap-2 text-[#808080]">
+					<svg class="w-5 h-5" aria-hidden="true">
+						<use href="assets/icons/sprite.svg#terms"></use>
+					</svg>
+					<span>Términos y condiciones</span>
+					</div>
+					<div class="mt-1 text-[#0E225C]">No especificado</div>
+				</div>
+				</div>
+				</div>
+			</div>
+
+			<!-- Aviso -->
+			<div class="mt-2 rounded-2xl p-6 text-center">
+				<div class="flex items-center justify-center mb-3">
+				<svg class="w-10 h-10 text-[#C82333]" aria-hidden="true">
+					<use href="assets/icons/sprite.svg#danger"></use>
+				</svg>
+				</div>
+				<h3 class="text-xl font-normal text-[#1A2440] mb-2">Esta acción eliminará el cupón de forma permanente.</h3>
+				<p class="text-sm text-[#1A2440]">No podrá ser reactivado ni reutilizado.</p>
+			</div>
+
+			<!-- Actions -->
+			<div class="mt-6 flex items-center justify-center gap-3">
+				<button (click)="submitDeleteCoupon()"
+						class="px-6 py-3 rounded-full bg-[#C82333] text-white hover:bg-[#A71D2A] active:scale-95">
+				Eliminar cupón
+				</button>
+				<button type="button" class="px-6 py-3 rounded-full bg-white border border-[#0E225C] text-[#0E225C]" (click)="closeDeleteCoupon()">
+				Cancelar
+				</button>
+			</div>
+
+			<!-- Overlay: Eliminando -->
+			@if (deletingCoupon) {
+				<div class="absolute inset-0 bg-white/85 flex flex-col items-center justify-center z-10 rounded-2xl">
+				<svg class="animate-spin h-10 w-10 text-black mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+					<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"></path>
+				</svg>
+				<div class="text-center">
+					<h3 class="text-2xl font-normal text-[#1A2440] mb-2">Eliminando cupón...</h3>
+					<p class="text-base font-normal text-[#1A2440]">Por favor espera, no cierres esta ventana.</p>
+				</div>
+				</div>
+			}
+			
+			<!-- Overlay: Cupón eliminado correctamente -->
+			@if (couponDeleteSuccess) {
+			<div class="absolute inset-0 bg-white/90 flex flex-col items-center justify-center z-10 px-8 rounded-2xl">
+				<div class="mb-2 text-[#155724]">
+				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10">
+					<circle cx="12" cy="12" r="9" />
+					<path d="M8 12l2.5 2.5 5.5 -5.5" />
+				</svg>
+				</div>
+				<h3 class="text-2xl font-normal text-[#1A2440] mb-3 text-center">Cupón eliminado correctamente.</h3>
+				<h1 class="text-base font-normal text-[#1A2440] mb-3 text-center">El cupón ya no será visible ni reutilizable.</h1>
+				<button (click)="onDeleteSuccessContinue()"
+						class="w-full max-w-md bg-[#4a87f8] hover:bg-blue-600 text-white rounded-full py-3.5 font-normal text-lg shadow-lg shadow-blue-500/30 transition-all transform active:scale-95">
+				Volver a mis cupones
+				</button>
+			</div>
+			}
+			</div>
+		</div>
+		</div>
+	}

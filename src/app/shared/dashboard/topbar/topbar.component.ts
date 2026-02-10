@@ -75,7 +75,7 @@ export class TopbarComponent {
   get bgClass() {
     return this.role === 'admin'
       ? 'bg-[#1A2440]'     // azul oscuro (admin)
-      : 'bg-[#538CFF]';    // celeste (empresa/usuario)
+      : 'bg-[#538CFF]';    // celeste (empresa)
   }
 
 }

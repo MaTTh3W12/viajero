@@ -23,8 +23,7 @@ export class CompaniesComponent {
   tableConfig: DataTableConfig<Company> = {
     columns: [
       { key: 'empresa', label: 'Empresa' },
-      {
-        key: 'documentoLegal', label: 'Documento Legal'},
+      { key: 'documentoLegal', label: 'Documento Legal'},
       { key: 'coreo', label: 'Correo' },
       { key: 'estado', label: 'Estado', type: 'badge' },
     ],
