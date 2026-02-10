@@ -13,3 +13,8 @@
 .calendar-input::-webkit-clear-button {
   display: none;
 }
+
+/* Color de texto para opciones de selects dentro del modal de cupones */
+.coupon-modal select option {
+  color: #1A2440;
+}

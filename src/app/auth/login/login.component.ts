@@ -26,7 +26,7 @@ export class LoginComponent implements OnInit {
     private router: Router,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone
-  ) {}
+  ) { }
 
   async ngOnInit(): Promise<void> {
     this.loggingIn = true;
@@ -85,6 +85,8 @@ export class LoginComponent implements OnInit {
     // Dependiendo del rol, redirigimos a Public o Private
     if (this.currentUser.role === 'admin') {
       this.router.navigateByUrl('/dashboard');
+    } else if (this.currentUser.role === 'empresa') {
+      this.router.navigateByUrl('/companies/dashboard');
     } else {
       this.router.navigateByUrl('/');
     }

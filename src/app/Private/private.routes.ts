@@ -1,9 +1,10 @@
 import { Routes } from '@angular/router';
-import { adminGuard } from '../shared/guards/auth.guard';
+import { adminGuard, empresaGuard } from '../shared/guards/auth.guard';
 
-export const DASHBOARD_ROUTES: Routes = [
+// Rutas para ADMIN: /admin/dashboard
+export const ADMIN_ROUTES: Routes = [
   {
-    path: '',
+    path: 'dashboard',
     loadComponent: () =>
       import('./admin-dashboard/admin-dashboard.component')
         .then(m => m.AdminDashboardComponent),
@@ -50,6 +51,55 @@ export const DASHBOARD_ROUTES: Routes = [
         loadComponent: () =>
           import('./pages/companies/companies.component')
             .then(m => m.CompaniesComponent)
+      }
+    ]
+  }
+];
+
+// Rutas para EMPRESA: /company/dashboard
+export const COMPANY_ROUTES: Routes = [
+  {
+    path: 'dashboard',
+    loadComponent: () =>
+      import('./company-dashboard/company-dashboard.component')
+        .then(m => m.CompanyDashboardComponent),
+    canActivate: [empresaGuard],
+    children: [
+      {
+        path: '',
+        loadComponent: () =>
+          import('./pages/home/home.component')
+            .then(m => m.HomeComponent)
+      },
+      {
+        path: 'estadisticas',
+        loadComponent: () =>
+          import('./pages/home/home.component')
+            .then(m => m.HomeComponent)
+      },
+      {
+        path: 'gestion-cupones',
+        loadComponent: () =>
+          import('./pages/coupons-list/coupons-list.component')
+            .then(m => m.CouponsListComponent)
+      },
+      {
+        path: 'canje-cupones',
+        loadComponent: () =>
+          import('./pages/home/home.component')
+            .then(m => m.HomeComponent)
+      },
+      {
+        path: 'historial-canje',
+        loadComponent: () =>
+          import('./pages/home/home.component')
+            .then(m => m.HomeComponent)
+      },
+      {
+        path: 'contacto',
+        loadComponent: () =>
+          import('./pages/home/home.component')
+            .then(m => m.HomeComponent)
       }
     ]
   }
