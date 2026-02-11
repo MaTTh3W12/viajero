@@ -61,6 +61,7 @@ export class FilterBarComponent {
     fechaFin: string;
     disponibles: number;
     estado: string;
+    terminos: string[];
   }>();
   @Output() deleteCoupon = new EventEmitter<number>();
 
@@ -256,6 +257,7 @@ export class FilterBarComponent {
         fechaFin: this.toDisplayDate(this.editForm.fechaFin),
         disponibles: this.editForm.cantidad ?? 0,
         estado: this.editForm.estado,
+        terminos: this.editForm.terminos ? this.editForm.terminos.split('\n').filter(t => t.trim() !== '') : [],
       });
     }, 1500);
   }
