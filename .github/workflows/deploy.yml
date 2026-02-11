@@ -38,9 +38,9 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "dist/*"
+          source: "dist/browser/*"
           target: "${{ secrets.EC2_PATH }}/frontend/dist"
-          strip_components: 1
+          strip_components: 2
 
       - name: Restart frontend container
         uses: appleboy/ssh-action@v1.0.3
