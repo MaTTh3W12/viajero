@@ -329,6 +329,126 @@
   </div>
   }
 
+  @if (variant === 'statistics') {
+  <div class="w-full flex flex-col gap-2">
+
+    <!-- Label -->
+    <label class="text-sm text-[#0E225C] px-3 md:px-0">Buscar cupones recientes</label>
+
+    <!-- Fila de controles -->
+    <div class="flex items-center gap-3 px-3 md:px-0">
+
+      <!-- Input -->
+      <input type="text" placeholder="Buscar cupón" class="flex-1 bg-white rounded-xl px-4 py-3 text-[#0E225C]
+             focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40" />
+
+      <!-- Botón Buscar -->
+      <button class="w-11 md:w-auto h-11 flex items-center justify-center bg-[#538CFF] text-white
+             md:px-6 md:gap-2
+             rounded-full transition-all duration-300
+             hover:bg-[#3F7BFF] hover:shadow-md active:scale-95">
+        <svg class="w-5 h-5" aria-hidden="true">
+          <use href="assets/icons/sprite.svg#search"></use>
+        </svg>
+        <span class="hidden md:block">Buscar</span>
+      </button>
+
+      <!-- Botón Filtro -->
+      <button class="w-11 h-11 shrink-0 flex items-center justify-center
+             rounded-full border transition active:scale-95"
+             [class.border-[#538CFF]]="statisticsFiltersOpen"
+             [class.bg-[#538CFF]]="statisticsFiltersOpen"
+             [class.text-white]="statisticsFiltersOpen"
+             [class.border-[#0E225C]]="!statisticsFiltersOpen"
+             [class.text-[#1A2440]]="!statisticsFiltersOpen"
+             [class.hover:bg-black/5]="!statisticsFiltersOpen"
+             (click)="toggleStatisticsFilters()">
+        <svg class="w-6 h-6">
+          <use href="assets/icons/sprite.svg#filter"></use>
+        </svg>
+      </button>
+
+    </div>
+
+    <!-- Filtros expandibles -->
+    @if (statisticsFiltersOpen) {
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 px-3 md:px-0 mt-2 animate-slide-down">
+
+      <!-- Desde -->
+      <div>
+        <label class="text-sm text-[#0E225C] mb-1 block">Desde</label>
+        <div class="relative">
+          <input #statsStartDate type="date" placeholder="dd/mm/aaaa"
+                 class="calendar-input w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C]
+                        placeholder:text-[#A0A7BC]
+                        focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+                 (click)="openDatePicker(statsStartDate)" />
+          <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
+                  (click)="openDatePicker(statsStartDate)">
+            <svg class="w-6 h-6" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#calendar"></use>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Hasta -->
+      <div>
+        <label class="text-sm text-[#0E225C] mb-1 block">Hasta</label>
+        <div class="relative">
+          <input #statsEndDate type="date" placeholder="dd/mm/aaaa"
+                 class="calendar-input w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C]
+                        placeholder:text-[#A0A7BC]
+                        focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+                 (click)="openDatePicker(statsEndDate)" />
+          <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
+                  (click)="openDatePicker(statsEndDate)">
+            <svg class="w-6 h-6" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#calendar"></use>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tipo de métrica -->
+      <div>
+        <label class="text-sm text-[#0E225C] mb-1 block">Tipo de métrica</label>
+        <div class="relative" tabindex="0" (blur)="statisticsMetricTypeOpen = false">
+          <button type="button"
+                  class="w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C] text-left
+                         transition-all duration-200
+                         focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+                  (click)="statisticsMetricTypeOpen = !statisticsMetricTypeOpen">
+            <span [class.text-[#A0A7BC]]="statisticsMetricTypeSelected === 'Seleccionar tipo de métrica'">
+              {{ statisticsMetricTypeSelected }}
+            </span>
+          </button>
+          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF] pointer-events-none">
+            <svg class="w-4 h-4" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#arrow-down1"></use>
+            </svg>
+          </span>
+          @if (statisticsMetricTypeOpen) {
+            <div class="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-lg ring-1 ring-black/5 overflow-hidden z-20">
+              @for (option of statisticsMetricTypeOptions; track option) {
+                <button type="button"
+                        class="w-full text-left px-4 py-2 text-[#0E225C] hover:bg-[#F4F7FD]
+                               transition-colors duration-150"
+                        (mousedown)="selectStatisticsMetricType(option)">
+                  {{ option }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+    </div>
+    }
+
+  </div>
+  }
+
 </div>
 
 	@if (createCouponOpen) {

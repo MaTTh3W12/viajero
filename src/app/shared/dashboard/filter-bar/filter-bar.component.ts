@@ -13,6 +13,7 @@ const FILTER_BG_MAP: Record<UserRole, Record<FilterVariant, string>> = {
     coupons:   'bg-[#C8E7FF]', // Todos los cupones
     messages:  'bg-[#D4FFF1]', // Mensajes
     companies: 'bg-[#D4D6FF]', // Empresas
+    statistics: 'bg-[#E6EFFF]', // Estadísticas
   },
   empresa: {
     users:     'bg-[#D4FFF1]', // Todos los usuarios
@@ -21,6 +22,7 @@ const FILTER_BG_MAP: Record<UserRole, Record<FilterVariant, string>> = {
     coupons:   'bg-[#C8E7FF]', // Todos los cupones
     messages:  'bg-[#D4FFF1]', // Mensajes
     companies: 'bg-[#D4D6FF]', // Empresas
+    statistics: 'bg-[#E6EFFF]', // Estadísticas
   },
   usuario: {
     users:     'bg-[#D4FFF1]',
@@ -29,6 +31,7 @@ const FILTER_BG_MAP: Record<UserRole, Record<FilterVariant, string>> = {
     coupons:   'bg-[#C8E7FF]',
     messages:  'bg-[#D4FFF1]',
     companies: 'bg-[#D4D6FF]',
+    statistics: 'bg-[#E6EFFF]',
   },
 };
 
@@ -68,6 +71,21 @@ export class FilterBarComponent {
   auditTypeOpen = false;
   auditTypeSelected = 'Seleccionar tipo';
   auditTypeOptions = ['Desactivación', 'Aprobación'];
+
+  // Estado para filtros de estadísticas
+  statisticsFiltersOpen = false;
+  statisticsMetricTypeOpen = false;
+  statisticsMetricTypeSelected = 'Seleccionar tipo de métrica';
+  statisticsMetricTypeOptions = ['Canjes', 'Vistas', 'Conversión', 'Ingresos'];
+
+  toggleStatisticsFilters(): void {
+    this.statisticsFiltersOpen = !this.statisticsFiltersOpen;
+  }
+
+  selectStatisticsMetricType(option: string): void {
+    this.statisticsMetricTypeSelected = option;
+    this.statisticsMetricTypeOpen = false;
+  }
 
   // Estado para el modal de crear cupón
   createCouponOpen = false;

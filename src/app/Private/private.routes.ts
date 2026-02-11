@@ -74,8 +74,8 @@ export const COMPANY_ROUTES: Routes = [
       {
         path: 'estadisticas',
         loadComponent: () =>
-          import('./pages/home/home.component')
-            .then(m => m.HomeComponent)
+          import('./pages/company-statistics/company-statistics.component')
+            .then(m => m.CompanyStatisticsComponent)
       },
       {
         path: 'gestion-cupones',

@@ -14,39 +14,29 @@
           <p class="text-[#111E60] font-medium text-[16px] leading-none mb-2">Total de empresas<br>registradas</p>
           <div class="flex items-center gap-3">
             <div class="w-[45px] h-[45px] rounded-full bg-[#E6EFFF] flex items-center justify-center">
-              <img src="assets/icons/empresas.png" alt="Empresas registradas" class="w-[25px] h-[25px]" />
+              <svg class="w-[24px] h-[24px] text-[#538CFF]" fill="currentColor">
+                <use href="assets/icons/sprite.svg#card-device"></use>
+              </svg>
             </div>
             <span class="text-[40px] font-normal text-[#111E60] leading-none">397</span>
           </div>
         </div>
 
-        <!-- Gráfico Simulado Derecha (Fondo Grisáceo) -->
+        <!-- Gráfico Chart.js Derecha (Fondo Grisáceo) -->
         <div
-          class="bg-[#F4F7FD] rounded-[32px] px-4 pt-4 pb-2 w-[250px] h-[150px] flex flex-col items-center justify-end">
-          <div class="flex items-end h-20 gap-4 mb-2">
-            <!-- Barra SEP -->
-            <div class="flex flex-col items-center gap-1">
-              <div class="w-8 bg-[#E6EFFF] rounded-t-lg h-8 flex items-end justify-center pb-1">
-                <span class="text-[10px] font-bold text-[#0E225C]">25</span>
-              </div>
-              <span class="text-[10px] text-gray-400 uppercase">SEP</span>
-            </div>
-            <!-- Barra OCT -->
-            <div class="flex flex-col items-center gap-1">
-              <div class="w-8 bg-[#C6DBFF] rounded-t-lg h-12 flex items-end justify-center pb-1">
-                <span class="text-[10px] font-bold text-[#0E225C]">35</span>
-              </div>
-              <span class="text-[10px] text-gray-400 uppercase">OCT</span>
-            </div>
-            <!-- Barra NOV -->
-            <div class="flex flex-col items-center gap-1">
-              <div class="w-8 bg-[#A2C3FF] rounded-t-lg h-16 flex items-end justify-center pb-1">
-                <span class="text-[10px] font-bold text-[#0E225C]">45</span>
-              </div>
-              <span class="text-[10px] text-gray-400 uppercase">NOV</span>
-            </div>
+          class="bg-[#F4F7FD] rounded-[32px] px-3 pt-3 pb-2 flex-shrink-0 w-[200px] h-[140px] flex flex-col items-center justify-end">
+          <div class="w-full h-[90px] min-w-0">
+            @if (isBrowser) {
+              <canvas baseChart
+                [datasets]="empresasChartData.datasets"
+                [labels]="empresasChartData.labels"
+                [options]="empresasChartOptions"
+                [plugins]="empresasChartPlugins"
+                type="bar">
+              </canvas>
+            }
           </div>
-          <p class="text-[10px] text-gray-400 font-medium">En los últimos 3 meses</p>
+          <p class="text-[10px] text-gray-400 font-medium mt-1">En los últimos 3 meses</p>
         </div>
       </div>
 
@@ -69,33 +59,21 @@
           </div>
         </div>
 
-        <!-- Gráfico Simulado Derecha (Caja Blanca con borde azul) -->
+        <!-- Gráfico Chart.js Derecha (Caja Blanca) -->
         <div
-          class="bg-[#ffffff] rounded-[32px] px-4 pt-4 pb-2 w-[250px] h-[150px] flex flex-col items-center justify-end">
-          <div class="flex items-end h-20 gap-4 mb-2">
-            <!-- Barra SEP -->
-            <div class="flex flex-col items-center gap-1">
-              <div class="w-8 bg-[#FFFCD4] rounded-t-lg h-10 flex items-end justify-center pb-1">
-                <span class="text-[10px] font-bold text-[#0E225C]">75</span>
-              </div>
-              <span class="text-[10px] text-gray-400 uppercase">SEP</span>
-            </div>
-            <!-- Barra OCT -->
-            <div class="flex flex-col items-center gap-1">
-              <div class="w-8 bg-[#FFF9A9] rounded-t-lg h-16 flex items-end justify-center pb-1">
-                <span class="text-[10px] font-bold text-[#0E225C]">101</span>
-              </div>
-              <span class="text-[10px] text-gray-400 uppercase">OCT</span>
-            </div>
-            <!-- Barra NOV -->
-            <div class="flex flex-col items-center gap-1">
-              <div class="w-8 bg-[#F8F18D] rounded-t-lg h-8 flex items-end justify-center pb-1">
-                <span class="text-[10px] font-bold text-[#0E225C]">65</span>
-              </div>
-              <span class="text-[10px] text-gray-400 uppercase">NOV</span>
-            </div>
+          class="bg-[#ffffff] rounded-[32px] px-3 pt-3 pb-2 flex-shrink-0 w-[200px] h-[140px] flex flex-col items-center justify-end">
+          <div class="w-full h-[90px] min-w-0">
+            @if (isBrowser) {
+              <canvas baseChart
+                [datasets]="ciudadanosChartData.datasets"
+                [labels]="ciudadanosChartData.labels"
+                [options]="ciudadanosChartOptions"
+                [plugins]="ciudadanosChartPlugins"
+                type="bar">
+              </canvas>
+            }
           </div>
-          <p class="text-[10px] text-gray-400 font-medium">En los últimos 3 meses</p>
+          <p class="text-[10px] text-gray-400 font-medium mt-1">En los últimos 3 meses</p>
         </div>
       </div>
     </div>
