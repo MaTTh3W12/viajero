@@ -79,18 +79,18 @@ export class LoginComponent implements OnInit {
     }
   }
 
-  onContinue() {
-    if (!this.currentUser) return;
+onContinue() {
+  if (!this.currentUser) return;
 
-    // Dependiendo del rol, redirigimos a Public o Private
-    if (this.currentUser.role === 'admin') {
-      this.router.navigateByUrl('/dashboard');
-    } else if (this.currentUser.role === 'empresa') {
-      this.router.navigateByUrl('/companies/dashboard');
-    } else {
-      this.router.navigateByUrl('/');
-    }
+  if (this.currentUser.role === 'admin') {
+    this.router.navigateByUrl('/admin/dashboard');
+  } else if (this.currentUser.role === 'empresa') {
+    this.router.navigateByUrl('/companies/dashboard');
+  } else {
+    this.router.navigateByUrl('/');
   }
+}
+
 
   loginKeycloak(): void {
     this.auth.keycloakLogin();
