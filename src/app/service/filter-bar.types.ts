@@ -4,4 +4,5 @@ export type FilterVariant =
   | 'category'
   | 'coupons'
   | 'messages'
-  | 'companies';
+  | 'companies'
+  | 'statistics';

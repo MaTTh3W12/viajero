@@ -1,0 +1,108 @@
+<!-- Topbar -->
+<app-topbar location="Estadísticas"></app-topbar>
+
+<!-- Barra de búsqueda con FilterBar -->
+<app-filter-bar variant="statistics" [role]="role"></app-filter-bar>
+
+<h2 class="lg:hidden text-xl font-semibold text-[#0E225C] px-3 pt-4 pb-2">Estadísticas</h2>
+
+<!-- Tabla de cupones recientes -->
+<app-data-table [config]="tableConfig" [data]="coupons"></app-data-table>
+
+<!-- Modal de resultados estadísticos -->
+@if (showStatsModal && couponStats) {
+<div (click)="closeStatsModal()" class="fixed inset-0 z-[9999] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm md:p-4">
+	<div (click)="$event.stopPropagation()" class="bg-[#ffffff] rounded-t-[24px] md:rounded-[24px] p-6 md:p-8 w-full md:w-[92%] max-w-[560px] max-h-[85vh] overflow-y-auto relative shadow-2xl animate-slide-up md:animate-fade-in">
+
+		<!-- Botón cerrar -->
+		<button (click)="closeStatsModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center
+                   rounded-full border-gray-300 text-gray-400
+                   hover:text-gray-600 hover:border-gray-400 transition">
+			<svg class="w-7 h-7">
+				<use href="assets/icons/sprite.svg#close-circle"></use>
+			</svg>
+		</button>
+
+		<!-- Título -->
+		<h2 class="text-2xl font-semibold text-[#0E225C] text-center mb-5">Resultados estadísticos</h2>
+
+		<!-- Contenedor 1: Externo con fondo #F4F7FD -->
+		<div class="rounded-[24px] bg-[#F4F7FD] p-4 md:p-5 mb-6">
+
+			<!-- Rango de fechas (centrado arriba, fuera del borde azul) -->
+			<p class="text-center text-[18px] font-bold text-[#0E225C] mb-4 tracking-wide">
+				{{ couponStats.fechaInicio }} &nbsp;&nbsp;-&nbsp;&nbsp; {{ couponStats.fechaFin }}
+			</p>
+
+			<!-- Contenedor 2: Borde azul -->
+			<div class="rounded-[24px] border-[3px] border-[#538CFF] bg-white p-4 md:p-5">
+
+				<!-- Contenido: Total + Gráfica -->
+				<div class="flex flex-col items-center md:flex-row md:items-center gap-4 md:gap-5">
+
+					<!-- Total cupones adquiridos -->
+					<div class="flex-1 flex flex-col items-center md:items-start justify-center
+                      py-4 px-5">
+						<p class="text-[#111E60] font-medium text-[18px] leading-tight mb-3 text-center md:text-left">Total cupones adquiridos</p>
+						<div class="flex items-center gap-3">
+							<div class="w-[40px] h-[40px] rounded-full bg-[#E6EFFF] flex items-center justify-center">
+								<svg class="w-[24px] h-[24px] text-[#538CFF]" fill="currentColor">
+									<use href="assets/icons/sprite.svg#card-device"></use>
+								</svg>
+							</div>
+							<span class="text-[42px] font-bold text-[#111E60] leading-none">{{
+								couponStats.totalAdquiridos }}</span>
+						</div>
+					</div>
+
+					<!-- Contenedor 3: Gráfico con fondo propio -->
+					<div
+						class="flex-shrink-0 w-full max-w-[235px] h-[180px] bg-[#F4F7FD] rounded-[33px] px-4 pt-4 pb-2 flex flex-col items-center justify-end">
+						<div class="w-full h-[120px] min-w-0">
+							@if (isBrowser) {
+							<canvas baseChart [datasets]="statsChartData.datasets" [labels]="statsChartData.labels"
+								[options]="statsChartOptions" [plugins]="statsChartPlugins" type="bar">
+							</canvas>
+							}
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</div>
+
+		<!-- Tabla de métricas -->
+		<table class="w-full">
+			<thead>
+				<tr class="text-left text-sm text-[#0E225C]">
+					<th class="pb-3 font-medium">
+						<button (click)="sortMetrics('metrica')" class="inline-flex items-center gap-1 hover:text-[#538CFF] transition cursor-pointer">
+							Métrica
+							<svg class="w-[14px] h-[14px]" [class.opacity-40]="metricSortColumn !== 'metrica'" [class.opacity-100]="metricSortColumn === 'metrica'">
+								<use href="assets/icons/sprite.svg#arrow-up-down"></use>
+							</svg>
+						</button>
+					</th>
+					<th class="pb-3 font-medium">
+						<button (click)="sortMetrics('valor')" class="inline-flex items-center gap-1 hover:text-[#538CFF] transition cursor-pointer">
+							Valor
+							<svg class="w-[14px] h-[14px]" [class.opacity-40]="metricSortColumn !== 'valor'" [class.opacity-100]="metricSortColumn === 'valor'">
+								<use href="assets/icons/sprite.svg#arrow-up-down"></use>
+							</svg>
+						</button>
+					</th>
+				</tr>
+			</thead>
+			<tbody class="text-sm text-[#0E225C]">
+				@for (row of metricRows; track row.metrica) {
+				<tr class="border-t border-gray-200">
+					<td class="py-3.5">{{ row.metrica }}</td>
+					<td class="py-3.5">{{ row.valor }}</td>
+				</tr>
+				}
+			</tbody>
+		</table>
+
+	</div>
+</div>
+}
