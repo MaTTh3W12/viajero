@@ -27,9 +27,9 @@ jobs:
       - name: Debug secrets
         run: |
           if [ -z "${{ secrets.EC2_SSH_KEY }}" ]; then
-            echo "❌ SSH KEY is empty"
+            echo "SSH KEY is empty"
           else
-            echo "✅ SSH KEY exists"
+            echo "SSH KEY exists"
           fi
 
       - name: Copy dist to EC2
