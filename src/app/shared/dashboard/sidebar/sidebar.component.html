@@ -106,59 +106,59 @@
         </a>
 
         <!-- Estadísticas -->
-        <a routerLink="estadisticas" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
-          #rlaEstadisticas="routerLinkActive"
-          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
-              lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
-          <img src="assets/icons/auditoria.png" alt="Estadísticas Icon" class="w-5 h-5"
-            [class.filter]="rlaEstadisticas.isActive" [class.invert]="rlaEstadisticas.isActive"
-            [class.brightness-0]="rlaEstadisticas.isActive" />
-          <span class="text-sm font-medium">Estadísticas</span>
-        </a>
+          <a routerLink="estadisticas" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+            #rlaEstadisticas="routerLinkActive"
+            class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
+                lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
+            <svg class="w-5 h-5" fill="none" [style.color]="rlaEstadisticas.isActive ? 'white' : '#538CFF'">
+              <use href="assets/icons/sprite.svg#statistics"></use>
+            </svg>
+            <span class="text-sm font-medium">Estadísticas</span>
+          </a>
 
         <!-- Gestión de cupones -->
-        <a routerLink="gestion-cupones" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
-          #rlaGestion="routerLinkActive"
-          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
-              lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
-          <img src="assets/icons/ticket-cupones.png" alt="Gestión Icon" class="w-5 h-5"
-            [class.filter]="rlaGestion.isActive" [class.invert]="rlaGestion.isActive"
-            [class.brightness-0]="rlaGestion.isActive" />
-          <span class="text-sm font-medium">Gestión de cupones</span>
-        </a>
+          <a routerLink="gestion-cupones" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+            #rlaGestion="routerLinkActive"
+            class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
+                lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
+            <svg class="w-5 h-5" fill="none" [style.color]="rlaGestion.isActive ? 'white' : '#538CFF'">
+              <use href="assets/icons/sprite.svg#coupon-manage"></use>
+            </svg>
+            <span class="text-sm font-medium">Gestión de cupones</span>
+          </a>
 
         <!-- Canje de cupones -->
-        <a routerLink="canje-cupones" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
-          #rlaCanje="routerLinkActive"
-          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
-              lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
-          <img src="assets/icons/ticket-cupones.png" alt="Canje Icon" class="w-5 h-5"
-            [class.filter]="rlaCanje.isActive" [class.invert]="rlaCanje.isActive"
-            [class.brightness-0]="rlaCanje.isActive" />
-          <span class="text-sm font-medium">Canje de cupones</span>
-        </a>
+          <a routerLink="canje-cupones" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+            #rlaCanje="routerLinkActive"
+            class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
+                lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
+            <svg class="w-5 h-5" fill="none" [style.color]="rlaCanje.isActive ? 'white' : '#538CFF'">
+              <use href="assets/icons/sprite.svg#coupon-exchange"></use>
+            </svg>
+            <span class="text-sm font-medium">Canje de cupones</span>
+          </a>
 
         <!-- Historial de canjes -->
-        <a routerLink="historial-canje" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
-          #rlaHistorial="routerLinkActive"
-          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
-              lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
-          <img src="assets/icons/auditoria.png" alt="Historial Icon" class="w-5 h-5"
-            [class.filter]="rlaHistorial.isActive" [class.invert]="rlaHistorial.isActive"
-            [class.brightness-0]="rlaHistorial.isActive" />
-          <span class="text-sm font-medium">Historial de canjes</span>
-        </a>
+          <a routerLink="historial-canje" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+            #rlaHistorial="routerLinkActive"
+            class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
+                lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
+            <svg class="w-5 h-5" fill="none" [style.color]="rlaHistorial.isActive ? 'white' : '#538CFF'">
+              <use href="assets/icons/sprite.svg#document-search"></use>
+            </svg>
+            <span class="text-sm font-medium">Historial de canjes</span>
+          </a>
 
         <!-- Centro de contacto -->
-        <a routerLink="contacto" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
-          #rlaContacto="routerLinkActive"
-          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
-              lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
-          <img src="assets/icons/messages.png" alt="Contacto Icon" class="w-5 h-5"
-            [class.filter]="rlaContacto.isActive" [class.invert]="rlaContacto.isActive"
-            [class.brightness-0]="rlaContacto.isActive" />
-          <span class="text-sm font-medium">Centro de contacto</span>
-        </a>
+          <a routerLink="contacto" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+            #rlaContacto="routerLinkActive"
+            class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
+                lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
+            <svg class="w-5 h-5" fill="none" [style.color]="rlaContacto.isActive ? 'white' : '#538CFF'">
+              <use href="assets/icons/sprite.svg#document-chat"></use>
+            </svg>
+            <span class="text-sm font-medium">Centro de contacto</span>
+          </a>
       </ng-container>
     </div>
 

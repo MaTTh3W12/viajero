@@ -5,4 +5,6 @@ export type FilterVariant =
   | 'coupons'
   | 'messages'
   | 'companies'
-  | 'statistics';
+  | 'statistics'
+  | 'canje-cupones'
+  | 'historial-canjes';

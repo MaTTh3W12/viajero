@@ -1,0 +1,11 @@
+
+<!-- Topbar -->
+<app-topbar location="Historial de canjes"></app-topbar>
+
+<!-- Barra de búsqueda con FilterBar -->
+<app-filter-bar variant="historial-canjes" [role]="role"></app-filter-bar>
+
+<h2 class="lg:hidden text-xl font-semibold text-[#0E225C] px-3 pt-4 pb-2">Historial de canjes</h2>
+
+<!-- Tabla de historial de canjes -->
+<app-data-table [config]="tableConfig" [data]="historial"></app-data-table>

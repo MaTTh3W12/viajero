@@ -86,15 +86,15 @@ export const COMPANY_ROUTES: Routes = [
       {
         path: 'canje-cupones',
         loadComponent: () =>
-          import('./pages/home/home.component')
-            .then(m => m.HomeComponent)
+          import('./pages/canje-cupones/canje-cupones.component')
+            .then(m => m.CanjeCuponesComponent)
       },
-      {
-        path: 'historial-canje',
-        loadComponent: () =>
-          import('./pages/home/home.component')
-            .then(m => m.HomeComponent)
-      },
+        {
+          path: 'historial-canje',
+          loadComponent: () =>
+            import('./pages/historial-canjes/historial-canjes.component')
+              .then(m => m.HistorialCanjesComponent)
+        },
       {
         path: 'contacto',
         loadComponent: () =>

@@ -1,0 +1,81 @@
+
+<!-- Topbar -->
+<app-topbar location="Canje de cupones"></app-topbar>
+
+<!-- Barra de búsqueda con FilterBar -->
+
+<!-- Barra de búsqueda con FilterBar -->
+<app-filter-bar variant="canje-cupones" [role]="role"></app-filter-bar>
+
+<h2 class="lg:hidden text-xl font-semibold text-[#0E225C] px-3 pt-4 pb-2">Canje de cupones</h2>
+
+<!-- Tabla de cupones -->
+<app-data-table [config]="tableConfig" [data]="coupons"></app-data-table>
+<!-- Modal de escaneo QR -->
+@if (showQrModal) {
+  <div class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div (click)="$event.stopPropagation()" class="bg-white rounded-2xl p-8 w-full max-w-[420px] max-h-[90vh] overflow-y-auto relative shadow-2xl flex flex-col items-center animate-fade-in">
+      <!-- Botón cerrar -->
+      <button (click)="closeQrModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full border-gray-300 text-gray-400 hover:text-gray-600 hover:border-gray-400 transition">
+        <svg class="w-7 h-7"><use href="assets/icons/sprite.svg#close-circle"></use></svg>
+      </button>
+      <!-- Título -->
+      <h2 class="text-2xl font-semibold text-[#0E225C] text-center mb-5">Escanear QR</h2>
+      <!-- Área de escaneo -->
+      <div class="relative w-[260px] h-[260px] flex items-center justify-center mb-6">
+        <img src="assets/img/qr-bg.jpg" alt="QR background" class="absolute w-full h-full object-cover rounded-xl" />
+        <div class="absolute w-full h-full flex items-center justify-center">
+          <div class="border-2 border-white rounded-lg w-[200px] h-[200px] flex items-center justify-center">
+            <!-- Aquí iría el preview de la cámara -->
+            <span class="text-[#0E225C] text-lg font-medium">Vista previa QR</span>
+          </div>
+        </div>
+      </div>
+      <!-- Botones de acción -->
+      <div class="flex gap-4 w-full justify-center mt-2">
+        <button class="bg-[#538CFF] text-white px-6 py-2 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-[#3976e6] transition">
+          <svg class="w-6 h-6"><use href="assets/icons/sprite.svg#camera"></use></svg>
+          Escanear QR
+        </button>
+        <button (click)="closeQrModal()" class="bg-white border border-[#0E225C] text-[#0E225C] px-6 py-2 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-[#f3f3fd] transition">
+          <svg class="w-6 h-6"><use href="assets/icons/sprite.svg#close-circle"></use></svg>
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Modal de validación de cupón -->
+@if (showCouponModal && selectedCoupon) {
+<div (click)="closeCouponModal()" class="fixed inset-0 z-[9999] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm md:p-4">
+  <div (click)="$event.stopPropagation()" class="bg-[#ffffff] rounded-t-[24px] md:rounded-[24px] p-6 md:p-8 w-full md:w-[92%] max-w-[560px] max-h-[85vh] overflow-y-auto relative shadow-2xl animate-slide-up md:animate-fade-in">
+    <!-- Botón cerrar -->
+    <button (click)="closeCouponModal()" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full border-gray-300 text-gray-400 hover:text-gray-600 hover:border-gray-400 transition">
+      <svg class="w-7 h-7">
+        <use href="assets/icons/sprite.svg#close-circle"></use>
+      </svg>
+    </button>
+    <!-- Título -->
+    <h2 class="text-2xl font-semibold text-[#0E225C] text-center mb-5">Validar cupón</h2>
+    <!-- Información del cupón -->
+    <div class="rounded-[24px] bg-[#F4F7FD] p-4 md:p-5 mb-6">
+      <p class="text-center text-[18px] font-bold text-[#0E225C] mb-4 tracking-wide">
+        {{ selectedCoupon.titulo }}
+      </p>
+      <div class="rounded-[24px] border-[3px] border-[#538CFF] bg-white p-4 md:p-5 flex flex-col items-center gap-4">
+        <div class="flex flex-col items-center">
+          <span class="text-[#111E60] font-medium text-[18px] mb-2">Código</span>
+          <span class="text-lg font-bold text-[#538CFF]">{{ selectedCoupon.codigo }}</span>
+        </div>
+        <div class="flex flex-col items-center">
+          <span class="text-[#111E60] font-medium text-[18px] mb-2">Estado</span>
+          <span class="text-base font-semibold" [ngClass]="{'text-green-600': selectedCoupon.estado === 'Válido', 'text-red-600': selectedCoupon.estado !== 'Válido'}">{{ selectedCoupon.estado }}</span>
+        </div>
+      </div>
+    </div>
+    <!-- Botón de acción -->
+    <button (click)="validarCupon(selectedCoupon)" class="w-full bg-[#538CFF] text-white py-3 rounded-lg font-semibold text-lg hover:bg-[#3a6fd8] transition">Validar cupón</button>
+  </div>
+</div>
+}

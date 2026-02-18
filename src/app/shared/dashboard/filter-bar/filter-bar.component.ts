@@ -1,4 +1,6 @@
-import { Component, EventEmitter, Input, Output, Renderer2, Inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, Renderer2, Inject, ChangeDetectorRef, NgZone } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ZXingScannerModule } from '@zxing/ngx-scanner';
 import { DOCUMENT } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -14,6 +16,8 @@ const FILTER_BG_MAP: Record<UserRole, Record<FilterVariant, string>> = {
     messages:  'bg-[#D4FFF1]', // Mensajes
     companies: 'bg-[#D4D6FF]', // Empresas
     statistics: 'bg-[#E6EFFF]', // Estadísticas
+    'canje-cupones': 'bg-[#e6e6fa]', // Canje de cupones
+    'historial-canjes': 'bg-[#E6EFFF]', // Historial de canjes (igual que statistics)
   },
   empresa: {
     users:     'bg-[#D4FFF1]', // Todos los usuarios
@@ -22,7 +26,9 @@ const FILTER_BG_MAP: Record<UserRole, Record<FilterVariant, string>> = {
     coupons:   'bg-[#C8E7FF]', // Todos los cupones
     messages:  'bg-[#D4FFF1]', // Mensajes
     companies: 'bg-[#D4D6FF]', // Empresas
-    statistics: 'bg-[#E6EFFF]', // Estadísticas
+    statistics: 'bg-[#FFE3C1]', // Estadísticas
+    'canje-cupones': 'bg-[#D4D6FF]', // Canje de cupones
+    'historial-canjes': 'bg-[#FFE2DB]', // Historial de canjes (igual que statistics)
   },
   usuario: {
     users:     'bg-[#D4FFF1]',
@@ -32,17 +38,88 @@ const FILTER_BG_MAP: Record<UserRole, Record<FilterVariant, string>> = {
     messages:  'bg-[#D4FFF1]',
     companies: 'bg-[#D4D6FF]',
     statistics: 'bg-[#E6EFFF]',
+    'canje-cupones': 'bg-[#e6e6fa]', // Canje de cupones
+    'historial-canjes': 'bg-[#E6EFFF]', // Historial de canjes (igual que statistics)
   },
 };
 
 @Component({
   selector: 'app-filter-bar',
   standalone: true,
-  imports: [FormsModule],
+  imports: [CommonModule, FormsModule, ZXingScannerModule],
   templateUrl: './filter-bar.component.html',
   styleUrl: './filter-bar.component.css',
 })
 export class FilterBarComponent {
+  constructor(
+    private router: Router,
+    private renderer: Renderer2,
+    @Inject(DOCUMENT) private document: Document,
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone
+  ) {}
+
+  // Estados para overlays de canje
+  redeemingCoupon = false;
+  redeemSuccess = false;
+  showConfirmRedeemModal = false;
+
+  // Acción al hacer clic en 'Escanear QR' dentro del modal
+  onQrScanButtonClick(): void {
+    this.showConfirmRedeemModal = true;
+  }
+
+  // Cerrar el modal de confirmación
+  closeConfirmRedeemModal(): void {
+    this.showConfirmRedeemModal = false;
+  }
+
+  // Acción al confirmar canje
+  confirmRedeem(): void {
+    console.log('VALIDAR CUPON: inicia overlay canjeando');
+    this.showConfirmRedeemModal = false;
+    this.redeemingCoupon = true;
+    this.cdr.detectChanges();
+    setTimeout(() => {
+      this.redeemingCoupon = false;
+      this.redeemSuccess = true;
+      this.cdr.detectChanges();
+      console.log('VALIDAR CUPON: overlay éxito');
+    }, 3000);
+  }
+
+  // Cerrar overlay de éxito
+  closeRedeemSuccess(): void {
+    this.redeemSuccess = false;
+    this.closeQrModal();
+  }
+  // Para el input de código de cupón
+  couponCode: string = '';
+  scannerHasDevices: boolean = false;
+  scannerHasPermission: boolean = false;
+  scannerError: string | null = null;
+  availableDevices: MediaDeviceInfo[] = [];
+  currentDevice: MediaDeviceInfo | null = null;
+    onCamerasFound(devices: MediaDeviceInfo[]): void {
+      this.availableDevices = devices;
+      this.scannerHasDevices = devices && devices.length > 0;
+      if (devices.length > 0) {
+        this.currentDevice = devices[0];
+      }
+    }
+
+    onHasPermission(has: boolean): void {
+      this.scannerHasPermission = has;
+      if (!has) {
+        this.scannerError = 'No se otorgó permiso para acceder a la cámara.';
+      } else {
+        this.scannerError = null;
+      }
+    }
+
+    onScanError(error: any): void {
+      this.scannerError = 'Error al acceder a la cámara: ' + (error?.message || error);
+    }
   @Input({ required: true }) variant!: FilterVariant;
   @Input({ required: true }) role!: UserRole;
   @Output() createCoupon = new EventEmitter<{
@@ -75,6 +152,22 @@ export class FilterBarComponent {
   // Estado para filtros de estadísticas
   statisticsFiltersOpen = false;
   statisticsMetricTypeOpen = false;
+
+    // Estado y métodos para el modal de escaneo QR
+    showQrModal = false;
+
+    openQrModal(): void {
+      this.showQrModal = true;
+    }
+
+    closeQrModal(): void {
+      this.showQrModal = false;
+    }
+
+  onQrScan(result: string): void {
+    this.couponCode = result;
+    this.closeQrModal();
+  }
   statisticsMetricTypeSelected = 'Seleccionar tipo de métrica';
   statisticsMetricTypeOptions = ['Canjes', 'Vistas', 'Conversión', 'Ingresos'];
 
@@ -392,7 +485,6 @@ export class FilterBarComponent {
     return dateStr;
   }
 
-  constructor(private router: Router, private renderer: Renderer2, @Inject(DOCUMENT) private document: Document) {}
 
   private setBodyModalLock(on: boolean): void {
     const body = this.document.body;

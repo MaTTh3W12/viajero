@@ -1,390 +1,198 @@
 <div class="px-0 md:px-6 py-5 flex items-center" [class]="bgClass">
-
   @if (variant === 'users') {
-  <div class="w-full flex flex-col gap-2">
+    <div class="w-full flex flex-col gap-2">
+      <!-- Label -->
+      <label class="text-sm text-[#0E225C] px-3 md:px-0">Buscar</label>
 
-	<!-- Label -->
-	<label class="text-sm text-[#0E225C] px-3 md:px-0">Buscar</label>
+      <!-- Fila de controles -->
+      <div class="flex items-center gap-3">
+        <!-- Input -->
+        <input
+          type="text"
+          placeholder="Buscar usuario"
+          class="flex-1 bg-white rounded-xl px-4 py-3 text-[#0E225C] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+        />
 
-    <!-- Fila de controles -->
-    <div class="flex items-center gap-3">
+        <!-- Botón Buscar circular -->
+        <button
+          class="w-11 h-11 shrink-0 flex items-center justify-center bg-[#538CFF] text-white rounded-full transition-all duration-300 hover:bg-[#3F7BFF] hover:shadow-md active:scale-95"
+        >
+          <svg class="w-5 h-5" aria-hidden="true">
+            <use href="assets/icons/sprite.svg#search"></use>
+          </svg>
+        </button>
 
-      <!-- Input -->
-      <input type="text" placeholder="Buscar usuario" class="flex-1 bg-white rounded-xl px-4 py-3 text-[#0E225C]
-             focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40" />
-
-			<!-- Botón Buscar circular -->
-			<button class="w-11 h-11 shrink-0 flex items-center justify-center bg-[#538CFF] text-white
-						 rounded-full transition-all duration-300
-						 hover:bg-[#3F7BFF] hover:shadow-md active:scale-95">
-				<svg class="w-5 h-5" aria-hidden="true">
-					<use href="assets/icons/sprite.svg#search"></use>
-				</svg>
-			</button>
-
-      <!-- Botón Filtro -->
-			<button class="w-11 h-11 shrink-0 flex items-center justify-center
-             rounded-full border border-[#0E225C]
-             transition hover:bg-black/5 active:scale-95">
-        <img src="assets/icons/filter.svg" class="w-5 h-5" />
-      </button>
-
+        <!-- Botón Filtro -->
+        <button
+          class="w-11 h-11 shrink-0 flex items-center justify-center rounded-full border border-[#0E225C] transition hover:bg-black/5 active:scale-95"
+        >
+          <img src="assets/icons/filter.svg" class="w-5 h-5" />
+        </button>
+      </div>
     </div>
-  </div>
   }
 
   @if (variant === 'category') {
-  <div class="w-full flex flex-col gap-2">
+    <div class="w-full flex flex-col gap-2">
+      <!-- Label -->
+      <label class="text-sm text-[#0E225C] px-3 md:px-0">Buscar</label>
 
-	<!-- Label -->
-	<label class="text-sm text-[#0E225C] px-3 md:px-0">Buscar</label>
+      <!-- Fila de controles -->
+      <div class="flex items-center gap-3">
+        <!-- Input -->
+        <input
+          type="text"
+          placeholder="Buscar categoría"
+          class="flex-1 bg-white rounded-xl px-4 py-3 text-[#0E225C] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+        />
 
-    <!-- Fila de controles -->
-    <div class="flex items-center gap-3">
+        <!-- Botón Buscar circular -->
+        <button
+          class="w-11 h-11 shrink-0 flex items-center justify-center bg-[#538CFF] text-white rounded-full transition-all duration-300 hover:bg-[#3F7BFF] hover:shadow-md active:scale-95"
+        >
+          <img src="assets/icons/search.png" class="w-5 h-5" />
+        </button>
 
-      <!-- Input -->
-      <input type="text" placeholder="Buscar categoría" class="flex-1 bg-white rounded-xl px-4 py-3 text-[#0E225C]
-             focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40" />
+        <!-- Botón Crear categoría -->
+        <button
+          class="flex items-center gap-2 bg-[#0E225C] text-white px-6 py-3 rounded-full transition-all duration-300 hover:bg-[#0B1B4B] hover:shadow-md active:scale-95"
+        >
+          <svg class="w-6 h-6">
+            <use href="assets/icons/sprite.svg#add"></use>
+          </svg>
+          Crear categoría
+        </button>
 
-			<!-- Botón Buscar circular -->
-			<button class="w-11 h-11 shrink-0 flex items-center justify-center bg-[#538CFF] text-white
-						 rounded-full transition-all duration-300
-						 hover:bg-[#3F7BFF] hover:shadow-md active:scale-95">
-				<img src="assets/icons/search.png" class="w-5 h-5" />
-			</button>
-
-      <!-- Botón Crear categoría -->
-      <button class="flex items-center gap-2 bg-[#0E225C] text-white
-             px-6 py-3 rounded-full
-             transition-all duration-300
-             hover:bg-[#0B1B4B] hover:shadow-md
-             active:scale-95">
-        <svg class="w-6 h-6">
-          <use href="assets/icons/sprite.svg#add"></use>
-        </svg>
-        Crear categoría
-      </button>
-
-      <!-- Botón Filtro -->
-			<button class="w-11 h-11 shrink-0 flex items-center justify-center
-             rounded-full border border-[#0E225C] text-[#1A2440]
-             transition hover:bg-black/5 active:scale-95">
-        <svg class="w-6 h-6">
-          <use href="assets/icons/sprite.svg#filter"></use>
-        </svg>
-      </button>
-
+        <!-- Botón Filtro -->
+        <button
+          class="w-11 h-11 shrink-0 flex items-center justify-center rounded-full border border-[#0E225C] text-[#1A2440] transition hover:bg-black/5 active:scale-95"
+        >
+          <svg class="w-6 h-6">
+            <use href="assets/icons/sprite.svg#filter"></use>
+          </svg>
+        </button>
+      </div>
     </div>
-  </div>
   }
 
   @if (variant === 'coupons') {
-  <div class="w-full flex flex-col gap-2">
+    <div class="w-full flex flex-col gap-2">
+      <!-- Label -->
+      <label class="text-sm text-[#0E225C] px-3 md:px-0 mt-2 md:mt-0">Buscar</label>
 
-	<!-- Label -->
-	<label class="text-sm text-[#0E225C] px-3 md:px-0 mt-2 md:mt-0">Buscar</label>
+      <!-- Fila de controles -->
+      <div class="flex items-center gap-3 px-3 md:px-0">
+        <!-- Input -->
+        <input
+          type="text"
+          placeholder="Buscar cupón"
+          class="flex-1 bg-white rounded-xl px-4 py-3 text-[#0E225C] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+        />
 
-    <!-- Fila de controles -->
-		<div class="flex items-center gap-3 px-3 md:px-0">
+        <!-- Botón Buscar -->
+        <button
+          class="w-11 md:w-auto h-11 flex items-center justify-center bg-[#538CFF] text-white md:px-6 md:gap-2 rounded-full transition-all duration-300 hover:bg-[#3F7BFF] hover:shadow-md active:scale-95"
+        >
+          <img src="assets/icons/search.png" class="w-5 h-5" />
+          <span class="hidden md:block">Buscar</span>
+        </button>
 
-      <!-- Input -->
-      <input type="text" placeholder="Buscar cupón" class="flex-1 bg-white rounded-xl px-4 py-3 text-[#0E225C]
-             focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40" />
+        <!-- Botón Crear cupón (Desktop) -->
+        <button
+          class="hidden md:flex items-center gap-2 bg-[#0E225C] text-white px-6 h-11 rounded-full shrink-0 transition-all duration-300 hover:bg-[#0B1B4B] hover:shadow-md active:scale-95"
+          (click)="openCreateCoupon()"
+        >
+          <svg class="w-6 h-6">
+            <use href="assets/icons/sprite.svg#add"></use>
+          </svg>
+          Crear cupón
+        </button>
 
-			<!-- Botón Buscar -->
-			<button class="w-11 md:w-auto h-11 flex items-center justify-center bg-[#538CFF] text-white
-             md:px-6 md:gap-2
-						 rounded-full transition-all duration-300
-						 hover:bg-[#3F7BFF] hover:shadow-md active:scale-95">
-				<img src="assets/icons/search.png" class="w-5 h-5" />
-        <span class="hidden md:block">Buscar</span>
-			</button>
+        <!-- Botón Filtro -->
+        <button
+          class="w-11 h-11 flex items-center justify-center rounded-full border border-[#0E225C] text-[#1A2440] transition hover:bg-black/5 active:scale-95"
+        >
+          <svg class="w-6 h-6">
+            <use href="assets/icons/sprite.svg#filter"></use>
+          </svg>
+        </button>
+      </div>
 
-      <!-- Botón Crear cupón (Desktop) -->
-      <button class="hidden md:flex items-center gap-2 bg-[#0E225C] text-white
-             px-6 h-11 rounded-full shrink-0
-             transition-all duration-300
-             hover:bg-[#0B1B4B] hover:shadow-md active:scale-95" (click)="openCreateCoupon()">
-        <svg class="w-6 h-6">
-          <use href="assets/icons/sprite.svg#add"></use>
-        </svg>
-        Crear cupón
-      </button>
-
-      <!-- Botón Filtro -->
-      <button class="w-11 h-11 flex items-center justify-center
-             rounded-full border border-[#0E225C] text-[#1A2440]
-             transition hover:bg-black/5 active:scale-95">
-        <svg class="w-6 h-6">
-          <use href="assets/icons/sprite.svg#filter"></use>
-        </svg>
-      </button>
-
+      <!-- Botón Crear cupón ancho (Móvil) -->
+      <div class="mt-4 px-3 md:px-0 md:hidden">
+        <button
+          class="w-full flex items-center justify-center gap-2 bg-[#0E225C] text-white px-6 py-3 rounded-full transition-all duration-300 hover:bg-[#0B1B4B] hover:shadow-md active:scale-95"
+          (click)="openCreateCoupon()"
+        >
+          <svg class="w-6 h-6">
+            <use href="assets/icons/sprite.svg#add"></use>
+          </svg>
+          Crear cupón
+        </button>
+      </div>
     </div>
-
-		<!-- Botón Crear cupón ancho (Móvil) -->
-		<div class="mt-4 px-3 md:px-0 md:hidden">
-			<button class="w-full flex items-center justify-center gap-2 bg-[#0E225C] text-white
-						 px-6 py-3 rounded-full transition-all duration-300
-						 hover:bg-[#0B1B4B] hover:shadow-md active:scale-95" (click)="openCreateCoupon()">
-				<svg class="w-6 h-6">
-					<use href="assets/icons/sprite.svg#add"></use>
-				</svg>
-				Crear cupón
-			</button>
-		</div>
-  </div>
   }
 
   @if (variant === 'messages') {
-  <div class="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
+    <div class="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-end">
+      <!-- Categoría -->
+      <div>
+        <label class="text-sm text-[#0E225C] mb-1 block">Categoría</label>
+        <select
+          class="w-full bg-white rounded-xl px-4 py-3 pr-10 text-[#0E225C] appearance-none bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+        >
+          <option>Seleccionar</option>
+        </select>
+      </div>
 
-    <!-- Categoría -->
-    <div>
-      <label class="text-sm text-[#0E225C] mb-1 block">Categoría</label>
-      <select class="w-full bg-white rounded-xl px-4 py-3 pr-10 text-[#0E225C]
-               appearance-none
-               bg-[url('/assets/icons/select-arrow.png')]
-               bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
-               focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40">
-        <option>Seleccionar</option>
-      </select>
+      <!-- Empresa -->
+      <div>
+        <label class="text-sm text-[#0E225C] mb-1 block">Nombre de la empresa</label>
+        <select
+          class="w-full bg-white rounded-xl px-4 py-3 pr-10 text-[#0E225C] appearance-none bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+        >
+          <option>Seleccionar</option>
+        </select>
+      </div>
+
+      <!-- Botón filtrar -->
+      <button
+        class="w-full flex items-center justify-center gap-2 bg-[#538CFF] text-white rounded-full px-6 py-3 transition-all duration-300 ease-out hover:bg-[#3F7BFF] hover:shadow-lg hover:-translate-y-[1px] active:scale-95 focus:outline-none focus:ring-4 focus:ring-[#538CFF]/30"
+      >
+        <img src="assets/icons/search.png" class="w-4 h-4" />
+        Filtrar
+      </button>
+
+      <!-- Ordenar -->
+      <div class="flex items-center gap-3 justify-start lg:justify-end">
+        <span class="text-sm text-[#0E225C] whitespace-nowrap"> Ordenar por: </span>
+        <select
+          class="bg-white rounded-xl px-4 py-2 pr-10 text-[#0E225C] appearance-none bg-[url('/assets/icons/select-arrow2.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+        >
+          <option selected>Fecha</option>
+        </select>
+      </div>
     </div>
-
-    <!-- Empresa -->
-    <div>
-      <label class="text-sm text-[#0E225C] mb-1 block">Nombre de la empresa</label>
-      <select class="w-full bg-white rounded-xl px-4 py-3 pr-10 text-[#0E225C]
-               appearance-none
-               bg-[url('/assets/icons/select-arrow.png')]
-               bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
-               focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40">
-        <option>Seleccionar</option>
-      </select>
-    </div>
-
-    <!-- Botón filtrar -->
-    <button class="w-full flex items-center justify-center gap-2
-             bg-[#538CFF] text-white rounded-full
-             px-6 py-3
-             transition-all duration-300 ease-out
-             hover:bg-[#3F7BFF] hover:shadow-lg hover:-translate-y-[1px]
-             active:scale-95
-             focus:outline-none focus:ring-4 focus:ring-[#538CFF]/30">
-      <img src="assets/icons/search.png" class="w-4 h-4" />
-      Filtrar
-    </button>
-
-    <!-- Ordenar -->
-    <div class="flex items-center gap-3 justify-start lg:justify-end">
-      <span class="text-sm text-[#0E225C] whitespace-nowrap">
-        Ordenar por:
-      </span>
-      <select class="bg-white rounded-xl px-4 py-2 pr-10 text-[#0E225C]
-               appearance-none
-               bg-[url('/assets/icons/select-arrow2.png')]
-               bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
-               focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40">
-        <option selected>Fecha</option>
-      </select>
-    </div>
-
-  </div>
   }
 
   @if (variant === 'audit') {
-  <div class="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-end">
-
-    <!-- Fecha inicio -->
-    <div>
-      <label class="text-sm text-[#0E225C] mb-1 block">Fecha inicio</label>
-      <div class="relative">
-        <input #startDate type="date" placeholder="dd/mm/aaaa" class="calendar-input w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C]
-               placeholder:text-[#A0A7BC]
-               focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
-               (click)="openDatePicker(startDate)" />
-        <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
-          (click)="openDatePicker(startDate)">
-          <svg class="w-6 h-6" aria-hidden="true">
-            <use href="assets/icons/sprite.svg#calendar"></use>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Fecha fin -->
-    <div>
-      <label class="text-sm text-[#0E225C] mb-1 block">Fecha fin</label>
-      <div class="relative">
-        <input #endDate type="date" placeholder="dd/mm/aaaa" class="calendar-input w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C]
-               placeholder:text-[#A0A7BC]
-               focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
-               (click)="openDatePicker(endDate)" />
-        <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
-          (click)="openDatePicker(endDate)">
-          <svg class="w-6 h-6" aria-hidden="true">
-            <use href="assets/icons/sprite.svg#calendar"></use>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-    <!-- Tipo de evento -->
-    <div>
-      <label class="text-sm text-[#0E225C] mb-1 block">Tipo de evento</label>
-      <div class="relative" tabindex="0" (blur)="auditTypeOpen = false">
-        <button type="button"
-          class="w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C] text-left
-                 transition-all duration-200
-                 focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
-          (click)="auditTypeOpen = !auditTypeOpen">
-          <span [class.text-[#A0A7BC]]="auditTypeSelected === 'Seleccionar tipo'">
-            {{ auditTypeSelected }}
-          </span>
-        </button>
-        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF] pointer-events-none">
-          <svg class="w-4 h-4" aria-hidden="true">
-            <use href="assets/icons/sprite.svg#arrow-down1"></use>
-          </svg>
-        </span>
-        @if (auditTypeOpen) {
-          <div class="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-lg ring-1 ring-black/5 overflow-hidden z-20">
-            @for (option of auditTypeOptions; track option) {
-              <button type="button"
-                class="w-full text-left px-4 py-2 text-[#0E225C] hover:bg-[#F4F7FD]
-                       transition-colors duration-150"
-                (mousedown)="selectAuditType(option)">
-                {{ option }}
-              </button>
-            }
-          </div>
-        }
-      </div>
-    </div>
-
-    <!-- Usuario -->
-    <div>
-      <label class="text-sm text-[#0E225C] mb-1 block">Usuario</label>
-      <input type="text" placeholder="Buscar usuario" class="w-full bg-white rounded-[14px] px-4 py-3 text-[#0E225C]
-             shadow-sm ring-1 ring-black/5
-             transition-all duration-200
-             placeholder:text-[#A0A7BC]
-             focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40 focus:shadow-md" />
-    </div>
-
-    <!-- Empresa -->
-    <div>
-      <label class="text-sm text-[#0E225C] mb-1 block">Empresa</label>
-      <input type="text" placeholder="Buscar empresa" class="w-full bg-white rounded-[14px] px-4 py-3 text-[#0E225C]
-             shadow-sm ring-1 ring-black/5
-             transition-all duration-200
-             placeholder:text-[#A0A7BC]
-             focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40 focus:shadow-md" />
-    </div>
-
-    <!-- Buscar -->
-    <div class="flex items-end">
-      <button class="w-full flex items-center justify-center gap-2
-             bg-[#538CFF] text-white rounded-full
-             px-8 py-3
-             transition-all duration-300 ease-out
-             hover:bg-[#3F7BFF] hover:shadow-lg hover:-translate-y-[1px]
-             active:scale-95
-             focus:outline-none focus:ring-4 focus:ring-[#538CFF]/30">
-        <img src="assets/icons/search.png" class="w-4 h-4" />
-        Buscar
-      </button>
-    </div>
-  </div>
-  }
-
-  @if (variant === 'companies') {
-  <div class="w-full flex flex-col gap-2">
-
-    <!-- Label -->
-    <label class="text-sm text-[#0E225C]">Buscar</label>
-
-    <!-- Fila de controles -->
-    <div class="flex items-center gap-3">
-
-      <!-- Input -->
-      <input type="text" placeholder="Buscar cupón" class="flex-1 bg-white rounded-xl px-4 py-3 text-[#0E225C]
-             focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40" />
-
-			<!-- Botón Buscar circular -->
-			<button class="w-11 h-11 shrink-0 flex items-center justify-center bg-[#538CFF] text-white
-						 rounded-full transition-all duration-300
-						 hover:bg-[#3F7BFF] hover:shadow-md active:scale-95">
-				<img src="assets/icons/search.png" class="w-5 h-5" />
-			</button>
-
-      <!-- Botón Filtro -->
-			<button class="w-11 h-11 shrink-0 flex items-center justify-center
-             rounded-full border border-[#0E225C]
-             transition hover:bg-black/5 active:scale-95">
-        <img src="assets/icons/filter.svg" class="w-5 h-5" />
-      </button>
-
-    </div>
-  </div>
-  }
-
-  @if (variant === 'statistics') {
-  <div class="w-full flex flex-col gap-2">
-
-    <!-- Label -->
-    <label class="text-sm text-[#0E225C] px-3 md:px-0">Buscar cupones recientes</label>
-
-    <!-- Fila de controles -->
-    <div class="flex items-center gap-3 px-3 md:px-0">
-
-      <!-- Input -->
-      <input type="text" placeholder="Buscar cupón" class="flex-1 bg-white rounded-xl px-4 py-3 text-[#0E225C]
-             focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40" />
-
-      <!-- Botón Buscar -->
-      <button class="w-11 md:w-auto h-11 flex items-center justify-center bg-[#538CFF] text-white
-             md:px-6 md:gap-2
-             rounded-full transition-all duration-300
-             hover:bg-[#3F7BFF] hover:shadow-md active:scale-95">
-        <svg class="w-5 h-5" aria-hidden="true">
-          <use href="assets/icons/sprite.svg#search"></use>
-        </svg>
-        <span class="hidden md:block">Buscar</span>
-      </button>
-
-      <!-- Botón Filtro -->
-      <button class="w-11 h-11 shrink-0 flex items-center justify-center
-             rounded-full border transition active:scale-95"
-             [class.border-[#538CFF]]="statisticsFiltersOpen"
-             [class.bg-[#538CFF]]="statisticsFiltersOpen"
-             [class.text-white]="statisticsFiltersOpen"
-             [class.border-[#0E225C]]="!statisticsFiltersOpen"
-             [class.text-[#1A2440]]="!statisticsFiltersOpen"
-             [class.hover:bg-black/5]="!statisticsFiltersOpen"
-             (click)="toggleStatisticsFilters()">
-        <svg class="w-6 h-6">
-          <use href="assets/icons/sprite.svg#filter"></use>
-        </svg>
-      </button>
-
-    </div>
-
-    <!-- Filtros expandibles -->
-    @if (statisticsFiltersOpen) {
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 px-3 md:px-0 mt-2 animate-slide-down">
-
-      <!-- Desde -->
+    <div class="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 items-end">
+      <!-- Fecha inicio -->
       <div>
-        <label class="text-sm text-[#0E225C] mb-1 block">Desde</label>
+        <label class="text-sm text-[#0E225C] mb-1 block">Fecha inicio</label>
         <div class="relative">
-          <input #statsStartDate type="date" placeholder="dd/mm/aaaa"
-                 class="calendar-input w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C]
-                        placeholder:text-[#A0A7BC]
-                        focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
-                 (click)="openDatePicker(statsStartDate)" />
-          <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
-                  (click)="openDatePicker(statsStartDate)">
+          <input
+            #startDate
+            type="date"
+            placeholder="dd/mm/aaaa"
+            class="calendar-input w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C] placeholder:text-[#A0A7BC] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+            (click)="openDatePicker(startDate)"
+          />
+          <button
+            type="button"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
+            (click)="openDatePicker(startDate)"
+          >
             <svg class="w-6 h-6" aria-hidden="true">
               <use href="assets/icons/sprite.svg#calendar"></use>
             </svg>
@@ -392,17 +200,22 @@
         </div>
       </div>
 
-      <!-- Hasta -->
+      <!-- Fecha fin -->
       <div>
-        <label class="text-sm text-[#0E225C] mb-1 block">Hasta</label>
+        <label class="text-sm text-[#0E225C] mb-1 block">Fecha fin</label>
         <div class="relative">
-          <input #statsEndDate type="date" placeholder="dd/mm/aaaa"
-                 class="calendar-input w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C]
-                        placeholder:text-[#A0A7BC]
-                        focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
-                 (click)="openDatePicker(statsEndDate)" />
-          <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
-                  (click)="openDatePicker(statsEndDate)">
+          <input
+            #endDate
+            type="date"
+            placeholder="dd/mm/aaaa"
+            class="calendar-input w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C] placeholder:text-[#A0A7BC] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+            (click)="openDatePicker(endDate)"
+          />
+          <button
+            type="button"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
+            (click)="openDatePicker(endDate)"
+          >
             <svg class="w-6 h-6" aria-hidden="true">
               <use href="assets/icons/sprite.svg#calendar"></use>
             </svg>
@@ -410,31 +223,36 @@
         </div>
       </div>
 
-      <!-- Tipo de métrica -->
+      <!-- Tipo de evento -->
       <div>
-        <label class="text-sm text-[#0E225C] mb-1 block">Tipo de métrica</label>
-        <div class="relative" tabindex="0" (blur)="statisticsMetricTypeOpen = false">
-          <button type="button"
-                  class="w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C] text-left
-                         transition-all duration-200
-                         focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
-                  (click)="statisticsMetricTypeOpen = !statisticsMetricTypeOpen">
-            <span [class.text-[#A0A7BC]]="statisticsMetricTypeSelected === 'Seleccionar tipo de métrica'">
-              {{ statisticsMetricTypeSelected }}
+        <label class="text-sm text-[#0E225C] mb-1 block">Tipo de evento</label>
+        <div class="relative" tabindex="0" (blur)="auditTypeOpen = false">
+          <button
+            type="button"
+            class="w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C] text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+            (click)="auditTypeOpen = !auditTypeOpen"
+          >
+            <span [class.text-[#A0A7BC]]="auditTypeSelected === 'Seleccionar tipo'">
+              {{ auditTypeSelected }}
             </span>
           </button>
-          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF] pointer-events-none">
+          <span
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF] pointer-events-none"
+          >
             <svg class="w-4 h-4" aria-hidden="true">
               <use href="assets/icons/sprite.svg#arrow-down1"></use>
             </svg>
           </span>
-          @if (statisticsMetricTypeOpen) {
-            <div class="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-lg ring-1 ring-black/5 overflow-hidden z-20">
-              @for (option of statisticsMetricTypeOptions; track option) {
-                <button type="button"
-                        class="w-full text-left px-4 py-2 text-[#0E225C] hover:bg-[#F4F7FD]
-                               transition-colors duration-150"
-                        (mousedown)="selectStatisticsMetricType(option)">
+          @if (auditTypeOpen) {
+            <div
+              class="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-lg ring-1 ring-black/5 overflow-hidden z-20"
+            >
+              @for (option of auditTypeOptions; track option) {
+                <button
+                  type="button"
+                  class="w-full text-left px-4 py-2 text-[#0E225C] hover:bg-[#F4F7FD] transition-colors duration-150"
+                  (mousedown)="selectAuditType(option)"
+                >
                   {{ option }}
                 </button>
               }
@@ -443,673 +261,1513 @@
         </div>
       </div>
 
-    </div>
-    }
+      <!-- Usuario -->
+      <div>
+        <label class="text-sm text-[#0E225C] mb-1 block">Usuario</label>
+        <input
+          type="text"
+          placeholder="Buscar usuario"
+          class="w-full bg-white rounded-[14px] px-4 py-3 text-[#0E225C] shadow-sm ring-1 ring-black/5 transition-all duration-200 placeholder:text-[#A0A7BC] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40 focus:shadow-md"
+        />
+      </div>
 
-  </div>
+      <!-- Empresa -->
+      <div>
+        <label class="text-sm text-[#0E225C] mb-1 block">Empresa</label>
+        <input
+          type="text"
+          placeholder="Buscar empresa"
+          class="w-full bg-white rounded-[14px] px-4 py-3 text-[#0E225C] shadow-sm ring-1 ring-black/5 transition-all duration-200 placeholder:text-[#A0A7BC] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40 focus:shadow-md"
+        />
+      </div>
+
+      <!-- Buscar -->
+      <div class="flex items-end">
+        <button
+          class="w-full flex items-center justify-center gap-2 bg-[#538CFF] text-white rounded-full px-8 py-3 transition-all duration-300 ease-out hover:bg-[#3F7BFF] hover:shadow-lg hover:-translate-y-[1px] active:scale-95 focus:outline-none focus:ring-4 focus:ring-[#538CFF]/30"
+        >
+          <img src="assets/icons/search.png" class="w-4 h-4" />
+          Buscar
+        </button>
+      </div>
+    </div>
   }
 
+  @if (variant === 'companies') {
+    <div class="w-full flex flex-col gap-2">
+      <!-- Label -->
+      <label class="text-sm text-[#0E225C]">Buscar</label>
+
+      <!-- Fila de controles -->
+      <div class="flex items-center gap-3">
+        <!-- Input -->
+        <input
+          type="text"
+          placeholder="Buscar cupón"
+          class="flex-1 bg-white rounded-xl px-4 py-3 text-[#0E225C] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+        />
+
+        <!-- Botón Buscar circular -->
+        <button
+          class="w-11 h-11 shrink-0 flex items-center justify-center bg-[#538CFF] text-white rounded-full transition-all duration-300 hover:bg-[#3F7BFF] hover:shadow-md active:scale-95"
+        >
+          <img src="assets/icons/search.png" class="w-5 h-5" />
+        </button>
+
+        <!-- Botón Filtro -->
+        <button
+          class="w-11 h-11 shrink-0 flex items-center justify-center rounded-full border border-[#0E225C] transition hover:bg-black/5 active:scale-95"
+        >
+          <img src="assets/icons/filter.svg" class="w-5 h-5" />
+        </button>
+      </div>
+    </div>
+  }
+
+  @if (variant === 'statistics') {
+    <div class="w-full flex flex-col gap-2">
+      <!-- Label -->
+      <label class="text-sm text-[#0E225C] px-3 md:px-0">Buscar cupones recientes</label>
+
+      <!-- Fila de controles -->
+      <div class="flex items-center gap-3 px-3 md:px-0">
+        <!-- Input -->
+        <input
+          type="text"
+          placeholder="Buscar cupón"
+          class="flex-1 bg-white rounded-xl px-4 py-3 text-[#0E225C] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+        />
+
+        <!-- Botón Buscar -->
+        <button
+          class="w-11 md:w-auto h-11 flex items-center justify-center bg-[#538CFF] text-white md:px-6 md:gap-2 rounded-full transition-all duration-300 hover:bg-[#3F7BFF] hover:shadow-md active:scale-95"
+        >
+          <svg class="w-5 h-5" aria-hidden="true">
+            <use href="assets/icons/sprite.svg#search"></use>
+          </svg>
+          <span class="hidden md:block">Buscar</span>
+        </button>
+
+        <!-- Botón Filtro -->
+        <button
+          class="w-11 h-11 shrink-0 flex items-center justify-center rounded-full border transition active:scale-95"
+          [class.border-[#538CFF]]="statisticsFiltersOpen"
+          [class.bg-[#538CFF]]="statisticsFiltersOpen"
+          [class.text-white]="statisticsFiltersOpen"
+          [class.border-[#0E225C]]="!statisticsFiltersOpen"
+          [class.text-[#1A2440]]="!statisticsFiltersOpen"
+          [class.hover:bg-black/5]="!statisticsFiltersOpen"
+          (click)="toggleStatisticsFilters()"
+        >
+          <svg class="w-6 h-6">
+            <use href="assets/icons/sprite.svg#filter"></use>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Filtros expandibles -->
+      @if (statisticsFiltersOpen) {
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 px-3 md:px-0 mt-2 animate-slide-down">
+          <!-- Desde -->
+          <div>
+            <label class="text-sm text-[#0E225C] mb-1 block">Desde</label>
+            <div class="relative">
+              <input
+                #statsStartDate
+                type="date"
+                placeholder="dd/mm/aaaa"
+                class="calendar-input w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C] placeholder:text-[#A0A7BC] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+                (click)="openDatePicker(statsStartDate)"
+              />
+              <button
+                type="button"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
+                (click)="openDatePicker(statsStartDate)"
+              >
+                <svg class="w-6 h-6" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#calendar"></use>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Hasta -->
+          <div>
+            <label class="text-sm text-[#0E225C] mb-1 block">Hasta</label>
+            <div class="relative">
+              <input
+                #statsEndDate
+                type="date"
+                placeholder="dd/mm/aaaa"
+                class="calendar-input w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C] placeholder:text-[#A0A7BC] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+                (click)="openDatePicker(statsEndDate)"
+              />
+              <button
+                type="button"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
+                (click)="openDatePicker(statsEndDate)"
+              >
+                <svg class="w-6 h-6" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#calendar"></use>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tipo de métrica -->
+          <div>
+            <label class="text-sm text-[#0E225C] mb-1 block">Tipo de métrica</label>
+            <div class="relative" tabindex="0" (blur)="statisticsMetricTypeOpen = false">
+              <button
+                type="button"
+                class="w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C] text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+                (click)="statisticsMetricTypeOpen = !statisticsMetricTypeOpen"
+              >
+                <span
+                  [class.text-[#A0A7BC]]="
+                    statisticsMetricTypeSelected === 'Seleccionar tipo de métrica'
+                  "
+                >
+                  {{ statisticsMetricTypeSelected }}
+                </span>
+              </button>
+              <span
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF] pointer-events-none"
+              >
+                <svg class="w-4 h-4" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#arrow-down1"></use>
+                </svg>
+              </span>
+              @if (statisticsMetricTypeOpen) {
+                <div
+                  class="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-lg ring-1 ring-black/5 overflow-hidden z-20"
+                >
+                  @for (option of statisticsMetricTypeOptions; track option) {
+                    <button
+                      type="button"
+                      class="w-full text-left px-4 py-2 text-[#0E225C] hover:bg-[#F4F7FD] transition-colors duration-150"
+                      (mousedown)="selectStatisticsMetricType(option)"
+                    >
+                      {{ option }}
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+    @if (variant === 'historial-canjes') {
+    <div class="w-full flex flex-col gap-2">
+      <!-- Label -->
+      <label class="text-sm text-[#0E225C] px-3 md:px-0">Buscar cupón o usuario</label>
+
+      <!-- Fila de controles -->
+      <div class="flex items-center gap-3 px-3 md:px-0">
+        <!-- Input -->
+        <input
+          type="text"
+          placeholder="Ingresar código de cupón o nombre de usuario"
+          class="flex-1 bg-white rounded-xl px-4 py-3 text-[#0E225C] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+        />
+
+        <!-- Botón Buscar -->
+        <button
+          class="w-11 md:w-auto h-11 flex items-center justify-center bg-[#538CFF] text-white md:px-6 md:gap-2 rounded-full transition-all duration-300 hover:bg-[#3F7BFF] hover:shadow-md active:scale-95"
+        >
+          <svg class="w-5 h-5" aria-hidden="true">
+            <use href="assets/icons/sprite.svg#search"></use>
+          </svg>
+          <span class="hidden md:block">Buscar</span>
+        </button>
+
+        <!-- Botón Filtro -->
+        <button
+          class="w-11 h-11 shrink-0 flex items-center justify-center rounded-full border transition active:scale-95"
+          [class.border-[#538CFF]]="statisticsFiltersOpen"
+          [class.bg-[#538CFF]]="statisticsFiltersOpen"
+          [class.text-white]="statisticsFiltersOpen"
+          [class.border-[#0E225C]]="!statisticsFiltersOpen"
+          [class.text-[#1A2440]]="!statisticsFiltersOpen"
+          [class.hover:bg-black/5]="!statisticsFiltersOpen"
+          (click)="toggleStatisticsFilters()"
+        >
+          <svg class="w-6 h-6">
+            <use href="assets/icons/sprite.svg#filter"></use>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Filtros expandibles -->
+      @if (statisticsFiltersOpen) {
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 px-3 md:px-0 mt-2 animate-slide-down">
+          <!-- Desde -->
+          <div>
+            <label class="text-sm text-[#0E225C] mb-1 block">Fecha inicio</label>
+            <div class="relative">
+              <input
+                #statsStartDate
+                type="date"
+                placeholder="dd/mm/aaaa"
+                class="calendar-input w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C] placeholder:text-[#A0A7BC] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+                (click)="openDatePicker(statsStartDate)"
+              />
+              <button
+                type="button"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
+                (click)="openDatePicker(statsStartDate)"
+              >
+                <svg class="w-6 h-6" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#calendar"></use>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Hasta -->
+          <div>
+            <label class="text-sm text-[#0E225C] mb-1 block">Fecha fin</label>
+            <div class="relative">
+              <input
+                #statsEndDate
+                type="date"
+                placeholder="dd/mm/aaaa"
+                class="calendar-input w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C] placeholder:text-[#A0A7BC] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+                (click)="openDatePicker(statsEndDate)"
+              />
+              <button
+                type="button"
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
+                (click)="openDatePicker(statsEndDate)"
+              >
+                <svg class="w-6 h-6" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#calendar"></use>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Categoría de cupón -->
+          <div>
+            <label class="text-sm text-[#0E225C] mb-1 block">Categoría de cupón</label>
+            <div class="relative" tabindex="0" (blur)="statisticsMetricTypeOpen = false">
+              <button
+                type="button"
+                class="w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C] text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+                (click)="statisticsMetricTypeOpen = !statisticsMetricTypeOpen"
+              >
+                <span
+                  [class.text-[#A0A7BC]]="
+                    statisticsMetricTypeSelected === 'Seleccionar Categoría de cupón'
+                  "
+                >
+                  {{ statisticsMetricTypeSelected }}
+                </span>
+              </button>
+              <span
+                class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF] pointer-events-none"
+              >
+                <svg class="w-4 h-4" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#arrow-down1"></use>
+                </svg>
+              </span>
+              @if (statisticsMetricTypeOpen) {
+                <div
+                  class="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-lg ring-1 ring-black/5 overflow-hidden z-20"
+                >
+                  @for (option of statisticsMetricTypeOptions; track option) {
+                    <button
+                      type="button"
+                      class="w-full text-left px-4 py-2 text-[#0E225C] hover:bg-[#F4F7FD] transition-colors duration-150"
+                      (mousedown)="selectStatisticsMetricType(option)"
+                    >
+                      {{ option }}
+                    </button>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  }
+
+  @if (variant === 'canje-cupones') {
+    <!-- Overlay: Canjeando cupón -->
+    @if (redeemingCoupon) {
+      <div
+        class="fixed inset-0 z-[13000] flex items-center justify-center bg-white/80 backdrop-blur-sm"
+      >
+        <!-- Móvil: solo contenido centrado -->
+        <div class="flex flex-col items-center w-full px-4 md:hidden animate-fade-in">
+          <div class="mb-4 flex items-center justify-center">
+            <svg class="animate-spin w-10 h-10 text-[#1A2440]">
+              <use href="assets/icons/sprite.svg#loading"></use>
+            </svg>
+          </div>
+          <div class="text-center w-full">
+            <div class="text-xl font-semibold text-[#1A2440] mb-2">Canjeando cupón.</div>
+            <div class="text-base text-[#1A2440]">Por favor espera, no cierres esta ventana.</div>
+          </div>
+        </div>
+        <!-- Escritorio: card -->
+        <div
+          class="hidden md:flex bg-white rounded-[2rem] shadow-2xl w-full max-w-[900px] min-h-[300px] mx-auto p-10 flex-col items-center animate-fade-in"
+        >
+          <div class="flex flex-1 flex-col items-center justify-center w-full">
+            <div class="mb-6 flex items-center justify-center">
+              <svg class="animate-spin h-10 w-10 text-[#1A2440]">
+                <use href="assets/icons/sprite.svg#loading"></use>
+              </svg>
+            </div>
+            <div class="text-center">
+              <div class="text-2xl font-semibold text-[#1A2440] mb-2">Canjeando cupón.</div>
+              <div class="text-base text-[#1A2440]">Por favor espera, no cierres esta ventana.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+    <!-- Overlay: Cupón canjeado correctamente -->
+    @if (redeemSuccess) {
+      <div
+        class="fixed inset-0 z-[13000] flex items-center justify-center bg-white/80 backdrop-blur-sm"
+      >
+        <!-- Móvil: solo contenido centrado -->
+        <div class="flex flex-col items-center w-full px-4 md:hidden animate-fade-in">
+          <div class="mb-4 flex items-center justify-center">
+            <svg class="w-10 h-10 text-[#155724]">
+              <use href="assets/icons/sprite.svg#check-circle"></use>
+            </svg>
+          </div>
+          <div class="text-center w-full">
+            <div class="text-xl font-semibold text-[#1A2440] mb-2">
+              Cupón canjeado correctamente.
+            </div>
+            <div class="text-base text-[#1A2440] mb-8">El cupón ha sido marcado como canjeado.</div>
+          </div>
+          <button
+            (click)="closeRedeemSuccess()"
+            class="bg-[#538CFF] text-white w-full max-w-md py-3 rounded-full font-semibold text-base flex items-center justify-center gap-2 hover:bg-[#3976e6] transition"
+          >
+            Aceptar
+          </button>
+        </div>
+        <!-- Escritorio: card -->
+        <div
+          class="hidden md:flex bg-white rounded-[2rem] shadow-2xl w-full max-w-[900px] min-h-[375px] mx-auto p-10 flex-col items-center animate-fade-in"
+        >
+          <div class="flex flex-1 flex-col items-center justify-center w-full">
+            <div class="mb-6 flex items-center justify-center">
+              <svg class="w-12 h-12 text-[#155724]">
+                <use href="assets/icons/sprite.svg#check-circle"></use>
+              </svg>
+            </div>
+            <div class="text-center">
+              <div class="text-2xl font-semibold text-[#1A2440] mb-2">
+                Cupón canjeado correctamente.
+              </div>
+              <div class="text-base text-[#1A2440] mb-8">
+                El cupón ha sido marcado como canjeado.
+              </div>
+            </div>
+            <button
+              (click)="closeRedeemSuccess()"
+              class="bg-[#538CFF] text-white px-40 py-3 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-[#3976e6] transition"
+            >
+              Aceptar
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+    <div class="w-full flex flex-col gap-2">
+      <label class="font-medium text-[#18192B] mb-1 px-3 md:px-0">Validar cupón</label>
+      <div class="flex flex-row gap-3 items-center w-full px-3 md:px-0">
+        <input
+          type="text"
+          placeholder="Ingresar código del cupón"
+          class="flex-1 min-w-0 bg-white rounded-xl px-4 py-3 text-[#18192B] placeholder:text-[#bdbdbd] text-lg outline-none border-none md:px-6 md:py-4"
+          [(ngModel)]="couponCode"
+        />
+        <!-- Botón Buscar: circular, solo icono en móvil, texto en escritorio -->
+        <button
+          class="w-12 h-12 flex items-center justify-center bg-[#538cff] hover:bg-[#3976e6] text-white font-medium rounded-full transition md:w-auto md:px-8 md:py-3.5"
+        >
+          <svg
+            class="w-7 h-7"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+          >
+            <circle cx="11" cy="11" r="8" />
+            <path d="M21 21l-4.35-4.35" />
+          </svg>
+          <span class="hidden md:inline ml-2">Buscar</span>
+        </button>
+        <!-- Botón Escanear QR: circular, solo icono en móvil, texto en escritorio -->
+        <button
+          class="w-12 h-12 flex items-center justify-center border border-[#18192B] text-[#18192B] font-medium rounded-full transition bg-white hover:bg-[#f3f3fd] md:w-auto md:px-8 md:py-3.5"
+          (click)="openQrModal()"
+        >
+          <svg class="w-7 h-7">
+            <use href="assets/icons/sprite.svg#scan-qr"></use>
+          </svg>
+          <span class="hidden md:inline ml-2">Escanear QR</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal de escaneo QR -->
+    @if (showQrModal) {
+      <div
+        class="fixed inset-0 z-[9999] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm"
+      >
+        <div
+          (click)="$event.stopPropagation()"
+          class="w-full rounded-t-2xl md:rounded-2xl bg-white p-4 sm:p-8 max-w-full md:max-w-[420px] max-h-[95vh] overflow-y-auto relative shadow-2xl flex flex-col items-center animate-slide-up md:animate-fade-in"
+        >
+          <style>
+            @keyframes slideUp {
+              0% {
+                transform: translateY(100%);
+                opacity: 0;
+              }
+              100% {
+                transform: translateY(0);
+                opacity: 1;
+              }
+            }
+            .animate-slide-up {
+              animation: slideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+          </style>
+          <!-- Botón cerrar -->
+          <button
+            (click)="closeQrModal()"
+            class="absolute top-2 right-2 md:top-4 md:right-4 w-8 h-8 flex items-center justify-center rounded-full border-gray-300 text-gray-400 hover:text-gray-600 hover:border-gray-400 transition"
+          >
+            <svg class="w-7 h-7"><use href="assets/icons/sprite.svg#close-circle"></use></svg>
+          </button>
+          <!-- Título -->
+          <h2 class="text-xl sm:text-2xl font-semibold text-[#0E225C] text-center mb-5">
+            Escanear QR
+          </h2>
+          <!-- Área de escaneo -->
+          <div
+            class="relative w-[220px] h-[220px] sm:w-[260px] sm:h-[260px] flex items-center justify-center mb-6"
+          >
+            <ng-container *ngIf="!scannerError; else errorBlock">
+              <zxing-scanner
+                [device]="currentDevice || undefined"
+                (scanSuccess)="onQrScan($event)"
+                (camerasFound)="onCamerasFound($event)"
+                (permissionResponse)="onHasPermission($event)"
+                (scanError)="onScanError($event)"
+                class="w-full h-full rounded-xl"
+              ></zxing-scanner>
+              <div
+                *ngIf="!scannerHasDevices"
+                class="absolute inset-0 flex items-center justify-center bg-white/80 rounded-xl"
+              >
+                <span class="text-[#0E225C] text-lg font-medium">No se encontró cámara</span>
+              </div>
+              <div
+                *ngIf="scannerHasDevices && !scannerHasPermission"
+                class="absolute inset-0 flex items-center justify-center bg-white/80 rounded-xl"
+              >
+                <span class="text-[#0E225C] text-lg font-medium">Permiso de cámara denegado</span>
+              </div>
+            </ng-container>
+            <ng-template #errorBlock>
+              <div class="absolute inset-0 flex items-center justify-center bg-white/80 rounded-xl">
+                <span class="text-[#C82333] text-lg font-medium">{{ scannerError }}</span>
+              </div>
+            </ng-template>
+          </div>
+          <!-- Botones de acción -->
+          <div class="flex flex-col sm:flex-row gap-3 w-full justify-center mt-2">
+            <button
+              (click)="onQrScanButtonClick()"
+              class="w-full sm:w-auto bg-[#538CFF] text-white px-6 py-3 rounded-full font-semibold text-base sm:text-lg flex items-center justify-center gap-2 hover:bg-[#3976e6] transition"
+            >
+              <svg class="w-6 h-6">
+                <use href="assets/icons/sprite.svg#scan-qr"></use>
+              </svg>
+              Escanear QR
+            </button>
+            <button
+              (click)="closeQrModal()"
+              class="w-full sm:w-auto bg-white border border-[#0E225C] text-[#0E225C] px-6 py-3 rounded-full font-semibold text-base sm:text-lg flex items-center justify-center gap-2 hover:bg-[#f3f3fd] transition"
+            >
+              <svg class="w-6 h-6"><use href="assets/icons/sprite.svg#close-circle"></use></svg>
+              Cancelar
+            </button>
+          </div>
+          <!-- Modal de confirmación de canje -->
+          @if (showConfirmRedeemModal) {
+            <!-- Modal responsive (móvil) -->
+            <div
+              class="fixed inset-0 z-[10000] flex items-center justify-center bg-white/80 backdrop-blur-sm"
+            >
+              <!-- Versión móvil: solo contenido centrado, sin recuadro -->
+              <div class="flex flex-col items-center w-full px-4 md:hidden animate-fade-in">
+                <div class="mb-4 flex items-center justify-center">
+                  <svg class="w-8 h-8 text-[#856404]">
+                    <use href="assets/icons/sprite.svg#alert-hexagon"></use>
+                  </svg>
+                </div>
+                <div class="text-center w-full">
+                  <div class="text-xl font-semibold text-[#1A2440] mb-2">
+                    Esta acción marcará el cupón del usuario como
+                    <span class="font-bold">CANJEADO</span>.
+                  </div>
+                  <div class="text-base text-[#1A2440] mb-8">
+                    El cupón no podrá volver a utilizarse.
+                  </div>
+                </div>
+                <button
+                  (click)="confirmRedeem()"
+                  class="bg-[#538CFF] text-white w-full max-w-md py-3 rounded-full font-semibold text-base flex items-center justify-center gap-2 hover:bg-[#3976e6] transition mb-2"
+                >
+                  Validar cupón
+                </button>
+                <button
+                  (click)="closeConfirmRedeemModal()"
+                  class="w-full max-w-md bg-white border border-[#0E225C] text-[#0E225C] py-3 rounded-full font-semibold text-base flex items-center justify-center gap-2 hover:bg-[#f3f3fd] transition"
+                >
+                  Cancelar
+                </button>
+              </div>
+              <!-- Versión escritorio (sin cambios) -->
+              <div
+                class="hidden md:flex bg-white rounded-[2rem] shadow-2xl w-full max-w-[900px] mx-auto p-10 flex-col items-center relative animate-fade-in"
+              >
+                <div class="mb-4 flex items-center justify-center">
+                  <svg class="w-10 h-10 text-[#856404]">
+                    <use href="assets/icons/sprite.svg#alert-hexagon"></use>
+                  </svg>
+                </div>
+                <div class="text-center">
+                  <div class="text-2xl font-semibold text-[#1A2440] mb-2">
+                    Esta acción marcará el cupón del usuario como
+                    <span class="font-bold">CANJEADO</span>.
+                  </div>
+                  <div class="text-base text-[#1A2440] mb-8">
+                    El cupón no podrá volver a utilizarse.
+                  </div>
+                </div>
+                <div class="flex flex-row gap-4 w-full justify-center mt-2">
+                  <button
+                    (click)="confirmRedeem()"
+                    class="bg-[#538CFF] text-white px-8 py-3 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-[#3976e6] transition"
+                  >
+                    Validar cupón
+                  </button>
+                  <button
+                    (click)="closeConfirmRedeemModal()"
+                    class="bg-white border border-[#0E225C] text-[#0E225C] px-8 py-3 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-[#f3f3fd] transition"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
 </div>
 
-	@if (createCouponOpen) {
-		<!-- Overlay -->
-		<div class="fixed inset-0 bg-black/40 z-40" (click)="closeCreateCoupon()"></div>
+@if (createCouponOpen) {
+  <!-- Overlay -->
+  <div class="fixed inset-0 bg-black/40 z-40" (click)="closeCreateCoupon()"></div>
 
-		<!-- Modal -->
-		<div class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 w-screen h-screen overflow-x-hidden overscroll-none">
-		<div class="relative w-full md:max-w-3xl bg-white rounded-t-2xl md:rounded-2xl shadow-xl ring-1 ring-black/5 coupon-modal flex flex-col max-h-[92vh] md:max-h-[85vh] overflow-hidden">
-			<!-- Header -->
-			<div class="relative px-6 pt-6 pb-2 flex-none"
-				[class.opacity-60]="creatingCoupon || couponCreateSuccess"
-				[class.pointer-events-none]="creatingCoupon || couponCreateSuccess">
-			<h2 class="text-2xl font-medium text-[#0E225C] text-center">Crear cupón</h2>
-			<button class="absolute right-6 top-6 w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/5"
-					(click)="closeCreateCoupon()" aria-label="Cerrar">
-				<svg class="w-5 h-5 text-[#0E225C]">
-				<use href="assets/icons/sprite.svg#close-circle"></use>
-				</svg>
-			</button>
-			</div>
+  <!-- Modal -->
+  <div
+    class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 w-screen h-screen overflow-x-hidden overscroll-none"
+  >
+    <div
+      class="relative w-full md:max-w-3xl bg-white rounded-t-2xl md:rounded-2xl shadow-xl ring-1 ring-black/5 coupon-modal flex flex-col max-h-[92vh] md:max-h-[85vh] overflow-hidden"
+    >
+      <!-- Header -->
+      <div
+        class="relative px-6 pt-6 pb-2 flex-none"
+        [class.opacity-60]="creatingCoupon || couponCreateSuccess"
+        [class.pointer-events-none]="creatingCoupon || couponCreateSuccess"
+      >
+        <h2 class="text-2xl font-medium text-[#0E225C] text-center">Crear cupón</h2>
+        <button
+          class="absolute right-6 top-6 w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/5"
+          (click)="closeCreateCoupon()"
+          aria-label="Cerrar"
+        >
+          <svg class="w-5 h-5 text-[#0E225C]">
+            <use href="assets/icons/sprite.svg#close-circle"></use>
+          </svg>
+        </button>
+      </div>
 
-			<!-- Body -->
-			<div class="px-6 pb-6 flex-1 overflow-y-auto"
-				[class.opacity-60]="creatingCoupon || couponCreateSuccess"
-				[class.pointer-events-none]="creatingCoupon || couponCreateSuccess">
-			<form class="grid grid-cols-1 md:grid-cols-2 gap-5" (submit)="$event.preventDefault(); submitCreateCoupon()">
-				<!-- Título del cupón -->
-				<div>
-				<label class="text-sm text-[#1A2440] mb-1 block">Título del cupón</label>
-				<input [(ngModel)]="couponForm.titulo" name="titulo" type="text" placeholder="Agregar título"
-						class="w-full rounded-xl px-4 py-3 text-[#0E225C] bg-[#F4F7FD]
-								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
-								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
-				</div>
+      <!-- Body -->
+      <div
+        class="px-6 pb-6 flex-1 overflow-y-auto"
+        [class.opacity-60]="creatingCoupon || couponCreateSuccess"
+        [class.pointer-events-none]="creatingCoupon || couponCreateSuccess"
+      >
+        <form
+          class="grid grid-cols-1 md:grid-cols-2 gap-5"
+          (submit)="$event.preventDefault(); submitCreateCoupon()"
+        >
+          <!-- Título del cupón -->
+          <div>
+            <label class="text-sm text-[#1A2440] mb-1 block">Título del cupón</label>
+            <input
+              [(ngModel)]="couponForm.titulo"
+              name="titulo"
+              type="text"
+              placeholder="Agregar título"
+              class="w-full rounded-xl px-4 py-3 text-[#0E225C] bg-[#F4F7FD] ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+            />
+          </div>
 
-				<!-- Cantidad disponible -->
-				<div>
-				<label class="text-sm text-[#1A2440] mb-1 block">Cantidad disponible</label>
-				<input [(ngModel)]="couponForm.cantidad" name="cantidad" type="number" placeholder="Agregar cantidad"
-						class="w-full rounded-xl px-4 py-3 text-[#0E225C] bg-[#F4F7FD]
-								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
-								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
-				</div>
+          <!-- Cantidad disponible -->
+          <div>
+            <label class="text-sm text-[#1A2440] mb-1 block">Cantidad disponible</label>
+            <input
+              [(ngModel)]="couponForm.cantidad"
+              name="cantidad"
+              type="number"
+              placeholder="Agregar cantidad"
+              class="w-full rounded-xl px-4 py-3 text-[#0E225C] bg-[#F4F7FD] ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+            />
+          </div>
 
-				<!-- Descripción -->
-				<div class="md:col-span-1">
-				<label class="text-sm text-[#1A2440] mb-1 block">Descripción</label>
-				<textarea [(ngModel)]="couponForm.descripcion" name="descripcion" placeholder="Agregar descripción"
-							class="w-full rounded-xl px-4 py-3 text-[#0E225C] min-h-44
-								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
-								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
-				</div>
+          <!-- Descripción -->
+          <div class="md:col-span-1">
+            <label class="text-sm text-[#1A2440] mb-1 block">Descripción</label>
+            <textarea
+              [(ngModel)]="couponForm.descripcion"
+              name="descripcion"
+              placeholder="Agregar descripción"
+              class="w-full rounded-xl px-4 py-3 text-[#0E225C] min-h-44 ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD] focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+            ></textarea>
+          </div>
 
-				<!-- Fechas: inicio y fin (apiladas en la misma columna) -->
-				<div class="md:col-span-1 flex flex-col gap-5">
-				<!-- Fecha inicio -->
-				<div>
-					<label class="text-sm text-[#1A2440] mb-1 block">Fecha inicio</label>
-					<div class="relative">
-					<input #modalStart type="date" [(ngModel)]="couponForm.fechaInicio" name="fechaInicio" placeholder="dd/mm/aaaa"
-							class="calendar-input w-full rounded-xl px-4 py-3 pr-11 text-[#0E225C]
-									ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
-									focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
-							(click)="openDatePicker(modalStart)" />
-					<button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
-							(click)="openDatePicker(modalStart)">
-						<svg class="w-6 h-6" aria-hidden="true">
-						<use href="assets/icons/sprite.svg#calendar"></use>
-						</svg>
-					</button>
-					</div>
-				</div>
+          <!-- Fechas: inicio y fin (apiladas en la misma columna) -->
+          <div class="md:col-span-1 flex flex-col gap-5">
+            <!-- Fecha inicio -->
+            <div>
+              <label class="text-sm text-[#1A2440] mb-1 block">Fecha inicio</label>
+              <div class="relative">
+                <input
+                  #modalStart
+                  type="date"
+                  [(ngModel)]="couponForm.fechaInicio"
+                  name="fechaInicio"
+                  placeholder="dd/mm/aaaa"
+                  class="calendar-input w-full rounded-xl px-4 py-3 pr-11 text-[#0E225C] ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD] focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+                  (click)="openDatePicker(modalStart)"
+                />
+                <button
+                  type="button"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
+                  (click)="openDatePicker(modalStart)"
+                >
+                  <svg class="w-6 h-6" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#calendar"></use>
+                  </svg>
+                </button>
+              </div>
+            </div>
 
-				<!-- Fecha fin -->
-				<div>
-					<label class="text-sm text-[#1A2440] mb-1 block">Fecha fin</label>
-					<div class="relative">
-					<input #modalEnd type="date" [(ngModel)]="couponForm.fechaFin" name="fechaFin" placeholder="dd/mm/aaaa"
-							class="calendar-input w-full rounded-xl px-4 py-3 pr-11 text-[#0E225C]
-									ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
-									focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
-							(click)="openDatePicker(modalEnd)" />
-					<button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
-							(click)="openDatePicker(modalEnd)">
-						<svg class="w-6 h-6" aria-hidden="true">
-						<use href="assets/icons/sprite.svg#calendar"></use>
-						</svg>
-					</button>
-					</div>
-				</div>
-				</div>
+            <!-- Fecha fin -->
+            <div>
+              <label class="text-sm text-[#1A2440] mb-1 block">Fecha fin</label>
+              <div class="relative">
+                <input
+                  #modalEnd
+                  type="date"
+                  [(ngModel)]="couponForm.fechaFin"
+                  name="fechaFin"
+                  placeholder="dd/mm/aaaa"
+                  class="calendar-input w-full rounded-xl px-4 py-3 pr-11 text-[#0E225C] ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD] focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+                  (click)="openDatePicker(modalEnd)"
+                />
+                <button
+                  type="button"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
+                  (click)="openDatePicker(modalEnd)"
+                >
+                  <svg class="w-6 h-6" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#calendar"></use>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
 
-				<!-- Columna izquierda: Categoría + Estado -->
-				<div class="md:col-span-1 flex flex-col gap-5">
-				<!-- Categoría -->
-				<div>
-					<label class="text-sm text-[#1A2440] mb-1 block">Categoría</label>
-					<select [(ngModel)]="couponForm.categoria" name="categoria"
-							class="w-full rounded-xl px-4 py-3 pr-10 text-[#0E225C] bg-[#F4F7FD]
-								appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
-								bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
-								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60">
-					<option value="" disabled selected hidden>Seleccionar categoría</option>
-					<option>Turismo</option>
-					<option>Comida</option>
-					<option>Entretenimiento</option>
-					</select>
-				</div>
+          <!-- Columna izquierda: Categoría + Estado -->
+          <div class="md:col-span-1 flex flex-col gap-5">
+            <!-- Categoría -->
+            <div>
+              <label class="text-sm text-[#1A2440] mb-1 block">Categoría</label>
+              <select
+                [(ngModel)]="couponForm.categoria"
+                name="categoria"
+                class="w-full rounded-xl px-4 py-3 pr-10 text-[#0E225C] bg-[#F4F7FD] appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px] focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+              >
+                <option value="" disabled selected hidden>Seleccionar categoría</option>
+                <option>Turismo</option>
+                <option>Comida</option>
+                <option>Entretenimiento</option>
+              </select>
+            </div>
 
-				<!-- Estado -->
-				<div>
-					<label class="text-sm text-[#1A2440] mb-1 block">Estado</label>
-					<select [(ngModel)]="couponForm.estado" name="estado"
-							class="w-full rounded-xl px-4 py-3 pr-10 text-[#0E225C] bg-[#F4F7FD]
-								appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
-								bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
-								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60">
-					<option value="" disabled selected hidden>Seleccionar estado</option>
-					<option>Publicado</option>
-					<option>Borrador</option>
-					</select>
-				</div>
-				</div>
+            <!-- Estado -->
+            <div>
+              <label class="text-sm text-[#1A2440] mb-1 block">Estado</label>
+              <select
+                [(ngModel)]="couponForm.estado"
+                name="estado"
+                class="w-full rounded-xl px-4 py-3 pr-10 text-[#0E225C] bg-[#F4F7FD] appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px] focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+              >
+                <option value="" disabled selected hidden>Seleccionar estado</option>
+                <option>Publicado</option>
+                <option>Borrador</option>
+              </select>
+            </div>
+          </div>
 
-				<!-- Términos y condiciones -->
-				<div class="md:col-span-1">
-				<label class="text-sm text-[#1A2440] mb-1 block">Términos y condiciones</label>
-				<textarea [(ngModel)]="couponForm.terminos" name="terminos" placeholder="Agregar términos y condiciones"
-							class="w-full rounded-xl px-4 py-3 text-[#0E225C] min-h-44 bg-[#F4F7FD]
-								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
-								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
-				</div>
+          <!-- Términos y condiciones -->
+          <div class="md:col-span-1">
+            <label class="text-sm text-[#1A2440] mb-1 block">Términos y condiciones</label>
+            <textarea
+              [(ngModel)]="couponForm.terminos"
+              name="terminos"
+              placeholder="Agregar términos y condiciones"
+              class="w-full rounded-xl px-4 py-3 text-[#0E225C] min-h-44 bg-[#F4F7FD] ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+            ></textarea>
+          </div>
 
-				<!-- Actions -->
-				<div class="md:col-span-2 flex items-center justify-center gap-3 pt-6">
-				<button type="submit"
-						[disabled]="!isCouponFormValid()"
-						class="px-6 py-3 rounded-full text-white
-								bg-[#0E225C] hover:bg-[#0B1B4B]
-								disabled:bg-[#C7CBD5] disabled:hover:bg-[#C7CBD5] disabled:cursor-not-allowed">
-					Crear cupón
-				</button>
-				<button type="button" class="px-6 py-3 rounded-full bg-white border border-[#0E225C] text-[#0E225C]"
-						(click)="closeCreateCoupon()">Cancelar</button>
-				
-				</div>
-			</form>
-			</div>
+          <!-- Actions -->
+          <div class="md:col-span-2 flex items-center justify-center gap-3 pt-6">
+            <button
+              type="submit"
+              [disabled]="!isCouponFormValid()"
+              class="px-6 py-3 rounded-full text-white bg-[#0E225C] hover:bg-[#0B1B4B] disabled:bg-[#C7CBD5] disabled:hover:bg-[#C7CBD5] disabled:cursor-not-allowed"
+            >
+              Crear cupón
+            </button>
+            <button
+              type="button"
+              class="px-6 py-3 rounded-full bg-white border border-[#0E225C] text-[#0E225C]"
+              (click)="closeCreateCoupon()"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
 
-			<!-- Overlay: Creando cupón -->
-			@if (creatingCoupon) {
-			<div class="absolute inset-0 bg-white/85 flex flex-col items-center justify-center z-10">
-				<svg class="animate-spin h-10 w-10 text-black mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-				<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"></path>
-				</svg>
-				<div class="text-center">
-				<h3 class="text-2xl font-normal text-[#1A2440] mb-2">Creando cupón...</h3>
-				<p class="text-base font-normal text-[#1A2440]">Por favor espera, no cierres esta ventana.</p>
-				</div>
-			</div>
-			}
+      <!-- Overlay: Creando cupón -->
+      @if (creatingCoupon) {
+        <div class="absolute inset-0 bg-white/85 flex flex-col items-center justify-center z-10">
+          <svg
+            class="animate-spin h-10 w-10 text-black mb-4"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"
+            ></path>
+          </svg>
+          <div class="text-center">
+            <h3 class="text-2xl font-normal text-[#1A2440] mb-2">Creando cupón...</h3>
+            <p class="text-base font-normal text-[#1A2440]">
+              Por favor espera, no cierres esta ventana.
+            </p>
+          </div>
+        </div>
+      }
 
-			<!-- Overlay: Cupón creado correctamente -->
-			@if (couponCreateSuccess) {
-			<div class="absolute inset-0 bg-white/85 flex flex-col items-center justify-center z-10 px-8">
-				<div class="mb-2 text-[#155724]">
-					<svg class="w-10 h-10" aria-hidden="true">
-						<use href="assets/icons/sprite.svg#status-check"></use>
-					</svg>
-				</div>
+      <!-- Overlay: Cupón creado correctamente -->
+      @if (couponCreateSuccess) {
+        <div
+          class="absolute inset-0 bg-white/85 flex flex-col items-center justify-center z-10 px-8"
+        >
+          <div class="mb-2 text-[#155724]">
+            <svg class="w-10 h-10" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#status-check"></use>
+            </svg>
+          </div>
 
-				<h3 class="text-2xl font-normal text-[#1A2440] mb-3 text-center">Cupón creado correctamente.</h3>
-				<div class="text-sm text-[#1A2440] mb-5">
-				Su estado es:
-				<span class="ml-2 inline-flex items-center rounded-full bg-green-100 text-green-800 px-3 py-1 text-xs font-medium">
-					{{ couponForm.estado || 'Publicado' }}
-				</span>
-				</div>
+          <h3 class="text-2xl font-normal text-[#1A2440] mb-3 text-center">
+            Cupón creado correctamente.
+          </h3>
+          <div class="text-sm text-[#1A2440] mb-5">
+            Su estado es:
+            <span
+              class="ml-2 inline-flex items-center rounded-full bg-green-100 text-green-800 px-3 py-1 text-xs font-medium"
+            >
+              {{ couponForm.estado || 'Publicado' }}
+            </span>
+          </div>
 
-					<button (click)="onSuccessContinue()"
-					class="w-full max-w-md bg-[#5B95FF] hover:bg-blue-600 text-white rounded-full py-3.5 font-normal text-lg shadow-lg shadow-blue-500/30 transition-all transform active:scale-95">
-				Volver a mis cupones
-				</button>
-			</div>
-			}
-		</div>
-		</div>
-	}
-	
-	@if (editCouponOpen) {
-		<!-- Overlay -->
-		<div class="fixed inset-0 bg-black/40 z-40" (click)="closeEditCoupon()"></div>
+          <button
+            (click)="onSuccessContinue()"
+            class="w-full max-w-md bg-[#5B95FF] hover:bg-blue-600 text-white rounded-full py-3.5 font-normal text-lg shadow-lg shadow-blue-500/30 transition-all transform active:scale-95"
+          >
+            Volver a mis cupones
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}
 
-		<!-- Modal Editar -->
-		<div class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 w-screen h-screen overflow-x-hidden overscroll-none">
-		<div class="relative w-full md:max-w-3xl bg-white rounded-t-2xl md:rounded-2xl shadow-xl ring-1 ring-black/5 coupon-modal flex flex-col max-h-[92vh] md:max-h-[85vh] overflow-hidden">
-			<!-- Header -->
-			<div class="relative px-6 pt-6 pb-2 flex-none"
-				[class.opacity-60]="editingCoupon || couponEditSuccess"
-				[class.pointer-events-none]="editingCoupon || couponEditSuccess">
-			<h2 class="text-2xl font-medium text-[#0E225C] text-center">Editar cupón</h2>
-				<button class="absolute right-6 top-6 w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/5"
-					(click)="closeEditCoupon()" aria-label="Cerrar">
-				<svg class="w-5 h-5 text-[#0E225C]">
-				<use href="assets/icons/sprite.svg#close-circle"></use>
-				</svg>
-			</button>
-			</div>
+@if (editCouponOpen) {
+  <!-- Overlay -->
+  <div class="fixed inset-0 bg-black/40 z-40" (click)="closeEditCoupon()"></div>
 
-			<!-- Body -->
-			<div class="px-6 pb-6 flex-1 overflow-y-auto"
-				[class.opacity-60]="editingCoupon || couponEditSuccess"
-				[class.pointer-events-none]="editingCoupon || couponEditSuccess">
-			<form class="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-5" (submit)="$event.preventDefault(); submitEditCoupon()">
-				<!-- Título del cupón (móvil: 1ro | desktop: col1-fila1) -->
-				<div class="order-1 md:order-none">
-				<label class="text-sm text-[#1A2440] mb-1 block">Título del cupón</label>
-				<input [(ngModel)]="editForm.titulo" name="edit_titulo" type="text" placeholder="Agregar título"
-						class="w-full rounded-xl px-4 py-3 text-[#538CFF] bg-[#F4F7FD]
-								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
-								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
-				</div>
+  <!-- Modal Editar -->
+  <div
+    class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4 w-screen h-screen overflow-x-hidden overscroll-none"
+  >
+    <div
+      class="relative w-full md:max-w-3xl bg-white rounded-t-2xl md:rounded-2xl shadow-xl ring-1 ring-black/5 coupon-modal flex flex-col max-h-[92vh] md:max-h-[85vh] overflow-hidden"
+    >
+      <!-- Header -->
+      <div
+        class="relative px-6 pt-6 pb-2 flex-none"
+        [class.opacity-60]="editingCoupon || couponEditSuccess"
+        [class.pointer-events-none]="editingCoupon || couponEditSuccess"
+      >
+        <h2 class="text-2xl font-medium text-[#0E225C] text-center">Editar cupón</h2>
+        <button
+          class="absolute right-6 top-6 w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/5"
+          (click)="closeEditCoupon()"
+          aria-label="Cerrar"
+        >
+          <svg class="w-5 h-5 text-[#0E225C]">
+            <use href="assets/icons/sprite.svg#close-circle"></use>
+          </svg>
+        </button>
+      </div>
 
-				<!-- Cantidad disponible (móvil: 5to | desktop: col2-fila1) -->
-				<div class="order-5 md:order-none">
-				<label class="text-sm text-[#1A2440] mb-1 block">Cantidad disponible</label>
-				<input [(ngModel)]="editForm.cantidad" name="edit_cantidad" type="number" placeholder="Agregar cantidad"
-						class="w-full rounded-xl px-4 py-3 text-[#538CFF] bg-[#F4F7FD]
-								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
-								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
-				</div>
+      <!-- Body -->
+      <div
+        class="px-6 pb-6 flex-1 overflow-y-auto"
+        [class.opacity-60]="editingCoupon || couponEditSuccess"
+        [class.pointer-events-none]="editingCoupon || couponEditSuccess"
+      >
+        <form
+          class="flex flex-col gap-5 md:grid md:grid-cols-2 md:gap-5"
+          (submit)="$event.preventDefault(); submitEditCoupon()"
+        >
+          <!-- Título del cupón (móvil: 1ro | desktop: col1-fila1) -->
+          <div class="order-1 md:order-none">
+            <label class="text-sm text-[#1A2440] mb-1 block">Título del cupón</label>
+            <input
+              [(ngModel)]="editForm.titulo"
+              name="edit_titulo"
+              type="text"
+              placeholder="Agregar título"
+              class="w-full rounded-xl px-4 py-3 text-[#538CFF] bg-[#F4F7FD] ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+            />
+          </div>
 
-				<!-- Descripción (móvil: 2do | desktop: col1-fila2) -->
-				<div class="order-2 md:order-none md:col-span-1">
-				<label class="text-sm text-[#1A2440] mb-1 block">Descripción</label>
-				<textarea [(ngModel)]="editForm.descripcion" name="edit_descripcion" placeholder="Agregar descripción"
-							class="w-full rounded-xl px-4 py-3 text-[#538CFF] min-h-44
-								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
-								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
-				</div>
+          <!-- Cantidad disponible (móvil: 5to | desktop: col2-fila1) -->
+          <div class="order-5 md:order-none">
+            <label class="text-sm text-[#1A2440] mb-1 block">Cantidad disponible</label>
+            <input
+              [(ngModel)]="editForm.cantidad"
+              name="edit_cantidad"
+              type="number"
+              placeholder="Agregar cantidad"
+              class="w-full rounded-xl px-4 py-3 text-[#538CFF] bg-[#F4F7FD] ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+            />
+          </div>
 
-				<!-- Fechas: inicio y fin (móvil: 6to | desktop: col2-fila2) -->
-				<div class="order-6 md:order-none md:col-span-1 flex flex-col gap-5">
-				<!-- Fecha inicio -->
-				<div>
-					<label class="text-sm text-[#1A2440] mb-1 block">Fecha inicio</label>
-					<div class="relative">
-					<input #editStart type="date" [(ngModel)]="editForm.fechaInicio" name="edit_fechaInicio" placeholder="dd/mm/aaaa"
-							class="calendar-input w-full rounded-xl px-4 py-3 pr-11 text-[#538CFF]
-									ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
-									focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
-							(click)="openDatePicker(editStart)" />
-					<button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
-							(click)="openDatePicker(editStart)">
-						<svg class="w-6 h-6" aria-hidden="true">
-						<use href="assets/icons/sprite.svg#calendar"></use>
-						</svg>
-					</button>
-					</div>
-				</div>
+          <!-- Descripción (móvil: 2do | desktop: col1-fila2) -->
+          <div class="order-2 md:order-none md:col-span-1">
+            <label class="text-sm text-[#1A2440] mb-1 block">Descripción</label>
+            <textarea
+              [(ngModel)]="editForm.descripcion"
+              name="edit_descripcion"
+              placeholder="Agregar descripción"
+              class="w-full rounded-xl px-4 py-3 text-[#538CFF] min-h-44 ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD] focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+            ></textarea>
+          </div>
 
-				<!-- Fecha fin -->
-				<div>
-					<label class="text-sm text-[#1A2440] mb-1 block">Fecha fin</label>
-					<div class="relative">
-					<input #editEnd type="date" [(ngModel)]="editForm.fechaFin" name="edit_fechaFin" placeholder="dd/mm/aaaa"
-							class="calendar-input w-full rounded-xl px-4 py-3 pr-11 text-[#538CFF]
-									ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
-									focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
-							(click)="openDatePicker(editEnd)" />
-					<button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
-							(click)="openDatePicker(editEnd)">
-						<svg class="w-6 h-6" aria-hidden="true">
-						<use href="assets/icons/sprite.svg#calendar"></use>
-						</svg>
-					</button>
-					</div>
-				</div>
-				</div>
+          <!-- Fechas: inicio y fin (móvil: 6to | desktop: col2-fila2) -->
+          <div class="order-6 md:order-none md:col-span-1 flex flex-col gap-5">
+            <!-- Fecha inicio -->
+            <div>
+              <label class="text-sm text-[#1A2440] mb-1 block">Fecha inicio</label>
+              <div class="relative">
+                <input
+                  #editStart
+                  type="date"
+                  [(ngModel)]="editForm.fechaInicio"
+                  name="edit_fechaInicio"
+                  placeholder="dd/mm/aaaa"
+                  class="calendar-input w-full rounded-xl px-4 py-3 pr-11 text-[#538CFF] ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD] focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+                  (click)="openDatePicker(editStart)"
+                />
+                <button
+                  type="button"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
+                  (click)="openDatePicker(editStart)"
+                >
+                  <svg class="w-6 h-6" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#calendar"></use>
+                  </svg>
+                </button>
+              </div>
+            </div>
 
-				<!-- Categoría (móvil: 3ro | desktop: col1-fila3 agrupado con Estado) -->
-				<div class="order-3 md:order-none md:hidden">
-				<label class="text-sm text-[#1A2440] mb-1 block">Categoría</label>
-				<select [(ngModel)]="editForm.categoria" name="edit_categoria_mobile"
-						class="w-full rounded-xl px-4 py-3 pr-10 text-[#538CFF] bg-[#F4F7FD]
-							appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
-							bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
-							focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60">
-				<option value="" disabled hidden>Seleccionar categoría</option>
-				<option>Turismo</option>
-				<option>Comida</option>
-				<option>Entretenimiento</option>
-				</select>
-				</div>
+            <!-- Fecha fin -->
+            <div>
+              <label class="text-sm text-[#1A2440] mb-1 block">Fecha fin</label>
+              <div class="relative">
+                <input
+                  #editEnd
+                  type="date"
+                  [(ngModel)]="editForm.fechaFin"
+                  name="edit_fechaFin"
+                  placeholder="dd/mm/aaaa"
+                  class="calendar-input w-full rounded-xl px-4 py-3 pr-11 text-[#538CFF] ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD] focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+                  (click)="openDatePicker(editEnd)"
+                />
+                <button
+                  type="button"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
+                  (click)="openDatePicker(editEnd)"
+                >
+                  <svg class="w-6 h-6" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#calendar"></use>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
 
-				<!-- Estado (móvil: 4to | desktop: oculto, se muestra agrupado abajo) -->
-				<div class="order-4 md:order-none md:hidden">
-				<label class="text-sm text-[#1A2440] mb-1 block">Estado</label>
-				<select [(ngModel)]="editForm.estado" name="edit_estado_mobile"
-						class="w-full rounded-xl px-4 py-3 pr-10 text-[#538CFF] bg-[#F4F7FD]
-							appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
-							bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
-							focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60">
-				<option value="" disabled hidden>Seleccionar estado</option>
-				<option>Publicado</option>
-				<option>Borrador</option>
-				</select>
-				</div>
+          <!-- Categoría (móvil: 3ro | desktop: col1-fila3 agrupado con Estado) -->
+          <div class="order-3 md:order-none md:hidden">
+            <label class="text-sm text-[#1A2440] mb-1 block">Categoría</label>
+            <select
+              [(ngModel)]="editForm.categoria"
+              name="edit_categoria_mobile"
+              class="w-full rounded-xl px-4 py-3 pr-10 text-[#538CFF] bg-[#F4F7FD] appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px] focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+            >
+              <option value="" disabled hidden>Seleccionar categoría</option>
+              <option>Turismo</option>
+              <option>Comida</option>
+              <option>Entretenimiento</option>
+            </select>
+          </div>
 
-				<!-- Categoría + Estado agrupados (solo desktop) -->
-				<div class="hidden md:flex md:order-none md:col-span-1 flex-col gap-5">
-				<div>
-					<label class="text-sm text-[#1A2440] mb-1 block">Categoría</label>
-					<select [(ngModel)]="editForm.categoria" name="edit_categoria"
-							class="w-full rounded-xl px-4 py-3 pr-10 text-[#538CFF] bg-[#F4F7FD]
-								appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
-								bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
-								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60">
-					<option value="" disabled hidden>Seleccionar categoría</option>
-					<option>Turismo</option>
-					<option>Comida</option>
-					<option>Entretenimiento</option>
-					</select>
-				</div>
+          <!-- Estado (móvil: 4to | desktop: oculto, se muestra agrupado abajo) -->
+          <div class="order-4 md:order-none md:hidden">
+            <label class="text-sm text-[#1A2440] mb-1 block">Estado</label>
+            <select
+              [(ngModel)]="editForm.estado"
+              name="edit_estado_mobile"
+              class="w-full rounded-xl px-4 py-3 pr-10 text-[#538CFF] bg-[#F4F7FD] appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px] focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+            >
+              <option value="" disabled hidden>Seleccionar estado</option>
+              <option>Publicado</option>
+              <option>Borrador</option>
+            </select>
+          </div>
 
-				<div>
-					<label class="text-sm text-[#1A2440] mb-1 block">Estado</label>
-					<select [(ngModel)]="editForm.estado" name="edit_estado"
-							class="w-full rounded-xl px-4 py-3 pr-10 text-[#538CFF] bg-[#F4F7FD]
-								appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
-								bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
-								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60">
-					<option value="" disabled hidden>Seleccionar estado</option>
-					<option>Publicado</option>
-					<option>Borrador</option>
-					</select>
-				</div>
-				</div>
+          <!-- Categoría + Estado agrupados (solo desktop) -->
+          <div class="hidden md:flex md:order-none md:col-span-1 flex-col gap-5">
+            <div>
+              <label class="text-sm text-[#1A2440] mb-1 block">Categoría</label>
+              <select
+                [(ngModel)]="editForm.categoria"
+                name="edit_categoria"
+                class="w-full rounded-xl px-4 py-3 pr-10 text-[#538CFF] bg-[#F4F7FD] appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px] focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+              >
+                <option value="" disabled hidden>Seleccionar categoría</option>
+                <option>Turismo</option>
+                <option>Comida</option>
+                <option>Entretenimiento</option>
+              </select>
+            </div>
 
-				<!-- Términos y condiciones (móvil: 7mo | desktop: col2-fila3) -->
-				<div class="order-7 md:order-none md:col-span-1">
-				<label class="text-sm text-[#1A2440] mb-1 block">Términos y condiciones</label>
-				<textarea [(ngModel)]="editForm.terminos" name="edit_terminos" placeholder="Agregar términos y condiciones"
-							class="w-full rounded-xl px-4 py-3 text-[#538CFF] min-h-44 bg-[#F4F7FD]
-								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
-								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
-				</div>
+            <div>
+              <label class="text-sm text-[#1A2440] mb-1 block">Estado</label>
+              <select
+                [(ngModel)]="editForm.estado"
+                name="edit_estado"
+                class="w-full rounded-xl px-4 py-3 pr-10 text-[#538CFF] bg-[#F4F7FD] appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px] focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+              >
+                <option value="" disabled hidden>Seleccionar estado</option>
+                <option>Publicado</option>
+                <option>Borrador</option>
+              </select>
+            </div>
+          </div>
 
-				<!-- Actions (móvil: último | desktop: última fila) -->
-				<div class="order-8 md:order-none md:col-span-2 flex items-center justify-center gap-3 pt-6">
-				<button type="submit"
-						[disabled]="!isEditFormValid()"
-						class="px-6 py-3 rounded-full text-white
-								bg-[#538CFF] hover:bg-[#0B1B4B]
-								disabled:bg-[#C7CBD5] disabled:hover:bg-[#C7CBD5] disabled:cursor-not-allowed">
-					Guardar cambios
-				</button>
-				<button type="button" class="px-6 py-3 rounded-full bg-white border border-[#0E225C] text-[#0E225C]"
-						(click)="closeEditCoupon()">Cancelar</button>
-				</div>
-			</form>
-			</div>
+          <!-- Términos y condiciones (móvil: 7mo | desktop: col2-fila3) -->
+          <div class="order-7 md:order-none md:col-span-1">
+            <label class="text-sm text-[#1A2440] mb-1 block">Términos y condiciones</label>
+            <textarea
+              [(ngModel)]="editForm.terminos"
+              name="edit_terminos"
+              placeholder="Agregar términos y condiciones"
+              class="w-full rounded-xl px-4 py-3 text-[#538CFF] min-h-44 bg-[#F4F7FD] ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"
+            ></textarea>
+          </div>
 
-			<!-- Overlay: Guardando -->
-			@if (editingCoupon) {
-			<div class="absolute inset-0 bg-white/85 flex flex-col items-center justify-center z-10">
-				<svg class="animate-spin h-10 w-10 text-black mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-				<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"></path>
-				</svg>
-				<div class="text-center">
-				<h3 class="text-2xl font-normal text-[#1A2440] mb-2">Actualizando cupón...</h3>
-				<p class="text-base font-normal text-[#1A2440]">Por favor espera, no cierres esta ventana.</p>
-				</div>
-			</div>
-			}
+          <!-- Actions (móvil: último | desktop: última fila) -->
+          <div
+            class="order-8 md:order-none md:col-span-2 flex items-center justify-center gap-3 pt-6"
+          >
+            <button
+              type="submit"
+              [disabled]="!isEditFormValid()"
+              class="px-6 py-3 rounded-full text-white bg-[#538CFF] hover:bg-[#0B1B4B] disabled:bg-[#C7CBD5] disabled:hover:bg-[#C7CBD5] disabled:cursor-not-allowed"
+            >
+              Guardar cambios
+            </button>
+            <button
+              type="button"
+              class="px-6 py-3 rounded-full bg-white border border-[#0E225C] text-[#0E225C]"
+              (click)="closeEditCoupon()"
+            >
+              Cancelar
+            </button>
+          </div>
+        </form>
+      </div>
 
-			<!-- Overlay: Actualizado -->
-			@if (couponEditSuccess) {
-			<div class="absolute inset-0 bg-white/85 flex flex-col items-center justify-center z-10 px-8">
-				<div class="mb-2 text-[#155724]">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10">
-						<circle cx="12" cy="12" r="9" />
-						<path d="M8 12l2.5 2.5 5.5 -5.5" />
-					</svg>
-				</div>
+      <!-- Overlay: Guardando -->
+      @if (editingCoupon) {
+        <div class="absolute inset-0 bg-white/85 flex flex-col items-center justify-center z-10">
+          <svg
+            class="animate-spin h-10 w-10 text-black mb-4"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"
+            ></path>
+          </svg>
+          <div class="text-center">
+            <h3 class="text-2xl font-normal text-[#1A2440] mb-2">Actualizando cupón...</h3>
+            <p class="text-base font-normal text-[#1A2440]">
+              Por favor espera, no cierres esta ventana.
+            </p>
+          </div>
+        </div>
+      }
 
-				@if (editForm.estado === 'Publicado') {
-					<h3 class="text-2xl font-normal text-[#1A2440] mb-3 text-center">Cambios del cupón actualizados correctamente.</h3>
-					<div class="text-sm text-[#1A2440] mb-5 text-center">
-						Su estado es:
-						<span class="ml-2 inline-flex items-center rounded-full bg-green-100 text-green-800 px-3 py-1 text-xs font-medium">
-							{{ editForm.estado }}
-						</span>
-					</div>
-				} @else {
-					<h3 class="text-2xl font-normal text-[#1A2440] mb-3 text-center">Cupón actualizado correctamente.</h3>
-				}
+      <!-- Overlay: Actualizado -->
+      @if (couponEditSuccess) {
+        <div
+          class="absolute inset-0 bg-white/85 flex flex-col items-center justify-center z-10 px-8"
+        >
+          <div class="mb-2 text-[#155724]">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="w-10 h-10"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path d="M8 12l2.5 2.5 5.5 -5.5" />
+            </svg>
+          </div>
 
-				<button (click)="onEditSuccessContinue()"
-						class="w-full max-w-md bg-[#5B95FF] hover:bg-blue-600 text-white rounded-full py-3.5 font-normal text-lg shadow-lg shadow-blue-500/30 transition-all transform active:scale-95">
-					Volver a mis cupones
-				</button>
-			</div>
-			}
-		</div>
-		</div>
-	}
+          @if (editForm.estado === 'Publicado') {
+            <h3 class="text-2xl font-normal text-[#1A2440] mb-3 text-center">
+              Cambios del cupón actualizados correctamente.
+            </h3>
+            <div class="text-sm text-[#1A2440] mb-5 text-center">
+              Su estado es:
+              <span
+                class="ml-2 inline-flex items-center rounded-full bg-green-100 text-green-800 px-3 py-1 text-xs font-medium"
+              >
+                {{ editForm.estado }}
+              </span>
+            </div>
+          } @else {
+            <h3 class="text-2xl font-normal text-[#1A2440] mb-3 text-center">
+              Cupón actualizado correctamente.
+            </h3>
+          }
 
-	@if (deleteCouponOpen) {
-		<!-- Overlay -->
-		<div class="fixed inset-0 bg-black/40 z-40" (click)="closeDeleteCoupon()"></div>
+          <button
+            (click)="onEditSuccessContinue()"
+            class="w-full max-w-md bg-[#5B95FF] hover:bg-blue-600 text-white rounded-full py-3.5 font-normal text-lg shadow-lg shadow-blue-500/30 transition-all transform active:scale-95"
+          >
+            Volver a mis cupones
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}
 
-		<!-- Modal Eliminar -->
-		<div class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4">
-		<div class="relative w-full md:max-w-3xl bg-[white] rounded-t-2xl md:rounded-2xl shadow-xl ring-1 ring-black/5 coupon-modal flex flex-col max-h-[92vh] md:max-h-[85vh] overflow-hidden">
-			<!-- Header -->
-			<div class="relative px-6 pt-6 pb-2"
-				[class.opacity-60]="deletingCoupon || couponDeleteSuccess"
-				[class.pointer-events-none]="deletingCoupon || couponDeleteSuccess">
-			<h2 class="text-2xl font-medium text-[#0E225C] text-center">Eliminar cupón</h2>
-			<button class="absolute right-6 top-6 w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/5"
-					(click)="closeDeleteCoupon()" aria-label="Cerrar">
-				<svg class="w-5 h-5 text-[#0E225C]">
-				<use href="assets/icons/sprite.svg#close-circle"></use>
-				</svg>
-			</button>
-			</div>
+@if (deleteCouponOpen) {
+  <!-- Overlay -->
+  <div class="fixed inset-0 bg-black/40 z-40" (click)="closeDeleteCoupon()"></div>
 
-			<!-- Body -->
-			      <div class="px-6 pb-6 flex-1 overflow-y-auto"
-				      [class.opacity-60]="deletingCoupon || couponDeleteSuccess">
-			<!-- Resumen con recuadro -->
-			<div class="rounded-lg ring-1 ring-[#E4EAF5] p-6 bg-[#F4F7FD]">
-				<!-- Desktop: 2 columnas agrupadas | Móvil: grid 2 cols con campos pareados -->
-				
-				<!-- === LAYOUT MÓVIL (visible solo en móvil) === -->
-				<div class="flex flex-col gap-5 text-sm text-[#0E225C] md:hidden">
-					<!-- Fila 1: Título | Cantidad -->
-					<div class="flex gap-4">
-						<div class="flex-1 min-w-0">
-							<div class="flex items-center gap-2 text-[#808080]">
-								<svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="assets/icons/sprite.svg#user"></use></svg>
-								<span>Título del cupón</span>
-							</div>
-							<div class="mt-1 font-medium">{{ deleteTarget.titulo }}</div>
-						</div>
-						<div class="shrink-0">
-							<div class="flex items-center gap-2 text-[#808080]">
-								<svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="assets/icons/sprite.svg#quantity"></use></svg>
-								<span>Cantidad disponible</span>
-							</div>
-							<div class="mt-1">{{ deleteTarget.cantidad }}</div>
-						</div>
-					</div>
+  <!-- Modal Eliminar -->
+  <div class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4">
+    <div
+      class="relative w-full md:max-w-3xl bg-[white] rounded-t-2xl md:rounded-2xl shadow-xl ring-1 ring-black/5 coupon-modal flex flex-col max-h-[92vh] md:max-h-[85vh] overflow-hidden"
+    >
+      <!-- Header -->
+      <div
+        class="relative px-6 pt-6 pb-2"
+        [class.opacity-60]="deletingCoupon || couponDeleteSuccess"
+        [class.pointer-events-none]="deletingCoupon || couponDeleteSuccess"
+      >
+        <h2 class="text-2xl font-medium text-[#0E225C] text-center">Eliminar cupón</h2>
+        <button
+          class="absolute right-6 top-6 w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/5"
+          (click)="closeDeleteCoupon()"
+          aria-label="Cerrar"
+        >
+          <svg class="w-5 h-5 text-[#0E225C]">
+            <use href="assets/icons/sprite.svg#close-circle"></use>
+          </svg>
+        </button>
+      </div>
 
-					<!-- Fila 2: Descripción (ancho completo) -->
-					<div>
-						<div class="flex items-center gap-2 text-[#808080]">
-							<svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="assets/icons/sprite.svg#description-text"></use></svg>
-							<span>Descripción</span>
-						</div>
-						<div class="mt-1">{{ deleteTarget.descripcion }}</div>
-					</div>
+      <!-- Body -->
+      <div
+        class="px-6 pb-6 flex-1 overflow-y-auto"
+        [class.opacity-60]="deletingCoupon || couponDeleteSuccess"
+      >
+        <!-- Resumen con recuadro -->
+        <div class="rounded-lg ring-1 ring-[#E4EAF5] p-6 bg-[#F4F7FD]">
+          <!-- Desktop: 2 columnas agrupadas | Móvil: grid 2 cols con campos pareados -->
 
-					<!-- Fila 3: Fecha inicio | Fecha fin -->
-					<div class="flex gap-4">
-						<div class="flex-1 min-w-0">
-							<div class="flex items-center gap-2 text-[#808080]">
-								<svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="assets/icons/sprite.svg#calendar"></use></svg>
-								<span>Fecha inicio</span>
-							</div>
-							<div class="mt-1">{{ deleteTarget.fechaInicio }}</div>
-						</div>
-						<div class="flex-1 min-w-0">
-							<div class="flex items-center gap-2 text-[#808080]">
-								<svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="assets/icons/sprite.svg#calendar"></use></svg>
-								<span>Fecha fin</span>
-							</div>
-							<div class="mt-1">{{ deleteTarget.fechaFin }}</div>
-						</div>
-					</div>
+          <!-- === LAYOUT MÓVIL (visible solo en móvil) === -->
+          <div class="flex flex-col gap-5 text-sm text-[#0E225C] md:hidden">
+            <!-- Fila 1: Título | Cantidad -->
+            <div class="flex gap-4">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 text-[#808080]">
+                  <svg class="w-5 h-5 shrink-0" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#user"></use>
+                  </svg>
+                  <span>Título del cupón</span>
+                </div>
+                <div class="mt-1 font-medium">{{ deleteTarget.titulo }}</div>
+              </div>
+              <div class="shrink-0">
+                <div class="flex items-center gap-2 text-[#808080]">
+                  <svg class="w-5 h-5 shrink-0" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#quantity"></use>
+                  </svg>
+                  <span>Cantidad disponible</span>
+                </div>
+                <div class="mt-1">{{ deleteTarget.cantidad }}</div>
+              </div>
+            </div>
 
-					<!-- Fila 4: Términos y condiciones (ancho completo) -->
-					<div>
-						<div class="flex items-center gap-2 text-[#808080]">
-							<svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="assets/icons/sprite.svg#terms"></use></svg>
-							<span>Términos y condiciones</span>
-						</div>
-						@if (deleteTarget.terminos && deleteTarget.terminos.length > 0) {
-							<ul class="mt-2 list-disc pl-6 text-[#0E225C] space-y-1">
-								@for (t of deleteTarget.terminos; track t) {
-									<li>{{ t }}</li>
-								}
-							</ul>
-						} @else {
-							<div class="mt-1 text-[#0E225C]">No especificado</div>
-						}
-					</div>
+            <!-- Fila 2: Descripción (ancho completo) -->
+            <div>
+              <div class="flex items-center gap-2 text-[#808080]">
+                <svg class="w-5 h-5 shrink-0" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#description-text"></use>
+                </svg>
+                <span>Descripción</span>
+              </div>
+              <div class="mt-1">{{ deleteTarget.descripcion }}</div>
+            </div>
 
-					<!-- Fila 5: Categoría | Estado -->
-					<div class="flex gap-4">
-						<div class="flex-1 min-w-0">
-							<div class="flex items-center gap-2 text-[#808080]">
-								<svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="assets/icons/sprite.svg#category"></use></svg>
-								<span>Categoría</span>
-							</div>
-							<div class="mt-1">{{ deleteTarget.categoria }}</div>
-						</div>
-						<div class="flex-1 min-w-0">
-							<div class="flex items-center gap-2 text-[#808080]">
-								<svg class="w-5 h-5 shrink-0" aria-hidden="true"><use href="assets/icons/sprite.svg#status"></use></svg>
-								<span>Estado</span>
-							</div>
-							<span class="inline-flex items-center rounded-full bg-yellow-100 text-yellow-800 px-3 py-1 text-xs font-medium mt-1">
-								{{ deleteTarget.estado }}
-							</span>
-						</div>
-					</div>
-				</div>
+            <!-- Fila 3: Fecha inicio | Fecha fin -->
+            <div class="flex gap-4">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 text-[#808080]">
+                  <svg class="w-5 h-5 shrink-0" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#calendar"></use>
+                  </svg>
+                  <span>Fecha inicio</span>
+                </div>
+                <div class="mt-1">{{ deleteTarget.fechaInicio }}</div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 text-[#808080]">
+                  <svg class="w-5 h-5 shrink-0" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#calendar"></use>
+                  </svg>
+                  <span>Fecha fin</span>
+                </div>
+                <div class="mt-1">{{ deleteTarget.fechaFin }}</div>
+              </div>
+            </div>
 
-				<!-- === LAYOUT DESKTOP (visible solo en md+) === -->
-				<div class="hidden md:block text-sm text-[#0E225C]">
-					<!-- Fila 1: Título | Cantidad -->
-					<div class="grid grid-cols-2 gap-6">
-						<div>
-							<div class="flex items-center gap-2 text-[#808080]">
-								<svg class="w-5 h-5" aria-hidden="true"><use href="assets/icons/sprite.svg#user"></use></svg>
-								<span>Título del cupón</span>
-							</div>
-							<div class="mt-1">{{ deleteTarget.titulo }}</div>
-						</div>
-						<div>
-							<div class="flex items-center gap-2 text-[#808080]">
-								<svg class="w-5 h-5" aria-hidden="true"><use href="assets/icons/sprite.svg#quantity"></use></svg>
-								<span>Cantidad disponible</span>
-							</div>
-							<div class="mt-1">{{ deleteTarget.cantidad }}</div>
-						</div>
-					</div>
+            <!-- Fila 4: Términos y condiciones (ancho completo) -->
+            <div>
+              <div class="flex items-center gap-2 text-[#808080]">
+                <svg class="w-5 h-5 shrink-0" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#terms"></use>
+                </svg>
+                <span>Términos y condiciones</span>
+              </div>
+              @if (deleteTarget.terminos && deleteTarget.terminos.length > 0) {
+                <ul class="mt-2 list-disc pl-6 text-[#0E225C] space-y-1">
+                  @for (t of deleteTarget.terminos; track t) {
+                    <li>{{ t }}</li>
+                  }
+                </ul>
+              } @else {
+                <div class="mt-1 text-[#0E225C]">No especificado</div>
+              }
+            </div>
 
-					<!-- Fila 2: Descripción | Fechas -->
-					<div class="grid grid-cols-2 gap-6 mt-5">
-						<div>
-							<div class="flex items-center gap-2 text-[#808080]">
-								<svg class="w-5 h-5" aria-hidden="true"><use href="assets/icons/sprite.svg#description-text"></use></svg>
-								<span>Descripción</span>
-							</div>
-							<div class="mt-1">{{ deleteTarget.descripcion }}</div>
-						</div>
-						<div class="flex flex-col gap-4">
-							<div>
-								<div class="flex items-center gap-2 text-[#808080]">
-									<svg class="w-5 h-5" aria-hidden="true"><use href="assets/icons/sprite.svg#calendar"></use></svg>
-									<span>Fecha inicio</span>
-								</div>
-								<div class="mt-1">{{ deleteTarget.fechaInicio }}</div>
-							</div>
-							<div>
-								<div class="flex items-center gap-2 text-[#808080]">
-									<svg class="w-5 h-5" aria-hidden="true"><use href="assets/icons/sprite.svg#calendar"></use></svg>
-									<span>Fecha fin</span>
-								</div>
-								<div class="mt-1">{{ deleteTarget.fechaFin }}</div>
-							</div>
-						</div>
-					</div>
+            <!-- Fila 5: Categoría | Estado -->
+            <div class="flex gap-4">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 text-[#808080]">
+                  <svg class="w-5 h-5 shrink-0" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#category"></use>
+                  </svg>
+                  <span>Categoría</span>
+                </div>
+                <div class="mt-1">{{ deleteTarget.categoria }}</div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-2 text-[#808080]">
+                  <svg class="w-5 h-5 shrink-0" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#status"></use>
+                  </svg>
+                  <span>Estado</span>
+                </div>
+                <span
+                  class="inline-flex items-center rounded-full bg-yellow-100 text-yellow-800 px-3 py-1 text-xs font-medium mt-1"
+                >
+                  {{ deleteTarget.estado }}
+                </span>
+              </div>
+            </div>
+          </div>
 
-					<!-- Fila 3: Categoría + Estado | Términos -->
-					<div class="grid grid-cols-2 gap-6 mt-5">
-						<div class="flex flex-col gap-4">
-							<div>
-								<div class="flex items-center gap-2 text-[#808080]">
-									<svg class="w-5 h-5" aria-hidden="true"><use href="assets/icons/sprite.svg#category"></use></svg>
-									<span>Categoría</span>
-								</div>
-								<div class="mt-1">{{ deleteTarget.categoria }}</div>
-							</div>
-							<div>
-								<div class="flex items-center gap-2 text-[#808080]">
-									<svg class="w-5 h-5" aria-hidden="true"><use href="assets/icons/sprite.svg#status"></use></svg>
-									<span>Estado</span>
-								</div>
-								<span class="inline-flex items-center rounded-full bg-yellow-100 text-yellow-800 px-3 py-1 text-xs font-medium mt-1">
-									{{ deleteTarget.estado }}
-								</span>
-							</div>
-						</div>
-						<div>
-							<div class="flex items-center gap-2 text-[#808080]">
-								<svg class="w-5 h-5" aria-hidden="true"><use href="assets/icons/sprite.svg#terms"></use></svg>
-								<span>Términos y condiciones</span>
-							</div>
-							@if (deleteTarget.terminos && deleteTarget.terminos.length > 0) {
-								<ul class="mt-1 list-disc pl-5 text-[#0E225C] space-y-1">
-									@for (t of deleteTarget.terminos; track t) {
-										<li>{{ t }}</li>
-									}
-								</ul>
-							} @else {
-								<div class="mt-1 text-[#0E225C]">No especificado</div>
-							}
-						</div>
-					</div>
-				</div>
-			</div>
+          <!-- === LAYOUT DESKTOP (visible solo en md+) === -->
+          <div class="hidden md:block text-sm text-[#0E225C]">
+            <!-- Fila 1: Título | Cantidad -->
+            <div class="grid grid-cols-2 gap-6">
+              <div>
+                <div class="flex items-center gap-2 text-[#808080]">
+                  <svg class="w-5 h-5" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#user"></use>
+                  </svg>
+                  <span>Título del cupón</span>
+                </div>
+                <div class="mt-1">{{ deleteTarget.titulo }}</div>
+              </div>
+              <div>
+                <div class="flex items-center gap-2 text-[#808080]">
+                  <svg class="w-5 h-5" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#quantity"></use>
+                  </svg>
+                  <span>Cantidad disponible</span>
+                </div>
+                <div class="mt-1">{{ deleteTarget.cantidad }}</div>
+              </div>
+            </div>
 
-			<!-- Aviso -->
-			<div class="mt-2 rounded-2xl p-6 text-center">
-				<div class="flex items-center justify-center mb-3">
-				<svg class="w-10 h-10 text-[#C82333]" aria-hidden="true">
-					<use href="assets/icons/sprite.svg#danger"></use>
-				</svg>
-				</div>
-				<h3 class="text-xl font-normal text-[#1A2440] mb-2">Esta acción eliminará el cupón de forma permanente.</h3>
-				<p class="text-sm text-[#1A2440]">No podrá ser reactivado ni reutilizado.</p>
-			</div>
+            <!-- Fila 2: Descripción | Fechas -->
+            <div class="grid grid-cols-2 gap-6 mt-5">
+              <div>
+                <div class="flex items-center gap-2 text-[#808080]">
+                  <svg class="w-5 h-5" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#description-text"></use>
+                  </svg>
+                  <span>Descripción</span>
+                </div>
+                <div class="mt-1">{{ deleteTarget.descripcion }}</div>
+              </div>
+              <div class="flex flex-col gap-4">
+                <div>
+                  <div class="flex items-center gap-2 text-[#808080]">
+                    <svg class="w-5 h-5" aria-hidden="true">
+                      <use href="assets/icons/sprite.svg#calendar"></use>
+                    </svg>
+                    <span>Fecha inicio</span>
+                  </div>
+                  <div class="mt-1">{{ deleteTarget.fechaInicio }}</div>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2 text-[#808080]">
+                    <svg class="w-5 h-5" aria-hidden="true">
+                      <use href="assets/icons/sprite.svg#calendar"></use>
+                    </svg>
+                    <span>Fecha fin</span>
+                  </div>
+                  <div class="mt-1">{{ deleteTarget.fechaFin }}</div>
+                </div>
+              </div>
+            </div>
 
-			<!-- Actions -->
-			<div class="mt-6 flex items-center justify-center gap-3">
-				<button (click)="submitDeleteCoupon()"
-						class="px-6 py-3 rounded-full bg-[#C82333] text-white hover:bg-[#A71D2A] active:scale-95">
-				Eliminar cupón
-				</button>
-				<button type="button" class="px-6 py-3 rounded-full bg-white border border-[#0E225C] text-[#0E225C]" (click)="closeDeleteCoupon()">
-				Cancelar
-				</button>
-			</div>
+            <!-- Fila 3: Categoría + Estado | Términos -->
+            <div class="grid grid-cols-2 gap-6 mt-5">
+              <div class="flex flex-col gap-4">
+                <div>
+                  <div class="flex items-center gap-2 text-[#808080]">
+                    <svg class="w-5 h-5" aria-hidden="true">
+                      <use href="assets/icons/sprite.svg#category"></use>
+                    </svg>
+                    <span>Categoría</span>
+                  </div>
+                  <div class="mt-1">{{ deleteTarget.categoria }}</div>
+                </div>
+                <div>
+                  <div class="flex items-center gap-2 text-[#808080]">
+                    <svg class="w-5 h-5" aria-hidden="true">
+                      <use href="assets/icons/sprite.svg#status"></use>
+                    </svg>
+                    <span>Estado</span>
+                  </div>
+                  <span
+                    class="inline-flex items-center rounded-full bg-yellow-100 text-yellow-800 px-3 py-1 text-xs font-medium mt-1"
+                  >
+                    {{ deleteTarget.estado }}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <div class="flex items-center gap-2 text-[#808080]">
+                  <svg class="w-5 h-5" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#terms"></use>
+                  </svg>
+                  <span>Términos y condiciones</span>
+                </div>
+                @if (deleteTarget.terminos && deleteTarget.terminos.length > 0) {
+                  <ul class="mt-1 list-disc pl-5 text-[#0E225C] space-y-1">
+                    @for (t of deleteTarget.terminos; track t) {
+                      <li>{{ t }}</li>
+                    }
+                  </ul>
+                } @else {
+                  <div class="mt-1 text-[#0E225C]">No especificado</div>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
 
-			</div>
+        <!-- Aviso -->
+        <div class="mt-2 rounded-2xl p-6 text-center">
+          <div class="flex items-center justify-center mb-3">
+            <svg class="w-10 h-10 text-[#C82333]" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#danger"></use>
+            </svg>
+          </div>
+          <h3 class="text-xl font-normal text-[#1A2440] mb-2">
+            Esta acción eliminará el cupón de forma permanente.
+          </h3>
+          <p class="text-sm text-[#1A2440]">No podrá ser reactivado ni reutilizado.</p>
+        </div>
 
-			<!-- Overlay: Eliminando -->
-			@if (deletingCoupon) {
-				<div class="absolute inset-0 bg-white/85 flex flex-col items-center justify-center z-10 rounded-2xl">
-				<svg class="animate-spin h-10 w-10 text-black mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-					<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"></path>
-				</svg>
-				<div class="text-center">
-					<h3 class="text-2xl font-normal text-[#1A2440] mb-2">Eliminando cupón...</h3>
-					<p class="text-base font-normal text-[#1A2440]">Por favor espera, no cierres esta ventana.</p>
-				</div>
-				</div>
-			}
-			
-			<!-- Overlay: Cupón eliminado correctamente -->
-			@if (couponDeleteSuccess) {
-			<div class="absolute inset-0 bg-white/85 flex flex-col items-center justify-center z-10 px-8 rounded-2xl">
-				<div class="mb-2 text-[#155724]">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10">
-					<circle cx="12" cy="12" r="9" />
-					<path d="M8 12l2.5 2.5 5.5 -5.5" />
-				</svg>
-				</div>
-				<h3 class="text-2xl font-normal text-[#1A2440] mb-3 text-center">Cupón eliminado correctamente.</h3>
-				<h1 class="text-base font-normal text-[#1A2440] mb-3 text-center">El cupón ya no será visible ni reutilizable.</h1>
-				<button (click)="onDeleteSuccessContinue()"
-						class="w-full max-w-md bg-[#4a87f8] hover:bg-blue-600 text-white rounded-full py-3.5 font-normal text-lg shadow-lg shadow-blue-500/30 transition-all transform active:scale-95">
-				Volver a mis cupones
-				</button>
-			</div>
-			}
-		</div>
-		</div>
-	}
+        <!-- Actions -->
+        <div class="mt-6 flex items-center justify-center gap-3">
+          <button
+            (click)="submitDeleteCoupon()"
+            class="px-6 py-3 rounded-full bg-[#C82333] text-white hover:bg-[#A71D2A] active:scale-95"
+          >
+            Eliminar cupón
+          </button>
+          <button
+            type="button"
+            class="px-6 py-3 rounded-full bg-white border border-[#0E225C] text-[#0E225C]"
+            (click)="closeDeleteCoupon()"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+
+      <!-- Overlay: Eliminando -->
+      @if (deletingCoupon) {
+        <div
+          class="absolute inset-0 bg-white/85 flex flex-col items-center justify-center z-10 rounded-2xl"
+        >
+          <svg
+            class="animate-spin h-10 w-10 text-black mb-4"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"
+            ></path>
+          </svg>
+          <div class="text-center">
+            <h3 class="text-2xl font-normal text-[#1A2440] mb-2">Eliminando cupón...</h3>
+            <p class="text-base font-normal text-[#1A2440]">
+              Por favor espera, no cierres esta ventana.
+            </p>
+          </div>
+        </div>
+      }
+
+      <!-- Overlay: Cupón eliminado correctamente -->
+      @if (couponDeleteSuccess) {
+        <div
+          class="absolute inset-0 bg-white/85 flex flex-col items-center justify-center z-10 px-8 rounded-2xl"
+        >
+          <div class="mb-2 text-[#155724]">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="w-10 h-10"
+            >
+              <circle cx="12" cy="12" r="9" />
+              <path d="M8 12l2.5 2.5 5.5 -5.5" />
+            </svg>
+          </div>
+          <h3 class="text-2xl font-normal text-[#1A2440] mb-3 text-center">
+            Cupón eliminado correctamente.
+          </h3>
+          <h1 class="text-base font-normal text-[#1A2440] mb-3 text-center">
+            El cupón ya no será visible ni reutilizable.
+          </h1>
+          <button
+            (click)="onDeleteSuccessContinue()"
+            class="w-full max-w-md bg-[#4a87f8] hover:bg-blue-600 text-white rounded-full py-3.5 font-normal text-lg shadow-lg shadow-blue-500/30 transition-all transform active:scale-95"
+          >
+            Volver a mis cupones
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+}
