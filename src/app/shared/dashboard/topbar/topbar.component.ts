@@ -1,9 +1,9 @@
-import { Component, CUSTOM_ELEMENTS_SCHEMA, Input, ChangeDetectorRef } from '@angular/core';
-import { AuthService } from '../../../service/auth.service';
-import { CurrentUser } from '../../../service/current-user.interface';
+import { Component, CUSTOM_ELEMENTS_SCHEMA, Input, ChangeDetectorRef, OnDestroy, OnInit } from '@angular/core';
+import { AuthService, AuthUser } from '../../../service/auth.service';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { UiService } from '../../../service/ui.service';
+import { Subscription } from 'rxjs';
 
 type TopbarVariant =
   | 'dashboard'
@@ -19,14 +19,17 @@ type TopbarVariant =
   templateUrl: './topbar.component.html',
   styleUrls: ['./topbar.component.css'],
 })
-export class TopbarComponent {
+export class TopbarComponent implements OnInit, OnDestroy {
   @Input() location: string = '';
-  user: CurrentUser | null;
+  user: AuthUser | null;
   role: 'admin' | 'empresa' | 'usuario' | null;
   menuOpen = false;
   showLogoutModal = false;
   isLoggingOut = false;
   isLoggedOutSuccess = false;
+  showSessionExpiredModal = false;
+  private sessionExpiredSub?: Subscription;
+  private userSub?: Subscription;
 
   constructor(
     private auth: AuthService,
@@ -36,6 +39,23 @@ export class TopbarComponent {
   ) {
     this.user = this.auth.getCurrentUser();
     this.role = this.user?.role ?? null;
+
+  }
+
+  ngOnInit(): void {
+    this.sessionExpiredSub = this.auth.sessionExpired$.subscribe(expired => {
+      this.showSessionExpiredModal = expired;
+    });
+
+    this.userSub = this.auth.user$.subscribe((user) => {
+      this.user = user;
+      this.role = user?.role ?? null;
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.sessionExpiredSub?.unsubscribe();
+    this.userSub?.unsubscribe();
   }
 
   toggleSidebar() {
@@ -59,17 +79,55 @@ export class TopbarComponent {
 
   logout() {
     this.isLoggingOut = true;
+    this.isLoggedOutSuccess = false;
+
     setTimeout(() => {
-      this.auth.logout();
-      this.isLoggingOut = false;
-      this.isLoggedOutSuccess = true;
-      this.cdr.detectChanges();
-    }, 3000);
+      try {
+        // Si la sesión viene de Keycloak, el flujo correcto es redirección a logout de Keycloak.
+        if (this.auth.isKeycloakLoggedIn()) {
+          this.auth.keycloakLogout();
+          return;
+        }
+
+        // Flujo mock/local
+        this.auth.logout();
+        this.isLoggedOutSuccess = true;
+      } catch (error) {
+        console.error('[TOPBAR] Error al cerrar sesión', error);
+        this.isLoggedOutSuccess = true;
+      } finally {
+        this.isLoggingOut = false;
+        this.cdr.detectChanges();
+      }
+    }, 500);
   }
 
   finishLogout() {
     this.closeLogoutModal();
     this.router.navigate(['/']);
+  }
+
+  closeSessionExpiredModal() {
+    this.showSessionExpiredModal = false;
+    this.auth.clearSessionExpiredFlag();
+  }
+
+  goToLoginAfterExpiry() {
+    this.closeSessionExpiredModal();
+    this.router.navigate(['/login']);
+  }
+
+
+  get displayFullName(): string {
+    const first = this.user?.firstName?.trim() ?? '';
+    const last = this.user?.lastName?.trim() ?? '';
+    const full = [first, last].filter(Boolean).join(' ').trim();
+
+    return full || this.user?.username || 'Usuario';
+  }
+
+  get displayCompanyName(): string {
+    return this.user?.companyName?.trim() || this.user?.username || '';
   }
 
   get bgClass() {

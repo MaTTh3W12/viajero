@@ -1,4 +1,5 @@
-import { Component, ViewChild } from '@angular/core';
+import { Component, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
 import { TopbarComponent } from '../../../shared/dashboard/topbar/topbar.component';
 import { DataTableComponent } from '../../../shared/dashboard/data-table/data-table.component';
 import { DataTableConfig } from '../../../service/data-table.model';
@@ -6,21 +7,23 @@ import { CouponsMockService } from '../../../service/coupons-mock.service';
 import { Coupon } from '../../../service/coupon.interface';
 import { FilterBarComponent } from '../../../shared/dashboard/filter-bar/filter-bar.component';
 import { AuthService, UserRole } from '../../../service/auth.service';
+import { CouponService, InsertCouponVariables } from '../../../service/coupon.service';
+import { UserProfileService } from '../../../service/user-profile.service';
+import { CategoryService } from '../../../service/category.service';
 
 @Component({
   selector: 'app-coupons-list',
   standalone: true,
-  imports: [
-    TopbarComponent,
-    DataTableComponent,
-    FilterBarComponent
-  ],
+  imports: [TopbarComponent, DataTableComponent, FilterBarComponent],
   templateUrl: './coupons-list.component.html',
   styleUrl: './coupons-list.component.css',
 })
 export class CouponsListComponent {
   coupons: Coupon[] = [];
   @ViewChild(FilterBarComponent) filterBar!: FilterBarComponent;
+
+  private currentUserDbId: number | null = null;
+  private categoryNameById = new Map<number, string>();
 
   tableConfig: DataTableConfig<Coupon> = {
     columns: [
@@ -36,56 +39,125 @@ export class CouponsListComponent {
       {
         iconId: 'edit',
         bgClass: 'bg-[#E6EEFF] text-[#538CFF]',
-        show: row => row.estado === 'Publicado' || row.estado === 'Borrador',
-        action: row => this.openEdit(row),
+        show: (row) => row.estado === 'Publicado' || row.estado === 'Borrador',
+        action: (row) => this.openEdit(row),
       },
       {
         iconId: 'trash',
         bgClass: 'bg-[#F8D7DA] text-[#C82333]',
-        show: row => row.estado === 'Borrador',
-        action: row => this.openDelete(row),
+        show: (row) => row.estado === 'Borrador',
+        action: (row) => this.openDelete(row),
       },
     ],
   };
 
-  constructor(private service: CouponsMockService, private auth: AuthService) { }
+  constructor(
+    private service: CouponsMockService,
+    private auth: AuthService,
+    private couponService: CouponService,
+    private userProfileService: UserProfileService,
+    private categoryService: CategoryService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
-  ngOnInit() {
-    this.service.getCoupons().subscribe(data => {
-      this.coupons = data;
+  async ngOnInit(): Promise<void> {
+    console.log('[COUPONS] ngOnInit start', {
+      role: this.role,
+      isKeycloakLoggedIn: this.auth.isKeycloakLoggedIn(),
+      authUser: this.auth.user,
     });
+
+    if (this.role === 'empresa' && this.auth.isKeycloakLoggedIn()) {
+      console.log('[COUPONS] ngOnInit -> loading company coupons from API');
+      await this.loadCompanyCouponsFromApi();
+      console.log('[COUPONS] ngOnInit -> company coupons loaded', { rows: this.coupons.length });
+      return;
+    }
+
+    console.log('[COUPONS] ngOnInit -> loading coupons from mock');
+    this.loadCouponsFromMock();
   }
 
   get role(): UserRole {
-    return this.auth.getRole()!;
+    return this.auth.getRole() ?? 'usuario';
   }
 
-  onCreateCoupon(payload: {
+  async onCreateCoupon(payload: {
     titulo: string;
     cantidad: number | null;
     descripcion: string;
     fechaInicio: string;
     fechaFin: string;
-    categoria: string;
+    categoriaId: number;
+    categoriaNombre: string;
     terminos: string;
     estado: string;
-  }): void {
-    const nuevo: Coupon = {
-      id: Date.now(),
-      titulo: payload.titulo,
-      descripcion: payload.descripcion,
-      categoria: payload.categoria,
-      fechaInicio: payload.fechaInicio,
-      fechaFin: payload.fechaFin,
-      disponibles: payload.cantidad ?? 0,
-      estado: payload.estado,
-    };
-    this.coupons = [nuevo, ...this.coupons];
-    console.log('Cupón creado', nuevo);
+    onSuccess: () => void;
+    onError: (message?: string) => void;
+  }): Promise<void> {
+    try {
+      if (this.role !== 'empresa' || !this.auth.isKeycloakLoggedIn()) {
+        const nuevo: Coupon = {
+          id: Date.now(),
+          titulo: payload.titulo,
+          descripcion: payload.descripcion,
+          categoria: payload.categoriaNombre,
+          fechaInicio: payload.fechaInicio,
+          fechaFin: payload.fechaFin,
+          disponibles: payload.cantidad ?? 0,
+          estado: payload.estado,
+        };
+
+        this.coupons = [nuevo, ...this.coupons];
+      this.cdr.detectChanges();
+        payload.onSuccess();
+        return;
+      }
+
+      const token = this.auth.token;
+      if (!token) {
+        payload.onError('No hay sesión activa para crear el cupón.');
+        return;
+      }
+
+      await this.ensureCategoryMap(token);
+
+      if (!this.currentUserDbId) {
+        await this.resolveCurrentUserDbId(token);
+      }
+
+      if (!this.currentUserDbId) {
+        payload.onError('No se pudo identificar la empresa actual.');
+        return;
+      }
+
+      const variables: InsertCouponVariables = {
+        user_id: this.currentUserDbId,
+        category_id: payload.categoriaId,
+        title: payload.titulo,
+        description: payload.descripcion || null,
+        terms: payload.terminos || null,
+        start_date: this.toIsoDate(payload.fechaInicio),
+        end_date: this.toIsoDate(payload.fechaFin),
+        stock_available: payload.cantidad,
+        stock_total: payload.cantidad,
+        price: null,
+        price_discount: null,
+        auto_published: false,
+        published: payload.estado === 'Publicado',
+      };
+
+      await firstValueFrom(this.couponService.insertCoupon(token, variables));
+      await this.loadCompanyCouponsFromApi();
+      payload.onSuccess();
+    } catch (error) {
+      console.error('[COUPONS] Error creando cupón', error);
+      payload.onError('No se pudo crear el cupón. Verifica los datos e intenta nuevamente.');
+    }
   }
 
   onUpdateCoupon(updated: Coupon): void {
-    this.coupons = this.coupons.map(c => (c.id === updated.id ? updated : c));
+    this.coupons = this.coupons.map((c) => (c.id === updated.id ? updated : c));
     console.log('Cupón actualizado', updated);
   }
 
@@ -96,7 +168,7 @@ export class CouponsListComponent {
   }
 
   onDeleteCoupon(id: number): void {
-    this.coupons = this.coupons.filter(c => c.id !== id);
+    this.coupons = this.coupons.filter((c) => c.id !== id);
     console.log('Cupón eliminado', id);
   }
 
@@ -104,5 +176,113 @@ export class CouponsListComponent {
     if (this.filterBar) {
       this.filterBar.openDeleteCoupon(row);
     }
+  }
+
+  private loadCouponsFromMock(): void {
+    this.service.getCoupons().subscribe((data) => {
+      console.log('[COUPONS] mock data received', { rows: data.length });
+      this.coupons = data;
+      this.cdr.detectChanges();
+    });
+  }
+
+  private async loadCompanyCouponsFromApi(): Promise<void> {
+    const token = this.auth.token;
+    console.log('[COUPONS] loadCompanyCouponsFromApi', {
+      hasToken: !!token,
+      authUserSub: this.auth.user?.sub,
+      authKeycloakSub: this.auth.getKeycloakUser()?.sub,
+    });
+
+    if (!token) {
+      console.warn('[COUPONS] loadCompanyCouponsFromApi aborted: token missing');
+      this.coupons = [];
+      this.cdr.detectChanges();
+      return;
+    }
+
+    await this.resolveCurrentUserDbId(token);
+
+    console.log('[COUPONS] resolved currentUserDbId', { currentUserDbId: this.currentUserDbId });
+
+    if (!this.currentUserDbId) {
+      console.warn('[COUPONS] loadCompanyCouponsFromApi aborted: currentUserDbId is null');
+      this.coupons = [];
+      this.cdr.detectChanges();
+      return;
+    }
+
+    await this.ensureCategoryMap(token);
+
+    const response = await firstValueFrom(this.couponService.getCoupons(token, { limit: 200, offset: 0 }));
+    console.log('[COUPONS] coupons API response', {
+      totalRows: response.rows.length,
+      userIds: response.rows.map((row) => row.user_id),
+      companyUserId: this.currentUserDbId,
+    });
+
+    const mine = response.rows.filter((row) => Number(row.user_id) === Number(this.currentUserDbId));
+    console.log('[COUPONS] filtered company coupons', { rows: mine.length });
+
+    this.coupons = mine.map((row) => ({
+      id: row.id,
+      titulo: row.title,
+      descripcion: this.auth.user?.companyName || this.auth.user?.username || row.description || '',
+      categoria: this.categoryNameById.get(row.category_id) ?? String(row.category_id),
+      fechaInicio: this.toDisplayDate(row.start_date),
+      fechaFin: this.toDisplayDate(row.end_date),
+      disponibles: row.stock_available ?? 0,
+      estado: row.published ? 'Publicado' : 'Borrador',
+    }));
+
+    console.log('[COUPONS] table rows assigned', { rows: this.coupons.length });
+    this.cdr.detectChanges();
+  }
+
+
+  private async ensureCategoryMap(token: string): Promise<void> {
+    if (this.categoryNameById.size > 0) return;
+
+    const categories = await firstValueFrom(this.categoryService.getCategories(token));
+    this.categoryNameById = new Map(categories.map((category) => [category.id, category.name]));
+    console.log('[COUPONS] categories loaded', {
+      rows: categories.length,
+      ids: categories.map((category) => category.id),
+    });
+  }
+
+  private async resolveCurrentUserDbId(token: string): Promise<void> {
+    if (this.currentUserDbId) return;
+
+    const keycloakId = this.auth.user?.sub ?? this.auth.getKeycloakUser()?.sub;
+    console.log('[COUPONS] resolveCurrentUserDbId', { keycloakId });
+
+    if (!keycloakId) {
+      console.warn('[COUPONS] resolveCurrentUserDbId aborted: keycloakId missing');
+      return;
+    }
+
+    const profile = await firstValueFrom(this.userProfileService.getUserByKeycloakId(token, keycloakId));
+    console.log('[COUPONS] getUserByKeycloakId response', profile);
+
+    this.currentUserDbId = profile?.id ? Number(profile.id) : null;
+  }
+
+  private toIsoDate(input: string): string {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(input)) return input;
+
+    const match = input.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (!match) return input;
+
+    const [, dd, mm, yyyy] = match;
+    return `${yyyy}-${mm}-${dd}`;
+  }
+
+  private toDisplayDate(input: string): string {
+    const match = input.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!match) return input;
+
+    const [, yyyy, mm, dd] = match;
+    return `${dd}/${mm}/${yyyy}`;
   }
 }

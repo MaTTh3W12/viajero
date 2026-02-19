@@ -168,30 +168,6 @@
             </div>
           </div>
 
-          <div>
-            <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Crear contraseña</label>
-            <div class="relative">
-              <input
-                [type]="showPassword ? 'text' : 'password'"
-                [(ngModel)]="password" (input)="onInputChange()" name="password" required
-                placeholder="Crea una contraseña"
-                class="w-full rounded-[10px] border-none bg-white px-4 py-3 pr-12 text-sm focus:ring-2 outline-none"
-                [ngClass]="{
-                  'border border-rose-500 focus:ring-rose-500': showValidation && !password,
-                  'border-none bg-white shadow-sm focus:ring-blue-400': !(showValidation && !password)
-                }"
-              />
-              <button type="button" (click)="togglePasswordVisibility('password')" class="absolute inset-y-0 right-4 flex items-center text-[#538CFF]">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-              </button>
-            </div>
-             <div *ngIf="showValidation && !password" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-1">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-              </svg>
-              Debes crear una contraseña.
-            </div>
-          </div>
 
         } @else {
           <!-- --- REGISTRO DE USUARIO --- -->
@@ -362,30 +338,6 @@
             </div>
           </div>
 
-          <div>
-            <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Contraseña</label>
-            <div class="relative">
-              <input
-                [type]="showPassword ? 'text' : 'password'"
-                [(ngModel)]="password" (input)="onInputChange()" name="password" required
-                placeholder="Crea una contraseña"
-                class="w-full rounded-[10px] border-none bg-white px-4 py-3 pr-12 text-sm focus:ring-2 outline-none"
-                [ngClass]="{
-                  'border border-rose-500 focus:ring-rose-500': showValidation && !password,
-                  'border-none bg-white shadow-sm focus:ring-blue-400': !(showValidation && !password)
-                }"
-              />
-              <button type="button" (click)="togglePasswordVisibility('password')" class="absolute inset-y-0 right-4 flex items-center text-[#538CFF]">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
-              </button>
-            </div>
-            <div *ngIf="showValidation && !password" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-1">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-              </svg>
-              Debes crear una contraseña.
-            </div>
-          </div>
         }
 
         <!-- Botón Registrar -->
@@ -436,7 +388,7 @@
             (click)="onGoToPortal()"
             class="w-full max-w-md bg-[#538CFF] hover:bg-[#3A78F0] text-white rounded-full py-3.5 font-bold text-lg shadow-lg shadow-blue-500/30 transition-all transform active:scale-95"
           >
-           {{ isCompany ? 'Volver al inicio' : 'Ir al portal' }}
+           {{ isCompany ? 'Ir al dashboard de empresa' : 'Ir al portal' }}
           </button>
         </div>
     </div>

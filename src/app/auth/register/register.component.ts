@@ -2,6 +2,7 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { AuthService } from '../../service/auth.service';
 
 @Component({
   selector: 'app-register',
@@ -11,7 +12,6 @@ import { FormsModule } from '@angular/forms';
   styleUrl: './register.component.css',
 })
 export class RegisterComponent implements OnInit {
-  // Estado UI
   showPassword = false;
   showConfirmPassword = false;
   isCompany = false;
@@ -20,7 +20,6 @@ export class RegisterComponent implements OnInit {
   emailFormatInvalid = false;
   registerSuccess = false;
 
-  // Modelo de datos (Usuario)
   nombres = '';
   apellidos = '';
   email = '';
@@ -30,29 +29,66 @@ export class RegisterComponent implements OnInit {
   numDoc = '';
   password = '';
 
-  // Modelo de datos (Empresa)
   nombreComercial = '';
   razonSocial = '';
   direccion = '';
   nit = '';
 
-  constructor(private route: ActivatedRoute, private router: Router, private cdr: ChangeDetectorRef) {}
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private cdr: ChangeDetectorRef,
+    private auth: AuthService
+  ) {}
 
-  ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
+  async ngOnInit(): Promise<void> {
+    this.route.queryParams.subscribe(async params => {
       this.isCompany = params['type'] === 'company';
-      // Resetear al cambiar de tipo
       this.resetForm();
+
+      const cleanUrl = this.isCompany
+        ? '/register?type=company'
+        : '/register?type=user';
+
+      await this.auth.handleKeycloakRedirect({
+        upsert: false,
+        cleanUrl,
+      });
+
+      if (!this.isCompany) {
+        this.prefillFromKeycloak();
+      } else {
+        this.prefillCompanyFromKeycloak();
+      }
     });
   }
 
-  resetForm() {
+  private prefillFromKeycloak(): void {
+    const kcUser = this.auth.getKeycloakUser();
+    if (!kcUser) return;
+
+    this.nombres = kcUser.firstName ?? this.nombres;
+    this.apellidos = kcUser.lastName ?? this.apellidos;
+    this.email = kcUser.email ?? kcUser.username ?? this.email;
+  }
+
+
+  private prefillCompanyFromKeycloak(): void {
+    const kcUser = this.auth.getKeycloakUser();
+    if (!kcUser) return;
+
+    this.email = kcUser.email ?? kcUser.username ?? this.email;
+  }
+
+  resetForm(): void {
     this.showValidation = false;
     this.registerSuccess = false;
     this.nombres = '';
     this.apellidos = '';
     this.email = '';
     this.telefono = '';
+    this.pais = '';
+    this.tipoDoc = '';
     this.numDoc = '';
     this.password = '';
     this.nombreComercial = '';
@@ -69,14 +105,14 @@ export class RegisterComponent implements OnInit {
     }
   }
 
-  onInputChange() {
+  onInputChange(): void {
     if (this.showValidation) {
       this.showValidation = false;
     }
     this.emailFormatInvalid = false;
   }
 
-  onPhoneInput(event: any) {
+  onPhoneInput(event: any): void {
     this.onInputChange();
 
     if (this.pais === 'El Salvador') {
@@ -92,39 +128,34 @@ export class RegisterComponent implements OnInit {
     }
   }
 
-  onDuiInput(event: any) {
+  onDuiInput(event: any): void {
     this.onInputChange();
 
-    // Validar solo si es DUI (aunque por ahora solo tenemos DUI en la vista)
     if (this.tipoDoc === 'DUI') {
-        let value = event.target.value.replace(/\D/g, ''); // Solo números
+      let value = event.target.value.replace(/\D/g, '');
 
-        // Máximo 9 dígitos
-        if (value.length > 9) {
-            value = value.substring(0, 9);
-        }
+      if (value.length > 9) {
+        value = value.substring(0, 9);
+      }
 
-        // Formato: 00000000-0 (8 dígitos + guion + 1 dígito)
-        if (value.length > 8) {
-            value = value.substring(0, 8) + '-' + value.substring(8);
-        }
+      if (value.length > 8) {
+        value = value.substring(0, 8) + '-' + value.substring(8);
+      }
 
-        this.numDoc = value;
-        event.target.value = this.numDoc; // Forzar actualización visual
+      this.numDoc = value;
+      event.target.value = this.numDoc;
     }
   }
 
-  onNitInput(event: any) {
+  onNitInput(event: any): void {
     this.onInputChange();
 
-    let value = event.target.value.replace(/\D/g, ''); // Solo números
+    let value = event.target.value.replace(/\D/g, '');
 
-    // Máximo 14 dígitos
     if (value.length > 14) {
       value = value.substring(0, 14);
     }
 
-    // Formato: 0000-000000-000-0
     let formattedValue = value;
     if (value.length > 4) {
       formattedValue = value.substring(0, 4) + '-' + value.substring(4);
@@ -140,14 +171,17 @@ export class RegisterComponent implements OnInit {
     event.target.value = this.nit;
   }
 
-  onSubmit(event: Event) {
+  async onSubmit(event: Event): Promise<void> {
     event.preventDefault();
 
-    // Resetear estados
+    console.log('[REGISTER] submit click', {
+      isCompany: this.isCompany,
+      isKeycloakLoggedIn: this.auth.isKeycloakLoggedIn(),
+    });
+
     this.showValidation = false;
     this.registerSuccess = false;
 
-    // 1. Validar primero
     const isValid = this.validateForm();
 
     if (!isValid) {
@@ -156,10 +190,64 @@ export class RegisterComponent implements OnInit {
       return;
     }
 
-    // 2. Si es válido, mostrar loading
     this.registering = true;
 
-    // 3. Simular espera de 2 segundos y mostrar éxito
+    if (!this.isCompany && this.auth.isKeycloakLoggedIn()) {
+      const completed = await this.auth.completeKeycloakUserProfile({
+        first_name: this.nombres,
+        last_name: this.apellidos,
+        email: this.email,
+        document_id: this.numDoc,
+        phone: this.telefono,
+        country: this.pais,
+        city: null,
+      });
+
+      this.registering = false;
+      console.log('[REGISTER] completeKeycloakCompanyProfile result', { completed });
+      if (completed) {
+        this.registerSuccess = true;
+      } else {
+        this.showValidation = true;
+      }
+      this.cdr.detectChanges();
+      return;
+    }
+
+    if (this.isCompany && this.auth.isKeycloakLoggedIn()) {
+      console.log('[REGISTER] calling completeKeycloakCompanyProfile', {
+        nombreComercial: this.nombreComercial,
+        razonSocial: this.razonSocial,
+        email: this.email,
+        telefono: this.telefono,
+        direccion: this.direccion,
+        nit: this.nit,
+      });
+      const completed = await this.auth.completeKeycloakCompanyProfile({
+        company_commercial_name: this.nombreComercial,
+        company_nit: this.nit,
+        company_email: this.email,
+        company_phone: this.telefono,
+        company_logo_url: null,
+        company_description: this.razonSocial || null,
+        company_address: this.direccion,
+        company_profile_completed: true,
+        phone: this.telefono,
+        country: 'El Salvador',
+        city: null,
+      });
+
+      this.registering = false;
+      console.log('[REGISTER] completeKeycloakCompanyProfile result', { completed });
+      if (completed) {
+        this.registerSuccess = true;
+      } else {
+        this.showValidation = true;
+      }
+      this.cdr.detectChanges();
+      return;
+    }
+
     setTimeout(() => {
       this.registering = false;
       this.registerSuccess = true;
@@ -170,8 +258,8 @@ export class RegisterComponent implements OnInit {
   validateForm(): boolean {
     const isEmailFormatValid = this.email && this.email.includes('@');
     if (this.email && !isEmailFormatValid) {
-       this.emailFormatInvalid = true;
-       return false;
+      this.emailFormatInvalid = true;
+      return false;
     }
 
     if (this.isCompany) {
@@ -182,23 +270,23 @@ export class RegisterComponent implements OnInit {
         isEmailFormatValid &&
         this.telefono?.trim() &&
         this.direccion?.trim() &&
-        this.nit?.trim() &&
-        this.password?.trim()
-      );
-    } else {
-      return !!(
-        this.nombres?.trim() &&
-        this.apellidos?.trim() &&
-        this.email?.trim() &&
-        isEmailFormatValid &&
-        this.telefono?.trim() &&
-        this.numDoc?.trim() &&
-        this.password?.trim()
+        this.nit?.trim()
       );
     }
+
+    return !!(
+      this.nombres?.trim() &&
+      this.apellidos?.trim() &&
+      this.email?.trim() &&
+      isEmailFormatValid &&
+      this.telefono?.trim() &&
+      this.pais?.trim() &&
+      this.tipoDoc?.trim() &&
+      this.numDoc?.trim()
+    );
   }
 
-  onGoToPortal() {
-    this.router.navigateByUrl('/');
+  onGoToPortal(): void {
+    this.router.navigateByUrl(this.isCompany ? '/companies/dashboard' : '/');
   }
 }
