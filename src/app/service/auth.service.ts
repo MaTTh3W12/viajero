@@ -1,37 +1,19 @@
 import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { BehaviorSubject, firstValueFrom } from 'rxjs';
+import { KeycloakService } from './keycloak.service';
+import { UpsertCompanyVariables, UpsertUserVariables, UserCompanyProfile, UserProfileService } from './user-profile.service';
 
 export type UserRole = 'admin' | 'empresa' | 'usuario';
 
 export interface AuthUser {
-  username: string;
-  role: UserRole;
+  sub?: string;
+  email?: string;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+  role?: UserRole;
   companyName?: string;
-}
-
-const STORAGE_KEY = 'viajero_current_user';
-const KC_TOKEN_KEY = 'viajero_kc_token';
-const KC_ROLE_KEY = 'viajero_kc_role';
-const KC_USER_KEY = 'viajero_kc_user';
-
-const KC_REALM = 'viajero-realm';
-const KC_CLIENTS = {
-  login: 'viajero-frontend',
-  user: 'viajero-frontend-user',
-  company: 'viajero-frontend-company',
-} as const;
-
-const KC_CLIENT_KEY = 'viajero_kc_client_id';
-const DEFAULT_AUTH_DOMAIN = 'auth.grupoavanza.work';
-const DEFAULT_HASURA_ENDPOINT = 'https://api.grupoavanza.work/v1/graphql';
-
-declare global {
-  interface Window {
-    __ENV__?: {
-      AUTH_DOMAIN?: string;
-      HASURA_GRAPHQL_ENDPOINT?: string;
-    };
-  }
 }
 
 interface KeycloakToken {
@@ -45,139 +27,156 @@ interface KeycloakToken {
 }
 
 interface KeycloakUser {
+  sub?: string;
   username?: string;
   email?: string;
+  firstName?: string;
+  lastName?: string;
   roles: string[];
+  role?: string;
 }
+
+interface HandleKeycloakRedirectOptions {
+  upsert?: boolean;
+  cleanUrl?: string;
+}
+
+
+interface HasuraJwtClaims {
+  'x-hasura-role'?: string;
+}
+
+interface DecodedJwtPayload {
+  sub?: string;
+  email?: string;
+  preferred_username?: string;
+  given_name?: string;
+  family_name?: string;
+  exp?: number;
+  realm_access?: {
+    roles?: string[];
+  };
+  'https://hasura.io/jwt/claims'?: HasuraJwtClaims;
+}
+
+const STORAGE_KEY = 'viajero_current_user';
+const KC_TOKEN_KEY = 'viajero_kc_token';
+const KC_ROLE_KEY = 'viajero_kc_role';
+const KC_USER_KEY = 'viajero_kc_user';
+const KC_CLIENT_KEY = 'kc_client';
+
+const KC_CLIENTS = {
+  login: 'viajero-frontend',
+  user: 'viajero-frontend-user',
+  company: 'viajero-frontend-company',
+} as const;
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private platformId = inject(PLATFORM_ID);
-  // 🔧 usuarios mock
+  private tokenExpiryTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private _token = new BehaviorSubject<string | null>(null);
+  private _user = new BehaviorSubject<AuthUser | null>(null);
+  private _sessionExpired = new BehaviorSubject<boolean>(false);
+
+  token$ = this._token.asObservable();
+  user$ = this._user.asObservable();
+  sessionExpired$ = this._sessionExpired.asObservable();
+
   private users: (AuthUser & { password: string })[] = [
     { username: 'admin', password: 'admin123', role: 'admin' },
-    { username: 'empresa', password: 'empresa123',role: 'empresa', companyName: 'AO MEDIA'},
+    { username: 'empresa', password: 'empresa123', role: 'empresa' },
+    { username: 'usuario1', password: 'usuario123', role: 'usuario' },
   ];
 
-  private currentUser: AuthUser | null = this.loadFromStorage();
+  constructor(
+    private kc: KeycloakService,
+    private profile: UserProfileService
+  ) {
+    if (this.isBrowser()) {
+      this._user.next(this.loadFromStorage());
+      const storedToken = this.getKeycloakToken()?.access_token ?? null;
+      this._token.next(storedToken);
 
-  /* ======================
-     GETTERS
-  ====================== */
+      if (storedToken) {
+        this.scheduleAutoLogoutFromToken(storedToken);
+        void this.loadCompanyNameFromHasura(storedToken);
+      }
+    }
+  }
+
+  get token(): string | null {
+    return this._token.value;
+  }
+
+  get user(): AuthUser | null {
+    return this._user.value;
+  }
 
   getCurrentUser(): AuthUser | null {
-    return this.currentUser;
+    return this._user.value;
   }
 
   getRole(): UserRole | null {
-    return this.currentUser?.role ?? null;
+    return this._user.value?.role ?? null;
   }
 
   isLoggedIn(): boolean {
-    return !!this.currentUser;
+    return !!this._user.value || this.isKeycloakLoggedIn();
   }
 
   isAdmin(): boolean {
-    return this.currentUser?.role === 'admin';
+    return this._user.value?.role === 'admin';
   }
 
   isEmpresa(): boolean {
-    return this.currentUser?.role === 'empresa';
+    const role = String(this._user.value?.role ?? '').toLowerCase();
+    return role === 'empresa' || role === 'company';
   }
 
   isUsuario(): boolean {
-    return this.currentUser?.role === 'usuario';
+    return this._user.value?.role === 'usuario';
   }
-
 
   isKeycloakLoggedIn(): boolean {
     return !!this.getKeycloakToken()?.access_token;
   }
 
-  keycloakLogout(): void {
-    if (!this.isBrowser()) return;
-    sessionStorage.removeItem(KC_TOKEN_KEY);
-    sessionStorage.removeItem(KC_ROLE_KEY);
-    sessionStorage.removeItem(KC_USER_KEY);
-    sessionStorage.removeItem(KC_CLIENT_KEY);
+  isSessionExpired(): boolean {
+    return this._sessionExpired.value;
+  }
 
-    const authBase = this.getAuthBase();
-    const redirectUri = window.location.origin;
-    window.location.href =
-      `${authBase}/realms/${KC_REALM}/protocol/openid-connect/logout` +
-      `?client_id=${KC_CLIENTS.login}` +
-      `&post_logout_redirect_uri=${encodeURIComponent(redirectUri)}`;
+  clearSessionExpiredFlag(): void {
+    this._sessionExpired.next(false);
+  }
+
+  isKeycloakUserFlow(): boolean {
+    if (!this.isBrowser()) return false;
+    return sessionStorage.getItem(KC_CLIENT_KEY) === KC_CLIENTS.user;
+  }
+
+  isKeycloakCompanyFlow(): boolean {
+    if (!this.isBrowser()) return false;
+    return sessionStorage.getItem(KC_CLIENT_KEY) === KC_CLIENTS.company;
   }
 
   getKeycloakRole(): string | null {
+    if (!this.isBrowser()) return null;
     return sessionStorage.getItem(KC_ROLE_KEY);
   }
 
   getKeycloakUser(): KeycloakUser | null {
+    if (!this.isBrowser()) return null;
     const raw = sessionStorage.getItem(KC_USER_KEY);
     return raw ? (JSON.parse(raw) as KeycloakUser) : null;
   }
 
-  /* ======================
-     KEYCLOAK ACTIONS
-  ====================== */
-
-  keycloakLogin(): void {
-    this.redirectToKeycloak(KC_CLIENTS.login, 'auth');
+  setAuth(token: string, user: AuthUser): void {
+    this._token.next(token);
+    this._user.next(user);
+    this.saveToStorage(user);
   }
-
-  keycloakRegisterUser(): void {
-    this.redirectToKeycloak(KC_CLIENTS.user, 'registrations');
-  }
-
-  keycloakRegisterCompany(): void {
-    this.redirectToKeycloak(KC_CLIENTS.company, 'registrations');
-  }
-
-  async handleKeycloakRedirect(): Promise<boolean> {
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
-    if (!code) return false;
-
-    const token = await this.exchangeCodeForToken(code);
-    if (!token) return false;
-
-    this.saveKeycloakToken(token);
-    this.saveKeycloakIdentity(token.access_token);
-    await this.upsertUserInHasura(token.access_token);
-    window.history.replaceState({}, document.title, this.getRedirectUri());
-    return true;
-  }
-
-  async refreshKeycloakToken(): Promise<KeycloakToken | null> {
-    const token = this.getKeycloakToken();
-    if (!token?.refresh_token) return null;
-
-    const clientId =
-      sessionStorage.getItem(KC_CLIENT_KEY) ?? KC_CLIENTS.login;
-
-    const res = await fetch(
-      `${this.getAuthBase()}/realms/${KC_REALM}/protocol/openid-connect/token`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type: 'refresh_token',
-          client_id: clientId,
-          refresh_token: token.refresh_token,
-        }),
-      }
-    );
-
-    if (!res.ok) return null;
-    const data = (await res.json()) as KeycloakToken;
-    this.saveKeycloakToken(data);
-    return data;
-  }
-
-  /* ======================
-     AUTH ACTIONS
-  ====================== */
 
   login(username: string, password: string): AuthUser | null {
     const found = this.users.find(
@@ -186,23 +185,192 @@ export class AuthService {
 
     if (!found) return null;
 
-    // ❌ no guardamos password
-    const { password: _, ...safeUser } = found;
-
-    this.currentUser = safeUser;
+    const { password: _pwd, ...safeUser } = found;
+    this._user.next(safeUser);
     this.saveToStorage(safeUser);
-
     return safeUser;
   }
 
   logout(): void {
-    this.currentUser = null;
+    this.clearTokenExpiryTimer();
+    this._token.next(null);
+    this._user.next(null);
+
+    if (!this.isBrowser()) return;
+
     localStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(KC_TOKEN_KEY);
+    sessionStorage.removeItem(KC_ROLE_KEY);
+    sessionStorage.removeItem(KC_USER_KEY);
   }
 
-  /* ======================
-     STORAGE
-  ====================== */
+  clear(): void {
+    this.logout();
+  }
+
+  keycloakLogin(): void {
+    this.kc.login();
+  }
+
+  keycloakRegisterUser(): void {
+    this.kc.registerUser();
+  }
+
+  keycloakRegisterCompany(): void {
+    this.kc.registerCompany();
+  }
+
+  keycloakLogout(): void {
+    this.logout();
+    this.kc.logout();
+  }
+
+  async handleKeycloakRedirect(
+    options: HandleKeycloakRedirectOptions = {}
+  ): Promise<boolean> {
+    if (!this.isBrowser()) return false;
+
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (!code) return false;
+
+    const tokenData = await this.kc.exchangeCode(code);
+    if (!tokenData?.access_token) return false;
+
+    this.saveKeycloakToken(tokenData);
+    this.saveKeycloakIdentity(tokenData.access_token);
+    void this.loadCompanyNameFromHasura(tokenData.access_token);
+
+    const upsert = options.upsert ?? true;
+    if (upsert) {
+      try {
+        await this.upsertUserInHasura(tokenData.access_token);
+      } catch (error) {
+        console.error('Error upserting Keycloak user in Hasura', error);
+      }
+    }
+
+    const cleanUrl = options.cleanUrl ?? window.location.pathname;
+    window.history.replaceState({}, document.title, cleanUrl);
+    return true;
+  }
+
+  async completeKeycloakUserProfile(formData: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    document_id: string | null;
+    phone: string | null;
+    country: string | null;
+    city: string | null;
+  }): Promise<boolean> {
+    const token = this.getKeycloakToken()?.access_token;
+    const user = this.getKeycloakUser();
+
+    console.log('[AUTH] completeKeycloakCompanyProfile start', {
+      hasToken: !!token,
+      keycloakSub: user?.sub ?? null,
+      keycloakUser: user,
+      formData,
+    });
+
+    if (!token || !user?.sub) {
+      console.warn('[AUTH] completeKeycloakCompanyProfile aborted: missing token or user.sub');
+      return false;
+    }
+
+    const role = this.getKeycloakRole() ?? 'USER';
+
+    try {
+      const variables: UpsertUserVariables = {
+        keycloak_id: user.sub,
+        email: formData.email || user.email || '',
+        role,
+        first_name: formData.first_name || user.firstName || null,
+        last_name: formData.last_name || user.lastName || null,
+        document_id: formData.document_id,
+        phone: formData.phone,
+        country: formData.country,
+        city: formData.city,
+      };
+
+      await firstValueFrom(this.profile.upsertUser(token, variables));
+      return true;
+    } catch (error) {
+      console.error('Error completing Keycloak profile in Hasura', error);
+      return false;
+    }
+  }
+
+
+  async completeKeycloakCompanyProfile(formData: {
+    company_commercial_name: string;
+    company_nit: string;
+    company_email: string;
+    company_phone: string;
+    company_logo_url: string | null;
+    company_description: string | null;
+    company_address: string;
+    company_profile_completed: boolean;
+    phone: string | null;
+    country: string | null;
+    city: string | null;
+  }): Promise<boolean> {
+    const token = this.getKeycloakToken()?.access_token;
+    const user = this.getKeycloakUser();
+
+    console.log('[AUTH] completeKeycloakCompanyProfile start', {
+      hasToken: !!token,
+      keycloakSub: user?.sub ?? null,
+      keycloakUser: user,
+      formData,
+    });
+
+    if (!token || !user?.sub) {
+      console.warn('[AUTH] completeKeycloakCompanyProfile aborted: missing token or user.sub');
+      return false;
+    }
+
+    const role = this.getKeycloakRole() ?? 'COMPANY';
+
+    try {
+      const variables: UpsertCompanyVariables = {
+        keycloak_id: user.sub,
+        email: user.email || user.username || '',
+        role,
+        company_commercial_name: formData.company_commercial_name,
+        company_nit: formData.company_nit,
+        company_email: formData.company_email,
+        company_phone: formData.company_phone,
+        company_logo_url: formData.company_logo_url,
+        company_description: formData.company_description,
+        company_address: formData.company_address,
+        company_profile_completed: formData.company_profile_completed,
+        phone: formData.phone,
+        country: formData.country,
+        city: formData.city,
+      };
+
+      console.log('[AUTH] upsertCompany variables', variables);
+      await firstValueFrom(this.profile.upsertCompany(token, variables));
+      console.log('[AUTH] upsertCompany success');
+
+      const current = this._user.value;
+      if (current) {
+        const nextUser: AuthUser = {
+          ...current,
+          companyName: formData.company_commercial_name,
+        };
+        this._user.next(nextUser);
+        this.saveToStorage(nextUser);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('[AUTH] Error completing company profile in Hasura', error);
+      return false;
+    }
+  }
 
   private saveToStorage(user: AuthUser): void {
     if (!this.isBrowser()) return;
@@ -215,75 +383,14 @@ export class AuthService {
     return raw ? (JSON.parse(raw) as AuthUser) : null;
   }
 
-  private getAuthBase(): string {
-    if (!this.isBrowser()) return '';
-    const scheme = window.location.protocol;
-    const authDomain =
-      window.__ENV__?.AUTH_DOMAIN ?? DEFAULT_AUTH_DOMAIN;
-    return `${scheme}//${authDomain}`;
-  }
-
-  private getHasuraEndpoint(): string {
-    if (!this.isBrowser()) return '';
-    return window.__ENV__?.HASURA_GRAPHQL_ENDPOINT ?? DEFAULT_HASURA_ENDPOINT;
-  }
-
-  private getRedirectUri(): string {
-    if (!this.isBrowser()) return '';
-    return `${window.location.origin}/login`;
-  }
-
-  private buildKeycloakAuthUrl(
-    endpoint: 'auth' | 'registrations',
-    clientId: string
-  ): string {
-    const authBase = this.getAuthBase();
-    const redirectUri = this.getRedirectUri();
-
-    return (
-      `${authBase}/realms/${KC_REALM}/protocol/openid-connect/${endpoint}` +
-      `?client_id=${clientId}` +
-      `&response_type=code` +
-      `&scope=openid` +
-      `&redirect_uri=${encodeURIComponent(redirectUri)}`
-    );
-  }
-
-  private redirectToKeycloak(
-    clientId: string,
-    endpoint: 'auth' | 'registrations'
-  ): void {
-    if (!this.isBrowser()) return;
-    sessionStorage.setItem(KC_CLIENT_KEY, clientId);
-    window.location.href = this.buildKeycloakAuthUrl(endpoint, clientId);
-  }
-
-  private async exchangeCodeForToken(code: string): Promise<KeycloakToken | null> {
-    const authBase = this.getAuthBase();
-    const redirectUri = this.getRedirectUri();
-    const clientId = sessionStorage.getItem(KC_CLIENT_KEY) ?? KC_CLIENTS.login;
-
-    const res = await fetch(
-      `${authBase}/realms/${KC_REALM}/protocol/openid-connect/token`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-          grant_type: 'authorization_code',
-          client_id: clientId,
-          code,
-          redirect_uri: redirectUri,
-        }),
-      }
-    );
-
-    if (!res.ok) return null;
-    return (await res.json()) as KeycloakToken;
-  }
-
   private saveKeycloakToken(token: KeycloakToken): void {
     if (!this.isBrowser()) return;
     sessionStorage.setItem(KC_TOKEN_KEY, JSON.stringify(token));
+    this._token.next(token.access_token ?? null);
+
+    if (token.access_token) {
+      this.scheduleAutoLogoutFromToken(token.access_token);
+    }
   }
 
   private getKeycloakToken(): KeycloakToken | null {
@@ -294,25 +401,62 @@ export class AuthService {
 
   private saveKeycloakIdentity(accessToken: string): void {
     if (!this.isBrowser()) return;
+
     const payload = this.decodeJwt(accessToken);
     if (!payload) return;
+
+    console.log('[AUTH] token claims check', {
+      sub: payload.sub,
+      preferred_username: payload.preferred_username,
+      email: payload.email,
+      given_name: payload.given_name,
+      family_name: payload.family_name,
+      has_given_name: !!payload.given_name,
+      has_family_name: !!payload.family_name,
+    });
 
     const realmRoles: string[] = payload.realm_access?.roles ?? [];
     const hasuraRole: string | undefined =
       payload['https://hasura.io/jwt/claims']?.['x-hasura-role'];
 
-    const role = hasuraRole ?? realmRoles[0] ?? '';
-    if (role) sessionStorage.setItem(KC_ROLE_KEY, role);
+    const chosenRoleRaw = hasuraRole ?? this.firstUsefulRealmRole(realmRoles) ?? 'USER';
+    sessionStorage.setItem(KC_ROLE_KEY, chosenRoleRaw);
+
+    const normalizedRole = this.normalizeRole(chosenRoleRaw);
+
+    const fullName = [payload.given_name, payload.family_name]
+      .filter((value): value is string => !!value)
+      .join(' ')
+      .trim();
+
+    const displayName = fullName || payload.preferred_username || payload.email || 'Usuario';
 
     const user: KeycloakUser = {
-      username: payload.preferred_username,
-      email: payload.email,
+      sub: payload.sub,
+      username: displayName,
+      email: payload.email ?? payload.preferred_username,
+      firstName: payload.given_name,
+      lastName: payload.family_name,
       roles: realmRoles,
+      role: chosenRoleRaw,
     };
+
     sessionStorage.setItem(KC_USER_KEY, JSON.stringify(user));
+
+    const appUser: AuthUser = {
+      sub: payload.sub,
+      username: displayName,
+      email: payload.email ?? payload.preferred_username,
+      firstName: payload.given_name,
+      lastName: payload.family_name,
+      role: normalizedRole,
+    };
+
+    this._user.next(appUser);
+    this.saveToStorage(appUser);
   }
 
-  private decodeJwt(token: string): any | null {
+  private decodeJwt(token: string): DecodedJwtPayload | null {
     try {
       const payload = token.split('.')[1];
       const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
@@ -322,21 +466,29 @@ export class AuthService {
     }
   }
 
-  private isBrowser(): boolean {
-    return isPlatformBrowser(this.platformId);
+  private firstUsefulRealmRole(roles: string[]): string | null {
+    const ignore = new Set(['offline_access', 'uma_authorization', 'default-roles-viajero-realm']);
+    return roles.find(r => !ignore.has(r)) ?? roles[0] ?? null;
+  }
+
+  private normalizeRole(raw?: string): UserRole {
+    const role = (raw ?? '').toLowerCase();
+
+    if (role.includes('admin')) return 'admin';
+    if (role.includes('company') || role.includes('empresa')) return 'empresa';
+    return 'usuario';
   }
 
   private async upsertUserInHasura(accessToken: string): Promise<void> {
-    if (!this.isBrowser()) return;
     const payload = this.decodeJwt(accessToken);
-    if (!payload) return;
+    if (!payload || !payload.sub) return;
 
-    const variables = {
+    const variables: UpsertUserVariables = {
       keycloak_id: payload.sub,
       email: payload.email ?? '',
       role:
         payload['https://hasura.io/jwt/claims']?.['x-hasura-role'] ??
-        payload.realm_access?.roles?.[0] ??
+        this.firstUsefulRealmRole(payload.realm_access?.roles ?? []) ??
         'USER',
       first_name: payload.given_name ?? null,
       last_name: payload.family_name ?? null,
@@ -346,48 +498,88 @@ export class AuthService {
       city: null,
     };
 
-    const query = `
-      mutation UpsertUserFromJwt(
-        $keycloak_id: uuid!,
-        $email: String!,
-        $role: String!,
-        $first_name: String,
-        $last_name: String,
-        $document_id: String,
-        $phone: String,
-        $country: String,
-        $city: String
-      ) {
-        insert_viajerosv_users(
-          objects: {
-            keycloak_id: $keycloak_id,
-            email: $email,
-            role: $role,
-            first_name: $first_name,
-            last_name: $last_name,
-            document_id: $document_id,
-            phone: $phone,
-            country: $country,
-            city: $city,
-            active: true
-          },
-          on_conflict: {
-            constraint: users_keycloak_id_key,
-            update_columns: [email, first_name, last_name, document_id, phone, country, city, updated_at]
-          }
-        ) {
-          affected_rows
-        }
-      }
-    `;
+    await firstValueFrom(this.profile.upsertUser(accessToken, variables));
+  }
 
-    await fetch(this.getHasuraEndpoint(), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${accessToken}`,
-      },
-      body: JSON.stringify({ query, variables }),
-    });
+
+  private async loadCompanyNameFromHasura(accessToken: string): Promise<void> {
+    const payload = this.decodeJwt(accessToken);
+    const keycloakId = payload?.sub;
+
+    if (!keycloakId) return;
+
+    const currentUser = this._user.value;
+    if (!currentUser || currentUser.role !== 'empresa') return;
+
+    try {
+      const profile = await firstValueFrom(this.profile.getUserByKeycloakId(accessToken, keycloakId));
+      this.applyCompanyNameToCurrentUser(profile);
+    } catch (error) {
+      console.error('Error loading company name from Hasura', error);
+    }
+  }
+
+  private applyCompanyNameToCurrentUser(profile: UserCompanyProfile | null): void {
+    if (!profile?.company_commercial_name) return;
+
+    const currentUser = this._user.value;
+    if (!currentUser) return;
+
+    const nextUser: AuthUser = {
+      ...currentUser,
+      companyName: profile.company_commercial_name,
+    };
+
+    this._user.next(nextUser);
+    this.saveToStorage(nextUser);
+  }
+
+
+  private scheduleAutoLogoutFromToken(accessToken: string): void {
+    if (!this.isBrowser()) return;
+
+    this.clearTokenExpiryTimer();
+
+    const payload = this.decodeJwt(accessToken);
+    const exp = Number(payload?.exp);
+
+    if (!Number.isFinite(exp)) {
+      console.warn('[AUTH] access token sin claim exp; no se programa auto-logout');
+      return;
+    }
+
+    const expiresAtMs = exp * 1000;
+    const remainingMs = expiresAtMs - Date.now();
+
+    console.log('[AUTH] token expira en', new Date(expiresAtMs).toISOString());
+
+    if (remainingMs <= 0) {
+      this.handleTokenExpired();
+      return;
+    }
+
+    this.tokenExpiryTimer = setTimeout(() => {
+      this.handleTokenExpired();
+    }, remainingMs);
+  }
+
+  private clearTokenExpiryTimer(): void {
+    if (this.tokenExpiryTimer) {
+      clearTimeout(this.tokenExpiryTimer);
+      this.tokenExpiryTimer = null;
+    }
+  }
+
+  private handleTokenExpired(): void {
+    this.logout();
+
+    if (!this.isBrowser()) return;
+
+    this._sessionExpired.next(true);
+    console.log('[AUTH] sesión cerrada por expiración de token');
+  }
+
+  private isBrowser(): boolean {
+    return isPlatformBrowser(this.platformId);
   }
 }

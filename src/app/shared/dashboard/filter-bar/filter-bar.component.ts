@@ -1,9 +1,10 @@
-import { Component, EventEmitter, Input, Output, Renderer2, Inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, Renderer2, Inject, ChangeDetectorRef } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { FilterVariant } from '../../../service/filter-bar.types';
-import { UserRole } from '../../../service/auth.service';
+import { AuthService, UserRole } from '../../../service/auth.service';
+import { Category, CategoryService } from '../../../service/category.service';
 
 const FILTER_BG_MAP: Record<UserRole, Record<FilterVariant, string>> = {
   admin: {
@@ -48,9 +49,12 @@ export class FilterBarComponent {
     descripcion: string;
     fechaInicio: string;
     fechaFin: string;
-    categoria: string;
+    categoriaId: number;
+    categoriaNombre: string;
     terminos: string;
     estado: string;
+    onSuccess: () => void;
+    onError: (message?: string) => void;
   }>();
   @Output() updateCoupon = new EventEmitter<{
     id: number;
@@ -68,18 +72,25 @@ export class FilterBarComponent {
   auditTypeSelected = 'Seleccionar tipo';
   auditTypeOptions = ['Desactivación', 'Aprobación'];
 
+
+  categories: Category[] = [];
+  categoriesLoaded = false;
+  categoriesLoading = false;
+  categoryLoadError = false;
+
   // Estado para el modal de crear cupón
   createCouponOpen = false;
   // Estados de overlay dentro del modal (similar a login)
   creatingCoupon = false;
   couponCreateSuccess = false;
+  createCouponError = '';
   couponForm = {
     titulo: '',
     cantidad: null as number | null,
     descripcion: '',
     fechaInicio: '',
     fechaFin: '',
-    categoria: '',
+    categoria: null as number | null,
     terminos: '',
     estado: '',
   };
@@ -136,12 +147,45 @@ export class FilterBarComponent {
     input.focus();
   }
 
+
+  private ensureCategoriesLoaded(force = false): void {
+    if (this.categoriesLoading) return;
+    if (this.categoriesLoaded && !force) return;
+
+    const token = this.auth.token;
+    if (!token) {
+      this.categories = [];
+      this.categoriesLoaded = true;
+      this.categoryLoadError = false;
+      return;
+    }
+
+    this.categoriesLoading = true;
+    this.categoryLoadError = false;
+
+    this.categoryService.getCategories(token).subscribe({
+      next: (categories) => {
+        this.categories = categories.filter((category) => category.active);
+        this.categoriesLoaded = true;
+        this.categoriesLoading = false;
+      },
+      error: (error) => {
+        console.error('[FILTER-BAR] Error cargando categorías', error);
+        this.categories = [];
+        this.categoriesLoaded = true;
+        this.categoriesLoading = false;
+        this.categoryLoadError = true;
+      },
+    });
+  }
+
   get bgClass(): string {
     return FILTER_BG_MAP[this.role]?.[this.variant] ?? 'bg-[#E6EFFF]';
   }
 
   openCreateCoupon(): void {
     this.resetCreateFlow();
+    this.ensureCategoriesLoaded();
     this.createCouponOpen = true;
     this.setBodyModalLock(true);
   }
@@ -157,17 +201,26 @@ export class FilterBarComponent {
       return;
     }
 
-    // Simular creación: mostrar overlay de carga por 3s y luego éxito
+    const categoria = this.categories.find((item) => item.id === this.couponForm.categoria);
+    if (!categoria) return;
+
+    this.createCouponError = '';
     this.creatingCoupon = true;
-    setTimeout(() => {
-      this.creatingCoupon = false;
-      this.couponCreateSuccess = true;
-      this.createCoupon.emit({
-        ...this.couponForm,
-        fechaInicio: this.toDisplayDate(this.couponForm.fechaInicio),
-        fechaFin: this.toDisplayDate(this.couponForm.fechaFin),
-      });
-    }, 3000);
+    this.couponCreateSuccess = false;
+
+    this.createCoupon.emit({
+      titulo: this.couponForm.titulo,
+      cantidad: this.couponForm.cantidad,
+      descripcion: this.couponForm.descripcion,
+      fechaInicio: this.toDisplayDate(this.couponForm.fechaInicio),
+      fechaFin: this.toDisplayDate(this.couponForm.fechaFin),
+      categoriaId: categoria.id,
+      categoriaNombre: categoria.name,
+      terminos: this.couponForm.terminos,
+      estado: this.couponForm.estado,
+      onSuccess: () => this.onCreateCouponSuccess(),
+      onError: (message?: string) => this.onCreateCouponError(message),
+    });
   }
 
   isCouponFormValid(): boolean {
@@ -176,7 +229,7 @@ export class FilterBarComponent {
     const tituloValido = f.titulo.trim().length > 0;
     const descripcionValida = f.descripcion.trim().length > 0;
     const fechasValidas = !!f.fechaInicio && !!f.fechaFin;
-    const categoriaValida = f.categoria !== '';
+    const categoriaValida = typeof f.categoria === 'number' && f.categoria > 0;
     const terminosValidos = f.terminos.trim().length > 0;
     const estadoValido = f.estado !== '';
     return (
@@ -201,6 +254,21 @@ export class FilterBarComponent {
   private resetCreateFlow(): void {
     this.creatingCoupon = false;
     this.couponCreateSuccess = false;
+    this.createCouponError = '';
+  }
+
+  onCreateCouponSuccess(): void {
+    this.creatingCoupon = false;
+    this.couponCreateSuccess = true;
+    this.createCouponError = '';
+    this.cdr.detectChanges();
+  }
+
+  onCreateCouponError(message = 'No se pudo crear el cupón. Intenta nuevamente.'): void {
+    this.creatingCoupon = false;
+    this.couponCreateSuccess = false;
+    this.createCouponError = message;
+    this.cdr.detectChanges();
   }
 
   // Abrir modal de edición con datos precargados
@@ -215,6 +283,7 @@ export class FilterBarComponent {
     estado: string;
   }): void {
     this.resetEditFlow();
+    this.ensureCategoriesLoaded();
     this.editForm = {
       id: coupon.id,
       titulo: coupon.titulo,
@@ -264,7 +333,7 @@ export class FilterBarComponent {
     const tituloValido = f.titulo.trim().length > 0;
     const descripcionValida = f.descripcion.trim().length > 0;
     const fechasValidas = !!f.fechaInicio && !!f.fechaFin;
-    const categoriaValida = f.categoria !== '';
+    const categoriaValida = typeof f.categoria === 'number' && f.categoria > 0;
     const terminosValidos = true; // opcional en edición
     const estadoValido = f.estado !== '';
     return (
@@ -368,7 +437,14 @@ export class FilterBarComponent {
     return dateStr;
   }
 
-  constructor(private router: Router, private renderer: Renderer2, @Inject(DOCUMENT) private document: Document) {}
+  constructor(
+    private router: Router,
+    private renderer: Renderer2,
+    @Inject(DOCUMENT) private document: Document,
+    private auth: AuthService,
+    private categoryService: CategoryService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   private setBodyModalLock(on: boolean): void {
     const body = this.document.body;

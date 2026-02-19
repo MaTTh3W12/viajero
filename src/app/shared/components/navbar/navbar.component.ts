@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../../service/auth.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-navbar',
@@ -13,11 +14,13 @@ import { AuthService } from '../../../service/auth.service';
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.css']
 })
-export class NavbarComponent implements OnInit {
+export class NavbarComponent implements OnInit, OnDestroy {
   open = false;
   isRegisterDropdownOpen = false;
   showLogoutModal = false;
   isLoggingOut = false;
+  showSessionExpiredModal = false;
+  private sessionExpiredSub?: Subscription;
 
   constructor(
     private router: Router,
@@ -25,6 +28,13 @@ export class NavbarComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    this.sessionExpiredSub = this.auth.sessionExpired$.subscribe(expired => {
+      this.showSessionExpiredModal = expired;
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.sessionExpiredSub?.unsubscribe();
   }
 
   isCouponsActive(): boolean {
@@ -36,6 +46,10 @@ export class NavbarComponent implements OnInit {
 
   registerKeycloakUser(): void {
     this.auth.keycloakRegisterUser();
+  }
+
+  registerKeycloakCompany(): void {
+    this.auth.keycloakRegisterCompany();
   }
 
   get isKeycloakLoggedIn(): boolean {
@@ -58,6 +72,16 @@ export class NavbarComponent implements OnInit {
   confirmLogout(): void {
     this.isLoggingOut = true;
     setTimeout(() => this.logoutKeycloak(), 500);
+  }
+
+  closeSessionExpiredModal(): void {
+    this.showSessionExpiredModal = false;
+    this.auth.clearSessionExpiredFlag();
+  }
+
+  goToLoginAfterExpiry(): void {
+    this.closeSessionExpiredModal();
+    this.router.navigate(['/login']);
   }
 
 }

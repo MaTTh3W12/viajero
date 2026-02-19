@@ -432,10 +432,16 @@
 								appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
 								bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
 								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60">
-					<option value="" disabled selected hidden>Seleccionar categoría</option>
-					<option>Turismo</option>
-					<option>Comida</option>
-					<option>Entretenimiento</option>
+					<option [ngValue]="null" disabled hidden>Seleccionar categoría</option>
+					@if (categoriesLoading) {
+						<option value="" disabled>Cargando categorías...</option>
+					} @else if (categories.length === 0) {
+						<option value="" disabled>Sin categorías disponibles</option>
+					} @else {
+						@for (category of categories; track category.id) {
+							<option [ngValue]="category.id">{{ category.name }}</option>
+						}
+					}
 					</select>
 				</div>
 
@@ -462,6 +468,12 @@
 								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
 								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
 				</div>
+
+				@if (createCouponError) {
+				<div class="md:col-span-2 rounded-xl bg-red-50 text-red-700 text-sm px-4 py-3">
+					{{ createCouponError }}
+				</div>
+				}
 
 				<!-- Actions -->
 				<div class="md:col-span-2 flex items-center justify-center gap-3 pt-6">
@@ -620,9 +632,15 @@
 								bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
 								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60">
 					<option value="" disabled hidden>Seleccionar categoría</option>
-					<option>Turismo</option>
-					<option>Comida</option>
-					<option>Entretenimiento</option>
+					@if (categoriesLoading) {
+						<option value="" disabled>Cargando categorías...</option>
+					} @else if (categories.length === 0) {
+						<option value="" disabled>Sin categorías disponibles</option>
+					} @else {
+						@for (category of categories; track category.id) {
+							<option [value]="category.name">{{ category.name }}</option>
+						}
+					}
 					</select>
 				</div>
 

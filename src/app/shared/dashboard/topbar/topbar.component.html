@@ -33,14 +33,14 @@
     </button>
 
     <!-- Usuario -->
-    <button class="flex items-center gap-2 text-white" (click)="toggleMenu()">
+    <button class="flex items-center gap-2" (click)="toggleMenu()">
       <img src="assets/img/Male01.png" class="w-9 h-9 rounded-full border-2 border-white" />
       <!-- Nombre y empresa (solo desktop) -->
       @if (user) {
         <div class="hidden lg:flex flex-col items-start leading-tight">
-          <span class="text-sm font-medium">{{ user.username }}</span>
-          @if (user.companyName) {
-            <span class="text-xs opacity-80">{{ user.companyName }}</span>
+          <span class="text-sm font-medium text-white">{{ displayFullName }}</span>
+          @if (displayCompanyName) {
+            <span class="text-xs text-[#1A2440]">{{ displayCompanyName }}</span>
           }
         </div>
       }
@@ -140,6 +140,39 @@
       </div>
     }
 
+  </div>
+</div>
+}
+
+
+@if (showSessionExpiredModal) {
+<div class="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="bg-white rounded-[30px] p-8 w-[600px] text-center relative shadow-2xl">
+    <button (click)="closeSessionExpiredModal()" class="absolute top-6 right-6 text-gray-400 hover:text-gray-600">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+
+    <h2 class="text-2xl font-semibold text-[#1A2440] mb-4">Sesión expirada</h2>
+    <p class="text-[#1A2440] opacity-80 mb-8">
+      Tu sesión expiró por seguridad.<br>
+      Debes iniciar sesión nuevamente para continuar.
+    </p>
+
+    <div class="flex justify-center gap-4">
+      <button
+        (click)="goToLoginAfterExpiry()"
+        class="bg-[#538CFF] text-white px-8 py-2.5 rounded-full font-medium hover:bg-blue-600 transition">
+        Ir a iniciar sesión
+      </button>
+
+      <button
+        (click)="closeSessionExpiredModal()"
+        class="bg-white border text-[#1A2440] border-[#1A2440] px-8 py-2.5 rounded-full font-medium hover:bg-gray-50 transition">
+        Cerrar
+      </button>
+    </div>
   </div>
 </div>
 }
