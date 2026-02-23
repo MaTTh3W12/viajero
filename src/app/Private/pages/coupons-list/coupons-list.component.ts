@@ -7,7 +7,7 @@ import { CouponsMockService } from '../../../service/coupons-mock.service';
 import { Coupon } from '../../../service/coupon.interface';
 import { FilterBarComponent } from '../../../shared/dashboard/filter-bar/filter-bar.component';
 import { AuthService, UserRole } from '../../../service/auth.service';
-import { CouponService, InsertCouponVariables } from '../../../service/coupon.service';
+import { CouponService, InsertCouponVariables, UpdateCouponVariables } from '../../../service/coupon.service';
 import { UserProfileService } from '../../../service/user-profile.service';
 import { CategoryService } from '../../../service/category.service';
 
@@ -148,28 +148,114 @@ export class CouponsListComponent {
       };
 
       await firstValueFrom(this.couponService.insertCoupon(token, variables));
-      await this.loadCompanyCouponsFromApi();
+
       payload.onSuccess();
+
+      try {
+        await this.loadCompanyCouponsFromApi();
+      } catch (reloadError) {
+        console.error('[COUPONS] Cupón creado pero falló recarga de tabla', reloadError);
+      }
     } catch (error) {
       console.error('[COUPONS] Error creando cupón', error);
       payload.onError('No se pudo crear el cupón. Verifica los datos e intenta nuevamente.');
     }
   }
 
-  onUpdateCoupon(updated: Coupon): void {
-    this.coupons = this.coupons.map((c) => (c.id === updated.id ? updated : c));
-    console.log('Cupón actualizado', updated);
+  async onUpdateCoupon(payload: {
+    id: number;
+    titulo: string;
+    descripcion: string;
+    categoriaId: number;
+    categoriaNombre: string;
+    fechaInicio: string;
+    fechaFin: string;
+    disponibles: number;
+    estado: string;
+    terminos: string;
+    onSuccess: () => void;
+    onError: (message?: string) => void;
+  }): Promise<void> {
+    try {
+      if (this.role !== 'empresa' || !this.auth.isKeycloakLoggedIn()) {
+        this.coupons = this.coupons.map((coupon) => {
+          if (coupon.id !== payload.id) return coupon;
+          return {
+            ...coupon,
+            titulo: payload.titulo,
+            categoria: payload.categoriaNombre,
+            categoriaId: payload.categoriaId,
+            fechaInicio: payload.fechaInicio,
+            fechaFin: payload.fechaFin,
+            disponibles: payload.disponibles,
+            estado: payload.estado,
+            rawDescripcion: payload.descripcion,
+            terminos: payload.terminos,
+          };
+        });
+        this.cdr.detectChanges();
+        payload.onSuccess();
+        return;
+      }
+
+      const token = this.auth.token;
+      if (!token) {
+        payload.onError('No hay sesión activa para actualizar el cupón.');
+        return;
+      }
+
+      const variables: UpdateCouponVariables = {
+        id: payload.id,
+        title: payload.titulo,
+        category_id: payload.categoriaId,
+        start_date: this.toIsoDate(payload.fechaInicio),
+        end_date: this.toIsoDate(payload.fechaFin),
+        stock_available: payload.disponibles,
+        stock_total: payload.disponibles,
+        description: payload.descripcion || null,
+        terms: payload.terminos || null,
+        published: payload.estado === 'Publicado',
+      };
+
+      await firstValueFrom(this.couponService.updateCoupon(token, variables));
+
+      // Primero cerramos estado de carga del modal para evitar que se quede pegado
+      // si algo falla durante la recarga de la tabla.
+      payload.onSuccess();
+
+      try {
+        await this.loadCompanyCouponsFromApi();
+      } catch (reloadError) {
+        console.error('[COUPONS] Cupón actualizado pero falló recarga de tabla', reloadError);
+      }
+    } catch (error) {
+      console.error('[COUPONS] Error actualizando cupón', error);
+      payload.onError('No se pudo actualizar el cupón. Intenta nuevamente.');
+    }
   }
 
   openEdit(row: Coupon): void {
     if (this.filterBar) {
-      this.filterBar.openEditCoupon(row);
+      this.filterBar.openEditCoupon({
+        ...row,
+        descripcion: row.rawDescripcion ?? row.descripcion,
+      });
     }
   }
 
-  onDeleteCoupon(id: number): void {
-    this.coupons = this.coupons.filter((c) => c.id !== id);
-    console.log('Cupón eliminado', id);
+  async onDeleteCoupon(payload: {
+    id: number;
+    onSuccess: () => void;
+    onError: (message?: string) => void;
+  }): Promise<void> {
+    try {
+      this.coupons = this.coupons.filter((coupon) => coupon.id !== payload.id);
+      this.cdr.detectChanges();
+      payload.onSuccess();
+    } catch (error) {
+      console.error('[COUPONS] Error eliminando cupón', error);
+      payload.onError('No se pudo eliminar el cupón. Intenta nuevamente.');
+    }
   }
 
   openDelete(row: Coupon): void {
@@ -233,6 +319,9 @@ export class CouponsListComponent {
       fechaFin: this.toDisplayDate(row.end_date),
       disponibles: row.stock_available ?? 0,
       estado: row.published ? 'Publicado' : 'Borrador',
+      categoriaId: row.category_id,
+      terminos: row.terms ?? '',
+      rawDescripcion: row.description ?? '',
     }));
 
     console.log('[COUPONS] table rows assigned', { rows: this.coupons.length });

@@ -84,7 +84,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       try {
         // Si la sesión viene de Keycloak, el flujo correcto es redirección a logout de Keycloak.
-        if (this.auth.isKeycloakLoggedIn()) {
+        if (this.auth.shouldLogoutInKeycloak()) {
           this.auth.keycloakLogout();
           return;
         }

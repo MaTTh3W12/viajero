@@ -476,7 +476,7 @@
 				}
 
 				<!-- Actions -->
-				<div class="md:col-span-2 flex items-center justify-center gap-3 pt-6">
+				<div class="md:col-span-2 flex items-center justify-center gap-3 pt-2">
 				<button type="submit"
 						[disabled]="!isCouponFormValid()"
 						class="px-6 py-3 rounded-full text-white
@@ -631,14 +631,14 @@
 								appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
 								bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
 								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60">
-					<option value="" disabled hidden>Seleccionar categoría</option>
+					<option [ngValue]="null" disabled hidden>Seleccionar categoría</option>
 					@if (categoriesLoading) {
 						<option value="" disabled>Cargando categorías...</option>
 					} @else if (categories.length === 0) {
 						<option value="" disabled>Sin categorías disponibles</option>
 					} @else {
 						@for (category of categories; track category.id) {
-							<option [value]="category.name">{{ category.name }}</option>
+							<option [ngValue]="category.id">{{ category.name }}</option>
 						}
 					}
 					</select>
@@ -667,8 +667,14 @@
 								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
 				</div>
 
+				@if (editCouponError) {
+				<div class="md:col-span-2">
+					<p class="text-sm text-[#C82333]">{{ editCouponError }}</p>
+				</div>
+				}
+
 				<!-- Actions -->
-				<div class="md:col-span-2 flex items-center justify-center gap-3 pt-6">
+				<div class="md:col-span-2 flex items-center justify-center gap-3 pt-2">
 				<button type="submit"
 						[disabled]="!isEditFormValid()"
 						class="px-6 py-3 rounded-full text-white
@@ -844,6 +850,12 @@
 				<h3 class="text-xl font-normal text-[#1A2440] mb-2">Esta acción eliminará el cupón de forma permanente.</h3>
 				<p class="text-sm text-[#1A2440]">No podrá ser reactivado ni reutilizado.</p>
 			</div>
+
+			@if (deleteCouponError) {
+			<div class="mt-4 rounded-xl bg-red-50 text-red-700 text-sm px-4 py-3">
+				{{ deleteCouponError }}
+			</div>
+			}
 
 			<!-- Actions -->
 			<div class="mt-6 flex items-center justify-center gap-3">

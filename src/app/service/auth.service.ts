@@ -71,6 +71,8 @@ const KC_CLIENTS = {
   company: 'viajero-frontend-company',
 } as const;
 
+const KEYCLOAK_CLIENT_IDS = new Set<string>(Object.values(KC_CLIENTS));
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private platformId = inject(PLATFORM_ID);
@@ -185,7 +187,15 @@ export class AuthService {
 
     if (!found) return null;
 
+    if (this.isBrowser()) {
+      sessionStorage.removeItem(KC_TOKEN_KEY);
+      sessionStorage.removeItem(KC_ROLE_KEY);
+      sessionStorage.removeItem(KC_USER_KEY);
+      sessionStorage.removeItem(KC_CLIENT_KEY);
+    }
+
     const { password: _pwd, ...safeUser } = found;
+    this._token.next(null);
     this._user.next(safeUser);
     this.saveToStorage(safeUser);
     return safeUser;
@@ -221,8 +231,25 @@ export class AuthService {
   }
 
   keycloakLogout(): void {
+    const clientId = this.isBrowser() ? (sessionStorage.getItem(KC_CLIENT_KEY) ?? undefined) : undefined;
     this.logout();
-    this.kc.logout();
+    this.kc.logout(clientId);
+  }
+
+  shouldLogoutInKeycloak(): boolean {
+    if (!this.isBrowser()) return false;
+
+    const token = this.getKeycloakToken()?.access_token;
+    const keycloakUser = this.getKeycloakUser();
+    const currentUser = this._user.value;
+    const sessionClient = sessionStorage.getItem(KC_CLIENT_KEY);
+
+    return (
+      !!token ||
+      !!keycloakUser?.sub ||
+      !!currentUser?.sub ||
+      (sessionClient !== null && KEYCLOAK_CLIENT_IDS.has(sessionClient))
+    );
   }
 
   async handleKeycloakRedirect(
