@@ -60,13 +60,21 @@ export class FilterBarComponent {
     id: number;
     titulo: string;
     descripcion: string;
-    categoria: string;
+    categoriaId: number;
+    categoriaNombre: string;
     fechaInicio: string;
     fechaFin: string;
     disponibles: number;
     estado: string;
+    terminos: string;
+    onSuccess: () => void;
+    onError: (message?: string) => void;
   }>();
-  @Output() deleteCoupon = new EventEmitter<number>();
+  @Output() deleteCoupon = new EventEmitter<{
+    id: number;
+    onSuccess: () => void;
+    onError: (message?: string) => void;
+  }>();
 
   auditTypeOpen = false;
   auditTypeSelected = 'Seleccionar tipo';
@@ -99,6 +107,7 @@ export class FilterBarComponent {
   editCouponOpen = false;
   editingCoupon = false;
   couponEditSuccess = false;
+  editCouponError = '';
   editForm = {
     id: null as number | null,
     titulo: '',
@@ -106,7 +115,7 @@ export class FilterBarComponent {
     descripcion: '',
     fechaInicio: '',
     fechaFin: '',
-    categoria: '',
+    categoria: null as number | null,
     terminos: '',
     estado: '',
   };
@@ -115,6 +124,7 @@ export class FilterBarComponent {
   deleteCouponOpen = false;
   deletingCoupon = false;
   couponDeleteSuccess = false;
+  deleteCouponError = '';
   deleteTarget: {
     id: number | null;
     titulo: string;
@@ -208,6 +218,12 @@ export class FilterBarComponent {
     this.creatingCoupon = true;
     this.couponCreateSuccess = false;
 
+    const failSafeTimer = setTimeout(() => {
+      if (this.creatingCoupon) {
+        this.onCreateCouponError('La creación tardó demasiado. Intenta nuevamente.');
+      }
+    }, 15000);
+
     this.createCoupon.emit({
       titulo: this.couponForm.titulo,
       cantidad: this.couponForm.cantidad,
@@ -218,8 +234,14 @@ export class FilterBarComponent {
       categoriaNombre: categoria.name,
       terminos: this.couponForm.terminos,
       estado: this.couponForm.estado,
-      onSuccess: () => this.onCreateCouponSuccess(),
-      onError: (message?: string) => this.onCreateCouponError(message),
+      onSuccess: () => {
+        clearTimeout(failSafeTimer);
+        this.onCreateCouponSuccess();
+      },
+      onError: (message?: string) => {
+        clearTimeout(failSafeTimer);
+        this.onCreateCouponError(message);
+      },
     });
   }
 
@@ -277,13 +299,20 @@ export class FilterBarComponent {
     titulo: string;
     descripcion: string;
     categoria: string;
+    categoriaId?: number;
     fechaInicio: string;
     fechaFin: string;
     disponibles: number;
     estado: string;
+    terminos?: string;
   }): void {
     this.resetEditFlow();
     this.ensureCategoriesLoaded();
+    const categoriaId =
+      coupon.categoriaId ??
+      this.categories.find((category) => category.name === coupon.categoria)?.id ??
+      null;
+
     this.editForm = {
       id: coupon.id,
       titulo: coupon.titulo,
@@ -291,8 +320,8 @@ export class FilterBarComponent {
       descripcion: coupon.descripcion,
       fechaInicio: this.toISODate(coupon.fechaInicio),
       fechaFin: this.toISODate(coupon.fechaFin),
-      categoria: coupon.categoria,
-      terminos: '',
+      categoria: categoriaId,
+      terminos: coupon.terminos ?? '',
       estado: coupon.estado,
     };
     this.editCouponOpen = true;
@@ -310,21 +339,43 @@ export class FilterBarComponent {
       return;
     }
 
+    const categoria = this.categories.find((item) => item.id === this.editForm.categoria);
+    if (!categoria) {
+      this.editCouponError = 'Selecciona una categoría válida.';
+      return;
+    }
+
+    this.editCouponError = '';
     this.editingCoupon = true;
-    setTimeout(() => {
-      this.editingCoupon = false;
-      this.couponEditSuccess = true;
-      this.updateCoupon.emit({
-        id: this.editForm.id!,
-        titulo: this.editForm.titulo,
-        descripcion: this.editForm.descripcion,
-        categoria: this.editForm.categoria,
-        fechaInicio: this.toDisplayDate(this.editForm.fechaInicio),
-        fechaFin: this.toDisplayDate(this.editForm.fechaFin),
-        disponibles: this.editForm.cantidad ?? 0,
-        estado: this.editForm.estado,
-      });
-    }, 1500);
+    this.couponEditSuccess = false;
+
+    // Fail-safe por si el componente padre no devuelve callback por alguna excepción.
+    const failSafeTimer = setTimeout(() => {
+      if (this.editingCoupon) {
+        this.onUpdateCouponError('La actualización tardó demasiado. Intenta nuevamente.');
+      }
+    }, 15000);
+
+    this.updateCoupon.emit({
+      id: this.editForm.id!,
+      titulo: this.editForm.titulo,
+      descripcion: this.editForm.descripcion,
+      categoriaId: categoria.id,
+      categoriaNombre: categoria.name,
+      fechaInicio: this.toDisplayDate(this.editForm.fechaInicio),
+      fechaFin: this.toDisplayDate(this.editForm.fechaFin),
+      disponibles: this.editForm.cantidad ?? 0,
+      estado: this.editForm.estado,
+      terminos: this.editForm.terminos,
+      onSuccess: () => {
+        clearTimeout(failSafeTimer);
+        this.onUpdateCouponSuccess();
+      },
+      onError: (message?: string) => {
+        clearTimeout(failSafeTimer);
+        this.onUpdateCouponError(message);
+      },
+    });
   }
 
   isEditFormValid(): boolean {
@@ -355,6 +406,21 @@ export class FilterBarComponent {
   private resetEditFlow(): void {
     this.editingCoupon = false;
     this.couponEditSuccess = false;
+    this.editCouponError = '';
+  }
+
+  private onUpdateCouponSuccess(): void {
+    this.editingCoupon = false;
+    this.couponEditSuccess = true;
+    this.editCouponError = '';
+    this.cdr.detectChanges();
+  }
+
+  private onUpdateCouponError(message = 'No se pudo actualizar el cupón. Intenta nuevamente.'): void {
+    this.editingCoupon = false;
+    this.couponEditSuccess = false;
+    this.editCouponError = message;
+    this.cdr.detectChanges();
   }
 
   // Abrir modal de eliminación
@@ -386,16 +452,33 @@ export class FilterBarComponent {
     this.deleteCouponOpen = false;
     this.deletingCoupon = false;
     this.couponDeleteSuccess = false;
+    this.deleteCouponError = '';
   }
 
   submitDeleteCoupon(): void {
     if (this.deleteTarget.id == null) return;
+
+    this.deleteCouponError = '';
     this.deletingCoupon = true;
-    setTimeout(() => {
-      this.deletingCoupon = false;
-      this.deleteCoupon.emit(this.deleteTarget.id!);
-      this.couponDeleteSuccess = true;
-    }, 1000);
+    this.couponDeleteSuccess = false;
+
+    const failSafeTimer = setTimeout(() => {
+      if (this.deletingCoupon) {
+        this.onDeleteCouponError('La eliminación tardó demasiado. Intenta nuevamente.');
+      }
+    }, 15000);
+
+    this.deleteCoupon.emit({
+      id: this.deleteTarget.id,
+      onSuccess: () => {
+        clearTimeout(failSafeTimer);
+        this.onDeleteCouponSuccess();
+      },
+      onError: (message?: string) => {
+        clearTimeout(failSafeTimer);
+        this.onDeleteCouponError(message);
+      },
+    });
   }
 
   onDeleteSuccessContinue(): void {
@@ -403,6 +486,20 @@ export class FilterBarComponent {
     this.closeDeleteCoupon();
     // Navegar siempre a gestión de cupones
     this.router.navigate(['/company/dashboard/gestion-cupones']);
+  }
+
+  private onDeleteCouponSuccess(): void {
+    this.deletingCoupon = false;
+    this.couponDeleteSuccess = true;
+    this.deleteCouponError = '';
+    this.cdr.detectChanges();
+  }
+
+  private onDeleteCouponError(message = 'No se pudo eliminar el cupón. Intenta nuevamente.'): void {
+    this.deletingCoupon = false;
+    this.couponDeleteSuccess = false;
+    this.deleteCouponError = message;
+    this.cdr.detectChanges();
   }
 
   // Utilidades de fecha

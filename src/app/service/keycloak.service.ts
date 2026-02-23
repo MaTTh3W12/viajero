@@ -46,10 +46,11 @@ export class KeycloakService {
     this.redirect(CLIENTS.company, 'registrations', '/register?type=company');
   }
 
-  logout() {
+  logout(clientId?: string) {
+    const activeClientId = clientId ?? sessionStorage.getItem(KC_CLIENT_KEY) ?? CLIENTS.login;
     window.location.href =
       `${this.authBase}/realms/${REALM}/protocol/openid-connect/logout` +
-      `?client_id=${CLIENTS.login}` +
+      `?client_id=${activeClientId}` +
       `&post_logout_redirect_uri=${encodeURIComponent(this.redirectUriBase)}`;
   }
 
