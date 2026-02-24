@@ -200,8 +200,6 @@ export class CouponsListComponent {
         category_id: payload.categoriaId,
         start_date: this.toIsoDate(payload.fechaInicio),
         end_date: this.toIsoDate(payload.fechaFin),
-        stock_available: payload.disponibles,
-        stock_total: payload.disponibles,
         description: payload.descripcion || null,
         terms: payload.terminos || null,
         published: payload.estado === 'Publicado',
