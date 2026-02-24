@@ -94,8 +94,6 @@ export interface UpdateCouponVariables {
   category_id?: number;
   end_date?: string;
   start_date?: string;
-  stock_available?: number | null;
-  stock_total?: number | null;
   price?: string | number | null;
   price_discount?: string | number | null;
   description?: string | null;
@@ -253,8 +251,6 @@ export class CouponService {
         $category_id: bigint
         $end_date: date
         $start_date: date
-        $stock_available: Int
-        $stock_total: Int
         $price: numeric
         $price_discount: numeric
         $description: String
@@ -270,8 +266,6 @@ export class CouponService {
             category_id: $category_id
             end_date: $end_date
             start_date: $start_date
-            stock_available: $stock_available
-            stock_total: $stock_total
             price: $price
             price_discount: $price_discount
             description: $description
