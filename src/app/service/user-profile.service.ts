@@ -26,17 +26,16 @@ interface UpsertMutationData {
   };
 }
 
-interface GetUserByKeycloakIdData {
+interface GetCurrentUserProfileData {
   viajerosv_users: UserCompanyProfile[];
 }
 
-interface GetUserByKeycloakIdVariables {
-  keycloak_id: string;
+interface GetUserByEmailVariables {
+  email: string;
 }
 
 export interface UserCompanyProfile {
   id: number;
-  keycloak_id: string;
   company_commercial_name: string | null;
   first_name: string | null;
   last_name: string | null;
@@ -44,9 +43,6 @@ export interface UserCompanyProfile {
 }
 
 export interface UpsertUserVariables {
-  keycloak_id: string;
-  email: string;
-  role: string;
   first_name: string | null;
   last_name: string | null;
   document_id: string | null;
@@ -56,9 +52,6 @@ export interface UpsertUserVariables {
 }
 
 export interface UpsertCompanyVariables {
-  keycloak_id: string;
-  email: string;
-  role: string;
   company_commercial_name: string;
   company_nit: string;
   company_email: string;
@@ -114,9 +107,6 @@ export class UserProfileService {
   upsertUser(token: string, data: UpsertUserVariables): Observable<void> {
     const mutation = `
       mutation UpsertUser(
-        $keycloak_id: uuid!,
-        $email: String!,
-        $role: String!,
         $first_name: String,
         $last_name: String,
         $document_id: String,
@@ -126,9 +116,6 @@ export class UserProfileService {
       ) {
         insert_viajerosv_users(
           objects: {
-            keycloak_id: $keycloak_id,
-            email: $email,
-            role: $role,
             first_name: $first_name,
             last_name: $last_name,
             document_id: $document_id,
@@ -138,9 +125,8 @@ export class UserProfileService {
             active: true
           },
           on_conflict: {
-            constraint: users_keycloak_id_key,
+            constraint: users_pkey,
             update_columns: [
-              email,
               first_name,
               last_name,
               document_id,
@@ -165,11 +151,9 @@ export class UserProfileService {
 
   upsertCompany(token: string, data: UpsertCompanyVariables): Observable<void> {
     console.log('[USER-PROFILE] upsertCompany request', { endpoint: this.endpoint, data });
+
     const mutation = `
       mutation UpsertCompanyProfile(
-        $keycloak_id: uuid!,
-        $email: String!,
-        $role: String!,
         $company_commercial_name: String,
         $company_nit: String,
         $company_email: String,
@@ -184,9 +168,6 @@ export class UserProfileService {
       ) {
         insert_viajerosv_users(
           objects: {
-            keycloak_id: $keycloak_id,
-            email: $email,
-            role: $role,
             company_commercial_name: $company_commercial_name,
             company_nit: $company_nit,
             company_email: $company_email,
@@ -201,7 +182,7 @@ export class UserProfileService {
             active: true
           },
           on_conflict: {
-            constraint: users_keycloak_id_key,
+            constraint: users_pkey,
             update_columns: [
               company_commercial_name,
               company_nit,
@@ -230,12 +211,31 @@ export class UserProfileService {
     ).pipe(map(() => void 0));
   }
 
-  getUserByKeycloakId(token: string, keycloakId: string): Observable<UserCompanyProfile | null> {
-    const query = `
-      query GetUserByKeycloakId($keycloak_id: uuid!) {
-        viajerosv_users(where: { keycloak_id: { _eq: $keycloak_id } }, limit: 1) {
+  getCurrentUserProfile(token: string, email?: string | null): Observable<UserCompanyProfile | null> {
+    if (email) {
+      const queryByEmail = `
+        query GetUserByEmail($email: String!) {
+          viajerosv_users(where: { email: { _eq: $email } }, limit: 1) {
+            id
+            company_commercial_name
+            first_name
+            last_name
+            email
+          }
+        }
+      `;
+
+      return this.executeOperation<GetCurrentUserProfileData, GetUserByEmailVariables>(
+        token,
+        queryByEmail,
+        { email }
+      ).pipe(map((data) => data.viajerosv_users[0] ?? null));
+    }
+
+    const queryCurrent = `
+      query GetCurrentUserProfile {
+        viajerosv_users(limit: 1) {
           id
-          keycloak_id
           company_commercial_name
           first_name
           last_name
@@ -244,10 +244,10 @@ export class UserProfileService {
       }
     `;
 
-    return this.executeOperation<GetUserByKeycloakIdData, GetUserByKeycloakIdVariables>(
+    return this.executeOperation<GetCurrentUserProfileData, Record<string, never>>(
       token,
-      query,
-      { keycloak_id: keycloakId }
+      queryCurrent,
+      {}
     ).pipe(map((data) => data.viajerosv_users[0] ?? null));
   }
 }

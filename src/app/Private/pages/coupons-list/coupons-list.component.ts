@@ -122,17 +122,7 @@ export class CouponsListComponent {
 
       await this.ensureCategoryMap(token);
 
-      if (!this.currentUserDbId) {
-        await this.resolveCurrentUserDbId(token);
-      }
-
-      if (!this.currentUserDbId) {
-        payload.onError('No se pudo identificar la empresa actual.');
-        return;
-      }
-
       const variables: InsertCouponVariables = {
-        user_id: this.currentUserDbId,
         category_id: payload.categoriaId,
         title: payload.titulo,
         description: payload.descripcion || null,
@@ -291,13 +281,6 @@ export class CouponsListComponent {
 
     console.log('[COUPONS] resolved currentUserDbId', { currentUserDbId: this.currentUserDbId });
 
-    if (!this.currentUserDbId) {
-      console.warn('[COUPONS] loadCompanyCouponsFromApi aborted: currentUserDbId is null');
-      this.coupons = [];
-      this.cdr.detectChanges();
-      return;
-    }
-
     await this.ensureCategoryMap(token);
 
     const response = await firstValueFrom(this.couponService.getCoupons(token, { limit: 200, offset: 0 }));
@@ -307,7 +290,10 @@ export class CouponsListComponent {
       companyUserId: this.currentUserDbId,
     });
 
-    const mine = response.rows.filter((row) => Number(row.user_id) === Number(this.currentUserDbId));
+    const mine = this.currentUserDbId
+      ? response.rows.filter((row) => Number(row.user_id) === Number(this.currentUserDbId))
+      : response.rows;
+
     console.log('[COUPONS] filtered company coupons', { rows: mine.length });
 
     this.coupons = mine.map((row) => ({
@@ -343,18 +329,17 @@ export class CouponsListComponent {
   private async resolveCurrentUserDbId(token: string): Promise<void> {
     if (this.currentUserDbId) return;
 
-    const keycloakId = this.auth.user?.sub ?? this.auth.getKeycloakUser()?.sub;
-    console.log('[COUPONS] resolveCurrentUserDbId', { keycloakId });
+    const email = this.auth.user?.email ?? this.auth.getKeycloakUser()?.email ?? null;
+    console.log('[COUPONS] resolveCurrentUserDbId', { email });
 
-    if (!keycloakId) {
-      console.warn('[COUPONS] resolveCurrentUserDbId aborted: keycloakId missing');
-      return;
+    try {
+      const profile = await firstValueFrom(this.userProfileService.getCurrentUserProfile(token, email));
+      console.log('[COUPONS] getCurrentUserProfile response', profile);
+      this.currentUserDbId = profile?.id ? Number(profile.id) : null;
+    } catch (error) {
+      console.error('[COUPONS] resolveCurrentUserDbId failed', error);
+      this.currentUserDbId = null;
     }
-
-    const profile = await firstValueFrom(this.userProfileService.getUserByKeycloakId(token, keycloakId));
-    console.log('[COUPONS] getUserByKeycloakId response', profile);
-
-    this.currentUserDbId = profile?.id ? Number(profile.id) : null;
   }
 
   private toIsoDate(input: string): string {

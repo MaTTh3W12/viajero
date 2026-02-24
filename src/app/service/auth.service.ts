@@ -294,27 +294,22 @@ export class AuthService {
     const token = this.getKeycloakToken()?.access_token;
     const user = this.getKeycloakUser();
 
-    console.log('[AUTH] completeKeycloakCompanyProfile start', {
+    console.log('[AUTH] completeKeycloakUserProfile start', {
       hasToken: !!token,
       keycloakSub: user?.sub ?? null,
       keycloakUser: user,
       formData,
     });
 
-    if (!token || !user?.sub) {
-      console.warn('[AUTH] completeKeycloakCompanyProfile aborted: missing token or user.sub');
+    if (!token) {
+      console.warn('[AUTH] completeKeycloakUserProfile aborted: missing token');
       return false;
     }
 
-    const role = this.getKeycloakRole() ?? 'USER';
-
     try {
       const variables: UpsertUserVariables = {
-        keycloak_id: user.sub,
-        email: formData.email || user.email || '',
-        role,
-        first_name: formData.first_name || user.firstName || null,
-        last_name: formData.last_name || user.lastName || null,
+        first_name: formData.first_name || user?.firstName || null,
+        last_name: formData.last_name || user?.lastName || null,
         document_id: formData.document_id,
         phone: formData.phone,
         country: formData.country,
@@ -353,18 +348,13 @@ export class AuthService {
       formData,
     });
 
-    if (!token || !user?.sub) {
-      console.warn('[AUTH] completeKeycloakCompanyProfile aborted: missing token or user.sub');
+    if (!token) {
+      console.warn('[AUTH] completeKeycloakCompanyProfile aborted: missing token');
       return false;
     }
 
-    const role = this.getKeycloakRole() ?? 'COMPANY';
-
     try {
       const variables: UpsertCompanyVariables = {
-        keycloak_id: user.sub,
-        email: user.email || user.username || '',
-        role,
         company_commercial_name: formData.company_commercial_name,
         company_nit: formData.company_nit,
         company_email: formData.company_email,
@@ -511,12 +501,6 @@ export class AuthService {
     if (!payload || !payload.sub) return;
 
     const variables: UpsertUserVariables = {
-      keycloak_id: payload.sub,
-      email: payload.email ?? '',
-      role:
-        payload['https://hasura.io/jwt/claims']?.['x-hasura-role'] ??
-        this.firstUsefulRealmRole(payload.realm_access?.roles ?? []) ??
-        'USER',
       first_name: payload.given_name ?? null,
       last_name: payload.family_name ?? null,
       document_id: null,
@@ -531,15 +515,13 @@ export class AuthService {
 
   private async loadCompanyNameFromHasura(accessToken: string): Promise<void> {
     const payload = this.decodeJwt(accessToken);
-    const keycloakId = payload?.sub;
-
-    if (!keycloakId) return;
+    const email = payload?.email ?? this._user.value?.email ?? this.getKeycloakUser()?.email ?? null;
 
     const currentUser = this._user.value;
     if (!currentUser || currentUser.role !== 'empresa') return;
 
     try {
-      const profile = await firstValueFrom(this.profile.getUserByKeycloakId(accessToken, keycloakId));
+      const profile = await firstValueFrom(this.profile.getCurrentUserProfile(accessToken, email));
       this.applyCompanyNameToCurrentUser(profile);
     } catch (error) {
       console.error('Error loading company name from Hasura', error);
