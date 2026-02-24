@@ -72,7 +72,7 @@ export interface UpsertCompanyVariables {
   city: string | null;
 }
 
-const DEFAULT_HASURA_ENDPOINT = 'https://hasura.grupoavanza.work/v1/graphql';
+const DEFAULT_HASURA_ENDPOINT = 'https://api.grupoavanza.work/v1/graphql';
 
 @Injectable({
   providedIn: 'root',
