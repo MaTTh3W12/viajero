@@ -74,7 +74,6 @@ export interface GetCouponsVariables {
 }
 
 export interface InsertCouponVariables {
-  user_id: number;
   category_id: number;
   end_date: string;
   start_date: string;
@@ -87,6 +86,7 @@ export interface InsertCouponVariables {
   auto_published?: boolean;
   published?: boolean;
   title: string;
+  image?: string | null;
 }
 
 export interface UpdateCouponVariables {
@@ -103,6 +103,7 @@ export interface UpdateCouponVariables {
   auto_published?: boolean;
   published?: boolean;
   title?: string;
+  image?: string | null;
 }
 
 export interface PublishCouponVariables {
@@ -194,7 +195,6 @@ export class CouponService {
   insertCoupon(token: string, variables: InsertCouponVariables): Observable<CouponSummary | null> {
     const mutation = `
       mutation InsertCoupon(
-        $user_id: bigint!
         $category_id: bigint!
         $end_date: date!
         $start_date: date!
@@ -207,10 +207,10 @@ export class CouponService {
         $auto_published: Boolean = false
         $published: Boolean = false
         $title: String!
+        $image: String
       ) {
         insert_viajerosv_coupons(
           objects: {
-            user_id: $user_id
             category_id: $category_id
             end_date: $end_date
             start_date: $start_date
@@ -223,6 +223,7 @@ export class CouponService {
             auto_published: $auto_published
             published: $published
             title: $title
+            image_base64_upload: $image
           }
         ) {
           affected_rows
@@ -261,6 +262,7 @@ export class CouponService {
         $auto_published: Boolean
         $published: Boolean
         $title: String
+        $image: String
       ) {
         update_viajerosv_coupons_by_pk(
           pk_columns: { id: $id }
@@ -277,6 +279,7 @@ export class CouponService {
             auto_published: $auto_published
             published: $published
             title: $title
+            image_base64_upload: $image
           }
         ) {
           id

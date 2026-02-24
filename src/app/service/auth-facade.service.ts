@@ -56,12 +56,7 @@ export class AuthFacadeService {
 
     if (!token || !user) return;
 
-    if (!user.sub || !user.role) return;
-
     const variables: UpsertUserVariables = {
-      keycloak_id: user.sub,
-      email: user.email ?? '',
-      role: user.role,
       first_name: (formData.first_name ?? user.firstName) ?? null,
       last_name: (formData.last_name ?? user.lastName) ?? null,
       document_id: formData.document_id ?? null,
