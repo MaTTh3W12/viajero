@@ -53,6 +53,7 @@ export class FilterBarComponent {
     categoriaNombre: string;
     terminos: string;
     estado: string;
+    image?: string | null;
     onSuccess: () => void;
     onError: (message?: string) => void;
   }>();
@@ -67,6 +68,7 @@ export class FilterBarComponent {
     disponibles: number;
     estado: string;
     terminos: string;
+    image?: string | null;
     onSuccess: () => void;
     onError: (message?: string) => void;
   }>();
@@ -92,6 +94,10 @@ export class FilterBarComponent {
   creatingCoupon = false;
   couponCreateSuccess = false;
   createCouponError = '';
+  couponImageError = '';
+  couponImageLoading = false;
+  private readonly maxCouponFileSizeBytes = 500 * 1024;
+  private readonly allowedCouponMimeTypes = ['image/jpeg', 'image/png', 'application/pdf'];
   couponForm = {
     titulo: '',
     cantidad: null as number | null,
@@ -101,6 +107,9 @@ export class FilterBarComponent {
     categoria: null as number | null,
     terminos: '',
     estado: '',
+    image: null as string | null,
+    imageName: '',
+    imageMime: '',
   };
 
   // Estado para el modal de editar cupón
@@ -108,6 +117,8 @@ export class FilterBarComponent {
   editingCoupon = false;
   couponEditSuccess = false;
   editCouponError = '';
+  editCouponImageError = '';
+  editCouponImageLoading = false;
   editForm = {
     id: null as number | null,
     titulo: '',
@@ -118,6 +129,9 @@ export class FilterBarComponent {
     categoria: null as number | null,
     terminos: '',
     estado: '',
+    image: null as string | null,
+    imageName: '',
+    imageMime: '',
   };
 
   // Estado para eliminar cupón
@@ -125,6 +139,10 @@ export class FilterBarComponent {
   deletingCoupon = false;
   couponDeleteSuccess = false;
   deleteCouponError = '';
+  deleteCouponImageLoading = false;
+  private couponImageLoadingTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private editCouponImageLoadingTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private deleteCouponImageLoadingTimeoutId: ReturnType<typeof setTimeout> | null = null;
   deleteTarget: {
     id: number | null;
     titulo: string;
@@ -134,6 +152,9 @@ export class FilterBarComponent {
     fechaFin: string;
     cantidad: number | null;
     estado: string;
+    terminos: string;
+    image: string | null;
+    imageMime: string;
   } = {
     id: null,
     titulo: '',
@@ -143,6 +164,9 @@ export class FilterBarComponent {
     fechaFin: '',
     cantidad: null,
     estado: '',
+    terminos: '',
+    image: null,
+    imageMime: '',
   };
 
   selectAuditType(option: string): void {
@@ -224,6 +248,14 @@ export class FilterBarComponent {
       }
     }, 15000);
 
+    console.log('[FILTER-BAR] submitCreateCoupon', {
+      title: this.couponForm.titulo,
+      categoryId: categoria.id,
+      hasImage: !!this.couponForm.image,
+      imageName: this.couponForm.imageName,
+      imageChars: this.couponForm.image?.length ?? 0,
+    });
+
     this.createCoupon.emit({
       titulo: this.couponForm.titulo,
       cantidad: this.couponForm.cantidad,
@@ -234,6 +266,7 @@ export class FilterBarComponent {
       categoriaNombre: categoria.name,
       terminos: this.couponForm.terminos,
       estado: this.couponForm.estado,
+      image: this.couponForm.image,
       onSuccess: () => {
         clearTimeout(failSafeTimer);
         this.onCreateCouponSuccess();
@@ -277,6 +310,9 @@ export class FilterBarComponent {
     this.creatingCoupon = false;
     this.couponCreateSuccess = false;
     this.createCouponError = '';
+    this.couponImageError = '';
+    this.couponImageLoading = false;
+    this.clearCouponImageLoadingTimeout();
   }
 
   onCreateCouponSuccess(): void {
@@ -293,6 +329,168 @@ export class FilterBarComponent {
     this.cdr.detectChanges();
   }
 
+  async onCouponImageSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement | null;
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    this.couponImageError = '';
+    this.couponImageLoading = true;
+    this.startCouponImageLoadingTimeout();
+
+    if (!this.allowedCouponMimeTypes.includes(file.type)) {
+      this.couponImageError = 'Formato no permitido. Solo JPG, JPEG, PNG o PDF.';
+      this.couponForm.image = null;
+      this.couponForm.imageName = '';
+      this.couponForm.imageMime = '';
+      this.couponImageLoading = false;
+      this.clearCouponImageLoadingTimeout();
+      if (input) input.value = '';
+      return;
+    }
+
+    if (file.size > this.maxCouponFileSizeBytes) {
+      this.couponImageError = 'La imagen supera el tamaño máximo de 500 KB.';
+      this.couponForm.image = null;
+      this.couponForm.imageName = '';
+      this.couponForm.imageMime = '';
+      this.couponImageLoading = false;
+      this.clearCouponImageLoadingTimeout();
+      if (input) input.value = '';
+      return;
+    }
+
+    try {
+      const base64 = await this.readFileAsDataUrl(file);
+      this.couponForm.image = base64;
+      this.couponForm.imageName = file.name;
+      this.couponForm.imageMime = file.type;
+
+      console.log('[FILTER-BAR] coupon image selected', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        base64Chars: base64.length,
+      });
+    } catch (error) {
+      console.error('[FILTER-BAR] error reading coupon image', error);
+      this.couponImageError = 'No se pudo leer el archivo seleccionado.';
+      this.couponForm.image = null;
+      this.couponForm.imageName = '';
+      this.couponForm.imageMime = '';
+      if (input) input.value = '';
+    } finally {
+      this.couponImageLoading = false;
+      this.clearCouponImageLoadingTimeout();
+      this.cdr.detectChanges();
+    }
+  }
+
+  removeCouponImage(input: HTMLInputElement): void {
+    this.couponForm.image = null;
+    this.couponForm.imageName = '';
+    this.couponForm.imageMime = '';
+    this.couponImageError = '';
+    this.couponImageLoading = false;
+    this.clearCouponImageLoadingTimeout();
+    input.value = '';
+  }
+
+  pickCouponImage(input: HTMLInputElement): void {
+    input.value = '';
+    input.click();
+  }
+
+  private readFileAsDataUrl(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result;
+        if (typeof result === 'string') {
+          resolve(result);
+          return;
+        }
+
+        reject(new Error('No se pudo convertir el archivo a base64.'));
+      };
+
+      reader.onerror = () => reject(reader.error ?? new Error('Error leyendo archivo.'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async onEditCouponImageSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement | null;
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    this.editCouponImageError = '';
+    this.editCouponImageLoading = true;
+    this.startEditCouponImageLoadingTimeout();
+
+    if (!this.allowedCouponMimeTypes.includes(file.type)) {
+      this.editCouponImageError = 'Formato no permitido. Solo JPG, JPEG, PNG o PDF.';
+      this.editForm.image = null;
+      this.editForm.imageName = '';
+      this.editForm.imageMime = '';
+      this.editCouponImageLoading = false;
+      this.clearEditCouponImageLoadingTimeout();
+      if (input) input.value = '';
+      return;
+    }
+
+    if (file.size > this.maxCouponFileSizeBytes) {
+      this.editCouponImageError = 'La imagen supera el tamaño máximo de 500 KB.';
+      this.editForm.image = null;
+      this.editForm.imageName = '';
+      this.editForm.imageMime = '';
+      this.editCouponImageLoading = false;
+      this.clearEditCouponImageLoadingTimeout();
+      if (input) input.value = '';
+      return;
+    }
+
+    try {
+      const base64 = await this.readFileAsDataUrl(file);
+      this.editForm.image = base64;
+      this.editForm.imageName = file.name;
+      this.editForm.imageMime = file.type;
+
+      console.log('[FILTER-BAR] edit coupon image selected', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        base64Chars: base64.length,
+      });
+    } catch (error) {
+      console.error('[FILTER-BAR] error reading edit coupon image', error);
+      this.editCouponImageError = 'No se pudo leer el archivo seleccionado.';
+      this.editForm.image = null;
+      this.editForm.imageName = '';
+      this.editForm.imageMime = '';
+      if (input) input.value = '';
+    } finally {
+      this.editCouponImageLoading = false;
+      this.clearEditCouponImageLoadingTimeout();
+      this.cdr.detectChanges();
+    }
+  }
+
+  removeEditCouponImage(input: HTMLInputElement): void {
+    this.editForm.image = null;
+    this.editForm.imageName = '';
+    this.editForm.imageMime = '';
+    this.editCouponImageError = '';
+    this.editCouponImageLoading = false;
+    this.clearEditCouponImageLoadingTimeout();
+    input.value = '';
+  }
+
+  pickEditCouponImage(input: HTMLInputElement): void {
+    input.value = '';
+    input.click();
+  }
+
   // Abrir modal de edición con datos precargados
   openEditCoupon(coupon: {
     id: number;
@@ -305,6 +503,9 @@ export class FilterBarComponent {
     disponibles: number;
     estado: string;
     terminos?: string;
+    image?: string | null;
+    imageMime?: string;
+    imageName?: string;
   }): void {
     this.resetEditFlow();
     this.ensureCategoriesLoaded();
@@ -323,7 +524,11 @@ export class FilterBarComponent {
       categoria: categoriaId,
       terminos: coupon.terminos ?? '',
       estado: coupon.estado,
+      image: coupon.image ?? null,
+      imageName: coupon.imageName ?? this.getDefaultImageName(coupon.imageMime),
+      imageMime: coupon.imageMime ?? '',
     };
+    this.editCouponImageError = '';
     this.editCouponOpen = true;
     this.setBodyModalLock(true);
   }
@@ -356,6 +561,15 @@ export class FilterBarComponent {
       }
     }, 15000);
 
+    console.log('[FILTER-BAR] submitEditCoupon', {
+      id: this.editForm.id,
+      title: this.editForm.titulo,
+      stock_available: this.editForm.cantidad,
+      hasImage: !!this.editForm.image,
+      imageName: this.editForm.imageName,
+      imageChars: this.editForm.image?.length ?? 0,
+    });
+
     this.updateCoupon.emit({
       id: this.editForm.id!,
       titulo: this.editForm.titulo,
@@ -367,6 +581,7 @@ export class FilterBarComponent {
       disponibles: this.editForm.cantidad ?? 0,
       estado: this.editForm.estado,
       terminos: this.editForm.terminos,
+      image: this.editForm.image,
       onSuccess: () => {
         clearTimeout(failSafeTimer);
         this.onUpdateCouponSuccess();
@@ -407,6 +622,9 @@ export class FilterBarComponent {
     this.editingCoupon = false;
     this.couponEditSuccess = false;
     this.editCouponError = '';
+    this.editCouponImageError = '';
+    this.editCouponImageLoading = false;
+    this.clearEditCouponImageLoadingTimeout();
   }
 
   private onUpdateCouponSuccess(): void {
@@ -433,8 +651,13 @@ export class FilterBarComponent {
     fechaFin: string;
     disponibles: number;
     estado: string;
+    terminos?: string;
+    image?: string | null;
+    imageMime?: string;
   }): void {
     this.deletingCoupon = false;
+    this.deleteCouponImageLoading = false;
+    this.clearDeleteCouponImageLoadingTimeout();
     this.deleteTarget = {
       id: coupon.id,
       titulo: coupon.titulo,
@@ -444,6 +667,9 @@ export class FilterBarComponent {
       fechaFin: this.toDisplayDate(coupon.fechaFin),
       cantidad: coupon.disponibles,
       estado: coupon.estado,
+      terminos: coupon.terminos ?? '',
+      image: coupon.image ?? null,
+      imageMime: coupon.imageMime ?? '',
     };
     this.deleteCouponOpen = true;
   }
@@ -453,6 +679,10 @@ export class FilterBarComponent {
     this.deletingCoupon = false;
     this.couponDeleteSuccess = false;
     this.deleteCouponError = '';
+    this.deleteCouponImageLoading = false;
+    this.clearDeleteCouponImageLoadingTimeout();
+    this.deleteTarget.image = null;
+    this.deleteTarget.imageMime = '';
   }
 
   submitDeleteCoupon(): void {
@@ -502,6 +732,37 @@ export class FilterBarComponent {
     this.cdr.detectChanges();
   }
 
+  setEditCouponImageLoading(loading: boolean): void {
+    this.editCouponImageLoading = loading;
+    if (loading) this.startEditCouponImageLoadingTimeout();
+    else this.clearEditCouponImageLoadingTimeout();
+    this.cdr.detectChanges();
+  }
+
+  setEditCouponImagePreview(image: string | null, imageMime = '', imageName = ''): void {
+    this.editForm.image = image;
+    this.editForm.imageMime = imageMime;
+    this.editForm.imageName = image ? (imageName || this.getDefaultImageName(imageMime)) : '';
+    this.editCouponImageLoading = false;
+    this.clearEditCouponImageLoadingTimeout();
+    this.cdr.detectChanges();
+  }
+
+  setDeleteCouponImageLoading(loading: boolean): void {
+    this.deleteCouponImageLoading = loading;
+    if (loading) this.startDeleteCouponImageLoadingTimeout();
+    else this.clearDeleteCouponImageLoadingTimeout();
+    this.cdr.detectChanges();
+  }
+
+  setDeleteCouponImagePreview(image: string | null, imageMime = ''): void {
+    this.deleteTarget.image = image;
+    this.deleteTarget.imageMime = imageMime;
+    this.deleteCouponImageLoading = false;
+    this.clearDeleteCouponImageLoadingTimeout();
+    this.cdr.detectChanges();
+  }
+
   // Utilidades de fecha
   private toISODate(dateStr: string): string {
     if (!dateStr) return '';
@@ -532,6 +793,53 @@ export class FilterBarComponent {
       return `${d}/${m}/${y}`;
     }
     return dateStr;
+  }
+
+  private getDefaultImageName(mimeType?: string): string {
+    if (!mimeType) return '';
+    return mimeType.startsWith('application/pdf') ? 'Archivo actual.pdf' : 'Imagen actual';
+  }
+
+  private startCouponImageLoadingTimeout(): void {
+    this.clearCouponImageLoadingTimeout();
+    this.couponImageLoadingTimeoutId = setTimeout(() => {
+      this.couponImageLoading = false;
+      this.cdr.detectChanges();
+    }, 15000);
+  }
+
+  private clearCouponImageLoadingTimeout(): void {
+    if (!this.couponImageLoadingTimeoutId) return;
+    clearTimeout(this.couponImageLoadingTimeoutId);
+    this.couponImageLoadingTimeoutId = null;
+  }
+
+  private startEditCouponImageLoadingTimeout(): void {
+    this.clearEditCouponImageLoadingTimeout();
+    this.editCouponImageLoadingTimeoutId = setTimeout(() => {
+      this.editCouponImageLoading = false;
+      this.cdr.detectChanges();
+    }, 15000);
+  }
+
+  private clearEditCouponImageLoadingTimeout(): void {
+    if (!this.editCouponImageLoadingTimeoutId) return;
+    clearTimeout(this.editCouponImageLoadingTimeoutId);
+    this.editCouponImageLoadingTimeoutId = null;
+  }
+
+  private startDeleteCouponImageLoadingTimeout(): void {
+    this.clearDeleteCouponImageLoadingTimeout();
+    this.deleteCouponImageLoadingTimeoutId = setTimeout(() => {
+      this.deleteCouponImageLoading = false;
+      this.cdr.detectChanges();
+    }, 15000);
+  }
+
+  private clearDeleteCouponImageLoadingTimeout(): void {
+    if (!this.deleteCouponImageLoadingTimeoutId) return;
+    clearTimeout(this.deleteCouponImageLoadingTimeoutId);
+    this.deleteCouponImageLoadingTimeoutId = null;
   }
 
   constructor(

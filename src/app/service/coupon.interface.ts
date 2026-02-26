@@ -10,4 +10,6 @@ export interface Coupon {
   categoriaId?: number;
   terminos?: string;
   rawDescripcion?: string;
+  imagePreview?: string | null;
+  imageMimeType?: string;
 }

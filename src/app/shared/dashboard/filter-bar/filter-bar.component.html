@@ -469,6 +469,71 @@
 								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
 				</div>
 
+				<!-- Subir imagen de cupón -->
+				<div class="md:col-span-1">
+				<label class="text-sm text-[#1A2440] mb-1 block">Imagen del cupón</label>
+				<input #couponImageInput type="file" class="hidden" accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf" (change)="onCouponImageSelected($event)" />
+
+				@if (couponImageLoading && !couponForm.image) {
+					<div class="w-full border border-dashed border-[#75A2FF] rounded-3xl px-4 py-6 text-center bg-[#F8FBFF]">
+						<div class="flex flex-col items-center justify-center gap-2 text-[#1A2440]">
+							<svg class="animate-spin h-7 w-7 text-[#538CFF]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+								<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"></path>
+							</svg>
+							<p class="text-base">Procesando imagen...</p>
+						</div>
+					</div>
+				} @else if (!couponForm.image) {
+					<button
+						type="button"
+						class="w-full border border-dashed border-[#75A2FF] rounded-3xl px-4 py-5 text-center bg-[#F8FBFF] hover:bg-[#F1F6FF] transition"
+						(click)="pickCouponImage(couponImageInput)">
+						<div class="flex items-center justify-center gap-2 text-[#1A2440]">
+							<span class="text-xl font-medium">Subir Imagen de cupón</span>
+							<svg class="w-6 h-6" aria-hidden="true">
+								<use href="assets/icons/sprite.svg#document-upload"></use>
+							</svg>
+						</div>
+						<p class="mt-2 text-sm text-[#7A8499]">
+							Solo se permiten archivos tipo: JPG, JPEG, PNG, PDF. <br />(Tamaño máximo: 500 kb)
+						</p>
+					</button>
+				} @else {
+					<div class="flex items-start gap-3">
+						<div class="relative w-[124px] h-[124px]">
+							@if (couponForm.imageMime.startsWith('image/')) {
+								<img
+									[src]="couponForm.image"
+									alt="Vista previa del cupón"
+									class="w-[124px] h-[124px] rounded-xl object-cover bg-[#EFF3FB]" />
+							} @else {
+								<div class="w-[124px] h-[124px] rounded-xl bg-[#EFF3FB] border border-[#D9E2F4] px-2 py-3 flex flex-col items-center justify-center text-center">
+									<svg class="w-7 h-7 text-[#1A2440] mb-1" aria-hidden="true">
+										<use href="assets/icons/sprite.svg#document-upload"></use>
+									</svg>
+									<p class="text-xs font-semibold text-[#1A2440]">PDF</p>
+									<p class="text-[10px] text-[#7A8499] break-words leading-tight">{{ couponForm.imageName }}</p>
+								</div>
+							}
+
+							<button
+								type="button"
+								class="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-[#5E616B] text-white flex items-center justify-center"
+								(click)="removeCouponImage(couponImageInput)"
+								aria-label="Quitar imagen">
+								<svg class="w-5 h-5" aria-hidden="true">
+									<use href="assets/icons/sprite.svg#close-circle"></use>
+								</svg>
+							</button>
+						</div>
+					</div>
+				}
+
+				@if (couponImageError) {
+					<p class="mt-2 text-sm text-[#C82333]">{{ couponImageError }}</p>
+				}
+				</div>
+
 				@if (createCouponError) {
 				<div class="md:col-span-2 rounded-xl bg-red-50 text-red-700 text-sm px-4 py-3">
 					{{ createCouponError }}
@@ -667,6 +732,71 @@
 								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
 				</div>
 
+				<!-- Actualizar imagen de cupón -->
+				<div class="md:col-span-1">
+				<label class="text-sm text-[#1A2440] mb-1 block">Imagen del cupón</label>
+				<input #editCouponImageInput type="file" class="hidden" accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf" (change)="onEditCouponImageSelected($event)" />
+
+				@if (editCouponImageLoading && !editForm.image) {
+					<div class="w-full border border-dashed border-[#75A2FF] rounded-3xl px-4 py-6 text-center bg-[#F8FBFF]">
+						<div class="flex flex-col items-center justify-center gap-2 text-[#1A2440]">
+							<svg class="animate-spin h-7 w-7 text-[#538CFF]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+								<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"></path>
+							</svg>
+							<p class="text-base">Cargando imagen del cupón...</p>
+						</div>
+					</div>
+				} @else if (!editForm.image) {
+					<button
+						type="button"
+						class="w-full border border-dashed border-[#75A2FF] rounded-3xl px-4 py-5 text-center bg-[#F8FBFF] hover:bg-[#F1F6FF] transition"
+						(click)="pickEditCouponImage(editCouponImageInput)">
+						<div class="flex items-center justify-center gap-2 text-[#1A2440]">
+							<span class="text-xl font-medium">Subir Imagen de cupón</span>
+							<svg class="w-6 h-6" aria-hidden="true">
+								<use href="assets/icons/sprite.svg#document-upload"></use>
+							</svg>
+						</div>
+						<p class="mt-2 text-sm text-[#7A8499]">
+							Solo se permiten archivos tipo: JPG, JPEG, PNG, PDF. <br />(Tamaño máximo: 500 kb)
+						</p>
+					</button>
+				} @else {
+					<div class="flex items-start gap-3">
+						<div class="relative w-[124px] h-[124px]">
+							@if (editForm.imageMime.startsWith('image/')) {
+								<img
+									[src]="editForm.image"
+									alt="Vista previa del cupón"
+									class="w-[124px] h-[124px] rounded-xl object-cover bg-[#EFF3FB]" />
+							} @else {
+								<div class="w-[124px] h-[124px] rounded-xl bg-[#EFF3FB] border border-[#D9E2F4] px-2 py-3 flex flex-col items-center justify-center text-center">
+									<svg class="w-7 h-7 text-[#1A2440] mb-1" aria-hidden="true">
+										<use href="assets/icons/sprite.svg#document-upload"></use>
+									</svg>
+									<p class="text-xs font-semibold text-[#1A2440]">PDF</p>
+									<p class="text-[10px] text-[#7A8499] break-words leading-tight">{{ editForm.imageName }}</p>
+								</div>
+							}
+
+							<button
+								type="button"
+								class="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-[#5E616B] text-white flex items-center justify-center"
+								(click)="removeEditCouponImage(editCouponImageInput)"
+								aria-label="Quitar imagen">
+								<svg class="w-5 h-5" aria-hidden="true">
+									<use href="assets/icons/sprite.svg#close-circle"></use>
+								</svg>
+							</button>
+						</div>
+					</div>
+				}
+
+				@if (editCouponImageError) {
+					<p class="mt-2 text-sm text-[#C82333]">{{ editCouponImageError }}</p>
+				}
+				</div>
+
 				@if (editCouponError) {
 				<div class="md:col-span-2">
 					<p class="text-sm text-[#C82333]">{{ editCouponError }}</p>
@@ -798,6 +928,41 @@
 					{{ deleteTarget.estado }}
 					</span>
 				</div>
+				@if (deleteTarget.image) {
+					<div>
+						<div class="flex items-center gap-2 text-[#A0A7BC] mb-2">
+							<svg class="w-5 h-5" aria-hidden="true">
+								<use href="assets/icons/sprite.svg#document-upload"></use>
+							</svg>
+							<span>Imagen</span>
+						</div>
+						@if (deleteTarget.imageMime.startsWith('image/') || deleteTarget.image.startsWith('data:image/')) {
+							<img [src]="deleteTarget.image" alt="Preview del cupón" class="w-[124px] h-[124px] rounded-xl object-cover bg-[#EFF3FB]" />
+						} @else {
+							<div class="w-[124px] h-[124px] rounded-xl bg-[#EFF3FB] border border-[#D9E2F4] px-2 py-3 flex flex-col items-center justify-center text-center">
+								<svg class="w-7 h-7 text-[#1A2440] mb-1" aria-hidden="true">
+									<use href="assets/icons/sprite.svg#document-upload"></use>
+								</svg>
+								<p class="text-xs font-semibold text-[#1A2440]">PDF</p>
+							</div>
+						}
+					</div>
+				} @else if (deleteCouponImageLoading && !deleteTarget.image) {
+					<div>
+						<div class="flex items-center gap-2 text-[#A0A7BC] mb-2">
+							<svg class="w-5 h-5" aria-hidden="true">
+								<use href="assets/icons/sprite.svg#document-upload"></use>
+							</svg>
+							<span>Imagen</span>
+						</div>
+						<div class="w-[124px] h-[124px] rounded-xl bg-[#EFF3FB] border border-[#D9E2F4] flex flex-col items-center justify-center">
+							<svg class="animate-spin h-6 w-6 text-[#538CFF] mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+								<path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"></path>
+							</svg>
+							<p class="text-[11px] text-[#7A8499]">Cargando imagen...</p>
+						</div>
+					</div>
+				}
 				</div>
 				<div class="space-y-3">
 				<div>
@@ -834,7 +999,7 @@
 					</svg>
 					<span>Términos y condiciones</span>
 					</div>
-					<div class="mt-1 text-[#0E225C]">No especificado</div>
+					<div class="mt-1 text-[#0E225C]">{{ deleteTarget.terminos || 'No especificado' }}</div>
 				</div>
 				</div>
 				</div>

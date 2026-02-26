@@ -29,6 +29,14 @@ interface GetCouponsData {
   };
 }
 
+interface GetCouponImageData {
+  viajerosv_coupons_with_image_base64: CouponImagePreview[];
+}
+
+interface GetCouponOwnerData {
+  viajerosv_coupons_by_pk: CouponOwner | null;
+}
+
 interface InsertCouponData {
   insert_viajerosv_coupons: {
     affected_rows: number;
@@ -40,9 +48,15 @@ interface UpdateCouponData {
   update_viajerosv_coupons_by_pk: CouponSummary | Coupon | null;
 }
 
+interface DeleteCouponData {
+  delete_viajerosv_coupons: {
+    affected_rows: number;
+  };
+}
+
 export interface Coupon {
   id: number;
-  user_id: number;
+  user_id: number | string;
   category_id: number;
   auto_published: boolean;
   published: boolean;
@@ -61,11 +75,23 @@ export interface Coupon {
 
 export interface CouponSummary {
   id: number;
-  user_id: number;
+  user_id: number | string;
   title: string;
   published: boolean;
   created_at?: string;
   updated_at?: string;
+}
+
+export interface CouponImagePreview {
+  id: number;
+  image_base64: string | null;
+  image_size: number | null;
+  image_mime_type: string | null;
+}
+
+export interface CouponOwner {
+  id: number;
+  user_id: number | string;
 }
 
 export interface GetCouponsVariables {
@@ -94,6 +120,7 @@ export interface UpdateCouponVariables {
   category_id?: number;
   end_date?: string;
   start_date?: string;
+  stock_available?: number | null;
   price?: string | number | null;
   price_discount?: string | number | null;
   description?: string | null;
@@ -190,6 +217,40 @@ export class CouponService {
     );
   }
 
+
+  getCouponImage(token: string, id: number): Observable<CouponImagePreview | null> {
+    const query = `
+      query GetCouponsImage($id: bigint!) {
+        viajerosv_coupons_with_image_base64(where: { id: { _eq: $id } }) {
+          id
+          image_base64
+          image_size
+          image_mime_type
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCouponImageData, { id: number }>(token, query, { id }).pipe(
+      map((data) => data.viajerosv_coupons_with_image_base64[0] ?? null)
+    );
+  }
+
+
+  getCouponOwner(token: string, id: number): Observable<CouponOwner | null> {
+    const query = `
+      query GetCouponOwner($id: bigint!) {
+        viajerosv_coupons_by_pk(id: $id) {
+          id
+          user_id
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCouponOwnerData, { id: number }>(token, query, { id }).pipe(
+      map((data) => data.viajerosv_coupons_by_pk)
+    );
+  }
+
   insertCoupon(token: string, variables: InsertCouponVariables): Observable<CouponSummary | null> {
     const mutation = `
       mutation InsertCoupon(
@@ -251,6 +312,7 @@ export class CouponService {
         $category_id: bigint
         $end_date: date
         $start_date: date
+        $stock_available: Int
         $price: numeric
         $price_discount: numeric
         $description: String
@@ -266,6 +328,7 @@ export class CouponService {
             category_id: $category_id
             end_date: $end_date
             start_date: $start_date
+            stock_available: $stock_available
             price: $price
             price_discount: $price_discount
             description: $description
@@ -290,6 +353,21 @@ export class CouponService {
     );
   }
 
+
+
+  deleteCoupon(token: string, id: number): Observable<boolean> {
+    const mutation = `
+      mutation DeleteCoupon($id: bigint!) {
+        delete_viajerosv_coupons(where: { id: { _eq: $id } }) {
+          affected_rows
+        }
+      }
+    `;
+
+    return this.executeOperation<DeleteCouponData, { id: number }>(token, mutation, { id }).pipe(
+      map((data) => data.delete_viajerosv_coupons.affected_rows > 0)
+    );
+  }
   setCouponPublished(
     token: string,
     variables: PublishCouponVariables

@@ -22,7 +22,7 @@ export class CouponsListComponent {
   coupons: Coupon[] = [];
   @ViewChild(FilterBarComponent) filterBar!: FilterBarComponent;
 
-  private currentUserDbId: number | null = null;
+  private currentUserDbId: string | number | null = null;
   private categoryNameById = new Map<number, string>();
 
   tableConfig: DataTableConfig<Coupon> = {
@@ -92,6 +92,7 @@ export class CouponsListComponent {
     categoriaNombre: string;
     terminos: string;
     estado: string;
+    image?: string | null;
     onSuccess: () => void;
     onError: (message?: string) => void;
   }): Promise<void> {
@@ -135,7 +136,15 @@ export class CouponsListComponent {
         price_discount: null,
         auto_published: false,
         published: payload.estado === 'Publicado',
+        image: payload.image ?? null,
       };
+
+      console.log('[COUPONS] creating coupon', {
+        title: payload.titulo,
+        categoryId: payload.categoriaId,
+        hasImage: !!payload.image,
+        imageChars: payload.image?.length ?? 0,
+      });
 
       await firstValueFrom(this.couponService.insertCoupon(token, variables));
 
@@ -163,6 +172,7 @@ export class CouponsListComponent {
     disponibles: number;
     estado: string;
     terminos: string;
+    image?: string | null;
     onSuccess: () => void;
     onError: (message?: string) => void;
   }): Promise<void> {
@@ -194,16 +204,37 @@ export class CouponsListComponent {
         return;
       }
 
+      const couponInView = this.coupons.some((coupon) => coupon.id === payload.id);
+      if (!couponInView) {
+        payload.onError('No puedes actualizar un cupón que no aparece en tu listado.');
+        return;
+      }
+
+      const canManage = await this.validateCouponOwnership(token, payload.id);
+      if (!canManage) {
+        payload.onError('No puedes editar/publicar un cupón que no pertenece a tu empresa.');
+        return;
+      }
+
       const variables: UpdateCouponVariables = {
         id: payload.id,
         title: payload.titulo,
         category_id: payload.categoriaId,
         start_date: this.toIsoDate(payload.fechaInicio),
         end_date: this.toIsoDate(payload.fechaFin),
+        stock_available: payload.disponibles,
         description: payload.descripcion || null,
         terms: payload.terminos || null,
         published: payload.estado === 'Publicado',
+        ...(payload.image ? { image: payload.image } : {}),
       };
+
+      console.log('[COUPONS] updating coupon', {
+        id: payload.id,
+        stock_available: payload.disponibles,
+        hasImage: !!payload.image,
+        imageChars: payload.image?.length ?? 0,
+      });
 
       await firstValueFrom(this.couponService.updateCoupon(token, variables));
 
@@ -222,12 +253,46 @@ export class CouponsListComponent {
     }
   }
 
-  openEdit(row: Coupon): void {
-    if (this.filterBar) {
-      this.filterBar.openEditCoupon({
-        ...row,
-        descripcion: row.rawDescripcion ?? row.descripcion,
-      });
+  async openEdit(row: Coupon): Promise<void> {
+    if (!this.filterBar) return;
+
+    this.filterBar.openEditCoupon({
+      ...row,
+      descripcion: row.rawDescripcion ?? row.descripcion,
+      image: row.imagePreview ?? null,
+      imageMime: this.normalizeMimeType(row.imageMimeType),
+      imageName: this.normalizeMimeType(row.imageMimeType).startsWith('application/pdf') ? 'Archivo actual.pdf' : 'Imagen actual',
+    });
+
+    if (row.imagePreview) return;
+
+    if (this.role !== 'empresa' || !this.auth.isKeycloakLoggedIn()) return;
+    const token = this.auth.token;
+    if (!token) return;
+
+    this.filterBar.setEditCouponImageLoading(true);
+    try {
+      const imageData = await firstValueFrom(this.couponService.getCouponImage(token, row.id));
+      if (!imageData?.image_base64) {
+        this.filterBar.setEditCouponImagePreview(null, '');
+        return;
+      }
+
+      const imageMimeType = this.normalizeMimeType(imageData.image_mime_type);
+      const imagePreview = this.toDataUrl(imageData.image_base64, imageMimeType);
+
+      row.imagePreview = imagePreview;
+      row.imageMimeType = imageMimeType;
+
+      const imageName = imageMimeType.startsWith('application/pdf')
+        ? 'Archivo actual.pdf'
+        : 'Imagen actual';
+      this.filterBar.setEditCouponImagePreview(imagePreview, imageMimeType, imageName);
+    } catch (error) {
+      console.warn('[COUPONS] No se pudo obtener preview de imagen para edit', error);
+      this.filterBar.setEditCouponImagePreview(null, '');
+    } finally {
+      this.filterBar.setEditCouponImageLoading(false);
     }
   }
 
@@ -237,18 +302,90 @@ export class CouponsListComponent {
     onError: (message?: string) => void;
   }): Promise<void> {
     try {
-      this.coupons = this.coupons.filter((coupon) => coupon.id !== payload.id);
-      this.cdr.detectChanges();
+      if (this.role !== 'empresa' || !this.auth.isKeycloakLoggedIn()) {
+        this.coupons = this.coupons.filter((coupon) => coupon.id !== payload.id);
+        this.cdr.detectChanges();
+        payload.onSuccess();
+        return;
+      }
+
+      const token = this.auth.token;
+      if (!token) {
+        payload.onError('No hay sesión activa para eliminar el cupón.');
+        return;
+      }
+
+      const couponInView = this.coupons.some((coupon) => coupon.id === payload.id);
+      if (!couponInView) {
+        payload.onError('No puedes eliminar un cupón que no aparece en tu listado.');
+        return;
+      }
+
+      const canManage = await this.validateCouponOwnership(token, payload.id);
+      if (!canManage) {
+        payload.onError('No puedes eliminar un cupón que no pertenece a tu empresa.');
+        return;
+      }
+
+      const deleted = await firstValueFrom(this.couponService.deleteCoupon(token, payload.id));
+      if (!deleted) {
+        payload.onError('No se pudo eliminar el cupón.');
+        return;
+      }
+
       payload.onSuccess();
+
+      try {
+        await this.loadCompanyCouponsFromApi();
+      } catch (reloadError) {
+        console.error('[COUPONS] Cupón eliminado pero falló recarga de tabla', reloadError);
+      }
     } catch (error) {
       console.error('[COUPONS] Error eliminando cupón', error);
       payload.onError('No se pudo eliminar el cupón. Intenta nuevamente.');
     }
   }
 
-  openDelete(row: Coupon): void {
-    if (this.filterBar) {
-      this.filterBar.openDeleteCoupon(row);
+  async openDelete(row: Coupon): Promise<void> {
+    if (!this.filterBar) return;
+
+    this.filterBar.openDeleteCoupon({
+      ...row,
+      descripcion: row.rawDescripcion ?? row.descripcion,
+      terminos: row.terminos ?? '',
+      image: row.imagePreview ?? null,
+      imageMime: this.normalizeMimeType(row.imageMimeType),
+    });
+
+    let imagePreview = row.imagePreview ?? null;
+    let imageMimeType = this.normalizeMimeType(row.imageMimeType);
+
+    if (this.role === 'empresa' && this.auth.isKeycloakLoggedIn()) {
+      const token = this.auth.token;
+      if (token) {
+        this.filterBar.setDeleteCouponImageLoading(true);
+        try {
+          const imageData = await firstValueFrom(this.couponService.getCouponImage(token, row.id));
+          if (imageData?.image_base64) {
+            imageMimeType = this.normalizeMimeType(imageData.image_mime_type);
+            imagePreview = this.toDataUrl(imageData.image_base64, imageMimeType);
+
+            const current = this.coupons.find((coupon) => coupon.id === row.id);
+            if (current) {
+              current.imagePreview = imagePreview;
+              current.imageMimeType = imageMimeType;
+            }
+            this.filterBar.setDeleteCouponImagePreview(imagePreview, imageMimeType);
+          } else {
+            this.filterBar.setDeleteCouponImagePreview(null, '');
+          }
+        } catch (error) {
+          console.warn('[COUPONS] No se pudo obtener preview de imagen para delete', error);
+          this.filterBar.setDeleteCouponImagePreview(imagePreview, imageMimeType);
+        } finally {
+          this.filterBar.setDeleteCouponImageLoading(false);
+        }
+      }
     }
   }
 
@@ -288,8 +425,8 @@ export class CouponsListComponent {
       companyUserId: this.currentUserDbId,
     });
 
-    const mine = this.currentUserDbId
-      ? response.rows.filter((row) => Number(row.user_id) === Number(this.currentUserDbId))
+    const mine = this.currentUserDbId != null
+      ? response.rows.filter((row) => this.idsMatch(row.user_id, this.currentUserDbId))
       : response.rows;
 
     console.log('[COUPONS] filtered company coupons', { rows: mine.length });
@@ -306,12 +443,27 @@ export class CouponsListComponent {
       categoriaId: row.category_id,
       terminos: row.terms ?? '',
       rawDescripcion: row.description ?? '',
+      imagePreview: null,
+      imageMimeType: '',
     }));
 
     console.log('[COUPONS] table rows assigned', { rows: this.coupons.length });
     this.cdr.detectChanges();
   }
 
+
+  private toDataUrl(base64: string, mimeType: string): string {
+    if (!base64) return '';
+    if (base64.startsWith('data:')) return base64;
+
+    const safeMime = this.normalizeMimeType(mimeType) || 'image/jpeg';
+    return `data:${safeMime};base64,${base64}`;
+  }
+
+  private normalizeMimeType(mimeType: string | null | undefined): string {
+    if (!mimeType) return '';
+    return String(mimeType).replace(/^"+|"+$/g, '').trim().toLowerCase();
+  }
 
   private async ensureCategoryMap(token: string): Promise<void> {
     if (this.categoryNameById.size > 0) return;
@@ -325,7 +477,7 @@ export class CouponsListComponent {
   }
 
   private async resolveCurrentUserDbId(token: string): Promise<void> {
-    if (this.currentUserDbId) return;
+    if (this.currentUserDbId != null) return;
 
     const email = this.auth.user?.email ?? this.auth.getKeycloakUser()?.email ?? null;
     console.log('[COUPONS] resolveCurrentUserDbId', { email });
@@ -333,11 +485,47 @@ export class CouponsListComponent {
     try {
       const profile = await firstValueFrom(this.userProfileService.getCurrentUserProfile(token, email));
       console.log('[COUPONS] getCurrentUserProfile response', profile);
-      this.currentUserDbId = profile?.id ? Number(profile.id) : null;
+      this.currentUserDbId = profile?.id ?? null;
     } catch (error) {
       console.error('[COUPONS] resolveCurrentUserDbId failed', error);
       this.currentUserDbId = null;
     }
+  }
+
+  private async validateCouponOwnership(token: string, couponId: number): Promise<boolean> {
+    await this.resolveCurrentUserDbId(token);
+    if (this.currentUserDbId == null) {
+      console.warn('[COUPONS] ownership validation failed: current user id missing');
+      return false;
+    }
+
+    const owner = await firstValueFrom(this.couponService.getCouponOwner(token, couponId));
+    if (!owner) {
+      console.warn('[COUPONS] ownership validation failed: coupon owner not found', { couponId });
+      return false;
+    }
+
+    const valid = this.idsMatch(owner.user_id, this.currentUserDbId);
+    if (!valid) {
+      console.warn('[COUPONS] ownership validation mismatch', {
+        couponId,
+        ownerUserId: owner.user_id,
+        currentUserDbId: this.currentUserDbId,
+      });
+    }
+    return valid;
+  }
+
+  private idsMatch(a: string | number | null | undefined, b: string | number | null | undefined): boolean {
+    const aValue = this.normalizeId(a);
+    const bValue = this.normalizeId(b);
+    return aValue !== null && bValue !== null && aValue === bValue;
+  }
+
+  private normalizeId(id: string | number | null | undefined): string | null {
+    if (id == null) return null;
+    const value = String(id).trim();
+    return value.length > 0 ? value : null;
   }
 
   private toIsoDate(input: string): string {
