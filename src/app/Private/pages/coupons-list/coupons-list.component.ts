@@ -27,15 +27,28 @@ export class CouponsListComponent {
 
   tableConfig: DataTableConfig<Coupon> = {
     columns: [
-      { key: 'titulo', label: 'Título' },
-      { key: 'descripcion', label: 'Empresa' },
-      { key: 'categoria', label: 'Categoría' },
-      { key: 'fechaInicio', label: 'Fecha Inicio' },
-      { key: 'fechaFin', label: 'Fecha Fin' },
-      { key: 'disponibles', label: 'Disponibles' },
+      {
+        key: 'titulo',
+        label: 'Título del cupón',
+        type: 'title-with-subtitle',
+        subLabel: (_, row) => row.categoria,
+        imageForRow: (row) => row.imagePreview ?? null,
+      },
+      { key: 'oferta', label: 'Oferta' },
+      { key: 'vigencia', label: 'Vigencia' },
+      {
+        key: 'disponibles',
+        label: 'Disponibles',
+        render: (_, row) => `${row.disponibles ?? 0} / ${row.disponiblesTotal ?? row.disponibles ?? 0}`,
+      },
       { key: 'estado', label: 'Estado', type: 'badge' },
     ],
     actions: [
+      {
+        iconId: 'eye',
+        bgClass: 'bg-[#D7E8FF] text-[#1E63D5]',
+        action: (row) => this.openView(row),
+      },
       {
         iconId: 'edit',
         bgClass: 'bg-[#E6EEFF] text-[#538CFF]',
@@ -47,6 +60,11 @@ export class CouponsListComponent {
         bgClass: 'bg-[#F8D7DA] text-[#C82333]',
         show: (row) => row.estado === 'Borrador',
         action: (row) => this.openDelete(row),
+      },
+      {
+        iconId: 'statistics',
+        bgClass: 'bg-[#E4DEFF] text-[#5B47C4]',
+        action: (row) => this.openStats(row),
       },
     ],
   };
@@ -85,6 +103,8 @@ export class CouponsListComponent {
   async onCreateCoupon(payload: {
     titulo: string;
     cantidad: number | null;
+    precio?: number | null;
+    descuento?: number | null;
     descripcion: string;
     fechaInicio: string;
     fechaFin: string;
@@ -106,11 +126,14 @@ export class CouponsListComponent {
           fechaInicio: payload.fechaInicio,
           fechaFin: payload.fechaFin,
           disponibles: payload.cantidad ?? 0,
+          disponiblesTotal: payload.cantidad ?? 0,
+          oferta: '-',
+          vigencia: `${payload.fechaInicio} - ${payload.fechaFin}`,
           estado: payload.estado,
         };
 
         this.coupons = [nuevo, ...this.coupons];
-      this.cdr.detectChanges();
+        this.cdr.detectChanges();
         payload.onSuccess();
         return;
       }
@@ -132,8 +155,8 @@ export class CouponsListComponent {
         end_date: this.toIsoDate(payload.fechaFin),
         stock_available: payload.cantidad,
         stock_total: payload.cantidad,
-        price: null,
-        price_discount: null,
+        price: payload.precio ?? null,
+        price_discount: payload.descuento ?? null,
         auto_published: false,
         published: payload.estado === 'Publicado',
         image: payload.image ?? null,
@@ -170,6 +193,8 @@ export class CouponsListComponent {
     fechaInicio: string;
     fechaFin: string;
     disponibles: number;
+    precio?: number | null;
+    descuento?: number | null;
     estado: string;
     terminos: string;
     image?: string | null;
@@ -188,6 +213,8 @@ export class CouponsListComponent {
             fechaInicio: payload.fechaInicio,
             fechaFin: payload.fechaFin,
             disponibles: payload.disponibles,
+            disponiblesTotal: coupon.disponiblesTotal ?? payload.disponibles,
+            vigencia: `${payload.fechaInicio} - ${payload.fechaFin}`,
             estado: payload.estado,
             rawDescripcion: payload.descripcion,
             terminos: payload.terminos,
@@ -225,6 +252,8 @@ export class CouponsListComponent {
         stock_available: payload.disponibles,
         description: payload.descripcion || null,
         terms: payload.terminos || null,
+        price: payload.precio ?? null,
+        price_discount: payload.descuento ?? null,
         published: payload.estado === 'Publicado',
         ...(payload.image ? { image: payload.image } : {}),
       };
@@ -259,6 +288,8 @@ export class CouponsListComponent {
     this.filterBar.openEditCoupon({
       ...row,
       descripcion: row.rawDescripcion ?? row.descripcion,
+      precio: row.precio ?? null,
+      descuento: row.descuento ?? null,
       image: row.imagePreview ?? null,
       imageMime: this.normalizeMimeType(row.imageMimeType),
       imageName: this.normalizeMimeType(row.imageMimeType).startsWith('application/pdf') ? 'Archivo actual.pdf' : 'Imagen actual',
@@ -389,10 +420,26 @@ export class CouponsListComponent {
     }
   }
 
+  openView(row: Coupon): void {
+    if (typeof row.onView === 'function') {
+      row.onView(row);
+      return;
+    }
+    console.log('[COUPONS] view action', { id: row.id, title: row.titulo });
+  }
+
+  openStats(row: Coupon): void {
+    if (typeof row.onStats === 'function') {
+      row.onStats(row);
+      return;
+    }
+    console.log('[COUPONS] stats action', { id: row.id, title: row.titulo });
+  }
+
   private loadCouponsFromMock(): void {
     this.service.getCoupons().subscribe((data) => {
       console.log('[COUPONS] mock data received', { rows: data.length });
-      this.coupons = data;
+      this.coupons = data.map((coupon) => this.decorateCouponForTable(coupon));
       this.cdr.detectChanges();
     });
   }
@@ -438,17 +485,30 @@ export class CouponsListComponent {
       categoria: this.categoryNameById.get(row.category_id) ?? String(row.category_id),
       fechaInicio: this.toDisplayDate(row.start_date),
       fechaFin: this.toDisplayDate(row.end_date),
-      disponibles: row.stock_available ?? 0,
+      disponibles: row.stock_available ?? row.stock_total ?? 0,
+      disponiblesTotal: row.stock_total ?? row.stock_available ?? 0,
+      oferta: this.resolveOfferLabel(row.price, row.price_discount),
+      vigencia: `${this.toDisplayDate(row.start_date)} - ${this.toDisplayDate(row.end_date)}`,
       estado: row.published ? 'Publicado' : 'Borrador',
       categoriaId: row.category_id,
       terminos: row.terms ?? '',
       rawDescripcion: row.description ?? '',
+      precio: this.toFiniteNumber(row.price),
+      descuento: this.toFiniteNumber(row.price_discount),
       imagePreview: null,
       imageMimeType: '',
     }));
 
     console.log('[COUPONS] table rows assigned', { rows: this.coupons.length });
     this.cdr.detectChanges();
+
+    // load images for each coupon so the table can show previews immediately
+    try {
+      await this.loadImagesForCoupons(token);
+      console.log('[COUPONS] images loaded for coupons');
+    } catch (imgErr) {
+      console.warn('[COUPONS] some images failed to load', imgErr);
+    }
   }
 
 
@@ -458,6 +518,31 @@ export class CouponsListComponent {
 
     const safeMime = this.normalizeMimeType(mimeType) || 'image/jpeg';
     return `data:${safeMime};base64,${base64}`;
+  }
+
+  /**
+   * Bulk fetch images for every coupon currently in `this.coupons`.
+   * Updates each item in place with preview and mime type. Errors on a
+   * per-coupon basis are logged but do not abort the whole operation.
+   */
+  private async loadImagesForCoupons(token: string): Promise<void> {
+    if (!token || this.coupons.length === 0) return;
+    const promises = this.coupons.map(async (coupon) => {
+      try {
+        const imageData = await firstValueFrom(this.couponService.getCouponImage(token, coupon.id));
+        if (imageData?.image_base64) {
+          const mime = this.normalizeMimeType(imageData.image_mime_type);
+          coupon.imagePreview = this.toDataUrl(imageData.image_base64, mime);
+          coupon.imageMimeType = mime;
+        }
+      } catch (e) {
+        console.warn('[COUPONS] failed loading image for coupon', coupon.id, e);
+      }
+    });
+
+    await Promise.all(promises);
+    // ensure table re-renders after all previews are set
+    this.cdr.detectChanges();
   }
 
   private normalizeMimeType(mimeType: string | null | undefined): string {
@@ -544,5 +629,46 @@ export class CouponsListComponent {
 
     const [, yyyy, mm, dd] = match;
     return `${dd}/${mm}/${yyyy}`;
+  }
+
+  private decorateCouponForTable(coupon: Coupon): Coupon {
+    const fechaInicio = coupon.fechaInicio;
+    const fechaFin = coupon.fechaFin;
+    const disponibles = coupon.disponibles ?? 0;
+    const disponiblesTotal = coupon.disponiblesTotal ?? disponibles;
+
+    return {
+      ...coupon,
+      disponibles,
+      disponiblesTotal,
+      oferta: coupon.oferta ?? '-',
+      vigencia: coupon.vigencia ?? `${fechaInicio} - ${fechaFin}`,
+    };
+  }
+
+  private resolveOfferLabel(price: string | null, discount: string | null): string {
+    const priceValue = this.toFiniteNumber(price);
+    const discountValue = this.toFiniteNumber(discount);
+
+    if (discountValue !== null && discountValue > 0) {
+      return `${this.trimTrailingZeros(discountValue)}% OFF`;
+    }
+
+    if (priceValue !== null && priceValue > 0) {
+      return `$${this.trimTrailingZeros(priceValue)}`;
+    }
+
+    return '-';
+  }
+
+  private toFiniteNumber(value: string | null): number | null {
+    if (value == null) return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  private trimTrailingZeros(value: number): string {
+    const asFixed = value.toFixed(2);
+    return asFixed.replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
   }
 }

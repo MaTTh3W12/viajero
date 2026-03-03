@@ -54,6 +54,13 @@ interface DeleteCouponData {
   };
 }
 
+interface ChangeStatusData {
+  viajerosv_change_coupon_status: {
+    id: number;
+    active: boolean;
+  };
+}
+
 export interface Coupon {
   id: number;
   user_id: number | string;
@@ -357,15 +364,21 @@ export class CouponService {
 
   deleteCoupon(token: string, id: number): Observable<boolean> {
     const mutation = `
-      mutation DeleteCoupon($id: bigint!) {
-        delete_viajerosv_coupons(where: { id: { _eq: $id } }) {
-          affected_rows
+      mutation ChangeStatus($id: bigint!, $active: Boolean!) {
+        viajerosv_change_coupon_status(
+          args: {
+            p_coupon_id: $id
+            p_active: $active
+          }
+        ) {
+          id
+          active
         }
       }
     `;
 
-    return this.executeOperation<DeleteCouponData, { id: number }>(token, mutation, { id }).pipe(
-      map((data) => data.delete_viajerosv_coupons.affected_rows > 0)
+    return this.executeOperation<ChangeStatusData, { id: number; active: boolean }>(token, mutation, { id, active: false }).pipe(
+      map((data) => data.viajerosv_change_coupon_status.id > 0)
     );
   }
   setCouponPublished(
