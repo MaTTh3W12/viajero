@@ -1,8 +1,10 @@
 export interface TableColumn<T, V = T[keyof T]> {
   key: keyof T;
   label: string;
-  type?: 'text' | 'badge' | 'box';
+  type?: 'text' | 'badge' | 'box' | 'title-with-subtitle';
   boxStyle?: 'blue' | 'gray' | 'expiration';
+  imageForRow?: (row: T) => string | null;
+  imageLoadingForRow?: (row: T) => boolean;
 
   render?: (value: V, row: T) => string;
   subLabel?: (value: V, row: T) => string | null;

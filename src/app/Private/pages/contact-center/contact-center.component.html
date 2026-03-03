@@ -1,0 +1,125 @@
+<!-- Topbar -->
+<app-topbar location="Centro de contacto"></app-topbar>
+<div class="p-6 md:p-10 bg-[#F4F7FD] min-h-screen animate-fadeSlideUp">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-semibold text-[#0E225C]">
+      Historial de mensajes
+    </h1>
+
+    <button class="flex items-center gap-2 bg-[#538CFF] text-white px-5 py-2 rounded-full hover:bg-[#3c74e6] transition">
+      <svg class="w-5 h-5">
+        <use href="assets/icons/sprite.svg#add"></use>
+      </svg>
+      Nuevo mensaje
+    </button>
+  </div>
+
+  <!-- Tabs -->
+  <div class="flex flex-wrap gap-3 mb-6">
+    <button
+      (click)="changeTab('all')"
+      [ngClass]="activeTab() === 'all'
+        ? 'bg-[#0E225C] text-white'
+        : 'border border-gray-300 text-[#0E225C] hover:bg-white'"
+      class="px-4 py-2 rounded-lg transition">
+      Todos
+    </button>
+
+    <button
+      (click)="changeTab('sent')"
+      [ngClass]="activeTab() === 'sent'
+        ? 'bg-[#0E225C] text-white'
+        : 'border border-gray-300 text-[#0E225C] hover:bg-white'"
+      class="px-4 py-2 rounded-lg transition">
+      Enviado
+    </button>
+
+    <button
+      (click)="changeTab('received')"
+      [ngClass]="activeTab() === 'received'
+        ? 'bg-[#0E225C] text-white'
+        : 'border border-gray-300 text-[#0E225C] hover:bg-white'"
+      class="px-4 py-2 rounded-lg transition">
+      Recibido por administrador
+    </button>
+
+    <button
+      (click)="changeTab('answered')"
+      [ngClass]="activeTab() === 'answered'
+        ? 'bg-[#0E225C] text-white'
+        : 'border border-gray-300 text-[#0E225C] hover:bg-white'"
+      class="px-4 py-2 rounded-lg transition">
+      Respuesta recibida
+    </button>
+  </div>
+
+  <!-- Lista -->
+  <div class="space-y-5">
+
+    <div
+      *ngFor="let message of paginatedMessages()"
+      class="bg-white rounded-2xl border border-[#E2E8F0] p-6 hover:shadow-lg transition duration-300 animate-fadeSlideUp">
+
+      <div class="flex justify-between items-start mb-2">
+        <div>
+          <h3 class="font-semibold text-[#0E225C] text-lg">
+            {{ message.title }}
+          </h3>
+          <p class="text-sm text-gray-500">
+            Tipo de mensaje: {{ message.type }}
+          </p>
+        </div>
+
+        <span
+          class="px-4 py-1 rounded-full text-sm font-medium"
+          [ngClass]="statusClasses(message.status)">
+          {{ message.status === 'sent' ? 'Enviado' :
+             message.status === 'received' ? 'Recibido por administrador' :
+             'Respuesta recibida' }}
+        </span>
+      </div>
+
+      <p class="text-xs text-gray-400 mb-2">
+        {{ message.date }}
+      </p>
+
+      <p class="text-gray-600 mb-4">
+        {{ message.description }}
+      </p>
+
+      <!-- Respuesta -->
+      <div *ngIf="message.response" class="bg-[#F1F5F9] rounded-xl p-4 animate-fadeSlideUp">
+        <h4 class="font-semibold text-[#0E225C] mb-1">
+          Respuesta del administrador
+        </h4>
+        <p class="text-sm text-gray-600">
+          Respondido por: {{ message.response.author }}
+        </p>
+        <p class="text-xs text-gray-400 mb-2">
+          {{ message.response.date }}
+        </p>
+        <p class="text-gray-700">
+          {{ message.response.message }}
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Paginación -->
+  <div class="flex justify-center items-center gap-3 mt-8">
+    <button
+      *ngFor="let page of [].constructor(totalPages()) ; let i = index"
+      (click)="goToPage(i+1)"
+      [ngClass]="currentPage() === i+1
+        ? 'bg-[#538CFF] text-white'
+        : 'border border-gray-300 hover:bg-white'"
+      class="w-10 h-10 rounded-full flex items-center justify-center transition">
+      {{ i+1 }}
+    </button>
+  </div>
+
+</div>

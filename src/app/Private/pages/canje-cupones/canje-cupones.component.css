@@ -1,0 +1,32 @@
+.canje-cupones-container {
+  background: #f7f8fc;
+  padding: 2rem;
+  border-radius: 1.5rem;
+}
+.validar-cupon {
+  background: #e6e6fa;
+  padding: 1rem;
+  border-radius: 1rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.cupones-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 1rem;
+  overflow: hidden;
+}
+.cupones-table th, .cupones-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+}
+.cupones-table th {
+  background: #f0f0ff;
+  font-weight: 600;
+}
+.cupones-table tbody tr {
+  border-bottom: 1px solid #e0e0e0;
+}

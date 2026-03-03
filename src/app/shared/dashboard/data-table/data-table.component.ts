@@ -57,6 +57,23 @@ export class DataTableComponent<T extends { id: number }> {
     return action.show ? action.show(row) : true;
   }
 
+  getCellValue(col: TableColumn<T, any>, row: T): string {
+    const raw = col.render ? col.render(row[col.key], row) : this.asString(row[col.key]);
+    return raw?.trim() ? raw : '-';
+  }
+
+  getCellSubLabel(col: TableColumn<T, any>, row: T): string | null {
+    if (!col.subLabel) return null;
+    const raw = col.subLabel(row[col.key], row);
+    if (raw == null) return null;
+    const value = String(raw).trim();
+    return value.length ? value : null;
+  }
+
+  getCellImage(col: TableColumn<T, any>, row: T): string | null {
+    return col.imageForRow?.(row) ?? null;
+  }
+
   // 📅 EXPIRACIÓN
   getExpirationBoxClass(value: string): string {
     if (value === 'Expirado') {

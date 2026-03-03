@@ -1,42 +1,53 @@
-import { Component, EventEmitter, Input, Output, Renderer2, Inject, ChangeDetectorRef } from '@angular/core';
+import { Component, EventEmitter, Input, Output, Renderer2, Inject, ChangeDetectorRef, NgZone } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { FilterVariant } from '../../../service/filter-bar.types';
 import { AuthService, UserRole } from '../../../service/auth.service';
 import { Category, CategoryService } from '../../../service/category.service';
+import { CommonModule } from '@angular/common';
+import { ZXingScannerModule } from '@zxing/ngx-scanner';
 
 const FILTER_BG_MAP: Record<UserRole, Record<FilterVariant, string>> = {
   admin: {
-    users:     'bg-[#D4FFF1]', // Todos los usuarios
-    audit:     'bg-[#FFE3C1]', // Auditoría
-    category:  'bg-[#FFE2DB]', // Categorías
-    coupons:   'bg-[#C8E7FF]', // Todos los cupones
-    messages:  'bg-[#D4FFF1]', // Mensajes
+    users: 'bg-[#D4FFF1]', // Todos los usuarios
+    audit: 'bg-[#FFE3C1]', // Auditoría
+    category: 'bg-[#FFE2DB]', // Categorías
+    coupons: 'bg-[#C8E7FF]', // Todos los cupones
+    messages: 'bg-[#D4FFF1]', // Mensajes
     companies: 'bg-[#D4D6FF]', // Empresas
+    statistics: 'bg-[#E6EFFF]',
+    'canje-cupones': 'bg-[#e6e6fa]',
+    'historial-canjes': 'bg-[#E6EFFF]',
   },
   empresa: {
-    users:     'bg-[#D4FFF1]', // Todos los usuarios
-    audit:     'bg-[#FFE3C1]', // Auditoría
-    category:  'bg-[#FFE2DB]', // Categorías
-    coupons:   'bg-[#C8E7FF]', // Todos los cupones
-    messages:  'bg-[#D4FFF1]', // Mensajes
+    users: 'bg-[#D4FFF1]', // Todos los usuarios
+    audit: 'bg-[#FFE3C1]', // Auditoría
+    category: 'bg-[#FFE2DB]', // Categorías
+    coupons: 'bg-[#C8E7FF]', // Todos los cupones
+    messages: 'bg-[#D4FFF1]', // Mensajes
     companies: 'bg-[#D4D6FF]', // Empresas
+    statistics: 'bg-[#E6EFFF]',
+    'canje-cupones': 'bg-[#e6e6fa]',
+    'historial-canjes': 'bg-[#FFE2DB]',
   },
   usuario: {
-    users:     'bg-[#D4FFF1]',
-    audit:     'bg-[#FFE3C1]',
-    category:  'bg-[#FFE2DB]',
-    coupons:   'bg-[#C8E7FF]',
-    messages:  'bg-[#D4FFF1]',
+    users: 'bg-[#D4FFF1]',
+    audit: 'bg-[#FFE3C1]',
+    category: 'bg-[#FFE2DB]',
+    coupons: 'bg-[#C8E7FF]',
+    messages: 'bg-[#D4FFF1]',
     companies: 'bg-[#D4D6FF]',
+    statistics: 'bg-[#E6EFFF]',
+    'canje-cupones': 'bg-[#e6e6fa]',
+    'historial-canjes': 'bg-[#E6EFFF]',
   },
 };
 
 @Component({
   selector: 'app-filter-bar',
   standalone: true,
-  imports: [FormsModule],
+  imports: [CommonModule, FormsModule, ZXingScannerModule],
   templateUrl: './filter-bar.component.html',
   styleUrl: './filter-bar.component.css',
 })
@@ -46,6 +57,8 @@ export class FilterBarComponent {
   @Output() createCoupon = new EventEmitter<{
     titulo: string;
     cantidad: number | null;
+    precio?: number | null;
+    descuento?: number | null;
     descripcion: string;
     fechaInicio: string;
     fechaFin: string;
@@ -53,6 +66,7 @@ export class FilterBarComponent {
     categoriaNombre: string;
     terminos: string;
     estado: string;
+    image?: string | null;
     onSuccess: () => void;
     onError: (message?: string) => void;
   }>();
@@ -65,8 +79,11 @@ export class FilterBarComponent {
     fechaInicio: string;
     fechaFin: string;
     disponibles: number;
+    precio?: number | null;
+    descuento?: number | null;
     estado: string;
     terminos: string;
+    image?: string | null;
     onSuccess: () => void;
     onError: (message?: string) => void;
   }>();
@@ -76,10 +93,32 @@ export class FilterBarComponent {
     onError: (message?: string) => void;
   }>();
 
+  // eventos específicos para canje de cupones
+  @Output() scanQr = new EventEmitter<void>();
+  @Output() validateCode = new EventEmitter<string>();
+
   auditTypeOpen = false;
   auditTypeSelected = 'Seleccionar tipo';
   auditTypeOptions = ['Desactivación', 'Aprobación'];
 
+  // QR
+  showQrModal = false;
+  couponCode: string = '';
+
+  scannerHasDevices = false;
+  scannerHasPermission = false;
+  scannerError: string | null = null;
+  availableDevices: MediaDeviceInfo[] = [];
+  currentDevice: MediaDeviceInfo | null = null;
+
+  // Estados para overlays de canje
+  redeemingCoupon = false;
+  redeemSuccess = false;
+  showConfirmRedeemModal = false;
+
+  // Estado para filtros de estadísticas
+  statisticsFiltersOpen = false;
+  statisticsMetricTypeOpen = false;
 
   categories: Category[] = [];
   categoriesLoaded = false;
@@ -92,32 +131,49 @@ export class FilterBarComponent {
   creatingCoupon = false;
   couponCreateSuccess = false;
   createCouponError = '';
+  couponImageError = '';
+  couponImageLoading = false;
+  private readonly maxCouponFileSizeBytes = 500 * 1024;
+  private readonly allowedCouponMimeTypes = ['image/jpeg', 'image/png', 'application/pdf'];
   couponForm = {
     titulo: '',
     cantidad: null as number | null,
+    precio: null as number | null,
+    descuento: null as number | null,
     descripcion: '',
     fechaInicio: '',
     fechaFin: '',
     categoria: null as number | null,
     terminos: '',
     estado: '',
+    image: null as string | null,
+    imageName: '',
+    imageMime: '',
   };
+  readonly todayIso = this.buildTodayIso();
 
   // Estado para el modal de editar cupón
   editCouponOpen = false;
   editingCoupon = false;
   couponEditSuccess = false;
   editCouponError = '';
+  editCouponImageError = '';
+  editCouponImageLoading = false;
   editForm = {
     id: null as number | null,
     titulo: '',
     cantidad: null as number | null,
+    precio: null as number | null,
+    descuento: null as number | null,
     descripcion: '',
     fechaInicio: '',
     fechaFin: '',
     categoria: null as number | null,
     terminos: '',
     estado: '',
+    image: null as string | null,
+    imageName: '',
+    imageMime: '',
   };
 
   // Estado para eliminar cupón
@@ -125,6 +181,10 @@ export class FilterBarComponent {
   deletingCoupon = false;
   couponDeleteSuccess = false;
   deleteCouponError = '';
+  deleteCouponImageLoading = false;
+  private couponImageLoadingTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private editCouponImageLoadingTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private deleteCouponImageLoadingTimeoutId: ReturnType<typeof setTimeout> | null = null;
   deleteTarget: {
     id: number | null;
     titulo: string;
@@ -134,16 +194,22 @@ export class FilterBarComponent {
     fechaFin: string;
     cantidad: number | null;
     estado: string;
+    terminos: string;
+    image: string | null;
+    imageMime: string;
   } = {
-    id: null,
-    titulo: '',
-    descripcion: '',
-    categoria: '',
-    fechaInicio: '',
-    fechaFin: '',
-    cantidad: null,
-    estado: '',
-  };
+      id: null,
+      titulo: '',
+      descripcion: '',
+      categoria: '',
+      fechaInicio: '',
+      fechaFin: '',
+      cantidad: null,
+      estado: '',
+      terminos: '',
+      image: null,
+      imageMime: '',
+    };
 
   selectAuditType(option: string): void {
     this.auditTypeSelected = option;
@@ -157,6 +223,72 @@ export class FilterBarComponent {
     input.focus();
   }
 
+  openQrModal(): void {
+    this.showQrModal = true;
+  }
+
+  closeQrModal(): void {
+    this.showQrModal = false;
+  }
+
+  onQrScan(result: string): void {
+    this.couponCode = result;
+    this.closeQrModal();
+  }
+
+  statisticsMetricTypeSelected = 'Seleccionar tipo de métrica';
+  statisticsMetricTypeOptions = ['Canjes', 'Vistas', 'Conversión', 'Ingresos'];
+
+  toggleStatisticsFilters(): void {
+    this.statisticsFiltersOpen = !this.statisticsFiltersOpen;
+  }
+
+  selectStatisticsMetricType(option: string): void {
+    this.statisticsMetricTypeSelected = option;
+    this.statisticsMetricTypeOpen = false;
+  }
+
+  onCamerasFound(devices: MediaDeviceInfo[]): void {
+    this.availableDevices = devices;
+    this.scannerHasDevices = devices?.length > 0;
+    if (devices.length > 0) {
+      this.currentDevice = devices[0];
+    }
+  }
+
+  onHasPermission(has: boolean): void {
+    this.scannerHasPermission = has;
+    this.scannerError = has ? null : 'No se otorgó permiso para acceder a la cámara.';
+  }
+
+  onScanError(error: any): void {
+    this.scannerError = 'Error al acceder a la cámara: ' + (error?.message || error);
+  }
+
+  onQrScanButtonClick(): void {
+    this.showConfirmRedeemModal = true;
+  }
+
+  closeConfirmRedeemModal(): void {
+    this.showConfirmRedeemModal = false;
+  }
+
+  confirmRedeem(): void {
+    this.showConfirmRedeemModal = false;
+    this.redeemingCoupon = true;
+    this.cdr.detectChanges();
+
+    setTimeout(() => {
+      this.redeemingCoupon = false;
+      this.redeemSuccess = true;
+      this.cdr.detectChanges();
+    }, 3000);
+  }
+
+  closeRedeemSuccess(): void {
+    this.redeemSuccess = false;
+    this.closeQrModal();
+  }
 
   private ensureCategoriesLoaded(force = false): void {
     if (this.categoriesLoading) return;
@@ -224,9 +356,19 @@ export class FilterBarComponent {
       }
     }, 15000);
 
+    console.log('[FILTER-BAR] submitCreateCoupon', {
+      title: this.couponForm.titulo,
+      categoryId: categoria.id,
+      hasImage: !!this.couponForm.image,
+      imageName: this.couponForm.imageName,
+      imageChars: this.couponForm.image?.length ?? 0,
+    });
+
     this.createCoupon.emit({
       titulo: this.couponForm.titulo,
       cantidad: this.couponForm.cantidad,
+      precio: this.couponForm.precio,
+      descuento: this.couponForm.descuento,
       descripcion: this.couponForm.descripcion,
       fechaInicio: this.toDisplayDate(this.couponForm.fechaInicio),
       fechaFin: this.toDisplayDate(this.couponForm.fechaFin),
@@ -234,6 +376,7 @@ export class FilterBarComponent {
       categoriaNombre: categoria.name,
       terminos: this.couponForm.terminos,
       estado: this.couponForm.estado,
+      image: this.couponForm.image,
       onSuccess: () => {
         clearTimeout(failSafeTimer);
         this.onCreateCouponSuccess();
@@ -247,21 +390,31 @@ export class FilterBarComponent {
 
   isCouponFormValid(): boolean {
     const f = this.couponForm;
-    const cantidadValida = typeof f.cantidad === 'number' && f.cantidad > 0;
+    const cantidadValida = this.isPositiveInteger(f.cantidad);
     const tituloValido = f.titulo.trim().length > 0;
     const descripcionValida = f.descripcion.trim().length > 0;
     const fechasValidas = !!f.fechaInicio && !!f.fechaFin;
+    const fechaInicioValida = this.isOnOrAfterToday(f.fechaInicio);
+    const fechaFinValida = this.isOnOrAfterToday(f.fechaFin);
+    const rangoFechasValido = this.isOnOrAfterDate(f.fechaFin, f.fechaInicio);
     const categoriaValida = typeof f.categoria === 'number' && f.categoria > 0;
     const terminosValidos = f.terminos.trim().length > 0;
     const estadoValido = f.estado !== '';
+    const precioValido = this.isValidNumericOrNull(f.precio);
+    const descuentoValido = this.isValidNumericOrNull(f.descuento);
     return (
       cantidadValida &&
       tituloValido &&
       descripcionValida &&
       fechasValidas &&
+      fechaInicioValida &&
+      fechaFinValida &&
+      rangoFechasValido &&
       categoriaValida &&
       terminosValidos &&
-      estadoValido
+      estadoValido &&
+      precioValido &&
+      descuentoValido
     );
   }
 
@@ -277,6 +430,9 @@ export class FilterBarComponent {
     this.creatingCoupon = false;
     this.couponCreateSuccess = false;
     this.createCouponError = '';
+    this.couponImageError = '';
+    this.couponImageLoading = false;
+    this.clearCouponImageLoadingTimeout();
   }
 
   onCreateCouponSuccess(): void {
@@ -293,6 +449,168 @@ export class FilterBarComponent {
     this.cdr.detectChanges();
   }
 
+  async onCouponImageSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement | null;
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    this.couponImageError = '';
+    this.couponImageLoading = true;
+    this.startCouponImageLoadingTimeout();
+
+    if (!this.allowedCouponMimeTypes.includes(file.type)) {
+      this.couponImageError = 'Formato no permitido. Solo JPG, JPEG, PNG o PDF.';
+      this.couponForm.image = null;
+      this.couponForm.imageName = '';
+      this.couponForm.imageMime = '';
+      this.couponImageLoading = false;
+      this.clearCouponImageLoadingTimeout();
+      if (input) input.value = '';
+      return;
+    }
+
+    if (file.size > this.maxCouponFileSizeBytes) {
+      this.couponImageError = 'La imagen supera el tamaño máximo de 500 KB.';
+      this.couponForm.image = null;
+      this.couponForm.imageName = '';
+      this.couponForm.imageMime = '';
+      this.couponImageLoading = false;
+      this.clearCouponImageLoadingTimeout();
+      if (input) input.value = '';
+      return;
+    }
+
+    try {
+      const base64 = await this.readFileAsDataUrl(file);
+      this.couponForm.image = base64;
+      this.couponForm.imageName = file.name;
+      this.couponForm.imageMime = file.type;
+
+      console.log('[FILTER-BAR] coupon image selected', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        base64Chars: base64.length,
+      });
+    } catch (error) {
+      console.error('[FILTER-BAR] error reading coupon image', error);
+      this.couponImageError = 'No se pudo leer el archivo seleccionado.';
+      this.couponForm.image = null;
+      this.couponForm.imageName = '';
+      this.couponForm.imageMime = '';
+      if (input) input.value = '';
+    } finally {
+      this.couponImageLoading = false;
+      this.clearCouponImageLoadingTimeout();
+      this.cdr.detectChanges();
+    }
+  }
+
+  removeCouponImage(input: HTMLInputElement): void {
+    this.couponForm.image = null;
+    this.couponForm.imageName = '';
+    this.couponForm.imageMime = '';
+    this.couponImageError = '';
+    this.couponImageLoading = false;
+    this.clearCouponImageLoadingTimeout();
+    input.value = '';
+  }
+
+  pickCouponImage(input: HTMLInputElement): void {
+    input.value = '';
+    input.click();
+  }
+
+  private readFileAsDataUrl(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const result = reader.result;
+        if (typeof result === 'string') {
+          resolve(result);
+          return;
+        }
+
+        reject(new Error('No se pudo convertir el archivo a base64.'));
+      };
+
+      reader.onerror = () => reject(reader.error ?? new Error('Error leyendo archivo.'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async onEditCouponImageSelected(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement | null;
+    const file = input?.files?.[0];
+    if (!file) return;
+
+    this.editCouponImageError = '';
+    this.editCouponImageLoading = true;
+    this.startEditCouponImageLoadingTimeout();
+
+    if (!this.allowedCouponMimeTypes.includes(file.type)) {
+      this.editCouponImageError = 'Formato no permitido. Solo JPG, JPEG, PNG o PDF.';
+      this.editForm.image = null;
+      this.editForm.imageName = '';
+      this.editForm.imageMime = '';
+      this.editCouponImageLoading = false;
+      this.clearEditCouponImageLoadingTimeout();
+      if (input) input.value = '';
+      return;
+    }
+
+    if (file.size > this.maxCouponFileSizeBytes) {
+      this.editCouponImageError = 'La imagen supera el tamaño máximo de 500 KB.';
+      this.editForm.image = null;
+      this.editForm.imageName = '';
+      this.editForm.imageMime = '';
+      this.editCouponImageLoading = false;
+      this.clearEditCouponImageLoadingTimeout();
+      if (input) input.value = '';
+      return;
+    }
+
+    try {
+      const base64 = await this.readFileAsDataUrl(file);
+      this.editForm.image = base64;
+      this.editForm.imageName = file.name;
+      this.editForm.imageMime = file.type;
+
+      console.log('[FILTER-BAR] edit coupon image selected', {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        base64Chars: base64.length,
+      });
+    } catch (error) {
+      console.error('[FILTER-BAR] error reading edit coupon image', error);
+      this.editCouponImageError = 'No se pudo leer el archivo seleccionado.';
+      this.editForm.image = null;
+      this.editForm.imageName = '';
+      this.editForm.imageMime = '';
+      if (input) input.value = '';
+    } finally {
+      this.editCouponImageLoading = false;
+      this.clearEditCouponImageLoadingTimeout();
+      this.cdr.detectChanges();
+    }
+  }
+
+  removeEditCouponImage(input: HTMLInputElement): void {
+    this.editForm.image = null;
+    this.editForm.imageName = '';
+    this.editForm.imageMime = '';
+    this.editCouponImageError = '';
+    this.editCouponImageLoading = false;
+    this.clearEditCouponImageLoadingTimeout();
+    input.value = '';
+  }
+
+  pickEditCouponImage(input: HTMLInputElement): void {
+    input.value = '';
+    input.click();
+  }
+
   // Abrir modal de edición con datos precargados
   openEditCoupon(coupon: {
     id: number;
@@ -303,8 +621,13 @@ export class FilterBarComponent {
     fechaInicio: string;
     fechaFin: string;
     disponibles: number;
+    precio?: number | null;
+    descuento?: number | null;
     estado: string;
     terminos?: string;
+    image?: string | null;
+    imageMime?: string;
+    imageName?: string;
   }): void {
     this.resetEditFlow();
     this.ensureCategoriesLoaded();
@@ -317,13 +640,19 @@ export class FilterBarComponent {
       id: coupon.id,
       titulo: coupon.titulo,
       cantidad: coupon.disponibles,
+      precio: coupon.precio ?? null,
+      descuento: coupon.descuento ?? null,
       descripcion: coupon.descripcion,
       fechaInicio: this.toISODate(coupon.fechaInicio),
       fechaFin: this.toISODate(coupon.fechaFin),
       categoria: categoriaId,
       terminos: coupon.terminos ?? '',
       estado: coupon.estado,
+      image: coupon.image ?? null,
+      imageName: coupon.imageName ?? this.getDefaultImageName(coupon.imageMime),
+      imageMime: coupon.imageMime ?? '',
     };
+    this.editCouponImageError = '';
     this.editCouponOpen = true;
     this.setBodyModalLock(true);
   }
@@ -356,6 +685,15 @@ export class FilterBarComponent {
       }
     }, 15000);
 
+    console.log('[FILTER-BAR] submitEditCoupon', {
+      id: this.editForm.id,
+      title: this.editForm.titulo,
+      stock_available: this.editForm.cantidad,
+      hasImage: !!this.editForm.image,
+      imageName: this.editForm.imageName,
+      imageChars: this.editForm.image?.length ?? 0,
+    });
+
     this.updateCoupon.emit({
       id: this.editForm.id!,
       titulo: this.editForm.titulo,
@@ -365,8 +703,11 @@ export class FilterBarComponent {
       fechaInicio: this.toDisplayDate(this.editForm.fechaInicio),
       fechaFin: this.toDisplayDate(this.editForm.fechaFin),
       disponibles: this.editForm.cantidad ?? 0,
+      precio: this.editForm.precio,
+      descuento: this.editForm.descuento,
       estado: this.editForm.estado,
       terminos: this.editForm.terminos,
+      image: this.editForm.image,
       onSuccess: () => {
         clearTimeout(failSafeTimer);
         this.onUpdateCouponSuccess();
@@ -380,21 +721,28 @@ export class FilterBarComponent {
 
   isEditFormValid(): boolean {
     const f = this.editForm;
-    const cantidadValida = typeof f.cantidad === 'number' && f.cantidad >= 0;
+    const cantidadValida = this.isPositiveInteger(f.cantidad);
     const tituloValido = f.titulo.trim().length > 0;
     const descripcionValida = f.descripcion.trim().length > 0;
     const fechasValidas = !!f.fechaInicio && !!f.fechaFin;
+    // En edición NO validamos que sean fechas futuras, solo que sean válidas entre sí
+    const rangoFechasValido = this.isOnOrAfterDate(f.fechaFin, f.fechaInicio);
     const categoriaValida = typeof f.categoria === 'number' && f.categoria > 0;
     const terminosValidos = true; // opcional en edición
     const estadoValido = f.estado !== '';
+    const precioValido = this.isValidNumericOrNull(f.precio);
+    const descuentoValido = this.isValidNumericOrNull(f.descuento);
     return (
       cantidadValida &&
       tituloValido &&
       descripcionValida &&
       fechasValidas &&
+      rangoFechasValido &&
       categoriaValida &&
       terminosValidos &&
-      estadoValido
+      estadoValido &&
+      precioValido &&
+      descuentoValido
     );
   }
 
@@ -407,6 +755,9 @@ export class FilterBarComponent {
     this.editingCoupon = false;
     this.couponEditSuccess = false;
     this.editCouponError = '';
+    this.editCouponImageError = '';
+    this.editCouponImageLoading = false;
+    this.clearEditCouponImageLoadingTimeout();
   }
 
   private onUpdateCouponSuccess(): void {
@@ -433,8 +784,13 @@ export class FilterBarComponent {
     fechaFin: string;
     disponibles: number;
     estado: string;
+    terminos?: string;
+    image?: string | null;
+    imageMime?: string;
   }): void {
     this.deletingCoupon = false;
+    this.deleteCouponImageLoading = false;
+    this.clearDeleteCouponImageLoadingTimeout();
     this.deleteTarget = {
       id: coupon.id,
       titulo: coupon.titulo,
@@ -444,6 +800,9 @@ export class FilterBarComponent {
       fechaFin: this.toDisplayDate(coupon.fechaFin),
       cantidad: coupon.disponibles,
       estado: coupon.estado,
+      terminos: coupon.terminos ?? '',
+      image: coupon.image ?? null,
+      imageMime: coupon.imageMime ?? '',
     };
     this.deleteCouponOpen = true;
   }
@@ -453,6 +812,10 @@ export class FilterBarComponent {
     this.deletingCoupon = false;
     this.couponDeleteSuccess = false;
     this.deleteCouponError = '';
+    this.deleteCouponImageLoading = false;
+    this.clearDeleteCouponImageLoadingTimeout();
+    this.deleteTarget.image = null;
+    this.deleteTarget.imageMime = '';
   }
 
   submitDeleteCoupon(): void {
@@ -502,6 +865,37 @@ export class FilterBarComponent {
     this.cdr.detectChanges();
   }
 
+  setEditCouponImageLoading(loading: boolean): void {
+    this.editCouponImageLoading = loading;
+    if (loading) this.startEditCouponImageLoadingTimeout();
+    else this.clearEditCouponImageLoadingTimeout();
+    this.cdr.detectChanges();
+  }
+
+  setEditCouponImagePreview(image: string | null, imageMime = '', imageName = ''): void {
+    this.editForm.image = image;
+    this.editForm.imageMime = imageMime;
+    this.editForm.imageName = image ? (imageName || this.getDefaultImageName(imageMime)) : '';
+    this.editCouponImageLoading = false;
+    this.clearEditCouponImageLoadingTimeout();
+    this.cdr.detectChanges();
+  }
+
+  setDeleteCouponImageLoading(loading: boolean): void {
+    this.deleteCouponImageLoading = loading;
+    if (loading) this.startDeleteCouponImageLoadingTimeout();
+    else this.clearDeleteCouponImageLoadingTimeout();
+    this.cdr.detectChanges();
+  }
+
+  setDeleteCouponImagePreview(image: string | null, imageMime = ''): void {
+    this.deleteTarget.image = image;
+    this.deleteTarget.imageMime = imageMime;
+    this.deleteCouponImageLoading = false;
+    this.clearDeleteCouponImageLoadingTimeout();
+    this.cdr.detectChanges();
+  }
+
   // Utilidades de fecha
   private toISODate(dateStr: string): string {
     if (!dateStr) return '';
@@ -534,14 +928,99 @@ export class FilterBarComponent {
     return dateStr;
   }
 
+  private buildTodayIso(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  private isOnOrAfterToday(dateStr: string): boolean {
+    if (!dateStr) return false;
+    const iso = this.toISODate(dateStr);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false;
+    return iso >= this.todayIso;
+  }
+
+  private isOnOrAfterDate(dateStr: string, minDateStr: string): boolean {
+    if (!dateStr || !minDateStr) return false;
+    const isoDate = this.toISODate(dateStr);
+    const isoMin = this.toISODate(minDateStr);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(isoDate) || !/^\d{4}-\d{2}-\d{2}$/.test(isoMin)) return false;
+    return isoDate >= isoMin;
+  }
+
+  private isPositiveInteger(value: number | null): boolean {
+    return typeof value === 'number' && Number.isInteger(value) && value > 0;
+  }
+
+  private isValidNumericOrNull(value: any): boolean {
+    // Permite null, undefined, o números no negativos
+    if (value === null || value === undefined || value === '') return true;
+    if (typeof value === 'number') {
+      return Number.isFinite(value) && value >= 0;
+    }
+    if (typeof value === 'string' && value.trim() === '') return true;
+    return false;
+  }
+
+  private getDefaultImageName(mimeType?: string): string {
+    if (!mimeType) return '';
+    return mimeType.startsWith('application/pdf') ? 'Archivo actual.pdf' : 'Imagen actual';
+  }
+
+  private startCouponImageLoadingTimeout(): void {
+    this.clearCouponImageLoadingTimeout();
+    this.couponImageLoadingTimeoutId = setTimeout(() => {
+      this.couponImageLoading = false;
+      this.cdr.detectChanges();
+    }, 15000);
+  }
+
+  private clearCouponImageLoadingTimeout(): void {
+    if (!this.couponImageLoadingTimeoutId) return;
+    clearTimeout(this.couponImageLoadingTimeoutId);
+    this.couponImageLoadingTimeoutId = null;
+  }
+
+  private startEditCouponImageLoadingTimeout(): void {
+    this.clearEditCouponImageLoadingTimeout();
+    this.editCouponImageLoadingTimeoutId = setTimeout(() => {
+      this.editCouponImageLoading = false;
+      this.cdr.detectChanges();
+    }, 15000);
+  }
+
+  private clearEditCouponImageLoadingTimeout(): void {
+    if (!this.editCouponImageLoadingTimeoutId) return;
+    clearTimeout(this.editCouponImageLoadingTimeoutId);
+    this.editCouponImageLoadingTimeoutId = null;
+  }
+
+  private startDeleteCouponImageLoadingTimeout(): void {
+    this.clearDeleteCouponImageLoadingTimeout();
+    this.deleteCouponImageLoadingTimeoutId = setTimeout(() => {
+      this.deleteCouponImageLoading = false;
+      this.cdr.detectChanges();
+    }, 15000);
+  }
+
+  private clearDeleteCouponImageLoadingTimeout(): void {
+    if (!this.deleteCouponImageLoadingTimeoutId) return;
+    clearTimeout(this.deleteCouponImageLoadingTimeoutId);
+    this.deleteCouponImageLoadingTimeoutId = null;
+  }
+
   constructor(
     private router: Router,
     private renderer: Renderer2,
     @Inject(DOCUMENT) private document: Document,
     private auth: AuthService,
     private categoryService: CategoryService,
-    private cdr: ChangeDetectorRef
-  ) {}
+    private cdr: ChangeDetectorRef,
+    private ngZone: NgZone
+  ) { }
 
   private setBodyModalLock(on: boolean): void {
     const body = this.document.body;

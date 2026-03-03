@@ -1,0 +1,233 @@
+<!-- Topbar -->
+<app-topbar location="Canje de cupones"></app-topbar>
+
+<!-- Barra de búsqueda con FilterBar -->
+<app-filter-bar variant="canje-cupones" [role]="role" (scanQr)="openQrModal()"
+  (validateCode)="handleValidateCode($event)"></app-filter-bar>
+<!-- Vista detalle cupón canjeado (MAQUETADO ESTÁTICO) -->
+<div class="bg-white rounded-[28px] p-6 md:p-8 mt-6">
+
+  <!-- Header -->
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-semibold text-[#0E225C]">
+      Información del cupón
+    </h2>
+
+    <div class="flex gap-3">
+      <button
+        class="flex items-center gap-2 px-4 py-2 border border-[#0E225C] rounded-full text-[#0E225C] hover:bg-[#e9edfb] transition">
+        <svg class="w-5 h-5">
+          <use href="assets/icons/sprite.svg#broom"></use>
+        </svg>
+        Limpiar
+      </button>
+
+      <button
+        class="flex items-center gap-2 px-5 py-2 bg-[#538CFF] text-white rounded-full hover:bg-[#3c74e6] transition">
+        <svg class="w-5 h-5">
+          <use href="assets/icons/sprite.svg#check-circle"></use>
+        </svg>
+        Validar cupón
+      </button>
+    </div>
+  </div>
+
+  <!-- Card interior -->
+  <div class="bg-[#F4F7FD] rounded-[20px] p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
+
+    <!-- Columna izquierda -->
+    <div class="space-y-5">
+
+      <div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1">
+          <svg class="w-4 h-4">
+            <use href="assets/icons/sprite.svg#coupon-title"></use>
+          </svg>
+          Título del cupón
+        </div>
+        <p class="font-semibold text-[#0E225C] text-lg">
+          Descuento en almuerzos
+        </p>
+      </div>
+
+      <div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1">
+          <svg class="w-4 h-4">
+            <use href="assets/icons/sprite.svg#user"></use>
+          </svg>
+          Correo
+        </div>
+        <p class="text-[#0E225C]">
+          correo.ejemplo@correo.com
+        </p>
+      </div>
+
+      <div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1">
+          <svg class="w-4 h-4">
+            <use href="assets/icons/sprite.svg#calendar"></use>
+          </svg>
+          Vigencia
+        </div>
+        <p class="text-[#0E225C]">
+          31/12/2027
+        </p>
+      </div>
+
+      <div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-2">
+          <svg class="w-4 h-4">
+            <use href="assets/icons/sprite.svg#terms"></use>
+          </svg>
+          Términos y condiciones
+        </div>
+        <ul class="list-disc list-inside text-sm text-[#1A2440] space-y-1">
+          <li>Válido únicamente para consumo en el local.</li>
+          <li>No acumulable con otras promociones o descuentos.</li>
+          <li>Un cupón por persona por visita.</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Columna derecha -->
+    <div class="space-y-5">
+
+      <div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1">
+          <svg class="w-4 h-4">
+            <use href="assets/icons/sprite.svg#user"></use>
+          </svg>
+          Nombre
+        </div>
+        <p class="text-[#0E225C] font-medium">
+          Juan Pérez
+        </p>
+      </div>
+
+      <div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1">
+          <svg class="w-4 h-4">
+            <use href="assets/icons/sprite.svg#status-check"></use>
+          </svg>
+          Estado
+        </div>
+        <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-700">
+          Vigente
+        </span>
+      </div>
+
+      <div>
+        <div class="flex items-center gap-2 text-sm text-gray-500 mb-1">
+          <svg class="w-4 h-4">
+            <use href="assets/icons/sprite.svg#description-text"></use>
+          </svg>
+          Descripción
+        </div>
+        <p class="text-[#1A2440] leading-relaxed">
+          Obtén 10% de descuento en tu almuerzo favorito.
+          Válido de lunes a viernes, de 12:00 p. m. a 3:00 p. m.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Footer botones -->
+  <div class="flex justify-center gap-4 mt-8">
+    <button class="px-6 py-3 border border-[#0E225C] rounded-full text-[#0E225C] hover:bg-[#e9edfb] transition">
+      Cancelar
+    </button>
+
+    <button class="px-6 py-3 bg-[#538CFF] text-white rounded-full hover:bg-[#3c74e6] transition">
+      Confirmar (canje irreversible)
+    </button>
+  </div>
+
+</div>
+<!-- Modal de escaneo QR -->
+@if (showQrModal) {
+<div class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div (click)="$event.stopPropagation()"
+    class="bg-white rounded-2xl p-8 w-full max-w-[420px] max-h-[90vh] overflow-y-auto relative shadow-2xl flex flex-col items-center animate-fade-in">
+    <!-- Botón cerrar -->
+    <button (click)="closeQrModal()"
+      class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full border-gray-300 text-gray-400 hover:text-gray-600 hover:border-gray-400 transition">
+      <svg class="w-7 h-7">
+        <use href="assets/icons/sprite.svg#close-circle"></use>
+      </svg>
+    </button>
+    <!-- Título -->
+    <h2 class="text-2xl font-semibold text-[#0E225C] text-center mb-5">Escanear QR</h2>
+    <!-- Área de escaneo -->
+    <div class="relative w-[260px] h-[260px] flex items-center justify-center mb-6">
+      <img src="assets/img/qr-bg.jpg" alt="QR background" class="absolute w-full h-full object-cover rounded-xl" />
+      <div class="absolute w-full h-full flex items-center justify-center">
+        <div class="border-2 border-white rounded-lg w-[200px] h-[200px] flex items-center justify-center">
+          <!-- Aquí iría el preview de la cámara -->
+          <span class="text-[#0E225C] text-lg font-medium">Vista previa QR</span>
+        </div>
+      </div>
+    </div>
+    <!-- Botones de acción -->
+    <div class="flex gap-4 w-full justify-center mt-2">
+      <button
+        class="bg-[#538CFF] text-white px-6 py-2 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-[#3976e6] transition">
+        <svg class="w-6 h-6">
+          <use href="assets/icons/sprite.svg#camera"></use>
+        </svg>
+        Escanear QR
+      </button>
+      <button (click)="closeQrModal()"
+        class="bg-white border border-[#0E225C] text-[#0E225C] px-6 py-2 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-[#f3f3fd] transition">
+        <svg class="w-6 h-6">
+          <use href="assets/icons/sprite.svg#close-circle"></use>
+        </svg>
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Modal de validación de cupón -->
+@if (showCouponModal && selectedCoupon) {
+<div (click)="closeCouponModal()"
+  class="fixed inset-0 z-[9999] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm md:p-4">
+  <div (click)="$event.stopPropagation()"
+    class="bg-[#ffffff] rounded-t-[24px] md:rounded-[24px] p-6 md:p-8 w-full md:w-[92%] max-w-[560px] max-h-[85vh] overflow-y-auto relative shadow-2xl animate-slide-up md:animate-fade-in">
+    <!-- Botón cerrar -->
+    <button (click)="closeCouponModal()"
+      class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full border-gray-300 text-gray-400 hover:text-gray-600 hover:border-gray-400 transition">
+      <svg class="w-7 h-7">
+        <use href="assets/icons/sprite.svg#close-circle"></use>
+      </svg>
+    </button>
+    <!-- Título -->
+    <h2 class="text-2xl font-semibold text-[#0E225C] text-center mb-5">Validar cupón</h2>
+    <!-- Información del cupón -->
+    <div class="rounded-[24px] bg-[#F4F7FD] p-4 md:p-5 mb-6">
+      <p class="text-center text-[18px] font-bold text-[#0E225C] mb-4 tracking-wide">
+        {{ selectedCoupon.titulo }}
+      </p>
+      <div class="rounded-[24px] border-[3px] border-[#538CFF] bg-white p-4 md:p-5 flex flex-col items-center gap-4">
+        <div class="flex flex-col items-center">
+          <span class="text-[#111E60] font-medium text-[18px] mb-2">Código</span>
+          <span class="text-lg font-bold text-[#538CFF]">{{ selectedCoupon.codigo }}</span>
+        </div>
+        <div class="flex flex-col items-center">
+          <span class="text-[#111E60] font-medium text-[18px] mb-2">Estado</span>
+          <span class="text-base font-semibold"
+            [ngClass]="{'text-green-600': selectedCoupon.estado === 'Válido', 'text-red-600': selectedCoupon.estado !== 'Válido'}">{{
+            selectedCoupon.estado }}</span>
+        </div>
+      </div>
+    </div>
+    <!-- Botón de acción -->
+    <button (click)="validarCupon(selectedCoupon)"
+      class="w-full bg-[#538CFF] text-white py-3 rounded-lg font-semibold text-lg hover:bg-[#3a6fd8] transition">Validar
+      cupón</button>
+  </div>
+</div>
+}

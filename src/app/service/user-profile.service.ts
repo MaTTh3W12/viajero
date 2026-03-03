@@ -35,7 +35,7 @@ interface GetUserByEmailVariables {
 }
 
 export interface UserCompanyProfile {
-  id: number;
+  id: number | string;
   company_commercial_name: string | null;
   first_name: string | null;
   last_name: string | null;
