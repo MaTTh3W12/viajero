@@ -149,6 +149,33 @@ export interface CouponListResult {
 }
 
 const DEFAULT_HASURA_ENDPOINT = 'https://api.grupoavanza.work/v1/graphql';
+const GET_COUPONS_QUERY = `
+  query GetCoupons($limit: Int, $offset: Int) {
+    viajerosv_coupons(limit: $limit, offset: $offset) {
+      category_id
+      id
+      user_id
+      auto_published
+      published
+      title
+      end_date
+      start_date
+      stock_available
+      stock_total
+      price
+      price_discount
+      description
+      terms
+      created_at
+      updated_at
+    }
+    viajerosv_coupons_aggregate {
+      aggregate {
+        count
+      }
+    }
+  }
+`;
 
 @Injectable({
   providedIn: 'root',
@@ -157,6 +184,9 @@ export class CouponService {
   constructor(private http: HttpClient) {}
 
   private get endpoint(): string {
+    if (typeof window === 'undefined') {
+      return DEFAULT_HASURA_ENDPOINT;
+    }
     return window.__ENV__?.HASURA_GRAPHQL_ENDPOINT ?? DEFAULT_HASURA_ENDPOINT;
   }
 
@@ -187,36 +217,42 @@ export class CouponService {
       );
   }
 
-  getCoupons(token: string, variables: GetCouponsVariables = {}): Observable<CouponListResult> {
-    const query = `
-      query GetCoupons($limit: Int, $offset: Int) {
-        viajerosv_coupons(limit: $limit, offset: $offset) {
-          category_id
-          id
-          user_id
-          auto_published
-          published
-          title
-          end_date
-          start_date
-          stock_available
-          stock_total
-          price
-          price_discount
-          description
-          terms
-          created_at
-          updated_at
-        }
-        viajerosv_coupons_aggregate {
-          aggregate {
-            count
-          }
-        }
-      }
-    `;
+  private executePublicOperation<TData, TVariables extends object>(
+    query: string,
+    variables: TVariables
+  ): Observable<TData> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+    });
 
-    return this.executeOperation<GetCouponsData, GetCouponsVariables>(token, query, variables).pipe(
+    return this.http
+      .post<GraphQLResponse<TData>>(this.endpoint, { query, variables }, { headers })
+      .pipe(
+        map((response) => {
+          if (response.errors?.length) {
+            throw new Error(response.errors.map((error) => error.message).join(' | '));
+          }
+
+          if (!response.data) {
+            throw new Error('GraphQL response sin data');
+          }
+
+          return response.data;
+        })
+      );
+  }
+
+  getCoupons(token: string, variables: GetCouponsVariables = {}): Observable<CouponListResult> {
+    return this.executeOperation<GetCouponsData, GetCouponsVariables>(token, GET_COUPONS_QUERY, variables).pipe(
+      map((data) => ({
+        rows: data.viajerosv_coupons,
+        total: data.viajerosv_coupons_aggregate.aggregate.count,
+      }))
+    );
+  }
+
+  getPublicCoupons(variables: GetCouponsVariables = {}): Observable<CouponListResult> {
+    return this.executePublicOperation<GetCouponsData, GetCouponsVariables>(GET_COUPONS_QUERY, variables).pipe(
       map((data) => ({
         rows: data.viajerosv_coupons,
         total: data.viajerosv_coupons_aggregate.aggregate.count,
