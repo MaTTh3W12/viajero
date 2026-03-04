@@ -23,6 +23,7 @@ import { SavingsComponent } from '../../../shared/components/savings/savings.com
 export class CouponsComponent implements OnInit {
 
   selectedCategory = 'all';
+  foundCoupons = 0;
 
   constructor() { }
 
@@ -32,6 +33,10 @@ export class CouponsComponent implements OnInit {
 
   selectCategory(cat: string) {
     this.selectedCategory = cat;
+  }
+
+  onCouponsFound(total: number): void {
+    this.foundCoupons = total;
   }
 
   ngOnInit(): void {
