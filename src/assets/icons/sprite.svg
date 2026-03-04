@@ -293,4 +293,19 @@
     <path d="M11.75 18.37L13.4 21.08" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
     <path d="M16.8701 15.25L18.5201 17.96" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
   </symbol>
+
+  <!-- Coupon 1 / Ticket -->
+  <symbol id="coupon1" viewBox="0 0 24 24" fill="none">
+    <path d="M18.91 14.6925C18.91 15.9825 19.97 17.0325 21.26 17.0325C21.26 20.7825 20.32 21.7225 16.57 21.7225H7.19C3.44 21.7225 2.5 20.7825 2.5 17.0325V16.5725C3.79 16.5725 4.85 15.5125 4.85 14.2225C4.85 12.9325 3.79 11.8725 2.5 11.8725V11.4125C2.51 7.66247 3.44 6.72247 7.19 6.72247H16.56C20.31 6.72247 21.25 7.66247 21.25 11.4125V12.3525C19.96 12.3525 18.91 13.3925 18.91 14.6925Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M9.87891 6.72266L9.87891 21.7227" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 5"/>
+    <path d="M14.7 10.7L12.9 12.5L11.7 11.3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
+
+  <!-- SMS Tracking -->
+  <symbol id="sms-tracking" viewBox="0 0 24 24" fill="none">
+    <path d="M2 8.5C2 5 4 3.5 7 3.5H17C20 3.5 22 5 22 8.5V15.5C22 19 20 20.5 17 20.5H7" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M17 9L13.87 11.5C12.84 12.32 11.15 12.32 10.12 11.5L7 9" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M2 16.5H8" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M2 12.5H5" stroke="currentColor" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+  </symbol>
 </svg>
