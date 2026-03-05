@@ -1,210 +1,122 @@
 <app-topbar location="Dashboard">
 </app-topbar>
 <!-- Contenedor Principal -->
-<div class="bg-white rounded-b-[30px] shadow-sm px-6 pt-6 pb-8 space-y-5">
-  <div class="mx-auto max-w-7xl zoom-container">
+<div class="bg-[#FFFFFF] min-h-screen px-4 py-5 md:p-10 space-y-5 md:space-y-8">
 
-    <!-- Primera fila: Empresas y Ciudadanos -->
-    <div class="flex flex-col items-center justify-center gap-3 lg:flex-row">
-      <!-- Card: Total empresas registradas (borde azul, fondo blanco) -->
-      <div
-        class="bg-white rounded-[40px] border-[3px] border-[#538CFF] shadow-sm flex flex-row items-center justify-between gap-6 relative overflow-hidden w-full md:w-[526px] h-[180px] pl-8 pr-6">
-        <!-- Info Izquierda -->
-        <div class="z-10 flex flex-col justify-center w-auto">
-          <p class="text-[#111E60] font-medium text-[16px] leading-none mb-2">Total de empresas<br>registradas</p>
-          <div class="flex items-center gap-3">
-            <div class="w-[45px] h-[45px] rounded-full bg-[#E6EFFF] flex items-center justify-center">
-              <img src="assets/icons/empresas.png" alt="Empresas registradas" class="w-[25px] h-[25px]" />
-            </div>
-            <span class="text-[40px] font-normal text-[#111E60] leading-none">397</span>
-          </div>
-        </div>
+  <!-- Header -->
+  <div class="border-b border-[#C8CFDA] pb-3">
+    <div class="flex justify-between items-center">
+      <h1 class="text-2xl md:text-2xl font-semibold text-[#1A2440]">
+        {{ companyName }}
+      </h1>
 
-        <!-- Gráfico Simulado Derecha (Fondo Grisáceo) -->
-        <div
-          class="bg-[#F4F7FD] rounded-[32px] px-4 pt-4 pb-2 w-[250px] h-[150px] flex flex-col items-center justify-end">
-          <div class="flex items-end h-20 gap-4 mb-2">
-            <!-- Barra SEP -->
-            <div class="flex flex-col items-center gap-1">
-              <div class="w-8 bg-[#E6EFFF] rounded-t-lg h-8 flex items-end justify-center pb-1">
-                <span class="text-[10px] font-bold text-[#0E225C]">25</span>
-              </div>
-              <span class="text-[10px] text-gray-400 uppercase">SEP</span>
-            </div>
-            <!-- Barra OCT -->
-            <div class="flex flex-col items-center gap-1">
-              <div class="w-8 bg-[#C6DBFF] rounded-t-lg h-12 flex items-end justify-center pb-1">
-                <span class="text-[10px] font-bold text-[#0E225C]">35</span>
-              </div>
-              <span class="text-[10px] text-gray-400 uppercase">OCT</span>
-            </div>
-            <!-- Barra NOV -->
-            <div class="flex flex-col items-center gap-1">
-              <div class="w-8 bg-[#A2C3FF] rounded-t-lg h-16 flex items-end justify-center pb-1">
-                <span class="text-[10px] font-bold text-[#0E225C]">45</span>
-              </div>
-              <span class="text-[10px] text-gray-400 uppercase">NOV</span>
-            </div>
+      <div class="bg-[#E2E8F0] px-4 py-2 rounded-full text-base md:text-sm font-medium text-[#1A2440]">
+        {{ currentMonthLabel }}
+      </div>
+    </div>
+  </div>
+
+  <!-- Estadísticas -->
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+    <div *ngFor="let stat of stats"
+         class="bg-[#F4F7FD] rounded-2xl p-4 md:p-6 shadow-sm flex flex-col items-center justify-center text-center gap-3 min-h-[138px] md:min-h-[150px]">
+
+      <div>
+        <p class="text-base md:text-sm leading-tight text-[#0E225C] mb-2">
+          {{ stat.label }}
+        </p>
+        <div class="flex items-center justify-center gap-3">
+          <div class="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center"
+               [ngClass]="stat.color">
+            <svg class="w-6 h-6 md:w-7 md:h-7 text-[#1A2440]" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#ticket-money"></use>
+            </svg>
           </div>
-          <p class="text-[10px] text-gray-400 font-medium">En los últimos 3 meses</p>
+          <p class="text-[42px] leading-none md:text-5xl font-semibold text-[#0E225C]">
+            {{ stat.value }}
+          </p>
         </div>
       </div>
 
-      <!-- Card: Total ciudadanos (Fondo Azul Claro) -->
-      <div
-        class="bg-[#E6EFFF] rounded-[40px] flex flex-col md:flex-row justify-between gap-6 items-center w-full md:w-[526px] h-[180px] pl-8 pr-6 py-4">
+    </div>
+  </div>
 
-        <!-- Info Izquierda -->
-        <div class="flex flex-col justify-center w-full h-full md:w-auto">
-          <div class="space-y-2">
-            <p class="text-[#111E60] font-medium text-[16px] leading-none mb-2">Total de ciudadanos<br>registrados</p>
+  <!-- Gráfica + Top -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
 
-            <div class="flex items-center gap-3 mt-2">
-              <div
-                class="w-[45px] h-[45px] rounded-full border border-[#FFFCD4] flex items-center justify-center bg-white">
-                <img src="assets/icons/usuario-amarillo.png" alt="Ciudadanos registrados" class="w-[25px] h-[25px]" />
-              </div>
-              <span class="text-[40px] font-normal text-[#111E60] leading-none">2151</span>
-            </div>
-          </div>
-        </div>
+    <!-- Gráfica -->
+    <div class="lg:col-span-2 bg-[#F4F7FD] rounded-2xl p-4 md:p-6 shadow-sm">
+      <h2 class="font-semibold text-[#1A2440] text-3xl md:text-3xl mb-4">
+        Desempeño de Canjes
+      </h2>
 
-        <!-- Gráfico Simulado Derecha (Caja Blanca con borde azul) -->
-        <div
-          class="bg-[#ffffff] rounded-[32px] px-4 pt-4 pb-2 w-[250px] h-[150px] flex flex-col items-center justify-end">
-          <div class="flex items-end h-20 gap-4 mb-2">
-            <!-- Barra SEP -->
-            <div class="flex flex-col items-center gap-1">
-              <div class="w-8 bg-[#FFFCD4] rounded-t-lg h-10 flex items-end justify-center pb-1">
-                <span class="text-[10px] font-bold text-[#0E225C]">75</span>
-              </div>
-              <span class="text-[10px] text-gray-400 uppercase">SEP</span>
-            </div>
-            <!-- Barra OCT -->
-            <div class="flex flex-col items-center gap-1">
-              <div class="w-8 bg-[#FFF9A9] rounded-t-lg h-16 flex items-end justify-center pb-1">
-                <span class="text-[10px] font-bold text-[#0E225C]">101</span>
-              </div>
-              <span class="text-[10px] text-gray-400 uppercase">OCT</span>
-            </div>
-            <!-- Barra NOV -->
-            <div class="flex flex-col items-center gap-1">
-              <div class="w-8 bg-[#F8F18D] rounded-t-lg h-8 flex items-end justify-center pb-1">
-                <span class="text-[10px] font-bold text-[#0E225C]">65</span>
-              </div>
-              <span class="text-[10px] text-gray-400 uppercase">NOV</span>
-            </div>
-          </div>
-          <p class="text-[10px] text-gray-400 font-medium">En los últimos 3 meses</p>
-        </div>
+      <div class="bg-white border border-[#D5DBE5] rounded-2xl p-3 md:p-4 h-[280px] md:h-[300px]">
+        <canvas
+          baseChart
+          [data]="barChartData"
+          [options]="barChartOptions"
+          chartType="bar">
+        </canvas>
       </div>
     </div>
 
-    <!-- Segunda fila: Cupones (Tarjeta estilo diseño) -->
-    <div class="flex justify-center w-full mt-4">
-      <div
-        class="bg-[#E6FBFF] rounded-[40px] w-full max-w-[1068px] h-auto lg:h-[180px] px-8 py-6 lg:px-16 flex flex-col lg:flex-row items-center justify-between gap-10 shadow-sm">
+    <!-- Top cupones -->
+    <div class="bg-[#F4F7FD] rounded-2xl p-4 md:p-6 shadow-sm">
+      <h2 class="font-semibold text-[#1A2440] text-3xl md:text-3xl mb-4">
+        Top cupones canjeados
+      </h2>
 
-        <!-- Bloque 1: Cupones Totales -->
-        <div class="flex flex-col items-center justify-center w-full text-center lg:w-1/3">
-          <p class="text-[#111E60] font-medium text-[16px] leading-tight mb-2">Cupones totales<br>adquiridos</p>
-          <div class="flex items-center justify-center gap-3">
-            <!-- Círculo para el icono -->
-            <div class="w-[45px] h-[45px] rounded-full bg-[#D4FFF1] flex items-center justify-center">
-              <img src="assets/icons/cupones-totales.png" alt="Cupones totales" class="w-[25px] h-[25px]" />
-            </div>
-            <span class="text-[40px] font-medium text-[#111E60] leading-none">385</span>
-          </div>
+      <div class="space-y-0">
+        <div *ngFor="let coupon of topCoupons"
+             class="flex justify-between items-center text-base md:text-sm py-3 border-b border-[#D5DBE5]">
+          <span class="text-gray-700">{{ coupon.name }}</span>
+          <span class="font-medium text-[#1A2440]">
+            {{ coupon.total }}
+          </span>
         </div>
+      </div>
 
-        <!-- Divisor visual (oculto en móvil, visible en escritorio) -->
-        <div class="hidden lg:block w-[6px] h-[100px] bg-[#ffffff] rounded-lg"></div>
-
-        <!-- Bloque 2: Cupones Canjeados -->
-        <div class="flex flex-col items-center justify-center w-full text-center lg:w-1/3">
-          <p class="text-[#111E60] font-medium text-[18px] leading-tight mb-2">Cupones<br>canjeados</p>
-          <div class="flex items-center justify-center gap-3">
-            <div class="w-[45px] h-[45px] rounded-full bg-[#D4D6FF] flex items-center justify-center">
-              <img src="assets/icons/cupones-canjeados.png" alt="Cupones canjeados" class="w-[25px] h-[25px]" />
-            </div>
-
-            <!-- Número principal -->
-            <span class="text-[40px] font-medium text-[#111E60] leading-none">21</span>
-
-            <!-- Porcentaje y texto lateral -->
-            <div class="flex flex-row items-center gap-2 ml-[-4px] leading-tight">
-              <div class="bg-[#D4D6FF] text-[#111E60] text-[14px] font-medium px-3 py-2 rounded-[12px]">5%</div>
-              <span class="text-[10px] text-[#111E60] font-medium text-left">de los<br>boletos<br>totales</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Divisor visual -->
-        <div class="hidden lg:block w-[6px] h-[100px] bg-[#ffffff] rounded-lg"></div>
-
-        <!-- Bloque 3: Cupones Vencidos -->
-        <div class="flex flex-col items-center justify-center w-full text-center lg:w-1/3">
-          <p class="text-[#111E60] font-medium text-[16px] leading-tight mb-2">Cupones<br>vencidos</p>
-          <div class="flex items-center justify-center gap-3">
-            <div class="w-[45px] h-[45px] rounded-full bg-[#FFE2DB] flex items-center justify-center">
-              <img src="assets/icons/cupones-vencidos.png" alt="Cupones vencidos" class="w-[25px] h-[25px]" />
-            </div>
-            <span class="text-[40px] font-medium text-[#111E60] leading-none">31,000</span>
-          </div>
-        </div>
-
+      <div class="mt-4 text-center">
+        <span class="text-blue-600 text-2xl md:text-sm font-medium cursor-pointer underline underline-offset-2">
+          Ver todos
+        </span>
       </div>
     </div>
-    <!-- Fin Segunda fila -->
+  </div>
 
-    <!-- Tercera fila: Cupones Activos y Empresas sin cupones -->
-    <div class="flex flex-col items-center justify-center gap-3 mt-4 lg:flex-row">
-      <!-- Card: Total de cupones activos -->
-      <div
-        class="bg-[#D4FFF1] rounded-[40px] flex flex-col items-center justify-center w-full md:w-[526px] h-[180px] px-6 shadow-sm">
-        <p class="text-[#111E60] font-medium text-[16px] leading-none mb-3 text-center">Total de cupones<br>activos</p>
+  <!-- Transacciones -->
+  <div class="bg-[#F4F7FD] rounded-2xl p-4 md:p-6 shadow-sm">
+    <h2 class="font-semibold text-[#1A2440] text-3xl md:text-3xl mb-4">
+      Transacciones recientes
+    </h2>
 
-        <div class="flex items-center justify-center gap-1">
-          <!-- Icono -->
-          <div class="w-[45px] h-[45px] rounded-full bg-[#8CFFD9] flex items-center justify-center">
-            <img src="assets/icons/cupones-activos.png" alt="Cupones activos" class="w-[25px] h-[25px]" />
-          </div>
+    <div class="overflow-x-auto bg-white rounded-xl border border-[#D5DBE5]">
+      <table class="min-w-[680px] w-full text-sm">
+        <thead class="text-left text-gray-500 border-b">
+          <tr>
+            <th class="py-3 px-3 md:px-4">Fecha y hora</th>
+            <th class="px-3 md:px-4">Cupón/Oferta</th>
+            <th class="px-3 md:px-4">Usuario</th>
+            <th class="px-3 md:px-4">Estado</th>
+          </tr>
+        </thead>
 
-          <!-- Numero -->
-          <span class="text-[40px] font-medium text-[#111E60] leading-none">172</span>
-
-          <!-- Tag -->
-          <div class="bg-[#8CFFD9] text-[#111E60] text-[12px] font-medium px-4 py-2 rounded-[12px]">
-            en 165 empresas
-          </div>
-        </div>
-      </div>
-
-      <!-- Card: Total de empresas sin cupones creados -->
-      <div
-        class="bg-[#FFE2DB] rounded-[40px] flex flex-col items-center justify-center w-full md:w-[526px] h-[180px] px-6 shadow-sm">
-        <p class="text-[#111E60] font-medium text-[16px] leading-none mb-3 text-center">Total de empresas<br>sin cupones
-          creados</p>
-
-        <div class="flex items-center justify-center gap-2">
-          <!-- Icono -->
-          <div class="w-[45px] h-[45px] rounded-full bg-[#FFC4B5] flex items-center justify-center">
-            <img src="assets/icons/empresas-sin-cupones.png" alt="Empresas sin cupones" class="w-[25px] h-[25px]" />
-          </div>
-
-          <!-- Numero -->
-          <span class="text-[40px] font-medium text-[#111E60] leading-none">93</span>
-
-          <!-- Tag Group -->
-          <div class="flex items-center gap-2">
-            <div class="bg-[#FFC4B5] text-[#111E60] text-[14px] font-medium px-3 py-2 rounded-[12px]">23%</div>
-            <span class="text-[10px] text-[#111E60] font-medium leading-tight text-left">de
-              las<br>empresas<br>registradas</span>
-          </div>
-        </div>
-      </div>
+        <tbody>
+          <tr *ngFor="let t of transactions"
+              class="border-b hover:bg-gray-50 transition">
+            <td class="py-3 px-3 md:px-4">{{ t.date }}</td>
+            <td class="px-3 md:px-4">{{ t.coupon }}</td>
+            <td class="px-3 md:px-4">{{ t.user }}</td>
+            <td class="px-3 md:px-4">
+              <span class="px-3 py-1 rounded-full text-xs bg-green-100 text-green-700">
+                {{ t.status }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-    <!-- Fin Tercera fila -->
 
   </div>
+
 </div>

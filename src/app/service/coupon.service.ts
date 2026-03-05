@@ -37,6 +37,10 @@ interface GetCouponOwnerData {
   viajerosv_coupons_by_pk: CouponOwner | null;
 }
 
+interface GetCouponByIdData {
+  viajerosv_coupons_by_pk: Coupon | null;
+}
+
 interface InsertCouponData {
   insert_viajerosv_coupons: {
     affected_rows: number;
@@ -257,6 +261,35 @@ export class CouponService {
         rows: data.viajerosv_coupons,
         total: data.viajerosv_coupons_aggregate.aggregate.count,
       }))
+    );
+  }
+
+  getPublicCouponById(id: number): Observable<Coupon | null> {
+    const query = `
+      query GetPublicCouponById($id: bigint!) {
+        viajerosv_coupons_by_pk(id: $id) {
+          category_id
+          id
+          user_id
+          auto_published
+          published
+          title
+          end_date
+          start_date
+          stock_available
+          stock_total
+          price
+          price_discount
+          description
+          terms
+          created_at
+          updated_at
+        }
+      }
+    `;
+
+    return this.executePublicOperation<GetCouponByIdData, { id: number }>(query, { id }).pipe(
+      map((data) => data.viajerosv_coupons_by_pk ?? null)
     );
   }
 

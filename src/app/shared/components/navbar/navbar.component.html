@@ -23,6 +23,7 @@
         <!-- CUPONES -->
           <a routerLink="/coupons"
             routerLinkActive="!bg-[#0E225C] !text-white shadow-md"
+            [class.coupons-active]="isCouponsActive()"
             class="px-4 py-2 rounded-full text-[#0E225C] bg-[#F4F7FD] hover:bg-gray-100 transition-all duration-300 text-sm font-medium font-museo cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md">
           Cupones
         </a>
@@ -154,6 +155,7 @@
           <!-- Cupones Mobile -->
           <a class="w-full text-center py-3.5 hover:bg-white/40 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer"
              routerLinkActive="bg-[#E6EDFF] font-bold text-[#4F8CFF]"
+             [class.coupons-active-mobile]="isCouponsActive()"
              routerLink="/coupons" (click)="open = false">
             Cupones
           </a>
