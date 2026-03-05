@@ -1,0 +1,11 @@
+.coupons-active {
+  background-color: #0e225c !important;
+  color: #ffffff !important;
+  box-shadow: 0 4px 12px rgba(14, 34, 92, 0.18);
+}
+
+.coupons-active-mobile {
+  background-color: #e6edff !important;
+  color: #4f8cff !important;
+  font-weight: 700;
+}
