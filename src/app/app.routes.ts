@@ -28,6 +28,12 @@ export const routes: Routes = [
         .then(m => m.ViewCouponsComponent),
   },
   {
+    path: 'my-coupons',
+    loadComponent: () =>
+      import('./Public/pages/my-coupons/my-coupons.component')
+        .then(m => m.MyCouponsComponent),
+  },
+  {
     path: 'contact',
     loadComponent: () =>
       import('./Public/pages/contact/contact.component')

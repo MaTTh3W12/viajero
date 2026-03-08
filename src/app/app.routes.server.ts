@@ -16,6 +16,10 @@ export const serverRoutes: ServerRoute[] = [
     renderMode: RenderMode.Prerender
   },
   {
+    path: 'my-coupons',
+    renderMode: RenderMode.Prerender
+  },
+  {
     path: 'contact',
     renderMode: RenderMode.Prerender
   },

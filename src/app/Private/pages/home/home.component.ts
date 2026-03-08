@@ -1,6 +1,7 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { TopbarComponent } from '../../../shared/dashboard/topbar/topbar.component';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectorRef } from '@angular/core';
 import { BaseChartDirective } from 'ng2-charts';
 import { AuthService, AuthUser } from '../../../service/auth.service';
 import { Subscription } from 'rxjs';
@@ -104,7 +105,10 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
   };
 
-  constructor(private auth: AuthService) {}
+  constructor(
+    private auth: AuthService,
+    private cdr: ChangeDetectorRef
+  ) {}
 
   ngOnInit(): void {
     this.currentMonthLabel = this.getCurrentMonthLabel();
@@ -114,6 +118,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
     this.userSub = this.auth.user$.subscribe((user: AuthUser | null) => {
       this.companyName = user?.companyName?.trim() || user?.username || this.companyName;
+      this.cdr.detectChanges();
     });
   }
 

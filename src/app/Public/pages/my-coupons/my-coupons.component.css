@@ -1,0 +1,36 @@
+.hero-ticket-notches::before,
+.hero-ticket-notches::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60px;
+  height: 60px;
+  background: #f3f6fd;
+  border-radius: 50%;
+  z-index: 20;
+}
+
+.hero-ticket-notches::before {
+  left: -14px;
+}
+
+.hero-ticket-notches::after {
+  right: -14px;
+}
+
+@media (max-width: 768px) {
+  .hero-ticket-notches::before,
+  .hero-ticket-notches::after {
+    width: 40px;
+    height: 40px;
+  }
+
+  .hero-ticket-notches::before {
+    left: -6px;
+  }
+
+  .hero-ticket-notches::after {
+    right: -6px;
+  }
+}

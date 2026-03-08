@@ -1,4 +1,4 @@
-import { Injectable, inject, PLATFORM_ID } from '@angular/core';
+import { Injectable, inject, NgZone, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject, firstValueFrom } from 'rxjs';
 import { KeycloakService } from './keycloak.service';
@@ -76,6 +76,7 @@ const KEYCLOAK_CLIENT_IDS = new Set<string>(Object.values(KC_CLIENTS));
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private platformId = inject(PLATFORM_ID);
+  private ngZone = inject(NgZone);
   private tokenExpiryTimer: ReturnType<typeof setTimeout> | null = null;
 
   private _token = new BehaviorSubject<string | null>(null);
@@ -469,7 +470,7 @@ export class AuthService {
       role: normalizedRole,
     };
 
-    this._user.next(appUser);
+    this.ngZone.run(() => this._user.next(appUser));
     this.saveToStorage(appUser);
   }
 
@@ -539,7 +540,7 @@ export class AuthService {
       companyName: profile.company_commercial_name,
     };
 
-    this._user.next(nextUser);
+    this.ngZone.run(() => this._user.next(nextUser));
     this.saveToStorage(nextUser);
   }
 
