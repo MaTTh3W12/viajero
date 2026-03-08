@@ -45,11 +45,13 @@ export class TopbarComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.sessionExpiredSub = this.auth.sessionExpired$.subscribe(expired => {
       this.showSessionExpiredModal = expired;
+      this.cdr.detectChanges();
     });
 
     this.userSub = this.auth.user$.subscribe((user) => {
       this.user = user;
       this.role = user?.role ?? null;
+      this.cdr.detectChanges();
     });
   }
 

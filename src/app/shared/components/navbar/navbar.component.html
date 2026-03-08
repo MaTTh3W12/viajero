@@ -97,7 +97,44 @@
         </div>
         }
 
-        @if (isKeycloakLoggedIn) {
+        @if (isPublicUserLoggedIn) {
+        <button (click)="goToMyCoupons()"
+          [class.my-coupons-active]="isMyCouponsActive()"
+          class="ml-2 px-5 py-2 rounded-full border border-[#538CFF] text-[#538CFF] bg-white hover:bg-[#EEF4FF] transition-colors text-sm font-medium font-museo uppercase">
+          Mis cupones
+        </button>
+
+        <div class="relative ml-2">
+          <button
+            (click)="toggleUserDropdown()"
+            class="px-5 py-2 rounded-full bg-[#4F8CFF] text-white hover:bg-[#3f7ff3] transition-colors text-sm font-medium font-museo uppercase inline-flex items-center gap-2">
+            <span>{{ displayUserName }}</span>
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 class="w-4 h-4 transition-transform duration-200"
+                 [class.rotate-180]="isUserDropdownOpen"
+                 fill="none"
+                 viewBox="0 0 24 24"
+                 stroke="currentColor"
+                 stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          @if (isUserDropdownOpen) {
+            <div class="absolute top-full right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
+              <button type="button"
+                (click)="openLogoutModal()"
+                class="w-full text-left px-5 py-3 text-sm text-[#0E225C] hover:bg-slate-50 transition-colors font-medium inline-flex items-center gap-2">
+                <svg class="w-4 h-4 text-[#538CFF]" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#logout"></use>
+                </svg>
+                Cerrar sesión
+              </button>
+            </div>
+            <div class="fixed inset-0 z-40 bg-transparent" (click)="isUserDropdownOpen = false"></div>
+          }
+        </div>
+        } @else if (isKeycloakLoggedIn) {
         <button (click)="openLogoutModal()"
           class="ml-2 px-4 py-2 rounded-full text-white bg-[#0E225C] hover:bg-[#0B1B4B] transition-colors text-sm font-museo cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md">
           Cerrar sesión
@@ -204,9 +241,28 @@
            </div>
            }
 
-           @if (isKeycloakLoggedIn) {
-           <button class="w-full text-center py-3.5 hover:bg-white/40 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer font-medium"
+           @if (isPublicUserLoggedIn) {
+           <a class="w-full text-center py-3.5 hover:bg-white/40 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer font-medium"
+             [ngClass]="{ 'bg-[#E6EDFF] font-bold text-[#4F8CFF]': isMyCouponsActive() }"
+             routerLink="/my-coupons" (click)="open = false">
+             Mis cupones
+           </a>
+
+           <div class="w-[234px] h-0 border-t-[3px] border-[#E6EDFF] mx-auto"></div>
+
+           <button class="w-full text-center py-3.5 hover:bg-white/40 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer font-medium inline-flex items-center justify-center gap-2"
               (click)="openLogoutModal(); open = false">
+             <svg class="w-4 h-4 text-[#538CFF]" aria-hidden="true">
+               <use href="assets/icons/sprite.svg#logout"></use>
+             </svg>
+             Cerrar sesión
+           </button>
+           } @else if (isKeycloakLoggedIn) {
+           <button class="w-full text-center py-3.5 hover:bg-white/40 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer font-medium inline-flex items-center justify-center gap-2"
+              (click)="openLogoutModal(); open = false">
+             <svg class="w-4 h-4 text-[#538CFF]" aria-hidden="true">
+               <use href="assets/icons/sprite.svg#logout"></use>
+             </svg>
              Cerrar sesión
            </button>
            }

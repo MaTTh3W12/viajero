@@ -65,6 +65,23 @@ interface ChangeStatusData {
   };
 }
 
+interface AcquireCouponData {
+  viajerosv_acquire_coupon: AcquiredCoupon | null;
+}
+
+interface GetCouponsAcquiredData {
+  viajerosv_coupons_acquired: CouponAcquired[];
+  viajerosv_coupons_acquired_aggregate: {
+    aggregate: {
+      count: number;
+    };
+  };
+}
+
+interface GetCouponsByIdsData {
+  viajerosv_coupons: Coupon[];
+}
+
 export interface Coupon {
   id: number;
   user_id: number | string;
@@ -105,7 +122,32 @@ export interface CouponOwner {
   user_id: number | string;
 }
 
+export interface AcquiredCoupon {
+  id: number | string;
+  coupon_id: number | string;
+  user_id: number | string;
+  unique_code: string;
+  acquired_at: string;
+  redeemed: boolean;
+}
+
+export interface CouponAcquired {
+  coupon_id: number | string;
+  id: number | string;
+  user_id: number | string;
+  validated_by: number | string | null;
+  redeemed: boolean;
+  unique_code: string;
+  acquired_at: string;
+  redeemed_at: string | null;
+}
+
 export interface GetCouponsVariables {
+  limit?: number;
+  offset?: number;
+}
+
+export interface GetCouponsAcquiredVariables {
   limit?: number;
   offset?: number;
 }
@@ -149,6 +191,11 @@ export interface PublishCouponVariables {
 
 export interface CouponListResult {
   rows: Coupon[];
+  total: number;
+}
+
+export interface CouponAcquiredListResult {
+  rows: CouponAcquired[];
   total: number;
 }
 
@@ -324,6 +371,90 @@ export class CouponService {
 
     return this.executeOperation<GetCouponOwnerData, { id: number }>(token, query, { id }).pipe(
       map((data) => data.viajerosv_coupons_by_pk)
+    );
+  }
+
+  acquireCoupon(token: string, couponId: number): Observable<AcquiredCoupon | null> {
+    const mutation = `
+      mutation Acquire($coupon_id: bigint!) {
+        viajerosv_acquire_coupon(args: { p_coupon_id: $coupon_id }) {
+          id
+          coupon_id
+          user_id
+          unique_code
+          acquired_at
+          redeemed
+        }
+      }
+    `;
+
+    return this.executeOperation<AcquireCouponData, { coupon_id: number }>(token, mutation, { coupon_id: couponId }).pipe(
+      map((data) => data.viajerosv_acquire_coupon ?? null)
+    );
+  }
+
+  getCouponsAcquired(
+    token: string,
+    variables: GetCouponsAcquiredVariables = { limit: 10, offset: 0 }
+  ): Observable<CouponAcquiredListResult> {
+    const query = `
+      query GetCouponsAcquired($limit: Int = 10, $offset: Int = 0) {
+        viajerosv_coupons_acquired(
+          limit: $limit,
+          offset: $offset,
+          order_by: { acquired_at: asc, redeemed_at: asc }
+        ) {
+          coupon_id
+          id
+          user_id
+          validated_by
+          redeemed
+          unique_code
+          acquired_at
+          redeemed_at
+        }
+        viajerosv_coupons_acquired_aggregate {
+          aggregate {
+            count
+          }
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCouponsAcquiredData, GetCouponsAcquiredVariables>(token, query, variables).pipe(
+      map((data) => ({
+        rows: data.viajerosv_coupons_acquired,
+        total: data.viajerosv_coupons_acquired_aggregate.aggregate.count,
+      }))
+    );
+  }
+
+  getCouponsByIds(token: string, couponIds: number[]): Observable<Coupon[]> {
+    const query = `
+      query GetCouponsByIds($ids: [bigint!]!) {
+        viajerosv_coupons(where: { id: { _in: $ids } }) {
+          category_id
+          id
+          user_id
+          auto_published
+          published
+          title
+          end_date
+          start_date
+          stock_available
+          stock_total
+          price
+          price_discount
+          description
+          terms
+          created_at
+          updated_at
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCouponsByIdsData, { ids: number[] }>(token, query, { ids: couponIds }).pipe(
+      map((data) => data.viajerosv_coupons ?? [])
     );
   }
 

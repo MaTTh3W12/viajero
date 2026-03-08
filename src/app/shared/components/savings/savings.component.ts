@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Coupon, CouponService } from '../../../service/coupon.service';
 import { finalize, take, timeout } from 'rxjs';
@@ -11,14 +11,18 @@ import { finalize, take, timeout } from 'rxjs';
   templateUrl: './savings.component.html',
   styleUrls: ['./savings.component.css']
 })
-export class SavingsComponent implements OnInit {
+export class SavingsComponent implements OnInit, OnChanges {
+  @Input() selectedCategoryId: number | null = null;
+  @Input() sortBy: 'recent' = 'recent';
   @Output() couponsFound = new EventEmitter<number>();
   coupons: Coupon[] = [];
+  displayedCoupons: Coupon[] = [];
   loading = false;
   error = '';
   readonly fixedCouponTitle = 'EL SALVADOR TOURS';
   readonly fixedCouponBrand = 'El Salvador Tours';
   readonly fixedAddress = 'San Salvador, El Salvador';
+  private couponsFoundEmitVersion = 0;
 
   private readonly cardImages = [
     'assets/img/card1.png',
@@ -57,6 +61,12 @@ export class SavingsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCoupons();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['selectedCategoryId'] || changes['sortBy']) {
+      this.applyFiltersAndSort();
+    }
   }
 
   getCardImage(index: number): string {
@@ -124,15 +134,43 @@ export class SavingsComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.coupons = (response.rows ?? []).filter((coupon) => coupon.published);
-          this.couponsFound.emit(response.total ?? response.rows?.length ?? 0);
+          this.applyFiltersAndSort();
         },
         error: (error) => {
           console.error('[SAVINGS] Error loading public coupons', error);
           this.error = 'No se pudieron cargar los cupones en este momento.';
           this.coupons = [];
-          this.couponsFound.emit(0);
+          this.displayedCoupons = [];
+          this.emitCouponsFound(0);
         },
       });
+  }
+
+  private applyFiltersAndSort(): void {
+    let rows = [...this.coupons];
+
+    if (this.selectedCategoryId != null) {
+      rows = rows.filter((coupon) => Number(coupon.category_id) === Number(this.selectedCategoryId));
+    }
+
+    if (this.sortBy === 'recent') {
+      rows.sort((a, b) => {
+        const aDate = new Date(a.created_at).getTime();
+        const bDate = new Date(b.created_at).getTime();
+        return bDate - aDate;
+      });
+    }
+
+    this.displayedCoupons = rows;
+    this.emitCouponsFound(this.displayedCoupons.length);
+  }
+
+  private emitCouponsFound(total: number): void {
+    const version = ++this.couponsFoundEmitVersion;
+    Promise.resolve().then(() => {
+      if (version !== this.couponsFoundEmitVersion) return;
+      this.couponsFound.emit(total);
+    });
   }
 
   private parseNumeric(value: string | number | null | undefined): number | null {

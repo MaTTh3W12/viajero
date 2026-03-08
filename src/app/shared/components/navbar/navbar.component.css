@@ -9,3 +9,9 @@
   color: #4f8cff !important;
   font-weight: 700;
 }
+
+.my-coupons-active {
+  background-color: #1a2440 !important;
+  border-color: #1a2440 !important;
+  color: #ffffff !important;
+}

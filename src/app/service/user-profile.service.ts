@@ -37,8 +37,8 @@ interface GetUserByEmailVariables {
 export interface UserCompanyProfile {
   id: number | string;
   company_commercial_name: string | null;
-  first_name: string | null;
-  last_name: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
   email: string;
 }
 
@@ -218,8 +218,6 @@ export class UserProfileService {
           viajerosv_users(where: { email: { _eq: $email } }, limit: 1) {
             id
             company_commercial_name
-            first_name
-            last_name
             email
           }
         }
@@ -237,8 +235,6 @@ export class UserProfileService {
         viajerosv_users(limit: 1) {
           id
           company_commercial_name
-          first_name
-          last_name
           email
         }
       }
