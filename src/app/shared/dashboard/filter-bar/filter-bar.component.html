@@ -476,9 +476,9 @@
 
   <!-- Modal de escaneo QR -->
   @if (showQrModal) {
-  <div class="fixed inset-0 z-[9999] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
     <div (click)="$event.stopPropagation()"
-      class="w-full rounded-t-2xl md:rounded-2xl bg-white p-4 sm:p-8 max-w-full md:max-w-[420px] max-h-[95vh] overflow-y-auto relative shadow-2xl flex flex-col items-center animate-slide-up md:animate-fade-in">
+      class="w-full max-w-[560px] mx-4 sm:mx-6 md:mx-8 rounded-2xl bg-white px-6 sm:px-10 py-8 sm:py-10 max-h-[95vh] overflow-y-auto relative shadow-2xl flex flex-col items-center animate-slide-up md:animate-fade-in">
       <style>
         @keyframes slideUp {
           0% {
@@ -495,6 +495,17 @@
         .animate-slide-up {
           animation: slideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        /* Fuerza al video de la cámara a ocupar todo el área */
+        .qr-scan video,
+        .qr-scan zxing-scanner video,
+        .qr-scan zxing-scanner::ng-deep video {
+          position: absolute !important;
+          inset: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          object-fit: cover !important;
+        }
       </style>
       <!-- Botón cerrar -->
       <button (click)="closeQrModal()"
@@ -505,14 +516,35 @@
       </button>
       <!-- Título -->
       <h2 class="text-xl sm:text-2xl font-semibold text-[#0E225C] text-center mb-5">
-        Escanear QR
+        Validar QR
       </h2>
-      <!-- Área de escaneo -->
-      <div class="relative w-[220px] h-[220px] sm:w-[260px] sm:h-[260px] flex items-center justify-center mb-6">
+      <!-- Área de escaneo (panel oscuro con cámara completa) -->
+      <div class="relative qr-scan w-[320px] sm:w-[340px] md:w-[360px] h-[440px] sm:h-[460px] md:h-[480px] flex items-center justify-center mb-6 rounded-2xl overflow-hidden bg-[#0B1B4A] shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
         <ng-container *ngIf="!scannerError; else errorBlock">
           <zxing-scanner [device]="currentDevice || undefined" (scanSuccess)="onQrScan($event)"
             (camerasFound)="onCamerasFound($event)" (permissionResponse)="onHasPermission($event)"
-            (scanError)="onScanError($event)" class="w-full h-full rounded-xl"></zxing-scanner>
+            (scanError)="onScanError($event)" class="absolute inset-0 w-full h-full object-cover bg-transparent"></zxing-scanner>
+          <!-- Marco de escaneo (solo esquinas) -->
+          <!-- Esquina superior izquierda -->
+          <div
+            class="pointer-events-none absolute border-2 border-white border-b-0 border-r-0 rounded-tl-xl w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 top-8 left-8 sm:top-9 sm:left-9 md:top-10 md:left-10">
+          </div>
+          <!-- Esquina superior derecha -->
+          <div
+            class="pointer-events-none absolute border-2 border-white border-b-0 border-l-0 rounded-tr-xl w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 top-8 right-8 sm:top-9 sm:right-9 md:top-10 md:right-10">
+          </div>
+          <!-- Esquina inferior izquierda -->
+          <div
+            class="pointer-events-none absolute border-2 border-white border-t-0 border-r-0 rounded-bl-xl w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 bottom-8 left-8 sm:bottom-9 sm:left-9 md:bottom-10 md:left-10">
+          </div>
+          <!-- Esquina inferior derecha -->
+          <div
+            class="pointer-events-none absolute border-2 border-white border-t-0 border-l-0 rounded-br-xl w-16 h-16 sm:w-18 sm:h-18 md:w-20 md:h-20 bottom-8 right-8 sm:bottom-9 sm:right-9 md:bottom-10 md:right-10">
+          </div>
+          <!-- Línea horizontal central -->
+          <div
+            class="pointer-events-none absolute left-10 right-10 sm:left-12 sm:right-12 md:left-14 md:right-14 top-1/2 h-[2px] bg-white shadow-[0_0_12px_rgba(255,255,255,0.9)]">
+          </div>
           <div *ngIf="!scannerHasDevices"
             class="absolute inset-0 flex items-center justify-center bg-white/80 rounded-xl">
             <span class="text-[#0E225C] text-lg font-medium">No se encontró cámara</span>
@@ -529,13 +561,13 @@
         </ng-template>
       </div>
       <!-- Botones de acción -->
-      <div class="flex flex-col sm:flex-row gap-3 w-full justify-center mt-2">
+      <div class="flex flex-col sm:flex-row gap-3 w-full justify-center mt-4">
         <button (click)="onQrScanButtonClick()"
-          class="w-full sm:w-auto bg-[#538CFF] text-white px-6 py-3 rounded-full font-semibold text-base sm:text-lg flex items-center justify-center gap-2 hover:bg-[#3976e6] transition">
+          class="w-full sm:w-auto bg-[#538CFF] text-white px-6 py-3 rounded-full font-semibold text-base sm:text-lg flex items-center justify-center gap-2 hover:bg-[#538CFF] transition">
           <svg class="w-6 h-6">
-            <use href="assets/icons/sprite.svg#scan-qr"></use>
+            <use href="assets/icons/sprite.svg#check-circle"></use>
           </svg>
-          Escanear QR
+          Validar QR
         </button>
         <button (click)="closeQrModal()"
           class="w-full sm:w-auto bg-white border border-[#0E225C] text-[#0E225C] px-6 py-3 rounded-full font-semibold text-base sm:text-lg flex items-center justify-center gap-2 hover:bg-[#f3f3fd] transition">
@@ -769,11 +801,9 @@
           @if (couponImageLoading && !couponForm.image) {
           <div class="w-full border border-dashed border-[#75A2FF] rounded-3xl px-4 py-6 text-center bg-[#F8FBFF]">
             <div class="flex flex-col items-center justify-center gap-2 text-[#1A2440]">
-              <svg class="animate-spin h-7 w-7 text-[#538CFF]" xmlns="http://www.w3.org/2000/svg" fill="none"
-                viewBox="0 0 24 24">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                  d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"></path>
-              </svg>
+              <svg class="animate-spin h-10 w-10 text-black mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"></path>
+          </svg>
               <p class="text-base">Procesando imagen...</p>
             </div>
           </div>

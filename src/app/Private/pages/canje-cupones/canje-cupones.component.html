@@ -2,9 +2,14 @@
 <app-topbar location="Canje de cupones"></app-topbar>
 
 <!-- Barra de búsqueda con FilterBar -->
-<app-filter-bar variant="canje-cupones" [role]="role" (scanQr)="openQrModal()"
-  (validateCode)="handleValidateCode($event)"></app-filter-bar>
-<!-- Vista detalle cupón canjeado (MAQUETADO ESTÁTICO) -->
+<app-filter-bar
+  variant="canje-cupones"
+  [role]="role"
+  (scanQr)="openQrModal()"
+  (validateCode)="handleValidateCode($event)">
+</app-filter-bar>
+
+<!-- Vista detalle cupón canjeado -->
 <div class="bg-white rounded-[28px] p-6 md:p-8 mt-6">
 
   <!-- Header -->
@@ -14,7 +19,7 @@
     </h2>
 
     <div class="flex gap-3">
-      <button
+      <button (click)="clearSelection()"
         class="flex items-center gap-2 px-4 py-2 border border-[#0E225C] rounded-full text-[#0E225C] hover:bg-[#e9edfb] transition">
         <svg class="w-5 h-5">
           <use href="assets/icons/sprite.svg#broom"></use>
@@ -22,7 +27,7 @@
         Limpiar
       </button>
 
-      <button
+      <button *ngIf="selectedCoupon"
         class="flex items-center gap-2 px-5 py-2 bg-[#538CFF] text-white rounded-full hover:bg-[#3c74e6] transition">
         <svg class="w-5 h-5">
           <use href="assets/icons/sprite.svg#check-circle"></use>
@@ -32,7 +37,13 @@
     </div>
   </div>
 
+  <!-- Mensaje de error -->
+  <div *ngIf="couponLookupError" class="mb-4 px-4 py-3 rounded-xl bg-red-50 text-red-700 text-sm">
+    {{ couponLookupError }}
+  </div>
+
   <!-- Card interior -->
+  @if (selectedCoupon) {
   <div class="bg-[#F4F7FD] rounded-[20px] p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
 
     <!-- Columna izquierda -->
@@ -46,7 +57,7 @@
           Título del cupón
         </div>
         <p class="font-semibold text-[#0E225C] text-lg">
-          Descuento en almuerzos
+          {{ selectedCoupon!.titulo }}
         </p>
       </div>
 
@@ -58,7 +69,7 @@
           Correo
         </div>
         <p class="text-[#0E225C]">
-          correo.ejemplo@correo.com
+          {{ selectedCoupon!.correo || 'No disponible' }}
         </p>
       </div>
 
@@ -70,7 +81,7 @@
           Vigencia
         </div>
         <p class="text-[#0E225C]">
-          31/12/2027
+          {{ selectedCoupon!.fechaInicio }} - {{ selectedCoupon!.fechaFin }}
         </p>
       </div>
 
@@ -81,11 +92,9 @@
           </svg>
           Términos y condiciones
         </div>
-        <ul class="list-disc list-inside text-sm text-[#1A2440] space-y-1">
-          <li>Válido únicamente para consumo en el local.</li>
-          <li>No acumulable con otras promociones o descuentos.</li>
-          <li>Un cupón por persona por visita.</li>
-        </ul>
+        <p class="text-sm text-[#1A2440] leading-relaxed">
+          {{ selectedCoupon!.terminos || 'Términos y condiciones no disponibles.' }}
+        </p>
       </div>
 
     </div>
@@ -101,7 +110,7 @@
           Nombre
         </div>
         <p class="text-[#0E225C] font-medium">
-          Juan Pérez
+          {{ selectedCoupon!.nombre || 'No disponible' }}
         </p>
       </div>
 
@@ -112,8 +121,14 @@
           </svg>
           Estado
         </div>
-        <span class="inline-block px-3 py-1 rounded-full text-sm font-semibold bg-yellow-100 text-yellow-700">
-          Vigente
+        <span
+          class="inline-block px-3 py-1 rounded-full text-sm font-semibold"
+          [ngClass]="{
+            'bg-green-100 text-green-700': selectedCoupon!.estado === 'Vigente',
+            'bg-red-100 text-red-700': selectedCoupon!.estado === 'Canjeado',
+            'bg-yellow-100 text-yellow-700': selectedCoupon!.estado !== 'Vigente' && selectedCoupon!.estado !== 'Canjeado'
+          }">
+          {{ selectedCoupon!.estado }}
         </span>
       </div>
 
@@ -125,65 +140,78 @@
           Descripción
         </div>
         <p class="text-[#1A2440] leading-relaxed">
-          Obtén 10% de descuento en tu almuerzo favorito.
-          Válido de lunes a viernes, de 12:00 p. m. a 3:00 p. m.
+          {{ selectedCoupon!.descripcion || 'Sin descripción disponible.' }}
         </p>
       </div>
 
     </div>
 
   </div>
+  } @else {
+  <!-- Estado vacío cuando no hay cupón seleccionado -->
+  <div class="bg-[#F4F7FD] rounded-[20px] p-8 flex flex-col items-center justify-center text-center gap-3">
+    <svg class="w-10 h-10 text-[#538CFF] mb-1">
+      <use href="assets/icons/sprite.svg#scan-qr"></use>
+    </svg>
+    <p class="text-lg font-semibold text-[#0E225C]">
+      Escanea un QR o ingresa un código para ver la información del cupón.
+    </p>
+    <p class="text-sm text-[#4B5675] max-w-xl">
+      Usa el botón "Escanear QR" o escribe el código en el campo superior para cargar los detalles del cupón a canjear.
+    </p>
+  </div>
+  }
 
   <!-- Footer botones -->
   <div class="flex justify-center gap-4 mt-8">
-    <button class="px-6 py-3 border border-[#0E225C] rounded-full text-[#0E225C] hover:bg-[#e9edfb] transition">
+    <button (click)="cancelRedeemFlow()"
+      class="px-6 py-3 border border-[#0E225C] rounded-full text-[#0E225C] hover:bg-[#e9edfb] transition">
       Cancelar
     </button>
 
-    <button class="px-6 py-3 bg-[#538CFF] text-white rounded-full hover:bg-[#3c74e6] transition">
+    <button (click)="onConfirmIrreversible()"
+      class="px-6 py-3 bg-[#538CFF] text-white rounded-full hover:bg-[#3c74e6] transition">
       Confirmar (canje irreversible)
     </button>
   </div>
 
 </div>
-<!-- Modal de escaneo QR -->
-@if (showQrModal) {
-<div class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+
+<!-- Modal de validación de cupón (preview) -->
+@if (showCouponModal && selectedCoupon) {
+<div (click)="closeCouponModal()"
+  class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
   <div (click)="$event.stopPropagation()"
-    class="bg-white rounded-2xl p-8 w-full max-w-[420px] max-h-[90vh] overflow-y-auto relative shadow-2xl flex flex-col items-center animate-fade-in">
-    <!-- Botón cerrar -->
-    <button (click)="closeQrModal()"
-      class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full border-gray-300 text-gray-400 hover:text-gray-600 hover:border-gray-400 transition">
+    class="bg-white rounded-[28px] shadow-2xl w-full max-w-[660px] p-8 relative">
+    <button (click)="closeCouponModal()"
+      class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full text-[#6B7280] hover:text-[#111827] transition">
       <svg class="w-7 h-7">
         <use href="assets/icons/sprite.svg#close-circle"></use>
       </svg>
     </button>
-    <!-- Título -->
-    <h2 class="text-2xl font-semibold text-[#0E225C] text-center mb-5">Escanear QR</h2>
-    <!-- Área de escaneo -->
-    <div class="relative w-[260px] h-[260px] flex items-center justify-center mb-6">
-      <img src="assets/img/qr-bg.jpg" alt="QR background" class="absolute w-full h-full object-cover rounded-xl" />
-      <div class="absolute w-full h-full flex items-center justify-center">
-        <div class="border-2 border-white rounded-lg w-[200px] h-[200px] flex items-center justify-center">
-          <!-- Aquí iría el preview de la cámara -->
-          <span class="text-[#0E225C] text-lg font-medium">Vista previa QR</span>
-        </div>
-      </div>
+    <h2 class="text-2xl font-semibold text-[#0E225C] text-center mb-6">Validar QR</h2>
+
+    <div class="space-y-3 mb-6">
+      <label class="text-sm font-medium text-[#0E225C]">Ingresa el código del cupón</label>
+      <input type="text" [value]="selectedCoupon.codigo" readonly
+        class="w-full rounded-xl border border-[#E5E7EB] bg-[#F8FAFF] px-4 py-3 text-[#0E225C] shadow-inner" />
     </div>
-    <!-- Botones de acción -->
-    <div class="flex gap-4 w-full justify-center mt-2">
-      <button
-        class="bg-[#538CFF] text-white px-6 py-2 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-[#3976e6] transition">
-        <svg class="w-6 h-6">
-          <use href="assets/icons/sprite.svg#camera"></use>
-        </svg>
-        Escanear QR
+
+    @if (redeemError) {
+    <div class="mb-4 px-4 py-3 rounded-xl bg-red-50 text-red-700 text-sm text-center">
+      {{ redeemError }}
+    </div>
+    }
+
+    <div class="flex flex-col sm:flex-row gap-3 w-full justify-center">
+      <button (click)="startRedeemReview()"
+        class="w-full sm:w-auto bg-[#538CFF] text-[#ffffff] px-6 py-3 rounded-full font-semibold text-base sm:text-lg flex items-center justify-center gap-2 hover:bg-[#3F7BFF] transition">
+        <svg class="w-5 h-5" aria-hidden="true"><use href="assets/icons/sprite.svg#check-circle"></use></svg>
+        Validar QR
       </button>
-      <button (click)="closeQrModal()"
-        class="bg-white border border-[#0E225C] text-[#0E225C] px-6 py-2 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-[#f3f3fd] transition">
-        <svg class="w-6 h-6">
-          <use href="assets/icons/sprite.svg#close-circle"></use>
-        </svg>
+      <button (click)="cancelRedeemFlow()"
+        class="w-full sm:w-auto bg-white border border-[#0E225C] text-[#0E225C] px-6 py-3 rounded-full font-semibold text-base sm:text-lg flex items-center justify-center gap-2 hover:bg-[#f3f3fd] transition">
+        <svg class="w-5 h-5" aria-hidden="true"><use href="assets/icons/sprite.svg#close-circle"></use></svg>
         Cancelar
       </button>
     </div>
@@ -191,43 +219,76 @@
 </div>
 }
 
-<!-- Modal de validación de cupón -->
-@if (showCouponModal && selectedCoupon) {
-<div (click)="closeCouponModal()"
-  class="fixed inset-0 z-[9999] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm md:p-4">
-  <div (click)="$event.stopPropagation()"
-    class="bg-[#ffffff] rounded-t-[24px] md:rounded-[24px] p-6 md:p-8 w-full md:w-[92%] max-w-[560px] max-h-[85vh] overflow-y-auto relative shadow-2xl animate-slide-up md:animate-fade-in">
-    <!-- Botón cerrar -->
-    <button (click)="closeCouponModal()"
-      class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full border-gray-300 text-gray-400 hover:text-gray-600 hover:border-gray-400 transition">
-      <svg class="w-7 h-7">
-        <use href="assets/icons/sprite.svg#close-circle"></use>
-      </svg>
-    </button>
-    <!-- Título -->
-    <h2 class="text-2xl font-semibold text-[#0E225C] text-center mb-5">Validar cupón</h2>
-    <!-- Información del cupón -->
-    <div class="rounded-[24px] bg-[#F4F7FD] p-4 md:p-5 mb-6">
-      <p class="text-center text-[18px] font-bold text-[#0E225C] mb-4 tracking-wide">
-        {{ selectedCoupon.titulo }}
-      </p>
-      <div class="rounded-[24px] border-[3px] border-[#538CFF] bg-white p-4 md:p-5 flex flex-col items-center gap-4">
-        <div class="flex flex-col items-center">
-          <span class="text-[#111E60] font-medium text-[18px] mb-2">Código</span>
-          <span class="text-lg font-bold text-[#538CFF]">{{ selectedCoupon.codigo }}</span>
-        </div>
-        <div class="flex flex-col items-center">
-          <span class="text-[#111E60] font-medium text-[18px] mb-2">Estado</span>
-          <span class="text-base font-semibold"
-            [ngClass]="{'text-green-600': selectedCoupon.estado === 'Válido', 'text-red-600': selectedCoupon.estado !== 'Válido'}">{{
-            selectedCoupon.estado }}</span>
-        </div>
-      </div>
+<!-- Confirmación de canje -->
+@if (showRedeemConfirmModal && selectedCoupon) {
+<div class="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+  <div class="bg-white rounded-[30px] shadow-2xl w-full max-w-[900px] p-8 md:p-10 flex flex-col items-center text-center gap-4">
+    <div class="w-12 h-12 rounded-full border border-[#C29B1F] flex items-center justify-center text-[#C29B1F] mb-2">
+      <svg class="w-6 h-6" aria-hidden="true"><use href="assets/icons/sprite.svg#alert-hexagon"></use></svg>
     </div>
-    <!-- Botón de acción -->
-    <button (click)="validarCupon(selectedCoupon)"
-      class="w-full bg-[#538CFF] text-white py-3 rounded-lg font-semibold text-lg hover:bg-[#3a6fd8] transition">Validar
-      cupón</button>
+    <div class="text-2xl md:text-3xl font-semibold text-[#1A2440]">
+      Esta acción marcará el cupón del usuario como CANJEADO.
+    </div>
+    <div class="text-base text-[#1A2440] mb-4">El cupón no podrá volver a utilizarse.</div>
+    <div class="flex flex-col md:flex-row gap-3 w-full justify-center">
+      <button (click)="confirmRedeem()"
+        class="w-full md:w-auto bg-[#538CFF] text-white px-8 py-3 rounded-full font-semibold text-lg hover:bg-[#3976e6] transition">
+        Validar cupón
+      </button>
+      <button (click)="cancelRedeemFlow()"
+        class="w-full md:w-auto bg-white border border-[#538CFF] text-[#538CFF] px-8 py-3 rounded-full font-semibold text-lg hover:bg-[#f3f3fd] transition">
+        Cancelar
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- Proceso de canjeando -->
+@if (showRedeemingModal) {
+<div class="fixed inset-0 z-[10001] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+  <div class="bg-white rounded-[30px] shadow-2xl w-full max-w-[840px] p-10 flex flex-col items-center text-center gap-4">
+    <svg class="animate-spin h-10 w-10 text-[#0E225C]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+      <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+        d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5">
+      </path>
+    </svg>
+    <div class="text-2xl font-semibold text-[#1A2440]">Canjeando cupón.</div>
+    <div class="text-base text-[#1A2440]">Por favor espera, no cierres esta ventana.</div>
+  </div>
+</div>
+}
+
+<!-- Canje exitoso -->
+@if (showRedeemSuccessModal) {
+<div class="fixed inset-0 z-[10002] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+  <div class="bg-white rounded-[30px] shadow-2xl w-full max-w-[840px] p-10 flex flex-col items-center text-center gap-5">
+    <div class="w-12 h-12 rounded-full border border-green-500 flex items-center justify-center text-green-600">
+      <svg class="w-7 h-7" aria-hidden="true"><use href="assets/icons/sprite.svg#check-circle"></use></svg>
+    </div>
+    <div class="text-2xl font-semibold text-[#1A2440]">Cupón canjeado correctamente.</div>
+    <div class="text-base text-[#1A2440]">El cupón ha sido marcado como canjeado.</div>
+    <button (click)="closeSuccessModal()"
+      class="bg-[#538CFF] text-white px-10 py-3 rounded-full font-semibold text-lg hover:bg-[#3976e6] transition">
+      Aceptar
+    </button>
+  </div>
+</div>
+}
+
+<!-- Ya canjeado -->
+@if (showAlreadyRedeemedModal) {
+<div class="fixed inset-0 z-[10003] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
+  <div class="bg-white rounded-[30px] shadow-2xl w-full max-w-[720px] p-8 flex flex-col items-center text-center gap-4">
+    <div class="w-12 h-12 rounded-full border border-[#C82333] flex items-center justify-center text-[#C82333]">
+      <svg class="w-6 h-6" aria-hidden="true"><use href="assets/icons/sprite.svg#danger"></use></svg>
+    </div>
+    <div class="text-2xl font-semibold text-[#1A2440]">Este cupón ya fue canjeado.</div>
+    <div class="text-base text-[#1A2440]">No es posible volver a utilizarlo.</div>
+    <button (click)="closeAlreadyRedeemed()"
+      class="bg-[#538CFF] text-white px-8 py-3 rounded-full font-semibold text-lg hover:bg-[#3976e6] transition">
+      Entendido
+    </button>
   </div>
 </div>
 }
