@@ -107,6 +107,7 @@ export class FilterBarComponent {
   // QR
   showQrModal = false;
   couponCode: string = '';
+  scannedCouponCode: string = '';
 
   scannerHasDevices = false;
   scannerHasPermission = false;
@@ -227,14 +228,29 @@ export class FilterBarComponent {
   }
 
   openQrModal(): void {
+    this.scannedCouponCode = '';
+    this.showConfirmRedeemModal = false;
+    this.scannerError = null;
     this.showQrModal = true;
   }
 
   closeQrModal(): void {
+    this.showConfirmRedeemModal = false;
     this.showQrModal = false;
   }
 
+  submitCouponCode(): void {
+    const code = this.couponCode?.trim();
+    if (!code) {
+      return;
+    }
+
+    this.scannerError = null;
+    this.validateCode.emit(code);
+  }
+
   onQrScan(result: string): void {
+    this.scannedCouponCode = result;
     this.couponCode = result;
     this.closeQrModal();
     // Notificar al padre para que cargue la información del cupón si es necesario
@@ -271,7 +287,14 @@ export class FilterBarComponent {
   }
 
   onQrScanButtonClick(): void {
-    this.showConfirmRedeemModal = true;
+    const scannedCode = this.scannedCouponCode?.trim();
+    if (!scannedCode) {
+      return;
+    }
+
+    this.couponCode = scannedCode;
+    this.submitCouponCode();
+    this.closeQrModal();
   }
 
   closeConfirmRedeemModal(): void {
@@ -319,8 +342,22 @@ export class FilterBarComponent {
           .pipe(take(1), timeout(15000))
       );
 
-      if (!redeemed || !redeemed.redeemed) {
-        throw new Error('No se pudo canjear el cupón.');
+      let redeemedConfirmed = !!redeemed?.redeemed;
+
+      if (!redeemedConfirmed) {
+        const verifiedCoupon = await firstValueFrom(
+          this.couponService
+            .getCouponWithImageByCode(token, code)
+            .pipe(take(1), timeout(15000))
+        );
+
+        if (verifiedCoupon?.redeemed) {
+          redeemedConfirmed = true;
+        }
+      }
+
+      if (!redeemedConfirmed) {
+        throw new Error('No se pudo confirmar el canje del cupón.');
       }
 
       // Notificar al componente padre para que pueda cargar los detalles del cupón
@@ -332,9 +369,27 @@ export class FilterBarComponent {
     } catch (error: any) {
       console.error('[FILTER-BAR] Error canjeando cupón', error);
       this.redeemingCoupon = false;
+      const message = error?.message || 'No se pudo canjear el cupón. Intenta nuevamente.';
+
+      try {
+        const verifiedCoupon = await firstValueFrom(
+          this.couponService
+            .getCouponWithImageByCode(token, code)
+            .pipe(take(1), timeout(8000))
+        );
+
+        if (verifiedCoupon?.redeemed) {
+          this.validateCode.emit(code);
+          this.redeemSuccess = true;
+          this.cdr.detectChanges();
+          return;
+        }
+      } catch (verificationError) {
+        console.error('[FILTER-BAR] No fue posible verificar el estado final del cupón', verificationError);
+      }
+
       this.showQrModal = false;
-      this.scannerError =
-        error?.message || 'No se pudo canjear el cupón. Intenta nuevamente.';
+      this.scannerError = message;
       this.cdr.detectChanges();
     }
   }

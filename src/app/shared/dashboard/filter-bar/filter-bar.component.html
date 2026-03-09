@@ -451,24 +451,24 @@
     </div>
   </div>
   }
-  <div class="w-full flex flex-col gap-2">
-    <label class="font-medium text-[#18192B] mb-1 px-3 md:px-0">Validar cupón</label>
-    <div class="flex flex-row gap-3 items-center w-full px-3 md:px-0">
+  <div class="w-full flex flex-col gap-2 md:gap-3">
+    <label class="font-medium text-[#18192B] mb-1 px-4 md:px-0 text-sm md:text-base">Validar cupón</label>
+    <div class="flex flex-row gap-3 items-center w-full px-4 md:px-0">
 
       <!-- Input -->
-      <input type="text" placeholder="Ingresar código del cupón" [(ngModel)]="couponCode" class="flex-1 bg-white rounded-xl px-4 py-3 text-[#18192B]
+      <input type="text" placeholder="Ingresar código del cupón" [(ngModel)]="couponCode" (keyup.enter)="submitCouponCode()" class="min-w-0 flex-1 bg-white rounded-xl px-4 py-3 text-[#18192B]
            placeholder:text-[#bdbdbd] outline-none
            focus:ring-2 focus:ring-[#538CFF]/40" />
 
       <!-- Botón Escanear QR -->
-      <button (click)="openQrModal()" class="flex items-center gap-2 bg-[#538CFF] hover:bg-[#3976e6]
-           text-white px-6 py-3 rounded-full font-medium transition">
+      <button type="button" (click)="openQrModal()" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#538CFF] text-white transition hover:bg-[#3976e6]
+           md:h-auto md:w-auto md:gap-2 md:px-6 md:py-3">
 
         <svg class="w-5 h-5">
           <use href="assets/icons/sprite.svg#scan-qr"></use>
         </svg>
 
-        <span>Escanear QR</span>
+        <span class="hidden md:inline">Escanear QR</span>
       </button>
 
     </div>
@@ -476,50 +476,22 @@
 
   <!-- Modal de escaneo QR -->
   @if (showQrModal) {
-  <div class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="fixed inset-0 z-[9999] flex items-end justify-center bg-black/55 backdrop-blur-[2px] sm:items-center">
     <div (click)="$event.stopPropagation()"
-      class="w-full max-w-[560px] mx-4 sm:mx-6 md:mx-8 rounded-2xl bg-white px-6 sm:px-10 py-8 sm:py-10 max-h-[95vh] overflow-y-auto relative shadow-2xl flex flex-col items-center animate-slide-up md:animate-fade-in">
-      <style>
-        @keyframes slideUp {
-          0% {
-            transform: translateY(100%);
-            opacity: 0;
-          }
-
-          100% {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-
-        .animate-slide-up {
-          animation: slideUp 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        /* Fuerza al video de la cámara a ocupar todo el área */
-        .qr-scan video,
-        .qr-scan zxing-scanner video,
-        .qr-scan zxing-scanner::ng-deep video {
-          position: absolute !important;
-          inset: 0 !important;
-          width: 100% !important;
-          height: 100% !important;
-          object-fit: cover !important;
-        }
-      </style>
+      class="animate-slide-up relative flex max-h-[95vh] w-full flex-col items-center overflow-y-auto rounded-t-[28px] bg-white px-5 pb-8 pt-7 shadow-2xl sm:mx-6 sm:max-w-[420px] sm:rounded-[28px] sm:px-8 sm:py-8 md:max-w-[560px] md:px-10 md:py-10">
       <!-- Botón cerrar -->
       <button (click)="closeQrModal()"
-        class="absolute top-2 right-2 md:top-4 md:right-4 w-8 h-8 flex items-center justify-center rounded-full border-gray-300 text-gray-400 hover:text-gray-600 hover:border-gray-400 transition">
-        <svg class="w-7 h-7">
+        class="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full text-[#1A2440]/70 transition hover:bg-[#F4F7FD] hover:text-[#1A2440] md:right-5 md:top-5">
+        <svg class="w-6 h-6">
           <use href="assets/icons/sprite.svg#close-circle"></use>
         </svg>
       </button>
       <!-- Título -->
-      <h2 class="text-xl sm:text-2xl font-semibold text-[#0E225C] text-center mb-5">
+      <h2 class="mb-5 text-center text-[18px] font-semibold text-[#1A2440] sm:text-2xl">
         Validar QR
       </h2>
       <!-- Área de escaneo (panel oscuro con cámara completa) -->
-      <div class="relative qr-scan w-[320px] sm:w-[340px] md:w-[360px] h-[440px] sm:h-[460px] md:h-[480px] flex items-center justify-center mb-6 rounded-2xl overflow-hidden bg-[#0B1B4A] shadow-[0_10px_30px_rgba(0,0,0,0.2)]">
+      <div class="relative qr-scan mb-6 flex h-[345px] w-full max-w-[290px] items-center justify-center overflow-hidden rounded-[22px] bg-[#0B1B4A] shadow-[0_10px_30px_rgba(0,0,0,0.2)] sm:h-[420px] sm:max-w-[320px] md:h-[480px] md:max-w-[360px]">
         <ng-container *ngIf="!scannerError; else errorBlock">
           <zxing-scanner [device]="currentDevice || undefined" (scanSuccess)="onQrScan($event)"
             (camerasFound)="onCamerasFound($event)" (permissionResponse)="onHasPermission($event)"
@@ -561,82 +533,88 @@
         </ng-template>
       </div>
       <!-- Botones de acción -->
-      <div class="flex flex-col sm:flex-row gap-3 w-full justify-center mt-4">
-        <button (click)="onQrScanButtonClick()"
-          class="w-full sm:w-auto bg-[#538CFF] text-white px-6 py-3 rounded-full font-semibold text-base sm:text-lg flex items-center justify-center gap-2 hover:bg-[#538CFF] transition">
+      <div class="mt-2 flex w-full max-w-[370px] flex-col gap-3">
+        <button (click)="onQrScanButtonClick()" [disabled]="!scannedCouponCode"
+          class="flex w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-base font-semibold text-white transition sm:text-lg"
+          [class.bg-[#538CFF]]="!!scannedCouponCode"
+          [class.hover:bg-[#3F7BFF]]="!!scannedCouponCode"
+          [class.bg-[#C9D8FF]]="!scannedCouponCode"
+          [class.cursor-not-allowed]="!scannedCouponCode"
+          [class.opacity-70]="!scannedCouponCode">
           <svg class="w-6 h-6">
-            <use href="assets/icons/sprite.svg#check-circle"></use>
+            <use href="assets/icons/sprite.svg#scan-qr"></use>
           </svg>
           Validar QR
         </button>
         <button (click)="closeQrModal()"
-          class="w-full sm:w-auto bg-white border border-[#0E225C] text-[#0E225C] px-6 py-3 rounded-full font-semibold text-base sm:text-lg flex items-center justify-center gap-2 hover:bg-[#f3f3fd] transition">
+          class="flex w-full items-center justify-center gap-2 rounded-full border border-[#0E225C] bg-white px-6 py-3 text-base font-semibold text-[#0E225C] transition hover:bg-[#f3f3fd] sm:text-lg">
           <svg class="w-6 h-6">
             <use href="assets/icons/sprite.svg#close-circle"></use>
           </svg>
           Cancelar
         </button>
       </div>
-      <!-- Modal de confirmación de canje -->
-      @if (showConfirmRedeemModal) {
-      <!-- Modal responsive (móvil) -->
-      <div class="fixed inset-0 z-[10000] flex items-center justify-center bg-white/80 backdrop-blur-sm">
-        <!-- Versión móvil: solo contenido centrado, sin recuadro -->
-        <div class="flex flex-col items-center w-full px-4 md:hidden animate-fade-in">
-          <div class="mb-4 flex items-center justify-center">
-            <svg class="w-8 h-8 text-[#856404]">
-              <use href="assets/icons/sprite.svg#alert-hexagon"></use>
-            </svg>
+    </div>
+
+    <!-- Modal de confirmación de canje -->
+    @if (showConfirmRedeemModal) {
+    <!-- Modal responsive (móvil) -->
+    <div class="fixed inset-0 z-[10000] flex items-center justify-center bg-white/72 backdrop-blur-[2px]">
+      <!-- Versión móvil: solo contenido centrado, sin recuadro -->
+      <div class="flex min-h-screen w-full flex-col items-center justify-center px-6 md:hidden animate-fade-in">
+        <div class="mb-5 flex items-center justify-center">
+          <svg class="h-9 w-9 text-[#A67C00]">
+            <use href="assets/icons/sprite.svg#alert-hexagon"></use>
+          </svg>
+        </div>
+        <div class="w-full max-w-[340px] text-center">
+          <div class="mb-4 text-[24px] font-semibold leading-[1.35] text-[#1A2440]">
+            Esta acción marcará el cupón del usuario como
+            <span class="font-bold">CANJEADO</span>.
           </div>
-          <div class="text-center w-full">
-            <div class="text-xl font-semibold text-[#1A2440] mb-2">
-              Esta acción marcará el cupón del usuario como
-              <span class="font-bold">CANJEADO</span>.
-            </div>
-            <div class="text-base text-[#1A2440] mb-8">
-              El cupón no podrá volver a utilizarse.
-            </div>
+          <div class="mb-8 text-[18px] leading-[1.45] text-[#1A2440]">
+            El cupón no podrá volver a utilizarse.
           </div>
+        </div>
+        <button (click)="confirmRedeem()"
+          class="mb-4 flex w-full max-w-[360px] items-center justify-center gap-2 rounded-full bg-[#538CFF] py-3 text-base font-semibold text-white transition hover:bg-[#3976e6]">
+          Validar cupón
+        </button>
+        <button (click)="closeConfirmRedeemModal()"
+          class="flex w-full max-w-[360px] items-center justify-center gap-2 rounded-full border border-[#538CFF] bg-white py-3 text-base font-semibold text-[#538CFF] transition hover:bg-[#f3f3fd]">
+          Cancelar
+        </button>
+      </div>
+      <!-- Versión escritorio (sin cambios) -->
+      <div
+        class="hidden md:flex bg-white rounded-[2rem] shadow-2xl w-full max-w-[900px] mx-auto p-10 flex-col items-center relative animate-fade-in">
+        <div class="mb-4 flex items-center justify-center">
+          <svg class="w-10 h-10 text-[#856404]">
+            <use href="assets/icons/sprite.svg#alert-hexagon"></use>
+          </svg>
+        </div>
+        <div class="text-center">
+          <div class="text-2xl font-semibold text-[#1A2440] mb-2">
+            Esta acción marcará el cupón del usuario como
+            <span class="font-bold">CANJEADO</span>.
+          </div>
+          <div class="text-base text-[#1A2440] mb-8">
+            El cupón no podrá volver a utilizarse.
+          </div>
+        </div>
+        <div class="flex flex-row gap-4 w-full justify-center mt-2">
           <button (click)="confirmRedeem()"
-            class="bg-[#538CFF] text-white w-full max-w-md py-3 rounded-full font-semibold text-base flex items-center justify-center gap-2 hover:bg-[#3976e6] transition mb-2">
+            class="bg-[#538CFF] text-white px-8 py-3 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-[#3976e6] transition">
             Validar cupón
           </button>
           <button (click)="closeConfirmRedeemModal()"
-            class="w-full max-w-md bg-white border border-[#0E225C] text-[#0E225C] py-3 rounded-full font-semibold text-base flex items-center justify-center gap-2 hover:bg-[#f3f3fd] transition">
+            class="bg-white border border-[#0E225C] text-[#0E225C] px-8 py-3 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-[#f3f3fd] transition">
             Cancelar
           </button>
         </div>
-        <!-- Versión escritorio (sin cambios) -->
-        <div
-          class="hidden md:flex bg-white rounded-[2rem] shadow-2xl w-full max-w-[900px] mx-auto p-10 flex-col items-center relative animate-fade-in">
-          <div class="mb-4 flex items-center justify-center">
-            <svg class="w-10 h-10 text-[#856404]">
-              <use href="assets/icons/sprite.svg#alert-hexagon"></use>
-            </svg>
-          </div>
-          <div class="text-center">
-            <div class="text-2xl font-semibold text-[#1A2440] mb-2">
-              Esta acción marcará el cupón del usuario como
-              <span class="font-bold">CANJEADO</span>.
-            </div>
-            <div class="text-base text-[#1A2440] mb-8">
-              El cupón no podrá volver a utilizarse.
-            </div>
-          </div>
-          <div class="flex flex-row gap-4 w-full justify-center mt-2">
-            <button (click)="confirmRedeem()"
-              class="bg-[#538CFF] text-white px-8 py-3 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-[#3976e6] transition">
-              Validar cupón
-            </button>
-            <button (click)="closeConfirmRedeemModal()"
-              class="bg-white border border-[#0E225C] text-[#0E225C] px-8 py-3 rounded-full font-semibold text-lg flex items-center gap-2 hover:bg-[#f3f3fd] transition">
-              Cancelar
-            </button>
-          </div>
-        </div>
       </div>
-      }
     </div>
+    }
   </div>
   }
   }

@@ -5,6 +5,7 @@ import { Coupon } from '../../../service/coupon.interface';
 import { AuthService, UserRole } from '../../../service/auth.service';
 import { CouponService, CouponAcquiredWithImage } from '../../../service/coupon.service';
 import { firstValueFrom } from 'rxjs';
+import { timeout } from 'rxjs/operators';
 
 import { CommonModule } from '@angular/common';
 import { TopbarComponent } from '../../../shared/dashboard/topbar/topbar.component';
@@ -194,32 +195,36 @@ export class CanjeCuponesComponent implements OnInit {
       return;
     }
 
+    const couponCode = this.selectedCoupon.codigo;
+
     this.showRedeemConfirmModal = false;
     this.showRedeemingModal = true;
     this.redeemError = '';
+    this.cdr.detectChanges();
 
     try {
       const result = await firstValueFrom(
-        this.couponService.redeemCouponByCode(token, this.selectedCoupon.codigo)
+        this.couponService.redeemCouponByCode(token, couponCode).pipe(timeout(15000))
       );
 
-      this.showRedeemingModal = false;
-
       if (!result) {
-        this.redeemError = 'No se pudo canjear el cupón.';
-        this.showCouponModal = false;
-        return;
+        throw new Error('No se recibió confirmación del canje.');
       }
 
-      // Si el backend indica que ya estaba canjeado, mostramos el aviso correspondiente
-      if (result.redeemed) {
-        this.selectedCoupon = {
-          ...this.selectedCoupon,
-          estado: 'Canjeado',
-        };
-        this.showAlreadyRedeemedModal = true;
-        this.showCouponModal = false;
-        return;
+      let redeemedConfirmed = !!result.redeemed;
+
+      if (!redeemedConfirmed) {
+        const verifiedCoupon = await firstValueFrom(
+          this.couponService.getCouponWithImageByCode(token, couponCode).pipe(timeout(15000))
+        );
+
+        if (verifiedCoupon?.redeemed) {
+          redeemedConfirmed = true;
+        }
+      }
+
+      if (!redeemedConfirmed) {
+        throw new Error('No se pudo confirmar el canje del cupón.');
       }
 
       this.selectedCoupon = {
@@ -227,12 +232,46 @@ export class CanjeCuponesComponent implements OnInit {
         estado: 'Canjeado',
       };
 
+      this.showRedeemingModal = false;
       this.showRedeemSuccessModal = true;
+      this.cdr.detectChanges();
     } catch (error) {
       console.error('[CANJE] Error al canjear cupón', error);
       this.showRedeemingModal = false;
+      const message = error instanceof Error ? error.message : 'Ocurrió un error al canjear el cupón.';
+
+      if (message.toLowerCase().includes('canjeado')) {
+        this.selectedCoupon = {
+          ...this.selectedCoupon,
+          estado: 'Canjeado',
+        };
+        this.showAlreadyRedeemedModal = true;
+        this.showCouponModal = false;
+        this.cdr.detectChanges();
+        return;
+      }
+
+      try {
+        const verifiedCoupon = await firstValueFrom(
+          this.couponService.getCouponWithImageByCode(token, couponCode).pipe(timeout(8000))
+        );
+
+        if (verifiedCoupon?.redeemed) {
+          this.selectedCoupon = {
+            ...this.selectedCoupon,
+            estado: 'Canjeado',
+          };
+          this.showRedeemSuccessModal = true;
+          this.cdr.detectChanges();
+          return;
+        }
+      } catch (verificationError) {
+        console.error('[CANJE] No fue posible verificar el estado final del cupón', verificationError);
+      }
+
       this.redeemError = 'Ocurrió un error al canjear el cupón.';
       this.showCouponModal = false;
+      this.cdr.detectChanges();
     }
   }
 
