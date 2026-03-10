@@ -66,6 +66,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.auth.keycloakRegisterCompany();
   }
 
+  loginKeycloak(): void {
+    this.isRegisterDropdownOpen = false;
+    this.open = false;
+    this.auth.keycloakLogin();
+  }
+
   get isKeycloakLoggedIn(): boolean {
     return this.auth.isKeycloakLoggedIn();
   }
@@ -118,7 +124,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   goToLoginAfterExpiry(): void {
     this.closeSessionExpiredModal();
-    this.router.navigate(['/login']);
+    this.auth.keycloakLogin();
   }
 
 }
