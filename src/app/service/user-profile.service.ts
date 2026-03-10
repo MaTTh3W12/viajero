@@ -161,7 +161,6 @@ export class UserProfileService {
             phone: $phone,
             country: $country,
             city: $city,
-            active: true
           },
           on_conflict: {
             constraint: users_pkey,
