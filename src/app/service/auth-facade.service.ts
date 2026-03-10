@@ -60,6 +60,7 @@ export class AuthFacadeService {
       first_name: (formData.first_name ?? user.firstName) ?? null,
       last_name: (formData.last_name ?? user.lastName) ?? null,
       document_id: formData.document_id ?? null,
+      document_type_id: formData.document_type_id ?? null,
       phone: formData.phone ?? null,
       country: formData.country ?? null,
       city: formData.city ?? null,

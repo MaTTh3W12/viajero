@@ -288,6 +288,7 @@ export class AuthService {
     last_name: string;
     email: string;
     document_id: string | null;
+    document_type_id: string | null;
     phone: string | null;
     country: string | null;
     city: string | null;
@@ -312,6 +313,7 @@ export class AuthService {
         first_name: formData.first_name || user?.firstName || null,
         last_name: formData.last_name || user?.lastName || null,
         document_id: formData.document_id,
+        document_type_id: formData.document_type_id,
         phone: formData.phone,
         country: formData.country,
         city: formData.city,
@@ -505,6 +507,7 @@ export class AuthService {
       first_name: payload.given_name ?? null,
       last_name: payload.family_name ?? null,
       document_id: null,
+      document_type_id: null,
       phone: null,
       country: null,
       city: null,
