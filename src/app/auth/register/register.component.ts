@@ -2,7 +2,9 @@ import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { firstValueFrom } from 'rxjs';
 import { AuthService } from '../../service/auth.service';
+import { CountryOption, DocumentTypeOption, UserProfileService } from '../../service/user-profile.service';
 
 @Component({
   selector: 'app-register',
@@ -34,11 +36,20 @@ export class RegisterComponent implements OnInit {
   direccion = '';
   nit = '';
 
+  countries: CountryOption[] = [
+    { code: 'SV', name: 'El Salvador', phone_code: '+503' },
+  ];
+
+  documentTypes: DocumentTypeOption[] = [
+    { id: 'DUI', description: 'Documento Único de Identidad' },
+  ];
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private cdr: ChangeDetectorRef,
-    private auth: AuthService
+    private auth: AuthService,
+    private profile: UserProfileService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -60,7 +71,31 @@ export class RegisterComponent implements OnInit {
       } else {
         this.prefillCompanyFromKeycloak();
       }
+
+      await this.loadMasterData();
     });
+  }
+
+  private async loadMasterData(): Promise<void> {
+    const token = this.auth.token;
+    if (!token) return;
+
+    try {
+      const [documentTypes, countries] = await Promise.all([
+        firstValueFrom(this.profile.getDocumentTypes(token)),
+        firstValueFrom(this.profile.getCountriesPaged(token, { limit: 100, offset: 0 })),
+      ]);
+
+      if (documentTypes.length > 0) {
+        this.documentTypes = documentTypes;
+      }
+
+      if (countries.rows.length > 0) {
+        this.countries = countries.rows;
+      }
+    } catch (error) {
+      console.warn('[REGISTER] Error loading master data', error);
+    }
   }
 
   private prefillFromKeycloak(): void {
@@ -115,7 +150,7 @@ export class RegisterComponent implements OnInit {
   onPhoneInput(event: any): void {
     this.onInputChange();
 
-    if (this.pais === 'El Salvador') {
+    if (this.pais === 'SV') {
       let value = event.target.value.replace(/\D/g, '');
       if (value.length > 8) {
         value = value.substring(0, 8);
@@ -198,6 +233,7 @@ export class RegisterComponent implements OnInit {
         last_name: this.apellidos,
         email: this.email,
         document_id: this.numDoc,
+        document_type_id: this.tipoDoc,
         phone: this.telefono,
         country: this.pais,
         city: null,
@@ -233,7 +269,7 @@ export class RegisterComponent implements OnInit {
         company_address: this.direccion,
         company_profile_completed: true,
         phone: this.telefono,
-        country: 'El Salvador',
+        country: 'SV',
         city: null,
       });
 
@@ -288,5 +324,10 @@ export class RegisterComponent implements OnInit {
 
   onGoToPortal(): void {
     this.router.navigateByUrl(this.isCompany ? '/companies/dashboard' : '/');
+  }
+
+  get selectedCountryPhoneCode(): string {
+    const selectedCountry = this.countries.find((country) => country.code === this.pais);
+    return selectedCountry?.phone_code ?? '+503';
   }
 }

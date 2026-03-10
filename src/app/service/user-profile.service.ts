@@ -34,6 +34,19 @@ interface GetUserByEmailVariables {
   email: string;
 }
 
+interface GetDocumentTypesData {
+  viajerosv_document_types: DocumentTypeOption[];
+}
+
+interface GetCountriesPagedData {
+  viajerosv_countries: CountryOption[];
+  viajerosv_countries_aggregate: {
+    aggregate: {
+      count: number;
+    } | null;
+  };
+}
+
 export interface UserCompanyProfile {
   id: number | string;
   company_commercial_name: string | null;
@@ -42,10 +55,33 @@ export interface UserCompanyProfile {
   email: string;
 }
 
+export interface DocumentTypeOption {
+  id: string;
+  description: string;
+}
+
+export interface CountryOption {
+  code: string;
+  name: string;
+  phone_code: string | null;
+}
+
+export interface GetCountriesPagedVariables {
+  limit: number;
+  offset: number;
+  searchTerm?: string;
+}
+
+export interface CountriesPagedResult {
+  rows: CountryOption[];
+  total: number;
+}
+
 export interface UpsertUserVariables {
   first_name: string | null;
   last_name: string | null;
   document_id: string | null;
+  document_type_id: string | null;
   phone: string | null;
   country: string | null;
   city: string | null;
@@ -60,6 +96,7 @@ export interface UpsertCompanyVariables {
   company_description: string | null;
   company_address: string;
   company_profile_completed: boolean;
+  document_type_id?: string | null;
   phone: string | null;
   country: string | null;
   city: string | null;
@@ -110,6 +147,7 @@ export class UserProfileService {
         $first_name: String,
         $last_name: String,
         $document_id: String,
+        $document_type_id: String,
         $phone: String,
         $country: String,
         $city: String
@@ -119,6 +157,7 @@ export class UserProfileService {
             first_name: $first_name,
             last_name: $last_name,
             document_id: $document_id,
+            document_type_id: $document_type_id,
             phone: $phone,
             country: $country,
             city: $city,
@@ -130,6 +169,7 @@ export class UserProfileService {
               first_name,
               last_name,
               document_id,
+              document_type_id,
               phone,
               country,
               city,
@@ -162,6 +202,7 @@ export class UserProfileService {
         $company_description: String,
         $company_address: String,
         $company_profile_completed: Boolean,
+        $document_type_id: String,
         $phone: String,
         $country: String,
         $city: String
@@ -176,10 +217,12 @@ export class UserProfileService {
             company_description: $company_description,
             company_address: $company_address,
             company_profile_completed: $company_profile_completed,
+            document_type_id: $document_type_id,
             phone: $phone,
             country: $country,
             city: $city,
-            active: true
+            active: true,
+            role: "COMPANY"
           },
           on_conflict: {
             constraint: users_pkey,
@@ -192,6 +235,7 @@ export class UserProfileService {
               company_description,
               company_address,
               company_profile_completed,
+              document_type_id,
               phone,
               country,
               city,
@@ -209,6 +253,72 @@ export class UserProfileService {
       mutation,
       data
     ).pipe(map(() => void 0));
+  }
+
+  getDocumentTypes(token: string): Observable<DocumentTypeOption[]> {
+    const query = `
+      query GetDocumentTypes {
+        viajerosv_document_types(where: { active: { _eq: true } }) {
+          id
+          description
+        }
+      }
+    `;
+
+    return this.executeOperation<GetDocumentTypesData, Record<string, never>>(
+      token,
+      query,
+      {}
+    ).pipe(map((data) => data.viajerosv_document_types ?? []));
+  }
+
+  getCountriesPaged(
+    token: string,
+    variables: GetCountriesPagedVariables
+  ): Observable<CountriesPagedResult> {
+    const query = `
+      query GetCountriesPaged($limit: Int!, $offset: Int!, $searchTerm: String = "%%") {
+        viajerosv_countries(
+          limit: $limit,
+          offset: $offset,
+          order_by: { name: asc },
+          where: {
+            active: { _eq: true },
+            name: { _ilike: $searchTerm }
+          }
+        ) {
+          code
+          name
+          phone_code
+        }
+        viajerosv_countries_aggregate(
+          where: {
+            active: { _eq: true },
+            name: { _ilike: $searchTerm }
+          }
+        ) {
+          aggregate {
+            count
+          }
+        }
+      }
+    `;
+
+    const payload: GetCountriesPagedVariables = {
+      ...variables,
+      searchTerm: variables.searchTerm ?? '%%',
+    };
+
+    return this.executeOperation<GetCountriesPagedData, GetCountriesPagedVariables>(
+      token,
+      query,
+      payload
+    ).pipe(
+      map((data) => ({
+        rows: data.viajerosv_countries ?? [],
+        total: data.viajerosv_countries_aggregate.aggregate?.count ?? 0,
+      }))
+    );
   }
 
   getCurrentUserProfile(token: string, email?: string | null): Observable<UserCompanyProfile | null> {

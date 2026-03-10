@@ -243,7 +243,7 @@
               >
                 <div class="flex items-center gap-2 bg-[#E5EDFF] px-3 py-3 min-w-[85px] cursor-pointer">
                   <img src="assets/icons/banderaSalvador.png" alt="SV" class="w-5 h-3 object-cover rounded-sm" />
-                  <span class="text-[#538CFF] font-bold text-xs">+503</span>
+                  <span class="text-[#538CFF] font-bold text-xs">{{ selectedCountryPhoneCode }}</span>
                   <svg class="w-5 h-5 text-[#538CFF]" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
                 </div>
                 <input
@@ -273,8 +273,10 @@
                   'border-none bg-white shadow-sm focus:ring-blue-400': !(showValidation && !pais)
                 }"
               >
-                <option value="" disabled selected hidden>Elegir el pais de residencia...</option>
-                <option>El Salvador</option>
+                <option [ngValue]="''" disabled>Elegir el pais de residencia...</option>
+                <option *ngFor="let country of countries" [value]="country.code">
+                  {{ country.name }}
+                </option>
               </select>
               <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none" [class.text-rose-600]="showValidation && !pais" [class.text-[#538CFF]]="!(showValidation && !pais)">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
@@ -301,8 +303,10 @@
                   'border-none bg-white shadow-sm focus:ring-blue-400': !(showValidation && !tipoDoc)
                 }"
               >
-                <option value="" disabled selected hidden>Elegir tipo de documento...</option>
-                <option>DUI</option>
+                <option [ngValue]="''" disabled>Elegir tipo de documento...</option>
+                <option *ngFor="let doc of documentTypes" [value]="doc.id">
+                  {{ doc.description }}
+                </option>
               </select>
               <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none" [class.text-rose-600]="showValidation && !tipoDoc" [class.text-[#538CFF]]="!(showValidation && !tipoDoc)">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
@@ -319,7 +323,7 @@
           </div>
 
           <div>
-            <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Documento de identidad (DUI)</label>
+            <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Documento de identidad</label>
             <input
               type="text"
               [(ngModel)]="numDoc" (input)="onDuiInput($event)" name="numDoc" required
@@ -393,4 +397,3 @@
         </div>
     </div>
   </div>
-
