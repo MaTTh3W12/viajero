@@ -43,7 +43,7 @@
         </a>
 
         @if (!isKeycloakLoggedIn) {
-        <button routerLink="/login" class="ml-2 px-4 py-2 rounded-full text-[#0E225C] bg-[#F4F7FD] hover:bg-gray-100 transition-colors text-sm font-museo cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md">
+        <button type="button" (click)="loginKeycloak()" class="ml-2 px-4 py-2 rounded-full text-[#0E225C] bg-[#F4F7FD] hover:bg-gray-100 transition-colors text-sm font-museo cursor-pointer transform hover:-translate-y-0.5 hover:shadow-md">
           Iniciar sesión
         </button>
         }
@@ -217,10 +217,11 @@
           <div class="w-[234px] h-0 border-t-[3px] border-[#E6EDFF] mx-auto"></div>
 
            @if (!isKeycloakLoggedIn) {
-           <a class="w-full text-center py-3.5 hover:bg-white/40 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer"
-             routerLink="/login" (click)="open = false">
+           <button type="button"
+             class="w-full text-center py-3.5 hover:bg-white/40 transition-all duration-200 transform hover:-translate-y-0.5 cursor-pointer"
+             (click)="loginKeycloak()">
              Iniciar sesión
-           </a>
+           </button>
            }
 
           <div class="w-[234px] h-0 border-t-[3px] border-[#E6EDFF] mx-auto"></div>
