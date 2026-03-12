@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar.component';
 import { HeroComponent } from '../../../shared/components/hero/hero.component';
 import { CategoriesSliderComponent } from '../../../shared/components/categories-slider/categories-slider.component';
@@ -21,7 +22,8 @@ import { FooterComponent } from '../../../shared/components/footer/footer.compon
     AboutUsComponent,
     ContacUsComponent,
     RelatedPagesComponent,
-    FooterComponent
+    FooterComponent,
+    RouterLink
   ],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css']

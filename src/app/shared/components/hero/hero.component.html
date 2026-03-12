@@ -17,13 +17,13 @@
       </p>
 
       <!-- BOTÓN DESKTOP -->
-      <button class="hidden md:block bg-[#538CFF] hover:bg-blue-400 transition-all px-10 py-4 rounded-full text-lg font-medium w-fit shadow-lg active:scale-95 font-museo">
+      <button type="button" (click)="goToCoupons()" class="hidden md:block bg-[#538CFF] hover:bg-blue-400 transition-all px-10 py-4 rounded-full text-lg font-medium w-fit shadow-lg active:scale-95 font-museo">
         Explorar cupones
       </button>
 
       <!-- BOTÓN MÓVIL (Se mantiene igual) -->
       <div class="absolute md:hidden top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30">
-        <button class="bg-[#538CFF] px-8 py-3 rounded-full text-base font-medium shadow-xl whitespace-nowrap active:scale-95 font-museo">
+        <button type="button" (click)="goToCoupons()" class="bg-[#538CFF] px-8 py-3 rounded-full text-base font-medium shadow-xl whitespace-nowrap active:scale-95 font-museo">
           Explorar cupones
         </button>
       </div>
