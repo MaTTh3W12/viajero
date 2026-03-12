@@ -232,9 +232,10 @@ export class AuthService {
   }
 
   keycloakLogout(): void {
+    const idTokenHint = this.getKeycloakToken()?.id_token;
     const clientId = this.isBrowser() ? (sessionStorage.getItem(KC_CLIENT_KEY) ?? undefined) : undefined;
     this.logout();
-    this.kc.logout(clientId);
+    this.kc.logout(clientId, idTokenHint);
   }
 
   shouldLogoutInKeycloak(): boolean {
@@ -479,7 +480,16 @@ export class AuthService {
   private decodeJwt(token: string): DecodedJwtPayload | null {
     try {
       const payload = token.split('.')[1];
-      const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+      if (!payload) return null;
+
+      const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const padLength = (4 - (normalized.length % 4)) % 4;
+      const padded = normalized + '='.repeat(padLength);
+
+      const binary = atob(padded);
+      const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+      const decoded = new TextDecoder('utf-8').decode(bytes);
+
       return JSON.parse(decoded);
     } catch {
       return null;
