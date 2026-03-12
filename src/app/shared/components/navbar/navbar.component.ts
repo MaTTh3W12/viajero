@@ -124,7 +124,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   goToLoginAfterExpiry(): void {
     this.closeSessionExpiredModal();
-    this.auth.keycloakLogin();
+    this.router.navigate(['/']);
   }
 
 }

@@ -96,7 +96,6 @@ export interface UpsertCompanyVariables {
   company_description: string | null;
   company_address: string;
   company_profile_completed: boolean;
-  document_type_id?: string | null;
   phone: string | null;
   country: string | null;
   city: string | null;
@@ -149,7 +148,7 @@ export class UserProfileService {
         $document_id: String,
         $document_type_id: String,
         $phone: String,
-        $country: String,
+        $country: bpchar,
         $city: String
       ) {
         insert_viajerosv_users(
@@ -201,9 +200,8 @@ export class UserProfileService {
         $company_description: String,
         $company_address: String,
         $company_profile_completed: Boolean,
-        $document_type_id: String,
         $phone: String,
-        $country: String,
+        $country: bpchar,
         $city: String
       ) {
         insert_viajerosv_users(
@@ -216,12 +214,9 @@ export class UserProfileService {
             company_description: $company_description,
             company_address: $company_address,
             company_profile_completed: $company_profile_completed,
-            document_type_id: $document_type_id,
             phone: $phone,
             country: $country,
-            city: $city,
-            active: true,
-            role: "COMPANY"
+            city: $city
           },
           on_conflict: {
             constraint: users_pkey,
@@ -234,7 +229,6 @@ export class UserProfileService {
               company_description,
               company_address,
               company_profile_completed,
-              document_type_id,
               phone,
               country,
               city,

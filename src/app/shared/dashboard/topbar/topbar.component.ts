@@ -116,7 +116,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
 
   goToLoginAfterExpiry() {
     this.closeSessionExpiredModal();
-    this.router.navigate(['/login']);
+    this.router.navigate(['/']);
   }
 
 

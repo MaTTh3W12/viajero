@@ -46,12 +46,18 @@ export class KeycloakService {
     this.redirect(CLIENTS.company, 'registrations', '/register?type=company');
   }
 
-  logout(clientId?: string) {
+  logout(clientId?: string, idTokenHint?: string) {
     const activeClientId = clientId ?? sessionStorage.getItem(KC_CLIENT_KEY) ?? CLIENTS.login;
-    window.location.href =
-      `${this.authBase}/realms/${REALM}/protocol/openid-connect/logout` +
-      `?client_id=${activeClientId}` +
-      `&post_logout_redirect_uri=${encodeURIComponent(this.redirectUriBase)}`;
+    const params = new URLSearchParams({
+      client_id: activeClientId,
+      post_logout_redirect_uri: this.redirectUriBase
+    });
+
+    if (idTokenHint) {
+      params.set('id_token_hint', idTokenHint);
+    }
+
+    window.location.href = `${this.authBase}/realms/${REALM}/protocol/openid-connect/logout?${params.toString()}`;
   }
 
   private redirect(clientId: string, endpoint: string, path: string) {
