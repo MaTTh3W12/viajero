@@ -27,7 +27,7 @@
         Limpiar
       </button>
 
-      <button *ngIf="selectedCoupon"
+      <button *ngIf="selectedCoupon" (click)="onConfirmIrreversible()"
         class="flex w-full items-center justify-center gap-2 rounded-full bg-[#538CFF] px-5 py-3 text-white transition hover:bg-[#3c74e6] md:w-auto md:py-2">
         <svg class="w-5 h-5">
           <use href="assets/icons/sprite.svg#check-circle"></use>

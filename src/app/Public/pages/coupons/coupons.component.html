@@ -79,6 +79,8 @@
     <app-savings
       [selectedCategoryId]="selectedCategoryId"
       [sortBy]="sortBy"
+      [enablePagination]="true"
+      [pageSize]="8"
       (couponsFound)="onCouponsFound($event)">
     </app-savings>
   </section>

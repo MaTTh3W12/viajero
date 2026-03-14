@@ -53,6 +53,13 @@ export class MyCouponsComponent implements OnInit {
   qrUniqueCode = '';
   qrSelectedItem: MyCouponItem | null = null;
   qrSelectedImage = '';
+  transferModalOpen = false;
+  transferring = false;
+  transferSuccess = false;
+  transferError = '';
+  transferEmail = '';
+  transferTarget: MyCouponItem | null = null;
+  transferConfirm = false;
 
   coupons: MyCouponItem[] = [];
   searchText = '';
@@ -119,7 +126,7 @@ export class MyCouponsComponent implements OnInit {
     private readonly couponService: CouponService,
     private readonly auth: AuthService,
     private readonly cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     void this.loadCoupons();
@@ -259,6 +266,74 @@ export class MyCouponsComponent implements OnInit {
     this.qrSelectedImage = '';
   }
 
+  openTransferModal(item: MyCouponItem, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.transferTarget = item;
+    this.transferEmail = '';
+    this.transferError = '';
+    this.transferSuccess = false;
+    this.transferring = false;
+    this.transferModalOpen = true;
+  }
+
+  closeTransferModal(): void {
+    if (this.transferring) return;
+
+    this.transferModalOpen = false;
+    this.transferConfirm = false;
+    this.transferSuccess = false;
+    this.transferError = '';
+    this.transferEmail = '';
+    this.transferTarget = null;
+  }
+
+  confirmTransfer(): void {
+    const email = this.transferEmail.trim();
+
+    if (!this.isValidEmail(email)) {
+      this.transferError = 'Ingresa un correo electrónico válido.';
+      return;
+    }
+
+    this.transferConfirm = true;
+  }
+
+  async executeTransfer(): Promise<void> {
+    if (!this.transferTarget) return;
+
+    const email = this.transferEmail.trim();
+    const uniqueCode = (this.transferTarget.acquired.unique_code ?? '').trim();
+
+    const token = this.auth.token;
+    if (!token) {
+      this.transferError = 'Debes iniciar sesión para transferir cupones.';
+      return;
+    }
+
+    this.transferring = true;
+    this.transferError = '';
+
+    try {
+      const transferred = await firstValueFrom(
+        this.couponService.transferCoupon(token, uniqueCode, email).pipe(take(1), timeout(15000))
+      );
+
+      if (!transferred) throw new Error('No se pudo completar la transferencia.');
+
+      const transferredId = String(this.transferTarget.acquired.id);
+      this.coupons = this.coupons.filter((item) => String(item.acquired.id) !== transferredId);
+
+      this.transferSuccess = true;
+    } catch (error) {
+      this.transferError = 'No se pudo transferir el cupón.';
+    } finally {
+      this.transferring = false;
+      this.cdr.detectChanges();
+    }
+  }
+
   openQrImageZoom(event: Event): void {
     event.preventDefault();
     event.stopPropagation();
@@ -316,6 +391,13 @@ export class MyCouponsComponent implements OnInit {
   getStockLabel(coupon: Coupon): string {
     const amount = typeof coupon.stock_available === 'number' ? coupon.stock_available : 0;
     return `${amount} cupones`;
+  }
+
+  canTransfer(item: MyCouponItem): boolean {
+    if (item.acquired.redeemed) return false;
+    const endDate = new Date(item.coupon.end_date);
+    if (Number.isNaN(endDate.getTime())) return false;
+    return endDate >= new Date();
   }
 
   private async loadCoupons(): Promise<void> {
@@ -395,5 +477,10 @@ export class MyCouponsComponent implements OnInit {
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase()
       .trim();
+  }
+
+  private isValidEmail(value: string): boolean {
+    if (!value) return false;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
   }
 }

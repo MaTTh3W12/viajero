@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthService } from './auth.service';
-import { KeycloakService } from './keycloak.service';
 import { UpsertUserVariables, UserProfileService } from './user-profile.service';
 
 @Injectable({
@@ -10,22 +9,21 @@ import { UpsertUserVariables, UserProfileService } from './user-profile.service'
 })
 export class AuthFacadeService {
   constructor(
-    private kc: KeycloakService,
     private state: AuthService,
     private profile: UserProfileService,
     private router: Router
   ) {}
 
   login() {
-    this.kc.login();
+    this.state.keycloakLogin();
   }
 
   registerUser() {
-    this.kc.registerUser();
+    this.state.keycloakRegisterUser();
   }
 
   registerCompany() {
-    this.kc.registerCompany();
+    this.state.keycloakRegisterCompany();
   }
 
   async handleRedirect() {
@@ -33,21 +31,7 @@ export class AuthFacadeService {
     const code = params.get('code');
     if (!code) return;
 
-    const tokenData = await this.kc.exchangeCode(code);
-    if (!tokenData) return;
-
-    const payload = this.decode(tokenData.access_token);
-
-    this.state.setAuth(tokenData.access_token, {
-      sub: payload.sub,
-      email: payload.email,
-      username: payload.preferred_username,
-      firstName: payload.given_name,
-      lastName: payload.family_name,
-      role: payload.realm_access?.roles?.[0],
-    });
-
-    window.history.replaceState({}, document.title, window.location.pathname);
+    await this.state.handleKeycloakRedirect({ upsert: false });
   }
 
   async completeProfile(formData: Partial<UpsertUserVariables>) {
@@ -60,6 +44,7 @@ export class AuthFacadeService {
       first_name: (formData.first_name ?? user.firstName) ?? null,
       last_name: (formData.last_name ?? user.lastName) ?? null,
       document_id: formData.document_id ?? null,
+      document_type_id: formData.document_type_id ?? null,
       phone: formData.phone ?? null,
       country: formData.country ?? null,
       city: formData.city ?? null,
@@ -71,11 +56,11 @@ export class AuthFacadeService {
   }
 
   logout() {
-    this.state.clear();
-    this.kc.logout();
-  }
+    if (this.state.shouldLogoutInKeycloak()) {
+      this.state.keycloakLogout();
+      return;
+    }
 
-  private decode(token: string) {
-    return JSON.parse(atob(token.split('.')[1]));
+    this.state.clear();
   }
 }

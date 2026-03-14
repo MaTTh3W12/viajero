@@ -1,4 +1,14 @@
 import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Router } from '@angular/router';
+
+interface SliderCategoryItem {
+  key: string;
+  label: string;
+  categoryId: number | null;
+  icon: string;
+  bgColor: string;
+  activeIcon?: boolean;
+}
 
 @Component({
   selector: 'app-categories-slider',
@@ -9,13 +19,86 @@ import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef } fr
 export class CategoriesSliderComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @ViewChild('sliderContainer', { static: true }) sliderContainer!: ElementRef<HTMLDivElement>;
+  readonly categories: SliderCategoryItem[] = [
+    {
+      key: 'all',
+      label: 'Todos los cupones',
+      categoryId: null,
+      icon: 'assets/icons/coupon1.svg',
+      bgColor: '#1438A0',
+      activeIcon: true,
+    },
+    {
+      key: 'alojamiento',
+      label: 'Alojamiento',
+      categoryId: 1,
+      icon: 'assets/icons/double-bed.svg',
+      bgColor: '#FFF8D2',
+    },
+    {
+      key: 'alimentos',
+      label: 'Alimentos y bebidas',
+      categoryId: 2,
+      icon: 'assets/icons/dinner.svg',
+      bgColor: '#ABE9FF',
+    },
+    {
+      key: 'turismo',
+      label: 'Turismo',
+      categoryId: 3,
+      icon: 'assets/icons/sunbed.svg',
+      bgColor: '#D8D7FF',
+    },
+    {
+      key: 'entretenimiento',
+      label: 'Entretenimiento',
+      categoryId: 4,
+      icon: 'assets/icons/gift-bag1.svg',
+      bgColor: '#FFD5D6',
+    },
+    {
+      key: 'cuidado-personal',
+      label: 'Cuidado personal',
+      categoryId: 5,
+      icon: 'assets/icons/lotus1.svg',
+      bgColor: '#D3F6D2',
+    },
+    {
+      key: 'productos-nostalgicos',
+      label: 'Productos nostálgicos',
+      categoryId: 6,
+      icon: 'assets/icons/product-quality1.svg',
+      bgColor: '#FFD5D6',
+    },
+    {
+      key: 'productos-servicios',
+      label: 'Productos y servicios',
+      categoryId: 7,
+      icon: 'assets/icons/gift-bag1.svg',
+      bgColor: '#FFC6B3',
+    },
+    {
+      key: 'tour-operadores',
+      label: 'Tour operadores',
+      categoryId: 8,
+      icon: 'assets/icons/traveler1.svg',
+      bgColor: '#CAFFFB',
+    },
+    {
+      key: 'transporte',
+      label: 'Transporte',
+      categoryId: 9,
+      icon: 'assets/icons/bus1.svg',
+      bgColor: '#CAFFDC',
+    },
+  ];
 
   private items: HTMLElement[] = [];
   private currentIndex = 0;
   private autoplayTimer: any = null;
   private readonly AUTOPLAY_INTERVAL = 3000; // ms
 
-  constructor() { }
+  constructor(private router: Router) { }
 
   ngOnInit(): void {
   }
@@ -23,7 +106,7 @@ export class CategoriesSliderComponent implements OnInit, AfterViewInit, OnDestr
   ngAfterViewInit(): void {
     // collect direct children as items
     const el = this.sliderContainer.nativeElement;
-    this.items = Array.from(el.querySelectorAll(':scope > div')) as HTMLElement[];
+    this.items = Array.from(el.querySelectorAll(':scope > button')) as HTMLElement[];
 
     // start autoplay
     this.startAutoplay();
@@ -47,6 +130,13 @@ export class CategoriesSliderComponent implements OnInit, AfterViewInit, OnDestr
 
   pauseAutoplay(): void {
     this.stopAutoplay();
+  }
+
+  openCategory(categoryKey: string): void {
+    this.pauseAutoplay();
+    this.router.navigate(['/coupons'], {
+      queryParams: { category: categoryKey },
+    });
   }
 
   resumeAutoplay(): void {

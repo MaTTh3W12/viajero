@@ -232,9 +232,10 @@ export class AuthService {
   }
 
   keycloakLogout(): void {
+    const idTokenHint = this.getKeycloakToken()?.id_token;
     const clientId = this.isBrowser() ? (sessionStorage.getItem(KC_CLIENT_KEY) ?? undefined) : undefined;
     this.logout();
-    this.kc.logout(clientId);
+    this.kc.logout(clientId, idTokenHint);
   }
 
   shouldLogoutInKeycloak(): boolean {
@@ -288,6 +289,7 @@ export class AuthService {
     last_name: string;
     email: string;
     document_id: string | null;
+    document_type_id: string | null;
     phone: string | null;
     country: string | null;
     city: string | null;
@@ -312,6 +314,7 @@ export class AuthService {
         first_name: formData.first_name || user?.firstName || null,
         last_name: formData.last_name || user?.lastName || null,
         document_id: formData.document_id,
+        document_type_id: formData.document_type_id,
         phone: formData.phone,
         country: formData.country,
         city: formData.city,
@@ -477,7 +480,16 @@ export class AuthService {
   private decodeJwt(token: string): DecodedJwtPayload | null {
     try {
       const payload = token.split('.')[1];
-      const decoded = atob(payload.replace(/-/g, '+').replace(/_/g, '/'));
+      if (!payload) return null;
+
+      const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+      const padLength = (4 - (normalized.length % 4)) % 4;
+      const padded = normalized + '='.repeat(padLength);
+
+      const binary = atob(padded);
+      const bytes = Uint8Array.from(binary, char => char.charCodeAt(0));
+      const decoded = new TextDecoder('utf-8').decode(bytes);
+
       return JSON.parse(decoded);
     } catch {
       return null;
@@ -505,6 +517,7 @@ export class AuthService {
       first_name: payload.given_name ?? null,
       last_name: payload.family_name ?? null,
       document_id: null,
+      document_type_id: null,
       phone: null,
       country: null,
       city: null,
@@ -561,7 +574,7 @@ export class AuthService {
     const expiresAtMs = exp * 1000;
     const remainingMs = expiresAtMs - Date.now();
 
-    console.log('[AUTH] token expira en', new Date(expiresAtMs).toISOString());
+    console.log('[AUTH] token expira en', this.formatDateTimeForElSalvador(expiresAtMs));
 
     if (remainingMs <= 0) {
       this.handleTokenExpired();
@@ -587,6 +600,19 @@ export class AuthService {
 
     this._sessionExpired.next(true);
     console.log('[AUTH] sesión cerrada por expiración de token');
+  }
+
+  private formatDateTimeForElSalvador(timestamp: number): string {
+    return new Intl.DateTimeFormat('es-SV', {
+      timeZone: 'America/El_Salvador',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+    }).format(new Date(timestamp));
   }
 
   private isBrowser(): boolean {

@@ -3,7 +3,7 @@ import { DataTableConfig } from '../../../service/data-table.model';
 import { CouponsMockService } from '../../../service/coupons-mock.service';
 import { Coupon } from '../../../service/coupon.interface';
 import { AuthService, UserRole } from '../../../service/auth.service';
-import { CouponService, CouponAcquiredWithImage } from '../../../service/coupon.service';
+import { CouponService } from '../../../service/coupon.service';
 import { firstValueFrom } from 'rxjs';
 import { timeout } from 'rxjs/operators';
 
@@ -66,6 +66,9 @@ export class CanjeCuponesComponent implements OnInit {
 
   clearSelection(): void {
     this.selectedCoupon = null;
+    this.couponLookupError = '';
+    this.redeemError = '';
+    this.cancelRedeemFlow();
   }
   ngOnInit(): void {
     this.service.getCoupons().subscribe((data) => {
@@ -211,20 +214,20 @@ export class CanjeCuponesComponent implements OnInit {
         throw new Error('No se recibió confirmación del canje.');
       }
 
-      let redeemedConfirmed = !!result.redeemed;
+      let redeemedConfirmed = !!result.redeemed && result.validated_by != null;
 
       if (!redeemedConfirmed) {
         const verifiedCoupon = await firstValueFrom(
           this.couponService.getCouponWithImageByCode(token, couponCode).pipe(timeout(15000))
         );
 
-        if (verifiedCoupon?.redeemed) {
+        if (verifiedCoupon?.redeemed && verifiedCoupon.validated_by != null) {
           redeemedConfirmed = true;
         }
       }
 
       if (!redeemedConfirmed) {
-        throw new Error('No se pudo confirmar el canje del cupón.');
+        throw new Error('No se pudo confirmar la asignación del canje.');
       }
 
       this.selectedCoupon = {

@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { RelatedPagesComponent } from '../../../shared/components/related-pages/related-pages.component';
@@ -20,9 +21,13 @@ import { ContacUsComponent } from '../../../shared/components/contac-us/contac-u
 })
 export class AboutUsComponent implements OnInit {
 
-  constructor() { }
+  constructor(private router: Router) { }
 
   ngOnInit(): void {
+  }
+
+  goToCoupons(): void {
+    this.router.navigate(['/coupons']);
   }
 
 }

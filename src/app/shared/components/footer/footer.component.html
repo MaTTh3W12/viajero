@@ -17,16 +17,19 @@
 
     <!-- MENÚ IZQUIERDO (Oculto en móvil 'hidden', visible en desktop 'md:block') -->
     <ul class="space-y-3 text-sm hidden md:block">
-      <li><a href="#" class="hover:underline">Inicio</a></li>
-      <li><a href="#" class="hover:underline">Cupones</a></li>
-      <li><a href="#" class="hover:underline">Quiénes somos</a></li>
+      <li><a routerLink="/" class="hover:underline">Inicio</a></li>
+      <li><a routerLink="/coupons" class="hover:underline">Cupones</a></li>
+      <li><a routerLink="/about-us" class="hover:underline">Quiénes somos</a></li>
     </ul>
 
     <!-- MENÚ DERECHO (Oculto en móvil 'hidden', visible en desktop 'md:block') -->
     <ul class="space-y-3 text-sm hidden md:block">
-      <li><a href="#" class="hover:underline">Contacto</a></li>
-      <li><a href="#" class="hover:underline">Iniciar sesión</a></li>
-      <li><a href="#" class="hover:underline">Registrarse</a></li>
+      <li><a routerLink="/contact" class="hover:underline">Contacto</a></li>
+      <li>
+        <button type="button" (click)="loginKeycloak()" class="hover:underline">
+          Iniciar sesión
+        </button>
+      </li>
     </ul>
 
     <!-- CONTACTO -->

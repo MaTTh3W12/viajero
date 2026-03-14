@@ -86,6 +86,10 @@ interface RedeemCouponData {
   viajerosv_redeem_coupon: CouponAcquired | null;
 }
 
+interface TransferCouponData {
+  viajerosv_transfer_coupon: TransferCouponResult | null;
+}
+
 interface GetCouponsByIdsData {
   viajerosv_coupons: Coupon[];
 }
@@ -148,6 +152,13 @@ export interface CouponAcquired {
   unique_code: string;
   acquired_at: string;
   redeemed_at: string | null;
+}
+
+export interface TransferCouponResult {
+  id: number | string;
+  unique_code: string;
+  user_id: number | string;
+  acquired_at: string;
 }
 
 export interface CouponWithImageDetails {
@@ -544,6 +555,30 @@ export class CouponService {
       mutation,
       { unique_code: uniqueCode }
     ).pipe(map((data) => data.viajerosv_redeem_coupon ?? null));
+  }
+
+  transferCoupon(token: string, uniqueCode: string, email: string): Observable<TransferCouponResult | null> {
+    const mutation = `
+      mutation TransferCoupon($unique_code: String!, $email: String!) {
+        viajerosv_transfer_coupon(
+          args: {
+            p_unique_code: $unique_code,
+            p_dest_email: $email
+          }
+        ) {
+          id
+          unique_code
+          user_id
+          acquired_at
+        }
+      }
+    `;
+
+    return this.executeOperation<TransferCouponData, { unique_code: string; email: string }>(
+      token,
+      mutation,
+      { unique_code: uniqueCode, email }
+    ).pipe(map((data) => data.viajerosv_transfer_coupon ?? null));
   }
 
   insertCoupon(token: string, variables: InsertCouponVariables): Observable<CouponSummary | null> {

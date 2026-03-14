@@ -14,9 +14,12 @@ import { finalize, take, timeout } from 'rxjs';
 export class SavingsComponent implements OnInit, OnChanges {
   @Input() selectedCategoryId: number | null = null;
   @Input() sortBy: 'recent' = 'recent';
+  @Input() enablePagination = false;
+  @Input() pageSize = 8;
   @Output() couponsFound = new EventEmitter<number>();
   coupons: Coupon[] = [];
   displayedCoupons: Coupon[] = [];
+  currentPage = 1;
   loading = false;
   error = '';
   readonly fixedCouponTitle = 'EL SALVADOR TOURS';
@@ -36,7 +39,7 @@ export class SavingsComponent implements OnInit, OnChanges {
     3: 'Turismo',
     4: 'Entretenimiento',
     5: 'Cuidado personal',
-    6: 'Productos nostalgicos',
+    6: 'Productos nostálgicos',
     7: 'Productos y servicios',
     8: 'Tour operadores',
     9: 'Transporte',
@@ -46,12 +49,22 @@ export class SavingsComponent implements OnInit, OnChanges {
     2: 'assets/icons/dinner.svg', // Alimentos y bebidas
     3: 'assets/icons/sunbed.svg', // Turismo
     4: 'assets/icons/gift-bag1.svg', // Entretenimiento
+    5: 'assets/icons/lotus1.svg', // Cuidado personal
+    6: 'assets/icons/product-quality1.svg', // Productos nostálgicos
+    7: 'assets/icons/gift-bag1.svg', // Productos y servicios
+    8: 'assets/icons/traveler1.svg', // Tour operadores
+    9: 'assets/icons/bus1.svg', // Transporte
   };
   private readonly categoryBgColors: Record<number, string> = {
     1: '#FFF8D2', // Alojamiento
     2: '#ABE9FF', // Alimentos y bebidas
     3: '#D8D7FF', // Turismo
     4: '#FFD5D6', // Entretenimiento
+    5: '#D3F6D2', // Cuidado personal
+    6: '#FFD5D6', // Productos nostálgicos
+    7: '#FFC6B3', // Productos y servicios
+    8: '#CAFFFB', // Tour operadores
+    9: '#CAFFDC', // Transporte
   };
 
   constructor(
@@ -64,9 +77,30 @@ export class SavingsComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['selectedCategoryId'] || changes['sortBy']) {
+    if (
+      changes['selectedCategoryId'] ||
+      changes['sortBy'] ||
+      changes['enablePagination'] ||
+      changes['pageSize']
+    ) {
+      this.currentPage = 1;
       this.applyFiltersAndSort();
     }
+  }
+
+  get totalPages(): number {
+    if (!this.enablePagination) return 1;
+    return Math.max(1, Math.ceil(this.displayedCoupons.length / this.pageSize));
+  }
+
+  get paginatedCoupons(): Coupon[] {
+    if (!this.enablePagination) return this.displayedCoupons;
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.displayedCoupons.slice(start, start + this.pageSize);
+  }
+
+  get pages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, index) => index + 1);
   }
 
   getCardImage(index: number): string {
@@ -117,6 +151,13 @@ export class SavingsComponent implements OnInit, OnChanges {
     return `${amount} cupones`;
   }
 
+  goToPage(page: number): void {
+    if (!this.enablePagination) return;
+    if (page < 1 || page > this.totalPages) return;
+    this.currentPage = page;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   private loadCoupons(): void {
     this.loading = true;
     this.error = '';
@@ -162,6 +203,7 @@ export class SavingsComponent implements OnInit, OnChanges {
     }
 
     this.displayedCoupons = rows;
+    this.currentPage = Math.min(this.currentPage, this.totalPages);
     this.emitCouponsFound(this.displayedCoupons.length);
   }
 

@@ -342,7 +342,7 @@ export class FilterBarComponent {
           .pipe(take(1), timeout(15000))
       );
 
-      let redeemedConfirmed = !!redeemed?.redeemed;
+      let redeemedConfirmed = !!redeemed?.redeemed && redeemed?.validated_by != null;
 
       if (!redeemedConfirmed) {
         const verifiedCoupon = await firstValueFrom(
@@ -351,13 +351,13 @@ export class FilterBarComponent {
             .pipe(take(1), timeout(15000))
         );
 
-        if (verifiedCoupon?.redeemed) {
+        if (verifiedCoupon?.redeemed && verifiedCoupon.validated_by != null) {
           redeemedConfirmed = true;
         }
       }
 
       if (!redeemedConfirmed) {
-        throw new Error('No se pudo confirmar el canje del cupón.');
+        throw new Error('No se pudo confirmar la asignación del canje.');
       }
 
       // Notificar al componente padre para que pueda cargar los detalles del cupón
