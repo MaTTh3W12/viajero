@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar.component';
 import { ContacUsComponent } from '../../../shared/components/contac-us/contac-us.component';
 import { RelatedPagesComponent } from '../../../shared/components/related-pages/related-pages.component';
@@ -59,6 +60,13 @@ export class CouponsComponent implements OnInit {
       bgColor: '#ABE9FF',
     },
     {
+      key: 'turismo',
+      label: 'Turismo',
+      categoryId: 3,
+      icon: 'assets/icons/sunbed.svg',
+      bgColor: '#D8D7FF',
+    },
+    {
       key: 'entretenimiento',
       label: 'Entretenimiento',
       categoryId: 4,
@@ -66,24 +74,63 @@ export class CouponsComponent implements OnInit {
       bgColor: '#FFD5D6',
     },
     {
-      key: 'turismo',
-      label: 'Turismo',
-      categoryId: 3,
-      icon: 'assets/icons/sunbed.svg',
-      bgColor: '#D8D7FF',
+      key: 'cuidado-personal',
+      label: 'Cuidado personal',
+      categoryId: 5,
+      icon: 'assets/icons/lotus1.svg',
+      bgColor: '#D3F6D2',
+    },
+    {
+      key: 'productos-nostalgicos',
+      label: 'Productos nostálgicos',
+      categoryId: 6,
+      icon: 'assets/icons/product-quality1.svg',
+      bgColor: '#FFD5D6',
+    },
+    {
+      key: 'productos-servicios',
+      label: 'Productos y servicios',
+      categoryId: 7,
+      icon: 'assets/icons/gift-bag1.svg',
+      bgColor: '#FFC6B3',
+    },
+    {
+      key: 'tour-operadores',
+      label: 'Tour operadores',
+      categoryId: 8,
+      icon: 'assets/icons/traveler1.svg',
+      bgColor: '#CAFFFB',
+    },
+    {
+      key: 'transporte',
+      label: 'Transporte',
+      categoryId: 9,
+      icon: 'assets/icons/bus1.svg',
+      bgColor: '#CAFFDC',
     },
   ];
 
-  constructor() { }
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router
+  ) { }
 
   isActive(cat: string) {
     return this.selectedCategory === cat;
   }
 
-  selectCategory(cat: string) {
+  selectCategory(cat: string, syncQueryParam = true) {
     this.selectedCategory = cat;
     const selected = this.categoryFilters.find((item) => item.key === cat);
     this.selectedCategoryId = selected?.categoryId ?? null;
+
+    if (syncQueryParam) {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { category: cat === 'all' ? null : cat },
+        queryParamsHandling: 'merge',
+      });
+    }
   }
 
   onCouponsFound(total: number): void {
@@ -91,6 +138,11 @@ export class CouponsComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.route.queryParamMap.subscribe((params) => {
+      const requestedCategory = params.get('category') ?? 'all';
+      const hasCategory = this.categoryFilters.some((item) => item.key === requestedCategory);
+      this.selectCategory(hasCategory ? requestedCategory : 'all', false);
+    });
   }
 
 }

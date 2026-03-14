@@ -8,7 +8,7 @@
   <div class="text-center text-[#0E225C] py-8 font-museo">No hay cupones disponibles.</div>
   } @else {
   <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-8">
-    @for (coupon of displayedCoupons; track coupon.id; let idx = $index) {
+    @for (coupon of paginatedCoupons; track coupon.id; let idx = $index) {
     <div [routerLink]="['/view-coupons', coupon.id]"
       class="cursor-pointer bg-white rounded-[16px] md:rounded-[24px] shadow-md border border-gray-50 overflow-hidden flex flex-col h-full hover:shadow-xl transition-shadow duration-300">
       <div class="relative h-[110px] md:h-[180px] flex-shrink-0">
@@ -77,5 +77,24 @@
     </div>
     }
   </div>
+
+  @if (enablePagination && totalPages > 1) {
+  <div class="flex items-center justify-center gap-2 mt-8 text-[#1A2440]">
+    <button (click)="goToPage(currentPage - 1)"
+      class="w-9 h-9 rounded-full border border-[#A0A9BD] disabled:opacity-40"
+      [disabled]="currentPage === 1">‹</button>
+
+    @for (page of pages; track page) {
+    <button (click)="goToPage(page)" [ngClass]="{ 'bg-[#538CFF] text-white border-[#538CFF]': currentPage === page }"
+      class="w-9 h-9 rounded-full border border-[#A0A9BD]">
+      {{ page }}
+    </button>
+    }
+
+    <button (click)="goToPage(currentPage + 1)"
+      class="w-9 h-9 rounded-full border border-[#A0A9BD] disabled:opacity-40"
+      [disabled]="currentPage === totalPages">›</button>
+  </div>
+  }
   }
 </section>
