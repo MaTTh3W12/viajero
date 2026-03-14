@@ -5,8 +5,11 @@ import { FormsModule } from '@angular/forms';
 import { FilterVariant } from '../../../service/filter-bar.types';
 import { AuthService, UserRole } from '../../../service/auth.service';
 import { Category, CategoryService } from '../../../service/category.service';
+import { CouponService } from '../../../service/coupon.service';
 import { CommonModule } from '@angular/common';
 import { ZXingScannerModule } from '@zxing/ngx-scanner';
+import { firstValueFrom } from 'rxjs';
+import { take, timeout } from 'rxjs/operators';
 
 const FILTER_BG_MAP: Record<UserRole, Record<FilterVariant, string>> = {
   admin: {
@@ -104,6 +107,7 @@ export class FilterBarComponent {
   // QR
   showQrModal = false;
   couponCode: string = '';
+  scannedCouponCode: string = '';
 
   scannerHasDevices = false;
   scannerHasPermission = false;
@@ -224,16 +228,33 @@ export class FilterBarComponent {
   }
 
   openQrModal(): void {
+    this.scannedCouponCode = '';
+    this.showConfirmRedeemModal = false;
+    this.scannerError = null;
     this.showQrModal = true;
   }
 
   closeQrModal(): void {
+    this.showConfirmRedeemModal = false;
     this.showQrModal = false;
   }
 
+  submitCouponCode(): void {
+    const code = this.couponCode?.trim();
+    if (!code) {
+      return;
+    }
+
+    this.scannerError = null;
+    this.validateCode.emit(code);
+  }
+
   onQrScan(result: string): void {
+    this.scannedCouponCode = result;
     this.couponCode = result;
     this.closeQrModal();
+    // Notificar al padre para que cargue la información del cupón si es necesario
+    this.validateCode.emit(this.couponCode);
   }
 
   statisticsMetricTypeSelected = 'Seleccionar tipo de métrica';
@@ -266,23 +287,111 @@ export class FilterBarComponent {
   }
 
   onQrScanButtonClick(): void {
-    this.showConfirmRedeemModal = true;
+    const scannedCode = this.scannedCouponCode?.trim();
+    if (!scannedCode) {
+      return;
+    }
+
+    this.couponCode = scannedCode;
+    this.submitCouponCode();
+    this.closeQrModal();
   }
 
   closeConfirmRedeemModal(): void {
     this.showConfirmRedeemModal = false;
   }
 
-  confirmRedeem(): void {
+  async confirmRedeem(): Promise<void> {
+    const code = this.couponCode?.trim();
+    if (!code) {
+      this.scannerError = 'Ingresa o escanea un código de cupón válido.';
+      this.showConfirmRedeemModal = false;
+      return;
+    }
+
+    const token = this.auth.token;
+    if (!token) {
+      this.scannerError = 'Debes iniciar sesión para validar cupones.';
+      this.showConfirmRedeemModal = false;
+      return;
+    }
+
     this.showConfirmRedeemModal = false;
     this.redeemingCoupon = true;
+    this.scannerError = null;
     this.cdr.detectChanges();
 
-    setTimeout(() => {
+    try {
+      const acquired = await firstValueFrom(
+        this.couponService
+          .getCouponWithImageByCode(token, code)
+          .pipe(take(1), timeout(15000))
+      );
+
+      if (!acquired) {
+        throw new Error('No se encontró un cupón con ese código.');
+      }
+
+      if (acquired.redeemed) {
+        throw new Error('Este cupón ya fue canjeado.');
+      }
+
+      const redeemed = await firstValueFrom(
+        this.couponService
+          .redeemCouponByCode(token, code)
+          .pipe(take(1), timeout(15000))
+      );
+
+      let redeemedConfirmed = !!redeemed?.redeemed;
+
+      if (!redeemedConfirmed) {
+        const verifiedCoupon = await firstValueFrom(
+          this.couponService
+            .getCouponWithImageByCode(token, code)
+            .pipe(take(1), timeout(15000))
+        );
+
+        if (verifiedCoupon?.redeemed) {
+          redeemedConfirmed = true;
+        }
+      }
+
+      if (!redeemedConfirmed) {
+        throw new Error('No se pudo confirmar el canje del cupón.');
+      }
+
+      // Notificar al componente padre para que pueda cargar los detalles del cupón
+      this.validateCode.emit(code);
+
       this.redeemingCoupon = false;
       this.redeemSuccess = true;
       this.cdr.detectChanges();
-    }, 3000);
+    } catch (error: any) {
+      console.error('[FILTER-BAR] Error canjeando cupón', error);
+      this.redeemingCoupon = false;
+      const message = error?.message || 'No se pudo canjear el cupón. Intenta nuevamente.';
+
+      try {
+        const verifiedCoupon = await firstValueFrom(
+          this.couponService
+            .getCouponWithImageByCode(token, code)
+            .pipe(take(1), timeout(8000))
+        );
+
+        if (verifiedCoupon?.redeemed) {
+          this.validateCode.emit(code);
+          this.redeemSuccess = true;
+          this.cdr.detectChanges();
+          return;
+        }
+      } catch (verificationError) {
+        console.error('[FILTER-BAR] No fue posible verificar el estado final del cupón', verificationError);
+      }
+
+      this.showQrModal = false;
+      this.scannerError = message;
+      this.cdr.detectChanges();
+    }
   }
 
   closeRedeemSuccess(): void {
@@ -1019,7 +1128,8 @@ export class FilterBarComponent {
     private auth: AuthService,
     private categoryService: CategoryService,
     private cdr: ChangeDetectorRef,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private couponService: CouponService
   ) { }
 
   private setBodyModalLock(on: boolean): void {

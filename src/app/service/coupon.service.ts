@@ -78,6 +78,14 @@ interface GetCouponsAcquiredData {
   };
 }
 
+interface GetCouponWithImageByCodeData {
+  viajerosv_coupons_acquired: CouponAcquiredWithImage[];
+}
+
+interface RedeemCouponData {
+  viajerosv_redeem_coupon: CouponAcquired | null;
+}
+
 interface GetCouponsByIdsData {
   viajerosv_coupons: Coupon[];
 }
@@ -140,6 +148,30 @@ export interface CouponAcquired {
   unique_code: string;
   acquired_at: string;
   redeemed_at: string | null;
+}
+
+export interface CouponWithImageDetails {
+  id: number;
+  title: string;
+  description: string | null;
+  price: string | null;
+  price_discount: string | null;
+  start_date: string;
+  end_date: string;
+  image_mime_type: string | null;
+  image_size: number | null;
+  image: string | null;
+}
+
+export interface CouponAcquiredWithImage {
+  id: number | string;
+  unique_code: string;
+  acquired_at: string;
+  redeemed: boolean;
+  redeemed_at: string | null;
+  user_id: number | string;
+  validated_by: number | string | null;
+  coupon_with_image_base64: CouponWithImageDetails | null;
 }
 
 export interface GetCouponsVariables {
@@ -456,6 +488,62 @@ export class CouponService {
     return this.executeOperation<GetCouponsByIdsData, { ids: number[] }>(token, query, { ids: couponIds }).pipe(
       map((data) => data.viajerosv_coupons ?? [])
     );
+  }
+
+  getCouponWithImageByCode(token: string, uniqueCode: string): Observable<CouponAcquiredWithImage | null> {
+    const query = `
+      query GetCouponWithImageByCode($unique_code: String!) {
+        viajerosv_coupons_acquired(where: { unique_code: { _eq: $unique_code } }) {
+          id
+          unique_code
+          acquired_at
+          redeemed
+          redeemed_at
+          coupon_with_image_base64 {
+            id
+            title
+            description
+            price
+            price_discount
+            start_date
+            end_date
+            image_mime_type
+            image_size
+            image
+          }
+          user_id
+          validated_by
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCouponWithImageByCodeData, { unique_code: string }>(
+      token,
+      query,
+      { unique_code: uniqueCode }
+    ).pipe(map((data) => data.viajerosv_coupons_acquired[0] ?? null));
+  }
+
+  redeemCouponByCode(token: string, uniqueCode: string): Observable<CouponAcquired | null> {
+    const mutation = `
+      mutation Redeem($unique_code: String!) {
+        viajerosv_redeem_coupon(args: { p_unique_code: $unique_code }) {
+          id
+          coupon_id
+          user_id
+          unique_code
+          redeemed
+          redeemed_at
+          validated_by
+        }
+      }
+    `;
+
+    return this.executeOperation<RedeemCouponData, { unique_code: string }>(
+      token,
+      mutation,
+      { unique_code: uniqueCode }
+    ).pipe(map((data) => data.viajerosv_redeem_coupon ?? null));
   }
 
   insertCoupon(token: string, variables: InsertCouponVariables): Observable<CouponSummary | null> {
