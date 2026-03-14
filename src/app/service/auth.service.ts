@@ -574,7 +574,7 @@ export class AuthService {
     const expiresAtMs = exp * 1000;
     const remainingMs = expiresAtMs - Date.now();
 
-    console.log('[AUTH] token expira en', new Date(expiresAtMs).toISOString());
+    console.log('[AUTH] token expira en', this.formatDateTimeForElSalvador(expiresAtMs));
 
     if (remainingMs <= 0) {
       this.handleTokenExpired();
@@ -600,6 +600,19 @@ export class AuthService {
 
     this._sessionExpired.next(true);
     console.log('[AUTH] sesión cerrada por expiración de token');
+  }
+
+  private formatDateTimeForElSalvador(timestamp: number): string {
+    return new Intl.DateTimeFormat('es-SV', {
+      timeZone: 'America/El_Salvador',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true,
+    }).format(new Date(timestamp));
   }
 
   private isBrowser(): boolean {
