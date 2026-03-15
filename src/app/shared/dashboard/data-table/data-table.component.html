@@ -87,7 +87,7 @@
 
             <!-- TEXT -->
             @else {
-            <span class="text-[#0E225C] text-sm">
+            <span class="text-[#0E225C] text-sm" [attr.title]="getCellTooltip(col, row)">
               {{ getCellValue(col, row) }}
             </span>
             }

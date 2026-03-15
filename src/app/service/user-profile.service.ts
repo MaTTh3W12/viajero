@@ -50,6 +50,15 @@ interface GetCountriesPagedData {
 export interface UserCompanyProfile {
   id: number | string;
   company_commercial_name: string | null;
+  company_nit?: string | null;
+  company_email?: string | null;
+  company_phone?: string | null;
+  company_logo_url?: string | null;
+  company_description?: string | null;
+  company_address?: string | null;
+  phone?: string | null;
+  country?: string | null;
+  city?: string | null;
   first_name?: string | null;
   last_name?: string | null;
   email: string;
@@ -321,6 +330,15 @@ export class UserProfileService {
           viajerosv_users(where: { email: { _eq: $email } }, limit: 1) {
             id
             company_commercial_name
+            company_nit
+            company_email
+            company_phone
+            company_logo_url
+            company_description
+            company_address
+            phone
+            country
+            city
             email
           }
         }
@@ -338,6 +356,15 @@ export class UserProfileService {
         viajerosv_users(limit: 1) {
           id
           company_commercial_name
+          company_nit
+          company_email
+          company_phone
+          company_logo_url
+          company_description
+          company_address
+          phone
+          country
+          city
           email
         }
       }

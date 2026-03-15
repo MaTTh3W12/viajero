@@ -1,0 +1,9 @@
+select,
+textarea,
+input {
+  font-size: 14px;
+}
+
+textarea {
+  resize: none;
+}

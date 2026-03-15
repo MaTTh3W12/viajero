@@ -100,6 +100,12 @@ export const COMPANY_ROUTES: Routes = [
         loadComponent: () =>
           import('./pages/contact-center/contact-center.component')
             .then(m => m.ContactCenterComponent)
+      },
+      {
+        path: 'perfil-empresa',
+        loadComponent: () =>
+          import('./pages/company-profile/company-profile.component')
+            .then(m => m.CompanyProfileComponent)
       }
     ]
   }
