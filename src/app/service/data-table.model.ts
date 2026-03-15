@@ -8,6 +8,7 @@ export interface TableColumn<T, V = T[keyof T]> {
 
   render?: (value: V, row: T) => string;
   subLabel?: (value: V, row: T) => string | null;
+  tooltip?: (value: V, row: T) => string | null;
 }
 export interface TableAction<T> {
   icon?: string;

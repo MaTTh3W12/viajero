@@ -12,6 +12,11 @@ const KC_CLIENT_KEY = 'kc_client';
 const KC_REDIRECT_URI_KEY = 'kc_redirect_uri';
 const DEFAULT_AUTH_DOMAIN = 'auth.grupoavanza.work';
 
+interface RedirectOptions {
+  prompt?: 'login' | 'none' | 'consent' | 'select_account';
+  maxAge?: number;
+}
+
 declare global {
   interface Window {
     __ENV__?: {
@@ -35,7 +40,10 @@ export class KeycloakService {
   }
 
   login() {
-    this.redirect(CLIENTS.login, 'auth', '/login');
+    this.redirect(CLIENTS.login, 'auth', '/login', {
+      prompt: 'login',
+      maxAge: 0,
+    });
   }
 
   registerUser() {
@@ -60,18 +68,28 @@ export class KeycloakService {
     window.location.href = `${this.authBase}/realms/${REALM}/protocol/openid-connect/logout?${params.toString()}`;
   }
 
-  private redirect(clientId: string, endpoint: string, path: string) {
+  private redirect(clientId: string, endpoint: string, path: string, options: RedirectOptions = {}) {
     const redirectUri = `${this.redirectUriBase}${path}`;
 
     sessionStorage.setItem(KC_CLIENT_KEY, clientId);
     sessionStorage.setItem(KC_REDIRECT_URI_KEY, redirectUri);
 
-    window.location.href =
-      `${this.authBase}/realms/${REALM}/protocol/openid-connect/${endpoint}` +
-      `?client_id=${clientId}` +
-      `&response_type=code` +
-      `&scope=openid profile email` +
-      `&redirect_uri=${encodeURIComponent(redirectUri)}`;
+    const params = new URLSearchParams({
+      client_id: clientId,
+      response_type: 'code',
+      scope: 'openid profile email',
+      redirect_uri: redirectUri,
+    });
+
+    if (options.prompt) {
+      params.set('prompt', options.prompt);
+    }
+
+    if (typeof options.maxAge === 'number') {
+      params.set('max_age', String(options.maxAge));
+    }
+
+    window.location.href = `${this.authBase}/realms/${REALM}/protocol/openid-connect/${endpoint}?${params.toString()}`;
   }
 
   async exchangeCode(code: string) {
