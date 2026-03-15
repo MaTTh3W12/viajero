@@ -94,6 +94,45 @@ interface GetCouponsByIdsData {
   viajerosv_coupons: Coupon[];
 }
 
+interface HomeFeaturedCouponRow {
+  id: number;
+  title: string;
+  description: string | null;
+  price: number | string | null;
+  price_discount: number | string | null;
+  stock_available: number | null;
+  category_id: number;
+  created_at: string;
+  user: {
+    company_address: string | null;
+    company_map_url: string | null;
+  } | null;
+}
+
+interface GetHomeFeaturedCouponsData {
+  viajerosv_featured_coupons: HomeFeaturedCouponRow[];
+}
+
+interface CouponHighlightRow {
+  id: number;
+  title: string;
+  description: string | null;
+  price: number | string | null;
+  price_discount: number | string | null;
+  stock_available: number | null;
+  category_id: number;
+  created_at?: string | null;
+  end_date?: string | null;
+  user: {
+    company_address: string | null;
+    company_map_url: string | null;
+  } | null;
+}
+
+interface GetCouponsHighlightData {
+  viajerosv_coupons: CouponHighlightRow[];
+}
+
 export interface Coupon {
   id: number;
   user_id: number | string;
@@ -111,6 +150,10 @@ export interface Coupon {
   terms: string | null;
   created_at: string;
   updated_at: string;
+  user?: {
+    company_address: string | null;
+    company_map_url: string | null;
+  } | null;
 }
 
 export interface CouponSummary {
@@ -271,6 +314,83 @@ const GET_COUPONS_QUERY = `
   }
 `;
 
+const GET_HOME_FEATURED_COUPONS_QUERY = `
+  query GetHomeFeaturedCoupons {
+    viajerosv_featured_coupons {
+      id
+      title
+      description
+      price
+      price_discount
+      stock_available
+      category_id
+      created_at
+      user {
+        company_address
+        company_map_url
+      }
+    }
+  }
+`;
+
+const GET_EXPIRING_SOON_COUPONS_QUERY = `
+  query GetExpiringSoonCoupons {
+    viajerosv_coupons(
+      limit: 3,
+      order_by: { end_date: asc },
+      where: {
+        _and: [
+          { active: { _eq: true } }
+          { published: { _eq: true } }
+          { end_date: { _gte: "now()" } }
+          { stock_available: { _gt: 0 } }
+        ]
+      }
+    ) {
+      id
+      title
+      description
+      price
+      price_discount
+      stock_available
+      end_date
+      category_id
+      user {
+        company_address
+        company_map_url
+      }
+    }
+  }
+`;
+
+const GET_LATEST_COUPONS_QUERY = `
+  query GetLatestCoupons($limit: Int = 3) {
+    viajerosv_coupons(
+      limit: $limit,
+      order_by: { created_at: desc },
+      where: {
+        _and: [
+          { active: { _eq: true } }
+          { published: { _eq: true } }
+        ]
+      }
+    ) {
+      id
+      title
+      description
+      price
+      price_discount
+      stock_available
+      created_at
+      category_id
+      user {
+        company_address
+        company_map_url
+      }
+    }
+  }
+`;
+
 @Injectable({
   providedIn: 'root',
 })
@@ -380,6 +500,33 @@ export class CouponService {
 
     return this.executePublicOperation<GetCouponByIdData, { id: number }>(query, { id }).pipe(
       map((data) => data.viajerosv_coupons_by_pk ?? null)
+    );
+  }
+
+  getHomeFeaturedCoupons(): Observable<Coupon[]> {
+    return this.executePublicOperation<GetHomeFeaturedCouponsData, Record<string, never>>(
+      GET_HOME_FEATURED_COUPONS_QUERY,
+      {}
+    ).pipe(
+      map((data) => (data.viajerosv_featured_coupons ?? []).map((coupon) => this.mapCouponHighlight(coupon)))
+    );
+  }
+
+  getExpiringSoonCoupons(): Observable<Coupon[]> {
+    return this.executePublicOperation<GetCouponsHighlightData, Record<string, never>>(
+      GET_EXPIRING_SOON_COUPONS_QUERY,
+      {}
+    ).pipe(
+      map((data) => (data.viajerosv_coupons ?? []).map((coupon) => this.mapCouponHighlight(coupon)))
+    );
+  }
+
+  getLatestCoupons(limit = 3): Observable<Coupon[]> {
+    return this.executePublicOperation<GetCouponsHighlightData, { limit: number }>(
+      GET_LATEST_COUPONS_QUERY,
+      { limit }
+    ).pipe(
+      map((data) => (data.viajerosv_coupons ?? []).map((coupon) => this.mapCouponHighlight(coupon)))
     );
   }
 
@@ -746,5 +893,27 @@ export class CouponService {
       mutation,
       variables
     ).pipe(map((data) => (data.update_viajerosv_coupons_by_pk as Coupon | null) ?? null));
+  }
+
+  private mapCouponHighlight(coupon: CouponHighlightRow): Coupon {
+    return {
+      id: coupon.id,
+      user_id: 0,
+      category_id: coupon.category_id,
+      auto_published: false,
+      published: true,
+      title: coupon.title,
+      end_date: coupon.end_date ?? '',
+      start_date: '',
+      stock_available: coupon.stock_available,
+      stock_total: null,
+      price: coupon.price != null ? String(coupon.price) : null,
+      price_discount: coupon.price_discount != null ? String(coupon.price_discount) : null,
+      description: coupon.description,
+      terms: null,
+      created_at: coupon.created_at ?? '',
+      updated_at: coupon.created_at ?? coupon.end_date ?? '',
+      user: coupon.user,
+    };
   }
 }

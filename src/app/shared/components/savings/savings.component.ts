@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Coupon, CouponService } from '../../../service/coupon.service';
-import { finalize, take, timeout } from 'rxjs';
+import { finalize, map, take, timeout } from 'rxjs';
 
 @Component({
   selector: 'app-savings',
@@ -16,6 +16,7 @@ export class SavingsComponent implements OnInit, OnChanges {
   @Input() sortBy: 'recent' = 'recent';
   @Input() enablePagination = false;
   @Input() pageSize = 8;
+  @Input() useHomeFeaturedCoupons = false;
   @Output() couponsFound = new EventEmitter<number>();
   coupons: Coupon[] = [];
   displayedCoupons: Coupon[] = [];
@@ -77,6 +78,12 @@ export class SavingsComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['useHomeFeaturedCoupons'] && !changes['useHomeFeaturedCoupons'].firstChange) {
+      this.currentPage = 1;
+      this.loadCoupons();
+      return;
+    }
+
     if (
       changes['selectedCategoryId'] ||
       changes['sortBy'] ||
@@ -151,6 +158,11 @@ export class SavingsComponent implements OnInit, OnChanges {
     return `${amount} cupones`;
   }
 
+  getCouponAddress(coupon: Coupon): string {
+    const address = coupon.user?.company_address?.trim();
+    return address || this.fixedAddress;
+  }
+
   goToPage(page: number): void {
     if (!this.enablePagination) return;
     if (page < 1 || page > this.totalPages) return;
@@ -162,8 +174,13 @@ export class SavingsComponent implements OnInit, OnChanges {
     this.loading = true;
     this.error = '';
 
-    this.couponService
-      .getPublicCoupons({ limit: 40, offset: 0 })
+    const request$ = this.useHomeFeaturedCoupons
+      ? this.couponService.getHomeFeaturedCoupons()
+      : this.couponService.getPublicCoupons({ limit: 40, offset: 0 }).pipe(
+          map((response) => (response.rows ?? []).filter((coupon) => coupon.published))
+        );
+
+    request$
       .pipe(
         take(1),
         timeout(15000),
@@ -173,8 +190,8 @@ export class SavingsComponent implements OnInit, OnChanges {
         })
       )
       .subscribe({
-        next: (response) => {
-          this.coupons = (response.rows ?? []).filter((coupon) => coupon.published);
+        next: (coupons) => {
+          this.coupons = coupons;
           this.applyFiltersAndSort();
         },
         error: (error) => {
