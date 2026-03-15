@@ -504,7 +504,14 @@ export class CouponService {
   getCouponWithImageByCode(token: string, uniqueCode: string): Observable<CouponAcquiredWithImage | null> {
     const query = `
       query GetCouponWithImageByCode($unique_code: String!) {
-        viajerosv_coupons_acquired(where: { unique_code: { _eq: $unique_code } }) {
+        viajerosv_coupons_acquired(
+          where: {
+            _or: [
+              { unique_code: { _eq: $unique_code } }
+              { unique_code: { _ilike: $unique_code } }
+            ]
+          }
+        ) {
           id
           unique_code
           acquired_at

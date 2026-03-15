@@ -329,7 +329,7 @@ export class FilterBarComponent {
       );
 
       if (!acquired) {
-        throw new Error('No se encontró un cupón con ese código.');
+        throw new Error(this.buildCouponNotFoundMessage());
       }
 
       if (acquired.redeemed) {
@@ -397,6 +397,10 @@ export class FilterBarComponent {
   closeRedeemSuccess(): void {
     this.redeemSuccess = false;
     this.closeQrModal();
+  }
+
+  private buildCouponNotFoundMessage(): string {
+    return 'No se encontró un cupón con ese código para esta empresa. Este cupón podría pertenecer a otra empresa.';
   }
 
   private ensureCategoriesLoaded(force = false): void {
