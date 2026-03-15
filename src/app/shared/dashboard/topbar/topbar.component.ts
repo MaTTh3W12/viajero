@@ -68,6 +68,17 @@ export class TopbarComponent implements OnInit, OnDestroy {
     this.menuOpen = !this.menuOpen;
   }
 
+  goToProfile() {
+    this.menuOpen = false;
+
+    if (this.isEmpresaPortal) {
+      this.router.navigate(['/companies/dashboard/perfil-empresa']);
+      return;
+    }
+
+    this.router.navigate(['/admin/dashboard']);
+  }
+
   openLogoutModal() {
     this.showLogoutModal = true;
     this.menuOpen = false; // Close the dropdown menu
@@ -136,6 +147,11 @@ export class TopbarComponent implements OnInit, OnDestroy {
     return this.role === 'admin'
       ? 'bg-[#1A2440]'     // azul oscuro (admin)
       : 'bg-[#538CFF]';    // celeste (empresa)
+  }
+
+  get isEmpresaPortal(): boolean {
+    const normalizedRole = String(this.role ?? '').toLowerCase();
+    return normalizedRole === 'empresa' || normalizedRole === 'company';
   }
 
 }

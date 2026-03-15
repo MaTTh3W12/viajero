@@ -13,10 +13,19 @@
     <div class="flex-1">
       <!-- Logo -->
       <div class="hidden lg:flex items-center justify-start gap-2 px-3 mb-6">
-        <a routerLink=""
+        <a *ngIf="isEmpresa; else internalDashboardLogo"
+          href="/"
+          target="_blank"
+          rel="noopener noreferrer"
           class="flex items-center gap-3 transition-transform duration-300 transform cursor-pointer hover:scale-105">
           <img src="assets/img/logo.png" alt="ViajeroSV" class="h-[3rem]" />
         </a>
+        <ng-template #internalDashboardLogo>
+          <a routerLink=""
+            class="flex items-center gap-3 transition-transform duration-300 transform cursor-pointer hover:scale-105">
+            <img src="assets/img/logo.png" alt="ViajeroSV" class="h-[3rem]" />
+          </a>
+        </ng-template>
       </div>
 
       <!-- Menú ADMIN -->

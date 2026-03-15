@@ -74,6 +74,14 @@ export class DataTableComponent<T extends { id: number }> {
     return col.imageForRow?.(row) ?? null;
   }
 
+  getCellTooltip(col: TableColumn<T, any>, row: T): string | null {
+    if (!col.tooltip) return null;
+    const raw = col.tooltip(row[col.key], row);
+    if (raw == null) return null;
+    const value = String(raw).trim();
+    return value.length ? value : null;
+  }
+
   // 📅 EXPIRACIÓN
   getExpirationBoxClass(value: string): string {
     if (value === 'Expirado') {

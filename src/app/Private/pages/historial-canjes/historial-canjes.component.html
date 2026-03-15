@@ -7,5 +7,89 @@
 
 <h2 class="lg:hidden text-xl font-semibold text-[#0E225C] px-3 pt-4 pb-2">Historial de canjes</h2>
 
-<!-- Tabla de historial de canjes -->
-<app-data-table [config]="tableConfig" [data]="historial"></app-data-table>
+<section class="pb-4 md:pb-6">
+	<div class="bg-white rounded-b-2xl border border-[#D5DBE5] overflow-hidden">
+		<div class="overflow-x-auto">
+			<table class="min-w-[880px] w-full text-sm text-[#1A2440]">
+				<thead class="bg-white border-b border-[#D5DBE5]">
+					<tr>
+						<th class="py-3 px-4 text-left font-medium">
+							<button type="button" (click)="sortBy('fechaHora')" class="header-sort-btn">
+								Fecha y hora de canje
+								<span class="sort-indicator" [class.active]="isSortedBy('fechaHora')">⇵</span>
+							</button>
+						</th>
+						<th class="py-3 px-4 text-left font-medium">
+							<button type="button" (click)="sortBy('cuponOferta')" class="header-sort-btn">
+								Cupón/Oferta
+								<span class="sort-indicator" [class.active]="isSortedBy('cuponOferta')">⇵</span>
+							</button>
+						</th>
+						<th class="py-3 px-4 text-left font-medium">
+							<button type="button" (click)="sortBy('usuario')" class="header-sort-btn">
+								Usuario
+								<span class="sort-indicator" [class.active]="isSortedBy('usuario')">⇵</span>
+							</button>
+						</th>
+						<th class="py-3 px-4 text-left font-medium">
+							<button type="button" (click)="sortBy('responsableCanje')" class="header-sort-btn">
+								Responsable del canje (empresa)
+								<span class="sort-indicator" [class.active]="isSortedBy('responsableCanje')">⇵</span>
+							</button>
+						</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					@for (row of pagedHistorial; track row.fechaHora + row.usuario + row.cuponOferta) {
+						<tr class="border-b border-[#D5DBE5] hover:bg-[#F9FBFF] transition-colors">
+							<td class="py-3 px-4">{{ row.fechaHora }}</td>
+							<td class="py-3 px-4">
+								<p class="font-semibold" [attr.title]="getFullTitle(row.cuponOferta)">
+									{{ truncateTitle(row.cuponOferta) }}
+								</p>
+								<p class="text-[#3E4A66]">{{ row.categoria }}</p>
+							</td>
+							<td class="py-3 px-4">{{ row.usuario }}</td>
+							<td class="py-3 px-4">{{ row.responsableCanje }}</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+
+		<div class="pagination-wrap">
+			<button type="button" class="page-btn" (click)="goToFirstPage()" [disabled]="currentPage === 1">≪</button>
+			<button type="button" class="page-btn" (click)="goToPreviousPage()" [disabled]="currentPage === 1">‹</button>
+
+			@if (visiblePages[0] !== 1) {
+				<button type="button" class="page-btn" (click)="goToPage(1)">1</button>
+			}
+
+			@if (showLeadingEllipsis) {
+				<span class="ellipsis">...</span>
+			}
+
+			@for (page of visiblePages; track trackPage($index, page)) {
+				<button
+					type="button"
+					class="page-btn"
+					[class.active]="page === currentPage"
+					(click)="goToPage(page)">
+					{{ page }}
+				</button>
+			}
+
+			@if (showTrailingEllipsis) {
+				<span class="ellipsis">...</span>
+			}
+
+			@if (visiblePages[visiblePages.length - 1] !== totalPages) {
+				<button type="button" class="page-btn" (click)="goToPage(totalPages)">{{ totalPages }}</button>
+			}
+
+			<button type="button" class="page-btn" (click)="goToNextPage()" [disabled]="currentPage === totalPages">›</button>
+			<button type="button" class="page-btn" (click)="goToLastPage()" [disabled]="currentPage === totalPages">≫</button>
+		</div>
+	</div>
+</section>

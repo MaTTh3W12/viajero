@@ -1,0 +1,63 @@
+.header-sort-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.35rem;
+	color: #1a2440;
+	background: transparent;
+	border: 0;
+	font-weight: 500;
+	cursor: pointer;
+}
+
+.sort-indicator {
+	font-size: 0.9rem;
+	color: #c3c9d3;
+	transition: color 0.15s ease;
+}
+
+.sort-indicator.active,
+.header-sort-btn:hover .sort-indicator {
+	color: #538cff;
+}
+
+.pagination-wrap {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 1rem 1.25rem 1.5rem;
+}
+
+.page-btn {
+	width: 2.35rem;
+	height: 2.35rem;
+	border: 1px solid #1a2440;
+	border-radius: 9999px;
+	background-color: #ffffff;
+	color: #1a2440;
+	font-weight: 500;
+	line-height: 1;
+	cursor: pointer;
+	transition: all 0.15s ease;
+}
+
+.page-btn:hover:not(:disabled) {
+	background-color: #eef4ff;
+}
+
+.page-btn.active {
+	background-color: #538cff;
+	border-color: #538cff;
+	color: #ffffff;
+}
+
+.page-btn:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.ellipsis {
+	color: #1a2440;
+	font-weight: 500;
+	padding: 0 0.2rem;
+}
