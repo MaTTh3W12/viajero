@@ -1,100 +1,196 @@
-import { Component, signal, ElementRef, ViewChild, effect, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { RouterLink } from '@angular/router';
+import { finalize, forkJoin, take } from 'rxjs';
+import { Coupon, CouponService } from '../../../service/coupon.service';
 
 @Component({
   selector: 'app-featured-deals',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterLink],
   templateUrl: './featured-deals.component.html',
   styleUrls: ['./featured-deals.component.css']
 })
-export class FeaturedDealsComponent implements OnDestroy {
- // --- SIGNALS Y ESTADO ---
-  activeFilter = signal<'recent' | 'expiring'>('expiring');
+export class FeaturedDealsComponent implements OnInit, OnDestroy {
+  activeFilter: 'recent' | 'expiring' = 'expiring';
 
-  // --- REFERENCIAS AL DOM ---
   @ViewChild('recentContainer') recentContainer?: ElementRef<HTMLElement>;
   @ViewChild('expiringContainer') expiringContainer?: ElementRef<HTMLElement>;
 
-  // Variables para controlar los temporizadores
-  private autoScrollInterval: any;
-  private initTimeout: any; // <-- IMPORTANTE: Para controlar el setTimeout del efecto
+  recentCoupons: Coupon[] = [];
+  expiringCoupons: Coupon[] = [];
+  activeCoupons: Coupon[] = [];
+  loading = false;
+  error = '';
 
-  constructor() {
-    effect(() => {
-      // Registrar dependencia
-      const filter = this.activeFilter();
+  private readonly cardImages = [
+    'assets/img/card1.png',
+    'assets/img/card2.png',
+    'assets/img/card3.png',
+    'assets/img/card4.png',
+  ];
 
-      // 1. Limpiar TODO (Intervalo y Timeout pendiente)
-      this.stopAutoScroll();
+  private autoScrollInterval: ReturnType<typeof setInterval> | null = null;
+  private initTimeout: ReturnType<typeof setTimeout> | null = null;
 
-      // 2. Iniciar scroll con retraso seguro
-      this.initTimeout = setTimeout(() => {
-        this.startAutoScroll();
-      }, 100);
-    });
+  constructor(
+    private couponService: CouponService,
+    private cdr: ChangeDetectorRef
+  ) {}
+
+  ngOnInit(): void {
+    this.loadCoupons();
   }
 
-  setFilter(filter: 'recent' | 'expiring') {
-    this.activeFilter.set(filter);
+  setFilter(filter: 'recent' | 'expiring'): void {
+    if (this.activeFilter === filter) return;
+
+    this.activeFilter = filter;
+    this.updateActiveCoupons();
+    this.scheduleAutoScrollRestart();
   }
 
-  scrollContainer(container: HTMLElement, direction: 'left' | 'right') {
+  scrollContainer(container: HTMLElement | undefined, direction: 'left' | 'right'): void {
     this.stopAutoScroll();
 
-    // Validar que el contenedor exista antes de operar
     if (!container) return;
 
     const scrollAmount = 420;
-    if (direction === 'left') {
-      container.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-    } else {
-      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-    }
+    container.scrollBy({
+      left: direction === 'left' ? -scrollAmount : scrollAmount,
+      behavior: 'smooth',
+    });
 
-    // Reiniciar el auto-scroll después de la interacción manual
-    // Usamos el mismo timeout para asegurar que no choque
-    clearTimeout(this.initTimeout);
-    this.initTimeout = setTimeout(() => {
-      this.startAutoScroll();
-    }, 5000);
+    this.scheduleAutoScrollRestart(5000);
   }
 
-  startAutoScroll() {
-    this.stopAutoScroll(); // Limpieza preventiva
+  startAutoScroll(): void {
+    this.stopAutoScroll();
 
-    // Intervalo de 3 segundos (según tu comentario decía 3s pero el código tenía 5000)
     this.autoScrollInterval = setInterval(() => {
       this.moveNext();
     }, 3000);
   }
 
-  stopAutoScroll() {
-    // Limpiar intervalo del carrusel
+  stopAutoScroll(): void {
     if (this.autoScrollInterval) {
       clearInterval(this.autoScrollInterval);
       this.autoScrollInterval = null;
     }
-    // Limpiar el timeout de inicialización si estuviera pendiente
+
     if (this.initTimeout) {
       clearTimeout(this.initTimeout);
       this.initTimeout = null;
     }
   }
 
-  private moveNext() {
-    // 1. Determinar cuál contenedor DEBERÍA estar activo
-    const isRecent = this.activeFilter() === 'recent';
+  getCardImage(index: number): string {
+    return this.cardImages[index % this.cardImages.length];
+  }
 
-    // 2. Obtener la referencia segura usando Optional Chaining
-    const containerRef = isRecent ? this.recentContainer : this.expiringContainer;
+  getCategoryName(categoryId: number): string {
+    const categories: Record<number, string> = {
+      1: 'Alojamiento',
+      2: 'Alimentos y bebidas',
+      3: 'Turismo',
+      4: 'Entretenimiento',
+      5: 'Cuidado personal',
+      6: 'Productos nostálgicos',
+      7: 'Productos y servicios',
+      8: 'Tour operadores',
+      9: 'Transporte',
+    };
+
+    return categories[categoryId] ?? 'Cupón';
+  }
+
+  getCouponAddress(coupon: Coupon): string {
+    return coupon.user?.company_address?.trim() || 'Dirección no disponible';
+  }
+
+  getBadgeLabel(coupon: Coupon): string {
+    const discount = this.parseNumeric(coupon.price_discount);
+    const price = this.parseNumeric(coupon.price);
+
+    if (discount != null) {
+      return `${this.formatNumber(discount)}% OFF`;
+    }
+
+    if (price != null) {
+      return `$${this.formatNumber(price)} USD`;
+    }
+
+    return 'N/A';
+  }
+
+  getDateLabel(coupon: Coupon): string {
+    if (this.activeFilter === 'recent') {
+      return this.formatCreatedDate(coupon.created_at);
+    }
+
+    return this.formatExpirationDate(coupon.end_date);
+  }
+
+  truncateTitle(title: string | null | undefined): string {
+    const value = (title ?? '').trim();
+    if (!value) return 'Cupón disponible';
+    return value.length > 15 ? `${value.slice(0, 15)}...` : value;
+  }
+
+  ngOnDestroy(): void {
+    this.stopAutoScroll();
+  }
+
+  private loadCoupons(): void {
+    this.loading = true;
+    this.error = '';
+
+    forkJoin({
+      recent: this.couponService.getLatestCoupons(3),
+      expiring: this.couponService.getExpiringSoonCoupons(),
+    })
+      .pipe(
+        take(1),
+        finalize(() => {
+          this.loading = false;
+          this.cdr.detectChanges();
+        })
+      )
+      .subscribe({
+        next: ({ recent, expiring }) => {
+          this.recentCoupons = recent;
+          this.expiringCoupons = expiring;
+          this.updateActiveCoupons();
+          this.scheduleAutoScrollRestart();
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('[FEATURED_DEALS] Error loading coupon highlights', error);
+          this.error = 'No se pudieron cargar los cupones destacados en este momento.';
+          this.recentCoupons = [];
+          this.expiringCoupons = [];
+          this.activeCoupons = [];
+          this.cdr.detectChanges();
+        },
+      });
+  }
+
+  private updateActiveCoupons(): void {
+    this.activeCoupons = this.activeFilter === 'recent' ? this.recentCoupons : this.expiringCoupons;
+  }
+
+  private scheduleAutoScrollRestart(delay = 100): void {
+    this.stopAutoScroll();
+    this.initTimeout = setTimeout(() => {
+      this.startAutoScroll();
+    }, delay);
+  }
+
+  private moveNext(): void {
+    const containerRef = this.activeFilter === 'recent' ? this.recentContainer : this.expiringContainer;
     const container = containerRef?.nativeElement;
 
-    // 3. GUARDIA DE SEGURIDAD (Esto evita el error Timeout.eval)
-    // Si el contenedor es undefined o null (porque Angular está renderizando), abortamos.
-    if (!container) {
-      return;
-    }
+    if (!container) return;
 
     const maxScroll = container.scrollWidth - container.clientWidth;
     const scrollAmount = 420;
@@ -106,8 +202,41 @@ export class FeaturedDealsComponent implements OnDestroy {
     }
   }
 
-  ngOnDestroy() {
-    // Al destruir el componente, matamos todos los timers
-    this.stopAutoScroll();
+  private formatCreatedDate(createdAt: string): string {
+    if (!createdAt) return 'Publicado recientemente';
+
+    const parsedDate = new Date(createdAt);
+    if (Number.isNaN(parsedDate.getTime())) return 'Publicado recientemente';
+
+    const day = String(parsedDate.getDate()).padStart(2, '0');
+    const monthNames = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const month = monthNames[parsedDate.getMonth()] ?? '';
+    const year = parsedDate.getFullYear();
+    return `Publicado: ${day} ${month} ${year}`;
+  }
+
+  private formatExpirationDate(endDate: string): string {
+    const parsed = endDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (!parsed) return 'Vence: Fecha no disponible';
+
+    const [, year, month, day] = parsed;
+    const monthNames = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const monthIndex = Number(month) - 1;
+    const monthName = monthNames[monthIndex] ?? month;
+    return `Vence: ${day} ${monthName} ${year}`;
+  }
+
+  private parseNumeric(value: string | number | null | undefined): number | null {
+    if (value == null) return null;
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  private formatNumber(value: number): string {
+    if (Number.isInteger(value)) {
+      return value.toString();
+    }
+
+    return value.toFixed(2).replace(/\.?0+$/, '');
   }
 }
