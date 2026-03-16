@@ -31,7 +31,8 @@ export class CouponsListComponent {
         key: 'titulo',
         label: 'Título del cupón',
         type: 'title-with-subtitle',
-        subLabel: (_, row) => row.categoria,
+        render: (value) => this.truncateText(value, 20),
+        subLabel: (_, row) => this.truncateText(row.categoria, 20),
         imageForRow: (row) => row.imagePreview ?? null,
       },
       { key: 'oferta', label: 'Oferta' },
@@ -743,5 +744,12 @@ export class CouponsListComponent {
     const total = coupon.disponiblesTotal ?? coupon.disponibles ?? 0;
     const available = coupon.disponibles ?? 0;
     return Math.max(total - available, 0);
+  }
+
+  private truncateText(value: unknown, maxChars: number): string {
+    const text = String(value ?? '').trim();
+    if (!text.length) return '';
+    if (text.length <= maxChars) return text;
+    return `${text.slice(0, maxChars)}...`;
   }
 }
