@@ -335,37 +335,11 @@
         </div>
       </div>
 
-      <!-- Categoría de cupón -->
+      <!-- Responsable del canje (empresa) -->
       <div>
-        <label class="text-sm text-[#0E225C] mb-1 block">Categoría de cupón</label>
-        <div class="relative" tabindex="0" (blur)="statisticsMetricTypeOpen = false">
-          <button type="button"
-            class="w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C] text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
-            (click)="statisticsMetricTypeOpen = !statisticsMetricTypeOpen">
-            <span [class.text-[#A0A7BC]]="
-                    statisticsMetricTypeSelected === 'Seleccionar Categoría de cupón'
-                  ">
-              {{ statisticsMetricTypeSelected }}
-            </span>
-          </button>
-          <span class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF] pointer-events-none">
-            <svg class="w-4 h-4" aria-hidden="true">
-              <use href="assets/icons/sprite.svg#arrow-down1"></use>
-            </svg>
-          </span>
-          @if (statisticsMetricTypeOpen) {
-          <div
-            class="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-lg ring-1 ring-black/5 overflow-hidden z-20">
-            @for (option of statisticsMetricTypeOptions; track option) {
-            <button type="button"
-              class="w-full text-left px-4 py-2 text-[#0E225C] hover:bg-[#F4F7FD] transition-colors duration-150"
-              (mousedown)="selectStatisticsMetricType(option)">
-              {{ option }}
-            </button>
-            }
-          </div>
-          }
-        </div>
+        <label class="text-sm text-[#0E225C] mb-1 block">Responsable del canje (empresa)</label>
+        <input type="text" placeholder="Buscar por responsable de canje"
+          class="w-full bg-white rounded-xl px-4 py-3 text-[#0E225C] placeholder:text-[#A0A7BC] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40" />
       </div>
     </div>
     }
@@ -649,9 +623,15 @@
         <!-- Título del cupón -->
         <div>
           <label class="text-sm text-[#1A2440] mb-1 block">Título del cupón</label>
-          <input [(ngModel)]="couponForm.titulo" name="titulo" type="text" placeholder="Agregar título" class="w-full rounded-xl px-4 py-3 text-[#0E225C] bg-[#F4F7FD]
+          <div class="relative">
+            <input [(ngModel)]="couponForm.titulo" name="titulo" type="text" maxlength="180" placeholder="Agregar título"
+              class="w-full rounded-xl px-4 py-3 text-[#0E225C] bg-[#F4F7FD]
                   ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
                   focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
+            <span class="absolute right-3 -bottom-5 text-xs text-[#7A8499]">
+              {{ (couponForm.titulo || '').length }}/180
+            </span>
+          </div>
         </div>
 
         <!-- Cantidad disponible -->
@@ -682,9 +662,14 @@
         <!-- Descripción -->
         <div class="md:col-span-1">
           <label class="text-sm text-[#1A2440] mb-1 block">Descripción</label>
-          <textarea [(ngModel)]="couponForm.descripcion" name="descripcion" placeholder="Agregar descripción" class="w-full rounded-xl px-4 py-3 text-[#0E225C] min-h-44
+          <div class="relative">
+            <textarea [(ngModel)]="couponForm.descripcion" name="descripcion" maxlength="500" placeholder="Agregar descripción" class="w-full rounded-xl px-4 py-3 pb-8 text-[#0E225C] min-h-44
 								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
 								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
+            <span class="absolute right-3 bottom-3 text-xs text-[#7A8499] pointer-events-none">
+              {{ (couponForm.descripcion || '').length }}/500
+            </span>
+          </div>
         </div>
 
         <!-- Fechas: inicio y fin (apiladas en la misma columna) -->
@@ -763,10 +748,15 @@
         <!-- Términos y condiciones -->
         <div class="md:col-span-1">
           <label class="text-sm text-[#1A2440] mb-1 block">Términos y condiciones</label>
-          <textarea [(ngModel)]="couponForm.terminos" name="terminos" placeholder="Agregar términos y condiciones"
-            class="w-full rounded-xl px-4 py-3 text-[#0E225C] min-h-44 bg-[#F4F7FD]
+          <div class="relative">
+            <textarea [(ngModel)]="couponForm.terminos" name="terminos" maxlength="1000" placeholder="Agregar términos y condiciones"
+              class="w-full rounded-xl px-4 py-3 pb-8 text-[#0E225C] min-h-44 bg-[#F4F7FD]
 								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
 								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
+            <span class="absolute right-3 bottom-3 text-xs text-[#7A8499] pointer-events-none">
+              {{ (couponForm.terminos || '').length }}/1000
+            </span>
+          </div>
         </div>
 
         <!-- Subir imagen de cupón -->
@@ -923,9 +913,15 @@
         <!-- Título del cupón -->
         <div>
           <label class="text-sm text-[#1A2440] mb-1 block">Título del cupón</label>
-          <input [(ngModel)]="editForm.titulo" name="edit_titulo" type="text" placeholder="Agregar título" class="w-full rounded-xl px-4 py-3 text-[#538CFF] bg-[#F4F7FD]
+
+          <div class="relative">
+            <input [(ngModel)]="editForm.titulo" name="edit_titulo" type="text" maxlength="180" placeholder="Agregar título" class="w-full rounded-xl px-4 py-3 text-[#538CFF] bg-[#F4F7FD]
 								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
 								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
+            <span class="absolute right-3 -bottom-5 text-xs text-[#7A8499]">
+              {{ (editForm.titulo || '').length }}/180
+            </span>
+          </div>
         </div>
 
         <!-- Cantidad disponible -->
@@ -958,9 +954,15 @@
         <!-- Descripción -->
         <div class="md:col-span-1">
           <label class="text-sm text-[#1A2440] mb-1 block">Descripción</label>
-          <textarea [(ngModel)]="editForm.descripcion" name="edit_descripcion" placeholder="Agregar descripción" class="w-full rounded-xl px-4 py-3 text-[#538CFF] min-h-44
+
+          <div class="relative">
+            <textarea [(ngModel)]="editForm.descripcion" name="edit_descripcion" maxlength="500" placeholder="Agregar descripción" class="w-full rounded-xl px-4 py-3 pb-8 text-[#538CFF] min-h-44
 								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
 								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
+            <span class="absolute right-3 bottom-3 text-xs text-[#7A8499] pointer-events-none">
+              {{ (editForm.descripcion || '').length }}/500
+            </span>
+          </div>
         </div>
 
         <!-- Fechas: inicio y fin -->
@@ -1037,10 +1039,16 @@
         <!-- Términos y condiciones -->
         <div class="md:col-span-1">
           <label class="text-sm text-[#1A2440] mb-1 block">Términos y condiciones</label>
-          <textarea [(ngModel)]="editForm.terminos" name="edit_terminos" placeholder="Agregar términos y condiciones"
-            class="w-full rounded-xl px-4 py-3 text-[#538CFF] min-h-44 bg-[#F4F7FD]
+
+          <div class="relative">
+            <textarea [(ngModel)]="editForm.terminos" name="edit_terminos" maxlength="1000" placeholder="Agregar términos y condiciones"
+            class="w-full rounded-xl px-4 py-3 pb-8 text-[#538CFF] min-h-44 bg-[#F4F7FD]
 								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
 								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
+            <span class="absolute right-3 bottom-3 text-xs text-[#7A8499] pointer-events-none">
+              {{ (editForm.terminos || '').length }}/1000
+            </span>
+          </div>
         </div>
 
         <!-- Actualizar imagen de cupón -->
@@ -1173,6 +1181,170 @@
       </button>
     </div>
     }
+  </div>
+</div>
+}
+
+@if (viewCouponOpen) {
+<!-- Overlay -->
+<div class="fixed inset-0 bg-black/40 z-40" (click)="closeViewCoupon()"></div>
+
+<!-- Modal Ver -->
+<div class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4">
+  <div
+    class="relative w-full md:max-w-3xl bg-[white] rounded-t-2xl md:rounded-2xl shadow-xl ring-1 ring-black/5 coupon-modal flex flex-col max-h-[92vh] md:max-h-[85vh] overflow-hidden">
+    <!-- Header -->
+    <div class="relative px-6 pt-6 pb-2">
+      <h2 class="text-2xl font-medium text-[#0E225C] text-center">Detalle del cupón</h2>
+      <button class="absolute right-6 top-6 w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/5"
+        (click)="closeViewCoupon()" aria-label="Cerrar">
+        <svg class="w-5 h-5 text-[#0E225C]">
+          <use href="assets/icons/sprite.svg#close-circle"></use>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="px-6 pb-6 flex-1 overflow-y-auto">
+      <div class="rounded-lg ring-1 ring-[#E4EAF5] p-6 bg-[#F4F7FD]">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm text-[#0E225C]">
+          <div class="space-y-3">
+            <div>
+              <div class="flex items-center gap-2 text-[#808080]">
+                <svg class="w-5 h-5" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#user"></use>
+                </svg>
+                <span>Título del cupón</span>
+              </div>
+              <div class="mt-1">{{ viewTarget.titulo }}</div>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 text-[#A0A7BC]">
+                <svg class="w-5 h-5" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#description-text"></use>
+                </svg>
+                <span>Descripción</span>
+              </div>
+              <div class="mt-1">{{ viewTarget.descripcion }}</div>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 text-[#A0A7BC]">
+                <svg class="w-5 h-5" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#category"></use>
+                </svg>
+                <span>Categoría</span>
+              </div>
+              <div class="mt-1">{{ viewTarget.categoria }}</div>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 text-[#A0A7BC]">
+                <svg class="w-5 h-5" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#status"></use>
+                </svg>
+                <span>Estado</span>
+              </div>
+              <span
+                class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium mt-1"
+                [class.bg-yellow-100]="viewTarget.estado === 'Borrador'"
+                [class.text-yellow-800]="viewTarget.estado === 'Borrador'"
+                [class.bg-green-100]="viewTarget.estado === 'Publicado'"
+                [class.text-green-800]="viewTarget.estado === 'Publicado'"
+                [class.bg-blue-100]="viewTarget.estado !== 'Borrador' && viewTarget.estado !== 'Publicado'"
+                [class.text-blue-800]="viewTarget.estado !== 'Borrador' && viewTarget.estado !== 'Publicado'">
+                {{ viewTarget.estado }}
+              </span>
+            </div>
+
+            @if (viewTarget.image) {
+            <div>
+              <div class="flex items-center gap-2 text-[#A0A7BC] mb-2">
+                <svg class="w-5 h-5" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#document-upload"></use>
+                </svg>
+                <span>Imagen</span>
+              </div>
+              @if (viewTarget.imageMime.startsWith('image/') || viewTarget.image.startsWith('data:image/')) {
+              <img [src]="viewTarget.image" alt="Imagen del cupón"
+                class="w-[124px] h-[124px] rounded-xl object-cover bg-[#EFF3FB]" />
+              } @else {
+              <div
+                class="w-[124px] h-[124px] rounded-xl bg-[#EFF3FB] border border-[#D9E2F4] px-2 py-3 flex flex-col items-center justify-center text-center">
+                <svg class="w-7 h-7 text-[#1A2440] mb-1" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#document-upload"></use>
+                </svg>
+                <p class="text-xs font-semibold text-[#1A2440]">PDF</p>
+              </div>
+              }
+            </div>
+            } @else if (viewCouponImageLoading && !viewTarget.image) {
+            <div>
+              <div class="flex items-center gap-2 text-[#A0A7BC] mb-2">
+                <svg class="w-5 h-5" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#document-upload"></use>
+                </svg>
+                <span>Imagen</span>
+              </div>
+              <div
+                class="w-[124px] h-[124px] rounded-xl bg-[#EFF3FB] border border-[#D9E2F4] flex flex-col items-center justify-center">
+                <svg class="animate-spin h-6 w-6 text-[#538CFF] mb-2" xmlns="http://www.w3.org/2000/svg" fill="none"
+                  viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                    d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"></path>
+                </svg>
+                <p class="text-[11px] text-[#7A8499]">Cargando imagen...</p>
+              </div>
+            </div>
+            }
+          </div>
+
+          <div class="space-y-3">
+            <div>
+              <div class="flex items-center gap-2 text-[#808080]">
+                <svg class="w-5 h-5 text-[#808080]" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#quantity"></use>
+                </svg>
+                <span>Cantidad disponible</span>
+              </div>
+              <div class="mt-1">{{ viewTarget.cantidad }}</div>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 text-[#808080]">
+                <svg class="w-5 h-5" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#calendar"></use>
+                </svg>
+                <span>Fecha inicio</span>
+              </div>
+              <div class="mt-1">{{ viewTarget.fechaInicio }}</div>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 text-[#808080]">
+                <svg class="w-5 h-5" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#calendar"></use>
+                </svg>
+                <span>Fecha fin</span>
+              </div>
+              <div class="mt-1">{{ viewTarget.fechaFin }}</div>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 text-[#808080]">
+                <svg class="w-5 h-5" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#terms"></use>
+                </svg>
+                <span>Términos y condiciones</span>
+              </div>
+              <div class="mt-1 text-[#0E225C]">{{ viewTarget.terminos || 'No especificado' }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 flex items-center justify-center gap-3">
+        <button type="button" class="px-6 py-3 rounded-full bg-white border border-[#0E225C] text-[#0E225C]"
+          (click)="closeViewCoupon()">
+          Cerrar
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 }
