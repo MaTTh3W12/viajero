@@ -14,9 +14,9 @@ export class DataTableComponent<T extends { id: number }> {
   @Input() data: T[] = [];
 
   // ✅ TRACK BY (OBLIGATORIO con @for)
-  trackRow = (_: number, row: any) => row.id ?? row;
-  trackColumn = (_: number, col: any) => col.key;
-  trackAction = (_: number, action: any) => action.iconId ?? action.icon;
+  trackRow = (index: number, row: any) => row.id ?? `${index}-${JSON.stringify(row)}`;
+  trackColumn = (index: number, col: any) => `${index}-${col.key}`;
+  trackAction = (index: number, action: any) => `${index}-${action.iconId ?? action.icon ?? 'action'}`;
 
   // ✅ CAST SEGURO PARA TEMPLATES
   asString(value: unknown): string {

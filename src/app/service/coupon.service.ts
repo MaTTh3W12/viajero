@@ -94,6 +94,14 @@ interface GetCouponsByIdsData {
   viajerosv_coupons: Coupon[];
 }
 
+interface HasAcquiredCouponData {
+  viajerosv_coupons_acquired_aggregate: {
+    aggregate: {
+      count: number;
+    };
+  };
+}
+
 interface HomeFeaturedCouponRow {
   id: number;
   title: string;
@@ -648,10 +656,33 @@ export class CouponService {
     );
   }
 
+  hasAcquiredCoupon(token: string, couponId: number): Observable<boolean> {
+    const query = `
+      query HasAcquiredCoupon($coupon_id: bigint!) {
+        viajerosv_coupons_acquired_aggregate(where: { coupon_id: { _eq: $coupon_id } }) {
+          aggregate {
+            count
+          }
+        }
+      }
+    `;
+
+    return this.executeOperation<HasAcquiredCouponData, { coupon_id: number }>(token, query, { coupon_id: couponId }).pipe(
+      map((data) => (data.viajerosv_coupons_acquired_aggregate.aggregate.count ?? 0) > 0)
+    );
+  }
+
   getCouponWithImageByCode(token: string, uniqueCode: string): Observable<CouponAcquiredWithImage | null> {
     const query = `
       query GetCouponWithImageByCode($unique_code: String!) {
-        viajerosv_coupons_acquired(where: { unique_code: { _eq: $unique_code } }) {
+        viajerosv_coupons_acquired(
+          where: {
+            _or: [
+              { unique_code: { _eq: $unique_code } }
+              { unique_code: { _ilike: $unique_code } }
+            ]
+          }
+        ) {
           id
           unique_code
           acquired_at

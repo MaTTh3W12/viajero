@@ -420,12 +420,52 @@ export class CouponsListComponent {
     }
   }
 
-  openView(row: Coupon): void {
+  async openView(row: Coupon): Promise<void> {
     if (typeof row.onView === 'function') {
       row.onView(row);
       return;
     }
-    console.log('[COUPONS] view action', { id: row.id, title: row.titulo });
+
+    if (!this.filterBar) return;
+
+    this.filterBar.openViewCoupon({
+      ...row,
+      descripcion: row.rawDescripcion ?? row.descripcion,
+      terminos: row.terminos ?? '',
+      image: row.imagePreview ?? null,
+      imageMime: this.normalizeMimeType(row.imageMimeType),
+    });
+
+    let imagePreview = row.imagePreview ?? null;
+    let imageMimeType = this.normalizeMimeType(row.imageMimeType);
+
+    if (this.role === 'empresa' && this.auth.isKeycloakLoggedIn()) {
+      const token = this.auth.token;
+      if (token) {
+        this.filterBar.setViewCouponImageLoading(true);
+        try {
+          const imageData = await firstValueFrom(this.couponService.getCouponImage(token, row.id));
+          if (imageData?.image_base64) {
+            imageMimeType = this.normalizeMimeType(imageData.image_mime_type);
+            imagePreview = this.toDataUrl(imageData.image_base64, imageMimeType);
+
+            const current = this.coupons.find((coupon) => coupon.id === row.id);
+            if (current) {
+              current.imagePreview = imagePreview;
+              current.imageMimeType = imageMimeType;
+            }
+            this.filterBar.setViewCouponImagePreview(imagePreview, imageMimeType);
+          } else {
+            this.filterBar.setViewCouponImagePreview(null, '');
+          }
+        } catch (error) {
+          console.warn('[COUPONS] No se pudo obtener preview de imagen para view', error);
+          this.filterBar.setViewCouponImagePreview(imagePreview, imageMimeType);
+        } finally {
+          this.filterBar.setViewCouponImageLoading(false);
+        }
+      }
+    }
   }
 
   openStats(row: Coupon): void {
