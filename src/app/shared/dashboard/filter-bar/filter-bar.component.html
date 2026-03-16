@@ -1032,9 +1032,19 @@
           <div>
             <label class="text-sm text-[#1A2440] mb-1 block">Cantidad disponible</label>
             <input [(ngModel)]="editForm.cantidad" name="edit_cantidad" type="number" placeholder="Agregar cantidad"
-              min="1" step="1" class="w-full rounded-xl px-4 py-3 text-[#538CFF] bg-[#F4F7FD]
+              [min]="editMinAvailableQuantity > 0 ? editMinAvailableQuantity : 1" step="1" class="w-full rounded-xl px-4 py-3 text-[#538CFF] bg-[#F4F7FD]
 								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
 								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
+            @if (editMinAvailableQuantity > 0) {
+            <p class="mt-1 text-xs text-[#7A8499]">
+              Mínimo permitido: {{ editMinAvailableQuantity }} (cupones adquiridos).
+            </p>
+            }
+            @if (editForm.cantidad != null && editForm.cantidad < editMinAvailableQuantity) {
+            <p class="mt-1 text-xs text-[#C82333]">
+              La cantidad disponible no puede ser menor a {{ editMinAvailableQuantity }}.
+            </p>
+            }
           </div>
 
           <div>

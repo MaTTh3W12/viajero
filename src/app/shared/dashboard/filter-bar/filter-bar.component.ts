@@ -165,6 +165,7 @@ export class FilterBarComponent {
   editCouponImageError = '';
   editCouponImageLoading = false;
   editPromotionType: '' | 'descuento' | 'precio' = '';
+  editMinAvailableQuantity = 0;
   editForm = {
     id: null as number | null,
     titulo: '',
@@ -823,6 +824,7 @@ export class FilterBarComponent {
     image?: string | null;
     imageMime?: string;
     imageName?: string;
+    minCantidadDisponible?: number;
   }): void {
     this.resetEditFlow();
     this.ensureCategoriesLoaded();
@@ -847,6 +849,7 @@ export class FilterBarComponent {
       imageName: coupon.imageName ?? this.getDefaultImageName(coupon.imageMime),
       imageMime: coupon.imageMime ?? '',
     };
+    this.editMinAvailableQuantity = Math.max(0, Math.trunc(coupon.minCantidadDisponible ?? 0));
     this.syncEditPromotionTypeFromForm();
     this.editCouponImageError = '';
     this.editCouponOpen = true;
@@ -861,6 +864,11 @@ export class FilterBarComponent {
 
   submitEditCoupon(): void {
     if (!this.isEditFormValid()) {
+      return;
+    }
+
+    if ((this.editForm.cantidad ?? 0) < this.editMinAvailableQuantity) {
+      this.editCouponError = `La cantidad disponible no puede ser menor a ${this.editMinAvailableQuantity} (cupones adquiridos).`;
       return;
     }
 
@@ -926,6 +934,7 @@ export class FilterBarComponent {
     const categoriaValida = typeof f.categoria === 'number' && f.categoria > 0;
     const terminosValidos = true; // opcional en edición
     const estadoValido = f.estado !== '';
+    const cantidadMayorIgualAdquiridos = typeof f.cantidad === 'number' && f.cantidad >= this.editMinAvailableQuantity;
     const tipoPromocionValido = this.editPromotionType !== '';
     const valorPromocionValido = this.getCurrentPromotionValue(this.editPromotionType, f.precio, f.descuento) !== null;
     const precioValido = this.isValidNumericOrNull(f.precio);
@@ -936,6 +945,7 @@ export class FilterBarComponent {
       descripcionValida &&
       fechasValidas &&
       rangoFechasValido &&
+      cantidadMayorIgualAdquiridos &&
       categoriaValida &&
       terminosValidos &&
       estadoValido &&
@@ -1002,6 +1012,7 @@ export class FilterBarComponent {
     this.editCouponError = '';
     this.editCouponImageError = '';
     this.editCouponImageLoading = false;
+    this.editMinAvailableQuantity = 0;
     this.clearEditCouponImageLoadingTimeout();
   }
 

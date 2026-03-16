@@ -58,7 +58,7 @@ export class CouponsListComponent {
       {
         iconId: 'trash',
         bgClass: 'bg-[#F8D7DA] text-[#C82333]',
-        show: (row) => row.estado === 'Borrador',
+        show: (row) => row.estado === 'Borrador' && this.getAcquiredCouponsCount(row) === 0,
         action: (row) => this.openDelete(row),
       },
       {
@@ -237,6 +237,17 @@ export class CouponsListComponent {
         return;
       }
 
+      const currentCoupon = this.coupons.find((coupon) => coupon.id === payload.id) ?? null;
+      if (currentCoupon) {
+        const total = currentCoupon.disponiblesTotal ?? currentCoupon.disponibles ?? 0;
+        const available = currentCoupon.disponibles ?? 0;
+        const acquired = Math.max(total - available, 0);
+        if (payload.disponibles < acquired) {
+          payload.onError(`La cantidad disponible no puede ser menor a ${acquired} (cupones adquiridos).`);
+          return;
+        }
+      }
+
       const canManage = await this.validateCouponOwnership(token, payload.id);
       if (!canManage) {
         payload.onError('No puedes editar/publicar un cupón que no pertenece a tu empresa.');
@@ -285,6 +296,10 @@ export class CouponsListComponent {
   async openEdit(row: Coupon): Promise<void> {
     if (!this.filterBar) return;
 
+    const total = row.disponiblesTotal ?? row.disponibles ?? 0;
+    const available = row.disponibles ?? 0;
+    const acquired = Math.max(total - available, 0);
+
     this.filterBar.openEditCoupon({
       ...row,
       descripcion: row.rawDescripcion ?? row.descripcion,
@@ -293,6 +308,7 @@ export class CouponsListComponent {
       image: row.imagePreview ?? null,
       imageMime: this.normalizeMimeType(row.imageMimeType),
       imageName: this.normalizeMimeType(row.imageMimeType).startsWith('application/pdf') ? 'Archivo actual.pdf' : 'Imagen actual',
+      minCantidadDisponible: acquired,
     });
 
     if (row.imagePreview) return;
@@ -333,6 +349,23 @@ export class CouponsListComponent {
     onError: (message?: string) => void;
   }): Promise<void> {
     try {
+      const couponToDelete = this.coupons.find((coupon) => coupon.id === payload.id) ?? null;
+      if (!couponToDelete) {
+        payload.onError('No puedes eliminar un cupón que no aparece en tu listado.');
+        return;
+      }
+
+      const acquiredCoupons = this.getAcquiredCouponsCount(couponToDelete);
+      if (couponToDelete.estado === 'Publicado') {
+        payload.onError('No puedes eliminar un cupón publicado.');
+        return;
+      }
+
+      if (acquiredCoupons > 0) {
+        payload.onError(`No puedes eliminar este cupón porque ya tiene ${acquiredCoupons} adquisición(es).`);
+        return;
+      }
+
       if (this.role !== 'empresa' || !this.auth.isKeycloakLoggedIn()) {
         this.coupons = this.coupons.filter((coupon) => coupon.id !== payload.id);
         this.cdr.detectChanges();
@@ -343,12 +376,6 @@ export class CouponsListComponent {
       const token = this.auth.token;
       if (!token) {
         payload.onError('No hay sesión activa para eliminar el cupón.');
-        return;
-      }
-
-      const couponInView = this.coupons.some((coupon) => coupon.id === payload.id);
-      if (!couponInView) {
-        payload.onError('No puedes eliminar un cupón que no aparece en tu listado.');
         return;
       }
 
@@ -710,5 +737,11 @@ export class CouponsListComponent {
   private trimTrailingZeros(value: number): string {
     const asFixed = value.toFixed(2);
     return asFixed.replace(/\.00$/, '').replace(/(\.\d)0$/, '$1');
+  }
+
+  private getAcquiredCouponsCount(coupon: Coupon): number {
+    const total = coupon.disponiblesTotal ?? coupon.disponibles ?? 0;
+    const available = coupon.disponibles ?? 0;
+    return Math.max(total - available, 0);
   }
 }
