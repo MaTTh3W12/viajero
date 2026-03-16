@@ -139,6 +139,7 @@ export class FilterBarComponent {
   couponImageLoading = false;
   private readonly maxCouponFileSizeBytes = 500 * 1024;
   private readonly allowedCouponMimeTypes = ['image/jpeg', 'image/png', 'application/pdf'];
+  couponPromotionType: '' | 'descuento' | 'precio' = '';
   couponForm = {
     titulo: '',
     cantidad: null as number | null,
@@ -163,6 +164,7 @@ export class FilterBarComponent {
   editCouponError = '';
   editCouponImageError = '';
   editCouponImageLoading = false;
+  editPromotionType: '' | 'descuento' | 'precio' = '';
   editForm = {
     id: null as number | null,
     titulo: '',
@@ -471,6 +473,7 @@ export class FilterBarComponent {
   openCreateCoupon(): void {
     this.resetCreateFlow();
     this.ensureCategoriesLoaded();
+    this.syncCreatePromotionTypeFromForm();
     this.createCouponOpen = true;
     this.setBodyModalLock(true);
   }
@@ -543,6 +546,8 @@ export class FilterBarComponent {
     const categoriaValida = typeof f.categoria === 'number' && f.categoria > 0;
     const terminosValidos = f.terminos.trim().length > 0;
     const estadoValido = f.estado !== '';
+    const tipoPromocionValido = this.couponPromotionType !== '';
+    const valorPromocionValido = this.getCurrentPromotionValue(this.couponPromotionType, f.precio, f.descuento) !== null;
     const precioValido = this.isValidNumericOrNull(f.precio);
     const descuentoValido = this.isValidNumericOrNull(f.descuento);
     return (
@@ -556,9 +561,56 @@ export class FilterBarComponent {
       categoriaValida &&
       terminosValidos &&
       estadoValido &&
+      tipoPromocionValido &&
+      valorPromocionValido &&
       precioValido &&
       descuentoValido
     );
+  }
+
+  onCreatePromotionTypeChange(): void {
+    if (this.couponPromotionType === 'precio') {
+      this.couponForm.descuento = null;
+      return;
+    }
+
+    if (this.couponPromotionType === 'descuento') {
+      this.couponForm.precio = null;
+      return;
+    }
+
+    this.couponForm.precio = null;
+    this.couponForm.descuento = null;
+  }
+
+  getCreatePromotionLabel(): string {
+    if (this.couponPromotionType === 'precio') return 'Precio';
+    if (this.couponPromotionType === 'descuento') return 'Porcentaje';
+    return 'Valor de promoción';
+  }
+
+  getCreatePromotionPlaceholder(): string {
+    if (this.couponPromotionType === 'precio') return 'Ingresar precio';
+    if (this.couponPromotionType === 'descuento') return 'Ingresar descuento';
+    return 'Selecciona tipo de promoción';
+  }
+
+  getCreatePromotionValue(): number | null {
+    return this.getCurrentPromotionValue(this.couponPromotionType, this.couponForm.precio, this.couponForm.descuento);
+  }
+
+  onCreatePromotionValueInput(value: string): void {
+    const parsedValue = this.parsePromotionInput(value);
+    if (this.couponPromotionType === 'precio') {
+      this.couponForm.precio = parsedValue;
+      this.couponForm.descuento = null;
+      return;
+    }
+
+    if (this.couponPromotionType === 'descuento') {
+      this.couponForm.descuento = parsedValue;
+      this.couponForm.precio = null;
+    }
   }
 
   onSuccessContinue(): void {
@@ -795,6 +847,7 @@ export class FilterBarComponent {
       imageName: coupon.imageName ?? this.getDefaultImageName(coupon.imageMime),
       imageMime: coupon.imageMime ?? '',
     };
+    this.syncEditPromotionTypeFromForm();
     this.editCouponImageError = '';
     this.editCouponOpen = true;
     this.setBodyModalLock(true);
@@ -873,6 +926,8 @@ export class FilterBarComponent {
     const categoriaValida = typeof f.categoria === 'number' && f.categoria > 0;
     const terminosValidos = true; // opcional en edición
     const estadoValido = f.estado !== '';
+    const tipoPromocionValido = this.editPromotionType !== '';
+    const valorPromocionValido = this.getCurrentPromotionValue(this.editPromotionType, f.precio, f.descuento) !== null;
     const precioValido = this.isValidNumericOrNull(f.precio);
     const descuentoValido = this.isValidNumericOrNull(f.descuento);
     return (
@@ -884,9 +939,56 @@ export class FilterBarComponent {
       categoriaValida &&
       terminosValidos &&
       estadoValido &&
+      tipoPromocionValido &&
+      valorPromocionValido &&
       precioValido &&
       descuentoValido
     );
+  }
+
+  onEditPromotionTypeChange(): void {
+    if (this.editPromotionType === 'precio') {
+      this.editForm.descuento = null;
+      return;
+    }
+
+    if (this.editPromotionType === 'descuento') {
+      this.editForm.precio = null;
+      return;
+    }
+
+    this.editForm.precio = null;
+    this.editForm.descuento = null;
+  }
+
+  getEditPromotionLabel(): string {
+    if (this.editPromotionType === 'precio') return 'Precio';
+    if (this.editPromotionType === 'descuento') return 'Porcentaje';
+    return 'Valor de promoción';
+  }
+
+  getEditPromotionPlaceholder(): string {
+    if (this.editPromotionType === 'precio') return 'Ingresar precio';
+    if (this.editPromotionType === 'descuento') return 'Ingresar descuento';
+    return 'Selecciona tipo de promoción';
+  }
+
+  getEditPromotionValue(): number | null {
+    return this.getCurrentPromotionValue(this.editPromotionType, this.editForm.precio, this.editForm.descuento);
+  }
+
+  onEditPromotionValueInput(value: string): void {
+    const parsedValue = this.parsePromotionInput(value);
+    if (this.editPromotionType === 'precio') {
+      this.editForm.precio = parsedValue;
+      this.editForm.descuento = null;
+      return;
+    }
+
+    if (this.editPromotionType === 'descuento') {
+      this.editForm.descuento = parsedValue;
+      this.editForm.precio = null;
+    }
   }
 
   onEditSuccessContinue(): void {
@@ -901,6 +1003,37 @@ export class FilterBarComponent {
     this.editCouponImageError = '';
     this.editCouponImageLoading = false;
     this.clearEditCouponImageLoadingTimeout();
+  }
+
+  private syncCreatePromotionTypeFromForm(): void {
+    this.couponPromotionType = this.resolvePromotionType(this.couponForm.precio, this.couponForm.descuento);
+  }
+
+  private syncEditPromotionTypeFromForm(): void {
+    this.editPromotionType = this.resolvePromotionType(this.editForm.precio, this.editForm.descuento);
+  }
+
+  private resolvePromotionType(price: number | null, discount: number | null): '' | 'descuento' | 'precio' {
+    if (discount != null) return 'descuento';
+    if (price != null) return 'precio';
+    return '';
+  }
+
+  private getCurrentPromotionValue(
+    type: '' | 'descuento' | 'precio',
+    price: number | null,
+    discount: number | null
+  ): number | null {
+    if (type === 'precio') return this.isValidNumericOrNull(price) && price != null ? price : null;
+    if (type === 'descuento') return this.isValidNumericOrNull(discount) && discount != null ? discount : null;
+    return null;
+  }
+
+  private parsePromotionInput(value: string): number | null {
+    const normalized = value.trim();
+    if (!normalized.length) return null;
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
   }
 
   private onUpdateCouponSuccess(): void {
