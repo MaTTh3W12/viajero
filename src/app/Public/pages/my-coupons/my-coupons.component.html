@@ -141,7 +141,7 @@
               <img [src]="getCategoryIconPath(item.coupon.category_id)" [alt]="getCategoryName(item.coupon.category_id)"
                 class="w-4 h-4 object-contain" />
             </span>
-            <span class="text-[12px] md:text-[16px] text-[#1A2440] font-medium">{{
+            <span class="text-[12px] md:text-[16px] text-[#1A2440] font-medium truncate max-w-[20ch]">{{
               getCategoryName(item.coupon.category_id) }}</span>
           </div>
 
@@ -153,7 +153,7 @@
           </div>
 
           <p class="text-[9px] md:text-[11px] text-gray-400 mb-1 tracking-wider">EL SALVADOR TOURS</p>
-          <h3 class="text-[13px] md:text-[18px] font-bold text-[#0E225C] leading-tight mb-3 md:mb-4">{{
+          <h3 class="text-[13px] md:text-[18px] font-bold text-[#0E225C] leading-tight mb-3 md:mb-4 truncate max-w-[20ch]">{{
             item.coupon.title }}</h3>
 
           <div class="mt-auto">
