@@ -181,6 +181,36 @@ export class FilterBarComponent {
   };
 
   // Estado para eliminar cupón
+  viewCouponOpen = false;
+  viewCouponImageLoading = false;
+  private viewCouponImageLoadingTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  viewTarget: {
+    id: number | null;
+    titulo: string;
+    descripcion: string;
+    categoria: string;
+    fechaInicio: string;
+    fechaFin: string;
+    cantidad: number | null;
+    estado: string;
+    terminos: string;
+    image: string | null;
+    imageMime: string;
+  } = {
+      id: null,
+      titulo: '',
+      descripcion: '',
+      categoria: '',
+      fechaInicio: '',
+      fechaFin: '',
+      cantidad: null,
+      estado: '',
+      terminos: '',
+      image: null,
+      imageMime: '',
+    };
+
+  // Estado para eliminar cupón
   deleteCouponOpen = false;
   deletingCoupon = false;
   couponDeleteSuccess = false;
@@ -329,7 +359,7 @@ export class FilterBarComponent {
       );
 
       if (!acquired) {
-        throw new Error('No se encontró un cupón con ese código.');
+        throw new Error(this.buildCouponNotFoundMessage());
       }
 
       if (acquired.redeemed) {
@@ -397,6 +427,10 @@ export class FilterBarComponent {
   closeRedeemSuccess(): void {
     this.redeemSuccess = false;
     this.closeQrModal();
+  }
+
+  private buildCouponNotFoundMessage(): string {
+    return 'No se encontró un cupón con ese código para esta empresa. Este cupón podría pertenecer a otra empresa.';
   }
 
   private ensureCategoriesLoaded(force = false): void {
@@ -883,6 +917,45 @@ export class FilterBarComponent {
     this.cdr.detectChanges();
   }
 
+  openViewCoupon(coupon: {
+    id: number;
+    titulo: string;
+    descripcion: string;
+    categoria: string;
+    fechaInicio: string;
+    fechaFin: string;
+    disponibles: number;
+    estado: string;
+    terminos?: string;
+    image?: string | null;
+    imageMime?: string;
+  }): void {
+    this.viewCouponImageLoading = false;
+    this.clearViewCouponImageLoadingTimeout();
+    this.viewTarget = {
+      id: coupon.id,
+      titulo: coupon.titulo,
+      descripcion: coupon.descripcion,
+      categoria: coupon.categoria,
+      fechaInicio: this.toDisplayDate(coupon.fechaInicio),
+      fechaFin: this.toDisplayDate(coupon.fechaFin),
+      cantidad: coupon.disponibles,
+      estado: coupon.estado,
+      terminos: coupon.terminos ?? '',
+      image: coupon.image ?? null,
+      imageMime: coupon.imageMime ?? '',
+    };
+    this.viewCouponOpen = true;
+  }
+
+  closeViewCoupon(): void {
+    this.viewCouponOpen = false;
+    this.viewCouponImageLoading = false;
+    this.clearViewCouponImageLoadingTimeout();
+    this.viewTarget.image = null;
+    this.viewTarget.imageMime = '';
+  }
+
   // Abrir modal de eliminación
   openDeleteCoupon(coupon: {
     id: number;
@@ -997,6 +1070,21 @@ export class FilterBarComponent {
     this.cdr.detectChanges();
   }
 
+  setViewCouponImageLoading(loading: boolean): void {
+    this.viewCouponImageLoading = loading;
+    if (loading) this.startViewCouponImageLoadingTimeout();
+    else this.clearViewCouponImageLoadingTimeout();
+    this.cdr.detectChanges();
+  }
+
+  setViewCouponImagePreview(image: string | null, imageMime = ''): void {
+    this.viewTarget.image = image;
+    this.viewTarget.imageMime = imageMime;
+    this.viewCouponImageLoading = false;
+    this.clearViewCouponImageLoadingTimeout();
+    this.cdr.detectChanges();
+  }
+
   setDeleteCouponImagePreview(image: string | null, imageMime = ''): void {
     this.deleteTarget.image = image;
     this.deleteTarget.imageMime = imageMime;
@@ -1105,6 +1193,20 @@ export class FilterBarComponent {
     if (!this.editCouponImageLoadingTimeoutId) return;
     clearTimeout(this.editCouponImageLoadingTimeoutId);
     this.editCouponImageLoadingTimeoutId = null;
+  }
+
+  private startViewCouponImageLoadingTimeout(): void {
+    this.clearViewCouponImageLoadingTimeout();
+    this.viewCouponImageLoadingTimeoutId = setTimeout(() => {
+      this.viewCouponImageLoading = false;
+      this.cdr.detectChanges();
+    }, 15000);
+  }
+
+  private clearViewCouponImageLoadingTimeout(): void {
+    if (!this.viewCouponImageLoadingTimeoutId) return;
+    clearTimeout(this.viewCouponImageLoadingTimeoutId);
+    this.viewCouponImageLoadingTimeoutId = null;
   }
 
   private startDeleteCouponImageLoadingTimeout(): void {

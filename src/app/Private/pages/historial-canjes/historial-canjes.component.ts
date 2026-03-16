@@ -8,6 +8,7 @@ type SortKey = 'fechaHora' | 'cuponOferta' | 'usuario' | 'responsableCanje';
 type SortDirection = 'asc' | 'desc';
 
 interface HistorialCanjeRow {
+  id: number;
   fechaHora: string;
   fechaOrden: number;
   cuponOferta: string;
@@ -37,16 +38,16 @@ export class HistorialCanjesComponent {
   }
 
   historial: HistorialCanjeRow[] = [
-    { fechaHora: 'Hoy - 14:20', fechaOrden: 202603151420, cuponOferta: 'Cena 2x1 casual', categoria: 'Gastronomía', usuario: 'Pedro Escamoso', responsableCanje: 'María Gómez' },
-    { fechaHora: 'Hoy - 14:20', fechaOrden: 202603151420, cuponOferta: 'Noche de Cine', categoria: 'Entretenimiento', usuario: 'Paquita del Barrio', responsableCanje: 'Pedro Sánchez' },
-    { fechaHora: 'Ayer - 09:30', fechaOrden: 202603140930, cuponOferta: 'Café y Postre', categoria: 'Gastronomía', usuario: 'Snoop Dog', responsableCanje: 'José Ramírez' },
-    { fechaHora: '02/25/2026 - 04:52', fechaOrden: 202602250452, cuponOferta: 'Spa Relax Total', categoria: 'Bienestar', usuario: 'Camila Cabello', responsableCanje: 'Pedro Escamoso' },
-    { fechaHora: '02/25/2026 - 04:52', fechaOrden: 202602250452, cuponOferta: 'Spa Relax Total', categoria: 'Bienestar', usuario: 'Camila Cabello', responsableCanje: 'Pedro Escamoso' },
-    { fechaHora: '15/01/2026 - 13:52', fechaOrden: 202601151352, cuponOferta: 'Tour de Montaña', categoria: 'Turismo', usuario: 'Bruno Mars', responsableCanje: 'Betty la Fea' },
-    { fechaHora: '14/01/2026 - 08:25', fechaOrden: 202601140825, cuponOferta: 'Descuento en hospedaje familiar premium', categoria: 'Turismo', usuario: 'Luis Miguel', responsableCanje: 'Marta Pérez' },
-    { fechaHora: '13/01/2026 - 17:40', fechaOrden: 202601131740, cuponOferta: 'Paquete de cena ejecutiva', categoria: 'Gastronomía', usuario: 'Shakira Shakira', responsableCanje: 'Rosa Díaz' },
-    { fechaHora: '12/01/2026 - 11:12', fechaOrden: 202601121112, cuponOferta: 'Entrada general al museo', categoria: 'Cultura', usuario: 'Ana Gabriel', responsableCanje: 'Carlos Mena' },
-    { fechaHora: '11/01/2026 - 10:05', fechaOrden: 202601111005, cuponOferta: 'Descuento en tipo sedán', categoria: 'Transporte', usuario: 'David Bisbal', responsableCanje: 'Raúl Herrera' },
+    { id: 1, fechaHora: 'Hoy - 14:20', fechaOrden: 202603151420, cuponOferta: 'Cena 2x1 casual', categoria: 'Gastronomía', usuario: 'Pedro Escamoso', responsableCanje: 'María Gómez' },
+    { id: 2, fechaHora: 'Hoy - 14:20', fechaOrden: 202603151420, cuponOferta: 'Noche de Cine', categoria: 'Entretenimiento', usuario: 'Paquita del Barrio', responsableCanje: 'Pedro Sánchez' },
+    { id: 3, fechaHora: 'Ayer - 09:30', fechaOrden: 202603140930, cuponOferta: 'Café y Postre', categoria: 'Gastronomía', usuario: 'Snoop Dog', responsableCanje: 'José Ramírez' },
+    { id: 4, fechaHora: '02/25/2026 - 04:52', fechaOrden: 202602250452, cuponOferta: 'Spa Relax Total', categoria: 'Bienestar', usuario: 'Camila Cabello', responsableCanje: 'Pedro Escamoso' },
+    { id: 5, fechaHora: '02/25/2026 - 04:52', fechaOrden: 202602250452, cuponOferta: 'Spa Relax Total', categoria: 'Bienestar', usuario: 'Camila Cabello', responsableCanje: 'Pedro Escamoso' },
+    { id: 6, fechaHora: '15/01/2026 - 13:52', fechaOrden: 202601151352, cuponOferta: 'Tour de Montaña', categoria: 'Turismo', usuario: 'Bruno Mars', responsableCanje: 'Betty la Fea' },
+    { id: 7, fechaHora: '14/01/2026 - 08:25', fechaOrden: 202601140825, cuponOferta: 'Descuento en hospedaje familiar premium', categoria: 'Turismo', usuario: 'Luis Miguel', responsableCanje: 'Marta Pérez' },
+    { id: 8, fechaHora: '13/01/2026 - 17:40', fechaOrden: 202601131740, cuponOferta: 'Paquete de cena ejecutiva', categoria: 'Gastronomía', usuario: 'Shakira Shakira', responsableCanje: 'Rosa Díaz' },
+    { id: 9, fechaHora: '12/01/2026 - 11:12', fechaOrden: 202601121112, cuponOferta: 'Entrada general al museo', categoria: 'Cultura', usuario: 'Ana Gabriel', responsableCanje: 'Carlos Mena' },
+    { id: 10, fechaHora: '11/01/2026 - 10:05', fechaOrden: 202601111005, cuponOferta: 'Descuento en tipo sedán', categoria: 'Transporte', usuario: 'David Bisbal', responsableCanje: 'Raúl Herrera' },
   ];
 
   get totalPages(): number {

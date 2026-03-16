@@ -41,7 +41,7 @@
 				</thead>
 
 				<tbody>
-					@for (row of pagedHistorial; track row.fechaHora + row.usuario + row.cuponOferta) {
+					@for (row of pagedHistorial; track row.id) {
 						<tr class="border-b border-[#D5DBE5] hover:bg-[#F9FBFF] transition-colors">
 							<td class="py-3 px-4">{{ row.fechaHora }}</td>
 							<td class="py-3 px-4">
