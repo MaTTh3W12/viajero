@@ -25,7 +25,7 @@
             <img [src]="getCategoryIconPath(coupon.category_id)" [alt]="getCategoryName(coupon.category_id)"
               class="w-4 h-4 object-contain" />
           </span>
-          <span class="text-[12px] md:text-[16px] text-[#1A2440] font-medium font-museo">
+          <span class="text-[12px] md:text-[16px] text-[#1A2440] font-medium font-museo truncate max-w-[20ch]">
             {{ getCategoryName(coupon.category_id) }}
           </span>
         </div>
@@ -44,7 +44,7 @@
           {{ fixedCouponTitle }}
         </p>
         <h3
-          class="text-[13px] md:text-[18px] font-bold text-[#0E225C] leading-tight md:leading-snug mb-3 md:mb-5 font-museo">
+          class="text-[13px] md:text-[18px] font-bold text-[#0E225C] leading-tight md:leading-snug mb-3 md:mb-5 font-museo truncate max-w-[20ch]">
           {{ coupon.title || fixedCouponTitle }}
         </h3>
 
