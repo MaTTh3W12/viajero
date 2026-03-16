@@ -94,6 +94,14 @@ interface GetCouponsByIdsData {
   viajerosv_coupons: Coupon[];
 }
 
+interface HasAcquiredCouponData {
+  viajerosv_coupons_acquired_aggregate: {
+    aggregate: {
+      count: number;
+    };
+  };
+}
+
 interface HomeFeaturedCouponRow {
   id: number;
   title: string;
@@ -645,6 +653,22 @@ export class CouponService {
 
     return this.executeOperation<GetCouponsByIdsData, { ids: number[] }>(token, query, { ids: couponIds }).pipe(
       map((data) => data.viajerosv_coupons ?? [])
+    );
+  }
+
+  hasAcquiredCoupon(token: string, couponId: number): Observable<boolean> {
+    const query = `
+      query HasAcquiredCoupon($coupon_id: bigint!) {
+        viajerosv_coupons_acquired_aggregate(where: { coupon_id: { _eq: $coupon_id } }) {
+          aggregate {
+            count
+          }
+        }
+      }
+    `;
+
+    return this.executeOperation<HasAcquiredCouponData, { coupon_id: number }>(token, query, { coupon_id: couponId }).pipe(
+      map((data) => (data.viajerosv_coupons_acquired_aggregate.aggregate.count ?? 0) > 0)
     );
   }
 
