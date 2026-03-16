@@ -190,7 +190,7 @@
         @if (auditTypeOpen) {
         <div
           class="absolute left-0 right-0 mt-2 bg-white rounded-xl shadow-lg ring-1 ring-black/5 overflow-hidden z-20">
-          @for (option of auditTypeOptions; track $index) {
+          @for (option of auditTypeOptions; track option) {
           <button type="button" class="w-full text-left px-4 py-2 text-[#0E225C] hover:bg-[#F4F7FD]
                        transition-colors duration-150" (mousedown)="selectAuditType(option)">
             {{ option }}
@@ -620,98 +620,32 @@
     <div class="px-6 pb-6 flex-1 overflow-y-auto" [class.opacity-60]="creatingCoupon || couponCreateSuccess"
       [class.pointer-events-none]="creatingCoupon || couponCreateSuccess">
       <form class="grid grid-cols-1 md:grid-cols-2 gap-5" (submit)="$event.preventDefault(); submitCreateCoupon()">
-        <!-- Título del cupón -->
-        <div>
-          <label class="text-sm text-[#1A2440] mb-1 block">Título del cupón</label>
-          <div class="relative">
-            <input [(ngModel)]="couponForm.titulo" name="titulo" type="text" maxlength="180" placeholder="Agregar título"
-              class="w-full rounded-xl px-4 py-3 text-[#0E225C] bg-[#F4F7FD]
+        <div class="flex flex-col gap-5">
+          <div>
+            <label class="text-sm text-[#1A2440] mb-1 block">Título del cupón</label>
+            <div class="relative">
+              <input [(ngModel)]="couponForm.titulo" name="titulo" type="text" maxlength="180" placeholder="Agregar título"
+                class="w-full rounded-xl px-4 py-3 text-[#0E225C] bg-[#F4F7FD]
                   ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
                   focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
-            <span class="absolute right-3 -bottom-5 text-xs text-[#7A8499]">
-              {{ (couponForm.titulo || '').length }}/180
-            </span>
+              <span class="absolute right-3 -bottom-5 text-xs text-[#7A8499]">
+                {{ (couponForm.titulo || '').length }}/180
+              </span>
+            </div>
           </div>
-        </div>
 
-        <!-- Cantidad disponible -->
-        <div>
-          <label class="text-sm text-[#1A2440] mb-1 block">Cantidad disponible</label>
-          <input [(ngModel)]="couponForm.cantidad" name="cantidad" type="number" placeholder="Agregar cantidad" min="1"
-            step="1" class="w-full rounded-xl px-4 py-3 text-[#0E225C] bg-[#F4F7FD]
-                  ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
-                  focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
-        </div>
-
-        <div>
-          <label class="text-sm text-[#1A2440] mb-1 block">Precio</label>
-          <input [(ngModel)]="couponForm.precio" name="precio" type="number" placeholder="Agregar precio" min="0"
-            step="0.01" class="w-full rounded-xl px-4 py-3 text-[#0E225C] bg-[#F4F7FD]
-                  ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
-                  focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
-        </div>
-
-        <div>
-          <label class="text-sm text-[#1A2440] mb-1 block">Descuento</label>
-          <input [(ngModel)]="couponForm.descuento" name="descuento" type="number" placeholder="Agregar descuento"
-            min="0" step="0.01" class="w-full rounded-xl px-4 py-3 text-[#0E225C] bg-[#F4F7FD]
-                  ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
-                  focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
-        </div>
-
-        <!-- Descripción -->
-        <div class="md:col-span-1">
-          <label class="text-sm text-[#1A2440] mb-1 block">Descripción</label>
-          <div class="relative">
-            <textarea [(ngModel)]="couponForm.descripcion" name="descripcion" maxlength="500" placeholder="Agregar descripción" class="w-full rounded-xl px-4 py-3 pb-8 text-[#0E225C] min-h-44
+          <div>
+            <label class="text-sm text-[#1A2440] mb-1 block">Descripción</label>
+            <div class="relative">
+              <textarea [(ngModel)]="couponForm.descripcion" name="descripcion" maxlength="500" placeholder="Agregar descripción" class="w-full rounded-xl px-4 py-3 pb-8 text-[#0E225C] min-h-44
 								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
 								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
-            <span class="absolute right-3 bottom-3 text-xs text-[#7A8499] pointer-events-none">
-              {{ (couponForm.descripcion || '').length }}/500
-            </span>
-          </div>
-        </div>
-
-        <!-- Fechas: inicio y fin (apiladas en la misma columna) -->
-        <div class="md:col-span-1 flex flex-col gap-5">
-          <!-- Fecha inicio -->
-          <div>
-            <label class="text-sm text-[#1A2440] mb-1 block">Fecha inicio</label>
-            <div class="relative">
-              <input #modalStart type="date" [(ngModel)]="couponForm.fechaInicio" name="fechaInicio"
-                placeholder="dd/mm/aaaa" [min]="todayIso" class="calendar-input w-full rounded-xl px-4 py-3 pr-11 text-[#0E225C]
-									ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
-									focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" (click)="openDatePicker(modalStart)" />
-              <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
-                (click)="openDatePicker(modalStart)">
-                <svg class="w-6 h-6" aria-hidden="true">
-                  <use href="assets/icons/sprite.svg#calendar"></use>
-                </svg>
-              </button>
+              <span class="absolute right-3 bottom-3 text-xs text-[#7A8499] pointer-events-none">
+                {{ (couponForm.descripcion || '').length }}/500
+              </span>
             </div>
           </div>
 
-          <!-- Fecha fin -->
-          <div>
-            <label class="text-sm text-[#1A2440] mb-1 block">Fecha fin</label>
-            <div class="relative">
-              <input #modalEnd type="date" [(ngModel)]="couponForm.fechaFin" name="fechaFin" placeholder="dd/mm/aaaa"
-                [min]="couponForm.fechaInicio || todayIso" class="calendar-input w-full rounded-xl px-4 py-3 pr-11 text-[#0E225C]
-									ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
-									focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" (click)="openDatePicker(modalEnd)" />
-              <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
-                (click)="openDatePicker(modalEnd)">
-                <svg class="w-6 h-6" aria-hidden="true">
-                  <use href="assets/icons/sprite.svg#calendar"></use>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Columna izquierda: Categoría + Estado -->
-        <div class="md:col-span-1 flex flex-col gap-5">
-          <!-- Categoría -->
           <div>
             <label class="text-sm text-[#1A2440] mb-1 block">Categoría</label>
             <select [(ngModel)]="couponForm.categoria" name="categoria" class="w-full rounded-xl px-4 py-3 pr-10 text-[#0E225C] bg-[#F4F7FD]
@@ -731,7 +665,6 @@
             </select>
           </div>
 
-          <!-- Estado -->
           <div>
             <label class="text-sm text-[#1A2440] mb-1 block">Estado</label>
             <select [(ngModel)]="couponForm.estado" name="estado" class="w-full rounded-xl px-4 py-3 pr-10 text-[#0E225C] bg-[#F4F7FD]
@@ -743,83 +676,147 @@
               <option>Borrador</option>
             </select>
           </div>
-        </div>
 
-        <!-- Términos y condiciones -->
-        <div class="md:col-span-1">
-          <label class="text-sm text-[#1A2440] mb-1 block">Términos y condiciones</label>
-          <div class="relative">
-            <textarea [(ngModel)]="couponForm.terminos" name="terminos" maxlength="1000" placeholder="Agregar términos y condiciones"
-              class="w-full rounded-xl px-4 py-3 pb-8 text-[#0E225C] min-h-44 bg-[#F4F7FD]
-								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
-								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
-            <span class="absolute right-3 bottom-3 text-xs text-[#7A8499] pointer-events-none">
-              {{ (couponForm.terminos || '').length }}/1000
-            </span>
-          </div>
-        </div>
+          <div>
+            <label class="text-sm text-[#1A2440] mb-1 block">Imagen del cupón</label>
+            <input #couponImageInput type="file" class="hidden"
+              accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
+              (change)="onCouponImageSelected($event)" />
 
-        <!-- Subir imagen de cupón -->
-        <div class="md:col-span-1">
-          <label class="text-sm text-[#1A2440] mb-1 block">Imagen del cupón</label>
-          <input #couponImageInput type="file" class="hidden"
-            accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
-            (change)="onCouponImageSelected($event)" />
-
-          @if (couponImageLoading && !couponForm.image) {
-          <div class="w-full border border-dashed border-[#75A2FF] rounded-3xl px-4 py-6 text-center bg-[#F8FBFF]">
-            <div class="flex flex-col items-center justify-center gap-2 text-[#1A2440]">
-              <svg class="animate-spin h-10 w-10 text-black mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"></path>
-          </svg>
-              <p class="text-base">Procesando imagen...</p>
+            @if (couponImageLoading && !couponForm.image) {
+            <div class="w-full border border-dashed border-[#75A2FF] rounded-3xl px-4 py-6 text-center bg-[#F8FBFF]">
+              <div class="flex flex-col items-center justify-center gap-2 text-[#1A2440]">
+                <svg class="animate-spin h-10 w-10 text-black mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"></path>
+            </svg>
+                <p class="text-base">Procesando imagen...</p>
+              </div>
             </div>
-          </div>
-          } @else if (!couponForm.image) {
-          <button type="button"
-            class="w-full border border-dashed border-[#75A2FF] rounded-3xl px-4 py-5 text-center bg-[#F8FBFF] hover:bg-[#F1F6FF] transition"
-            (click)="pickCouponImage(couponImageInput)">
-            <div class="flex items-center justify-center gap-2 text-[#1A2440]">
-              <span class="text-xl font-medium">Subir Imagen de cupón</span>
-              <svg class="w-6 h-6" aria-hidden="true">
-                <use href="assets/icons/sprite.svg#document-upload"></use>
-              </svg>
-            </div>
-            <p class="mt-2 text-sm text-[#7A8499]">
-              Solo se permiten archivos tipo: JPG, JPEG, PNG, PDF. <br />(Tamaño máximo: 500 kb)
-            </p>
-          </button>
-          } @else {
-          <div class="flex items-start gap-3">
-            <div class="relative w-[124px] h-[124px]">
-              @if (couponForm.imageMime.startsWith('image/')) {
-              <img [src]="couponForm.image" alt="Vista previa del cupón"
-                class="w-[124px] h-[124px] rounded-xl object-cover bg-[#EFF3FB]" />
-              } @else {
-              <div
-                class="w-[124px] h-[124px] rounded-xl bg-[#EFF3FB] border border-[#D9E2F4] px-2 py-3 flex flex-col items-center justify-center text-center">
-                <svg class="w-7 h-7 text-[#1A2440] mb-1" aria-hidden="true">
+            } @else if (!couponForm.image) {
+            <button type="button"
+              class="w-full border border-dashed border-[#75A2FF] rounded-3xl px-4 py-5 text-center bg-[#F8FBFF] hover:bg-[#F1F6FF] transition"
+              (click)="pickCouponImage(couponImageInput)">
+              <div class="flex items-center justify-center gap-2 text-[#1A2440]">
+                <span class="text-xl font-medium">Subir Imagen de cupón</span>
+                <svg class="w-6 h-6" aria-hidden="true">
                   <use href="assets/icons/sprite.svg#document-upload"></use>
                 </svg>
-                <p class="text-xs font-semibold text-[#1A2440]">PDF</p>
-                <p class="text-[10px] text-[#7A8499] break-words leading-tight">{{ couponForm.imageName }}</p>
               </div>
-              }
+              <p class="mt-2 text-sm text-[#7A8499]">
+                Solo se permiten archivos tipo: JPG, JPEG, PNG, PDF. <br />(Tamaño máximo: 500 kb)
+              </p>
+            </button>
+            } @else {
+            <div class="flex items-start gap-3">
+              <div class="relative w-[124px] h-[124px]">
+                @if (couponForm.imageMime.startsWith('image/')) {
+                <img [src]="couponForm.image" alt="Vista previa del cupón"
+                  class="w-[124px] h-[124px] rounded-xl object-cover bg-[#EFF3FB]" />
+                } @else {
+                <div
+                  class="w-[124px] h-[124px] rounded-xl bg-[#EFF3FB] border border-[#D9E2F4] px-2 py-3 flex flex-col items-center justify-center text-center">
+                  <svg class="w-7 h-7 text-[#1A2440] mb-1" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#document-upload"></use>
+                  </svg>
+                  <p class="text-xs font-semibold text-[#1A2440]">PDF</p>
+                  <p class="text-[10px] text-[#7A8499] break-words leading-tight">{{ couponForm.imageName }}</p>
+                </div>
+                }
 
-              <button type="button"
-                class="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-[#5E616B] text-white flex items-center justify-center"
-                (click)="removeCouponImage(couponImageInput)" aria-label="Quitar imagen">
-                <svg class="w-5 h-5" aria-hidden="true">
-                  <use href="assets/icons/sprite.svg#close-circle"></use>
+                <button type="button"
+                  class="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-[#5E616B] text-white flex items-center justify-center"
+                  (click)="removeCouponImage(couponImageInput)" aria-label="Quitar imagen">
+                  <svg class="w-5 h-5" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#close-circle"></use>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            }
+
+            @if (couponImageError) {
+            <p class="mt-2 text-sm text-[#C82333]">{{ couponImageError }}</p>
+            }
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-5">
+          <div>
+            <label class="text-sm text-[#1A2440] mb-1 block">Cantidad disponible</label>
+            <input [(ngModel)]="couponForm.cantidad" name="cantidad" type="number" placeholder="Agregar cantidad" min="1"
+              step="1" class="w-full rounded-xl px-4 py-3 text-[#0E225C] bg-[#F4F7FD]
+                  ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
+                  focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
+          </div>
+
+          <div>
+            <label class="text-sm text-[#1A2440] mb-1 block">Tipo de promoción</label>
+            <select [(ngModel)]="couponPromotionType" name="tipoPromocion" (ngModelChange)="onCreatePromotionTypeChange()"
+              class="w-full rounded-xl px-4 py-3 pr-10 text-[#0E225C] bg-[#F4F7FD]
+                    appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
+                    bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
+                    focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60">
+              <option value="" disabled hidden>Seleccionar tipo de promoción</option>
+              <option value="descuento">Descuento</option>
+              <option value="precio">Precio</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-sm text-[#1A2440] mb-1 block">{{ getCreatePromotionLabel() }}</label>
+            <input name="valorPromocion" type="number" [placeholder]="getCreatePromotionPlaceholder()" min="0"
+              [max]="couponPromotionType === 'descuento' ? 100 : null" step="0.01"
+              [value]="getCreatePromotionValue() ?? ''" (input)="onCreatePromotionValueInput(($any($event.target).value || '').toString())"
+              [disabled]="couponPromotionType === ''" class="w-full rounded-xl px-4 py-3 text-[#0E225C] bg-[#F4F7FD]
+                    ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
+                    disabled:opacity-70 disabled:cursor-not-allowed
+                    focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
+          </div>
+
+          <div>
+            <label class="text-sm text-[#1A2440] mb-1 block">Fecha inicio</label>
+            <div class="relative">
+              <input #modalStart type="date" [(ngModel)]="couponForm.fechaInicio" name="fechaInicio"
+                placeholder="dd/mm/aaaa" [min]="todayIso" class="calendar-input w-full rounded-xl px-4 py-3 pr-11 text-[#0E225C]
+									ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
+									focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" (click)="openDatePicker(modalStart)" />
+              <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
+                (click)="openDatePicker(modalStart)">
+                <svg class="w-6 h-6" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#calendar"></use>
                 </svg>
               </button>
             </div>
           </div>
-          }
 
-          @if (couponImageError) {
-          <p class="mt-2 text-sm text-[#C82333]">{{ couponImageError }}</p>
-          }
+          <div>
+            <label class="text-sm text-[#1A2440] mb-1 block">Fecha fin</label>
+            <div class="relative">
+              <input #modalEnd type="date" [(ngModel)]="couponForm.fechaFin" name="fechaFin" placeholder="dd/mm/aaaa"
+                [min]="couponForm.fechaInicio || todayIso" class="calendar-input w-full rounded-xl px-4 py-3 pr-11 text-[#0E225C]
+									ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
+									focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" (click)="openDatePicker(modalEnd)" />
+              <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
+                (click)="openDatePicker(modalEnd)">
+                <svg class="w-6 h-6" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#calendar"></use>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-sm text-[#1A2440] mb-1 block">Términos y condiciones</label>
+            <div class="relative">
+              <textarea [(ngModel)]="couponForm.terminos" name="terminos" maxlength="1000" placeholder="Agregar términos y condiciones"
+                class="w-full rounded-xl px-4 py-3 pb-8 text-[#0E225C] min-h-44 bg-[#F4F7FD]
+								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
+								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
+              <span class="absolute right-3 bottom-3 text-xs text-[#7A8499] pointer-events-none">
+                {{ (couponForm.terminos || '').length }}/1000
+              </span>
+            </div>
+          </div>
         </div>
 
         @if (createCouponError) {
@@ -910,100 +907,31 @@
     <div class="px-6 pb-6 flex-1 overflow-y-auto" [class.opacity-60]="editingCoupon || couponEditSuccess"
       [class.pointer-events-none]="editingCoupon || couponEditSuccess">
       <form class="grid grid-cols-1 md:grid-cols-2 gap-5" (submit)="$event.preventDefault(); submitEditCoupon()">
-        <!-- Título del cupón -->
-        <div>
-          <label class="text-sm text-[#1A2440] mb-1 block">Título del cupón</label>
-
-          <div class="relative">
-            <input [(ngModel)]="editForm.titulo" name="edit_titulo" type="text" maxlength="180" placeholder="Agregar título" class="w-full rounded-xl px-4 py-3 text-[#538CFF] bg-[#F4F7FD]
+        <div class="flex flex-col gap-5">
+          <div>
+            <label class="text-sm text-[#1A2440] mb-1 block">Título del cupón</label>
+            <div class="relative">
+              <input [(ngModel)]="editForm.titulo" name="edit_titulo" type="text" maxlength="180" placeholder="Agregar título" class="w-full rounded-xl px-4 py-3 text-[#538CFF] bg-[#F4F7FD]
 								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
 								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
-            <span class="absolute right-3 -bottom-5 text-xs text-[#7A8499]">
-              {{ (editForm.titulo || '').length }}/180
-            </span>
+              <span class="absolute right-3 -bottom-5 text-xs text-[#7A8499]">
+                {{ (editForm.titulo || '').length }}/180
+              </span>
+            </div>
           </div>
-        </div>
 
-        <!-- Cantidad disponible -->
-        <div>
-          <label class="text-sm text-[#1A2440] mb-1 block">Cantidad disponible</label>
-          <input [(ngModel)]="editForm.cantidad" name="edit_cantidad" type="number" placeholder="Agregar cantidad"
-            min="1" step="1" class="w-full rounded-xl px-4 py-3 text-[#538CFF] bg-[#F4F7FD]
-								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
-								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
-        </div>
-
-        <!-- Precio -->
-        <div>
-          <label class="text-sm text-[#1A2440] mb-1 block">Precio</label>
-          <input [(ngModel)]="editForm.precio" name="edit_precio" type="number" placeholder="Agregar precio" min="0"
-            step="0.01" class="w-full rounded-xl px-4 py-3 text-[#538CFF] bg-[#F4F7FD]
-								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
-								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
-        </div>
-
-        <!-- Descuento -->
-        <div>
-          <label class="text-sm text-[#1A2440] mb-1 block">Descuento (%)</label>
-          <input [(ngModel)]="editForm.descuento" name="edit_descuento" type="number" placeholder="Agregar descuento"
-            min="0" max="100" step="0.01" class="w-full rounded-xl px-4 py-3 text-[#538CFF] bg-[#F4F7FD]
-								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
-								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
-        </div>
-
-        <!-- Descripción -->
-        <div class="md:col-span-1">
-          <label class="text-sm text-[#1A2440] mb-1 block">Descripción</label>
-
-          <div class="relative">
-            <textarea [(ngModel)]="editForm.descripcion" name="edit_descripcion" maxlength="500" placeholder="Agregar descripción" class="w-full rounded-xl px-4 py-3 pb-8 text-[#538CFF] min-h-44
+          <div>
+            <label class="text-sm text-[#1A2440] mb-1 block">Descripción</label>
+            <div class="relative">
+              <textarea [(ngModel)]="editForm.descripcion" name="edit_descripcion" maxlength="500" placeholder="Agregar descripción" class="w-full rounded-xl px-4 py-3 pb-8 text-[#538CFF] min-h-44
 								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
 								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
-            <span class="absolute right-3 bottom-3 text-xs text-[#7A8499] pointer-events-none">
-              {{ (editForm.descripcion || '').length }}/500
-            </span>
-          </div>
-        </div>
-
-        <!-- Fechas: inicio y fin -->
-        <div class="md:col-span-1 flex flex-col gap-5">
-          <!-- Fecha inicio -->
-          <div>
-            <label class="text-sm text-[#1A2440] mb-1 block">Fecha inicio</label>
-            <div class="relative">
-              <input #editStart type="date" [(ngModel)]="editForm.fechaInicio" name="edit_fechaInicio"
-                placeholder="dd/mm/aaaa" [min]="todayIso" class="calendar-input w-full rounded-xl px-4 py-3 pr-11 text-[#538CFF]
-									ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
-									focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" (click)="openDatePicker(editStart)" />
-              <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
-                (click)="openDatePicker(editStart)">
-                <svg class="w-6 h-6" aria-hidden="true">
-                  <use href="assets/icons/sprite.svg#calendar"></use>
-                </svg>
-              </button>
+              <span class="absolute right-3 bottom-3 text-xs text-[#7A8499] pointer-events-none">
+                {{ (editForm.descripcion || '').length }}/500
+              </span>
             </div>
           </div>
 
-          <!-- Fecha fin -->
-          <div>
-            <label class="text-sm text-[#1A2440] mb-1 block">Fecha fin</label>
-            <div class="relative">
-              <input #editEnd type="date" [(ngModel)]="editForm.fechaFin" name="edit_fechaFin" placeholder="dd/mm/aaaa"
-                [min]="editForm.fechaInicio || todayIso" class="calendar-input w-full rounded-xl px-4 py-3 pr-11 text-[#538CFF]
-									ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
-									focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" (click)="openDatePicker(editEnd)" />
-              <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
-                (click)="openDatePicker(editEnd)">
-                <svg class="w-6 h-6" aria-hidden="true">
-                  <use href="assets/icons/sprite.svg#calendar"></use>
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Categoría + Estado -->
-        <div class="md:col-span-1 flex flex-col gap-5">
           <div>
             <label class="text-sm text-[#1A2440] mb-1 block">Categoría</label>
             <select [(ngModel)]="editForm.categoria" name="edit_categoria" class="w-full rounded-xl px-4 py-3 pr-10 text-[#538CFF] bg-[#F4F7FD]
@@ -1034,86 +962,159 @@
               <option>Borrador</option>
             </select>
           </div>
-        </div>
 
-        <!-- Términos y condiciones -->
-        <div class="md:col-span-1">
-          <label class="text-sm text-[#1A2440] mb-1 block">Términos y condiciones</label>
+          <div>
+            <label class="text-sm text-[#1A2440] mb-1 block">Imagen del cupón</label>
+            <input #editCouponImageInput type="file" class="hidden"
+              accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
+              (change)="onEditCouponImageSelected($event)" />
 
-          <div class="relative">
-            <textarea [(ngModel)]="editForm.terminos" name="edit_terminos" maxlength="1000" placeholder="Agregar términos y condiciones"
-            class="w-full rounded-xl px-4 py-3 pb-8 text-[#538CFF] min-h-44 bg-[#F4F7FD]
-								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
-								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
-            <span class="absolute right-3 bottom-3 text-xs text-[#7A8499] pointer-events-none">
-              {{ (editForm.terminos || '').length }}/1000
-            </span>
-          </div>
-        </div>
-
-        <!-- Actualizar imagen de cupón -->
-        <div class="md:col-span-1">
-          <label class="text-sm text-[#1A2440] mb-1 block">Imagen del cupón</label>
-          <input #editCouponImageInput type="file" class="hidden"
-            accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
-            (change)="onEditCouponImageSelected($event)" />
-
-          @if (editCouponImageLoading && !editForm.image) {
-          <div class="w-full border border-dashed border-[#75A2FF] rounded-3xl px-4 py-6 text-center bg-[#F8FBFF]">
-            <div class="flex flex-col items-center justify-center gap-2 text-[#1A2440]">
-              <svg class="animate-spin h-7 w-7 text-[#538CFF]" xmlns="http://www.w3.org/2000/svg" fill="none"
-                viewBox="0 0 24 24">
-                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
-                  d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"></path>
-              </svg>
-              <p class="text-base">Cargando imagen del cupón...</p>
+            @if (editCouponImageLoading && !editForm.image) {
+            <div class="w-full border border-dashed border-[#75A2FF] rounded-3xl px-4 py-6 text-center bg-[#F8FBFF]">
+              <div class="flex flex-col items-center justify-center gap-2 text-[#1A2440]">
+                <svg class="animate-spin h-7 w-7 text-[#538CFF]" xmlns="http://www.w3.org/2000/svg" fill="none"
+                  viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"
+                    d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"></path>
+                </svg>
+                <p class="text-base">Cargando imagen del cupón...</p>
+              </div>
             </div>
-          </div>
-          } @else if (!editForm.image) {
-          <button type="button"
-            class="w-full border border-dashed border-[#75A2FF] rounded-3xl px-4 py-5 text-center bg-[#F8FBFF] hover:bg-[#F1F6FF] transition"
-            (click)="pickEditCouponImage(editCouponImageInput)">
-            <div class="flex items-center justify-center gap-2 text-[#1A2440]">
-              <span class="text-xl font-medium">Subir Imagen de cupón</span>
-              <svg class="w-6 h-6" aria-hidden="true">
-                <use href="assets/icons/sprite.svg#document-upload"></use>
-              </svg>
-            </div>
-            <p class="mt-2 text-sm text-[#7A8499]">
-              Solo se permiten archivos tipo: JPG, JPEG, PNG, PDF. <br />(Tamaño máximo: 500 kb)
-            </p>
-          </button>
-          } @else {
-          <div class="flex items-start gap-3">
-            <div class="relative w-[124px] h-[124px]">
-              @if (editForm.imageMime.startsWith('image/')) {
-              <img [src]="editForm.image" alt="Vista previa del cupón"
-                class="w-[124px] h-[124px] rounded-xl object-cover bg-[#EFF3FB]" />
-              } @else {
-              <div
-                class="w-[124px] h-[124px] rounded-xl bg-[#EFF3FB] border border-[#D9E2F4] px-2 py-3 flex flex-col items-center justify-center text-center">
-                <svg class="w-7 h-7 text-[#1A2440] mb-1" aria-hidden="true">
+            } @else if (!editForm.image) {
+            <button type="button"
+              class="w-full border border-dashed border-[#75A2FF] rounded-3xl px-4 py-5 text-center bg-[#F8FBFF] hover:bg-[#F1F6FF] transition"
+              (click)="pickEditCouponImage(editCouponImageInput)">
+              <div class="flex items-center justify-center gap-2 text-[#1A2440]">
+                <span class="text-xl font-medium">Subir Imagen de cupón</span>
+                <svg class="w-6 h-6" aria-hidden="true">
                   <use href="assets/icons/sprite.svg#document-upload"></use>
                 </svg>
-                <p class="text-xs font-semibold text-[#1A2440]">PDF</p>
-                <p class="text-[10px] text-[#7A8499] break-words leading-tight">{{ editForm.imageName }}</p>
               </div>
-              }
+              <p class="mt-2 text-sm text-[#7A8499]">
+                Solo se permiten archivos tipo: JPG, JPEG, PNG, PDF. <br />(Tamaño máximo: 500 kb)
+              </p>
+            </button>
+            } @else {
+            <div class="flex items-start gap-3">
+              <div class="relative w-[124px] h-[124px]">
+                @if (editForm.imageMime.startsWith('image/')) {
+                <img [src]="editForm.image" alt="Vista previa del cupón"
+                  class="w-[124px] h-[124px] rounded-xl object-cover bg-[#EFF3FB]" />
+                } @else {
+                <div
+                  class="w-[124px] h-[124px] rounded-xl bg-[#EFF3FB] border border-[#D9E2F4] px-2 py-3 flex flex-col items-center justify-center text-center">
+                  <svg class="w-7 h-7 text-[#1A2440] mb-1" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#document-upload"></use>
+                  </svg>
+                  <p class="text-xs font-semibold text-[#1A2440]">PDF</p>
+                  <p class="text-[10px] text-[#7A8499] break-words leading-tight">{{ editForm.imageName }}</p>
+                </div>
+                }
 
-              <button type="button"
-                class="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-[#5E616B] text-white flex items-center justify-center"
-                (click)="removeEditCouponImage(editCouponImageInput)" aria-label="Quitar imagen">
-                <svg class="w-5 h-5" aria-hidden="true">
-                  <use href="assets/icons/sprite.svg#close-circle"></use>
+                <button type="button"
+                  class="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-[#5E616B] text-white flex items-center justify-center"
+                  (click)="removeEditCouponImage(editCouponImageInput)" aria-label="Quitar imagen">
+                  <svg class="w-5 h-5" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#close-circle"></use>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            }
+
+            @if (editCouponImageError) {
+            <p class="mt-2 text-sm text-[#C82333]">{{ editCouponImageError }}</p>
+            }
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-5">
+          <div>
+            <label class="text-sm text-[#1A2440] mb-1 block">Cantidad disponible</label>
+            <input [(ngModel)]="editForm.cantidad" name="edit_cantidad" type="number" placeholder="Agregar cantidad"
+              [min]="editMinAvailableQuantity > 0 ? editMinAvailableQuantity : 1" step="1" class="w-full rounded-xl px-4 py-3 text-[#538CFF] bg-[#F4F7FD]
+								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
+								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
+            @if (editMinAvailableQuantity > 0) {
+            <p class="mt-1 text-xs text-[#7A8499]">
+              Mínimo permitido: {{ editMinAvailableQuantity }} (cupones adquiridos).
+            </p>
+            }
+            @if (editForm.cantidad != null && editForm.cantidad < editMinAvailableQuantity) {
+            <p class="mt-1 text-xs text-[#C82333]">
+              La cantidad disponible no puede ser menor a {{ editMinAvailableQuantity }}.
+            </p>
+            }
+          </div>
+
+          <div>
+            <label class="text-sm text-[#1A2440] mb-1 block">Tipo de promoción</label>
+            <select [(ngModel)]="editPromotionType" name="edit_tipoPromocion" (ngModelChange)="onEditPromotionTypeChange()"
+              class="w-full rounded-xl px-4 py-3 pr-10 text-[#538CFF] bg-[#F4F7FD]
+								appearance-none ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
+								bg-[url('/assets/icons/select-arrow.png')] bg-no-repeat bg-[right_1rem_center] bg-[length:16px]
+								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60">
+              <option value="" disabled hidden>Seleccionar tipo de promoción</option>
+              <option value="descuento">Descuento</option>
+              <option value="precio">Precio</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="text-sm text-[#1A2440] mb-1 block">{{ getEditPromotionLabel() }}</label>
+            <input name="edit_valorPromocion" type="number" [placeholder]="getEditPromotionPlaceholder()" min="0"
+              [max]="editPromotionType === 'descuento' ? 100 : null" step="0.01"
+              [value]="getEditPromotionValue() ?? ''" (input)="onEditPromotionValueInput(($any($event.target).value || '').toString())"
+              [disabled]="editPromotionType === ''" class="w-full rounded-xl px-4 py-3 text-[#538CFF] bg-[#F4F7FD]
+								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
+								disabled:opacity-70 disabled:cursor-not-allowed
+								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" />
+          </div>
+
+          <div>
+            <label class="text-sm text-[#1A2440] mb-1 block">Fecha inicio</label>
+            <div class="relative">
+              <input #editStart type="date" [(ngModel)]="editForm.fechaInicio" name="edit_fechaInicio"
+                placeholder="dd/mm/aaaa" [min]="todayIso" class="calendar-input w-full rounded-xl px-4 py-3 pr-11 text-[#538CFF]
+									ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
+									focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" (click)="openDatePicker(editStart)" />
+              <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
+                (click)="openDatePicker(editStart)">
+                <svg class="w-6 h-6" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#calendar"></use>
                 </svg>
               </button>
             </div>
           </div>
-          }
 
-          @if (editCouponImageError) {
-          <p class="mt-2 text-sm text-[#C82333]">{{ editCouponImageError }}</p>
-          }
+          <div>
+            <label class="text-sm text-[#1A2440] mb-1 block">Fecha fin</label>
+            <div class="relative">
+              <input #editEnd type="date" [(ngModel)]="editForm.fechaFin" name="edit_fechaFin" placeholder="dd/mm/aaaa"
+                [min]="editForm.fechaInicio || todayIso" class="calendar-input w-full rounded-xl px-4 py-3 pr-11 text-[#538CFF]
+									ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC] bg-[#F4F7FD]
+									focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60" (click)="openDatePicker(editEnd)" />
+              <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
+                (click)="openDatePicker(editEnd)">
+                <svg class="w-6 h-6" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#calendar"></use>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="text-sm text-[#1A2440] mb-1 block">Términos y condiciones</label>
+            <div class="relative">
+              <textarea [(ngModel)]="editForm.terminos" name="edit_terminos" maxlength="1000" placeholder="Agregar términos y condiciones"
+              class="w-full rounded-xl px-4 py-3 pb-8 text-[#538CFF] min-h-44 bg-[#F4F7FD]
+								ring-1 ring-[#E4EAF5] placeholder:text-[#A0A7BC]
+								focus:outline-none focus:ring-2 focus:ring-[#0E225C]/60"></textarea>
+              <span class="absolute right-3 bottom-3 text-xs text-[#7A8499] pointer-events-none">
+                {{ (editForm.terminos || '').length }}/1000
+              </span>
+            </div>
+          </div>
         </div>
 
         @if (editCouponError) {
