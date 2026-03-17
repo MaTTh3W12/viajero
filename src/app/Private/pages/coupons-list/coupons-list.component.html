@@ -1,6 +1,6 @@
 <app-topbar location="Gestión de cupones">
 </app-topbar>
-<app-filter-bar variant="coupons" [role]="role" (createCoupon)="onCreateCoupon($event)" (updateCoupon)="onUpdateCoupon($event)" (deleteCoupon)="onDeleteCoupon($event)">
+<app-filter-bar variant="coupons" [role]="role" (createCoupon)="onCreateCoupon($event)" (updateCoupon)="onUpdateCoupon($event)" (deleteCoupon)="onDeleteCoupon($event)" (couponStatusFilterChange)="onCouponStatusFilterChange($event)">
 </app-filter-bar>
 
 <h2 class="lg:hidden text-xl font-semibold text-[#0E225C] px-3 pt-4 pb-2">Gestión de cupones</h2>

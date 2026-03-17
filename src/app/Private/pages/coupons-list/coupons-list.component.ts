@@ -19,7 +19,9 @@ import { CategoryService } from '../../../service/category.service';
   styleUrl: './coupons-list.component.css',
 })
 export class CouponsListComponent {
+  allCoupons: Coupon[] = [];
   coupons: Coupon[] = [];
+  couponStatusFilter: 'all' | 'Borrador' | 'Publicado' = 'all';
   @ViewChild(FilterBarComponent) filterBar!: FilterBarComponent;
 
   private currentUserDbId: string | number | null = null;
@@ -101,6 +103,11 @@ export class CouponsListComponent {
     return this.auth.getRole() ?? 'usuario';
   }
 
+  onCouponStatusFilterChange(filter: 'all' | 'Borrador' | 'Publicado'): void {
+    this.couponStatusFilter = filter;
+    this.refreshVisibleCoupons();
+  }
+
   async onCreateCoupon(payload: {
     titulo: string;
     cantidad: number | null;
@@ -133,8 +140,7 @@ export class CouponsListComponent {
           estado: payload.estado,
         };
 
-        this.coupons = [nuevo, ...this.coupons];
-        this.cdr.detectChanges();
+        this.setCoupons([nuevo, ...this.allCoupons]);
         payload.onSuccess();
         return;
       }
@@ -204,7 +210,7 @@ export class CouponsListComponent {
   }): Promise<void> {
     try {
       if (this.role !== 'empresa' || !this.auth.isKeycloakLoggedIn()) {
-        this.coupons = this.coupons.map((coupon) => {
+        const updatedCoupons = this.allCoupons.map((coupon) => {
           if (coupon.id !== payload.id) return coupon;
           return {
             ...coupon,
@@ -221,7 +227,7 @@ export class CouponsListComponent {
             terminos: payload.terminos,
           };
         });
-        this.cdr.detectChanges();
+        this.setCoupons(updatedCoupons);
         payload.onSuccess();
         return;
       }
@@ -232,13 +238,13 @@ export class CouponsListComponent {
         return;
       }
 
-      const couponInView = this.coupons.some((coupon) => coupon.id === payload.id);
+      const couponInView = this.allCoupons.some((coupon) => coupon.id === payload.id);
       if (!couponInView) {
         payload.onError('No puedes actualizar un cupón que no aparece en tu listado.');
         return;
       }
 
-      const currentCoupon = this.coupons.find((coupon) => coupon.id === payload.id) ?? null;
+      const currentCoupon = this.allCoupons.find((coupon) => coupon.id === payload.id) ?? null;
       if (currentCoupon) {
         const total = currentCoupon.disponiblesTotal ?? currentCoupon.disponibles ?? 0;
         const available = currentCoupon.disponibles ?? 0;
@@ -350,7 +356,7 @@ export class CouponsListComponent {
     onError: (message?: string) => void;
   }): Promise<void> {
     try {
-      const couponToDelete = this.coupons.find((coupon) => coupon.id === payload.id) ?? null;
+      const couponToDelete = this.allCoupons.find((coupon) => coupon.id === payload.id) ?? null;
       if (!couponToDelete) {
         payload.onError('No puedes eliminar un cupón que no aparece en tu listado.');
         return;
@@ -368,8 +374,7 @@ export class CouponsListComponent {
       }
 
       if (this.role !== 'empresa' || !this.auth.isKeycloakLoggedIn()) {
-        this.coupons = this.coupons.filter((coupon) => coupon.id !== payload.id);
-        this.cdr.detectChanges();
+        this.setCoupons(this.allCoupons.filter((coupon) => coupon.id !== payload.id));
         payload.onSuccess();
         return;
       }
@@ -429,11 +434,12 @@ export class CouponsListComponent {
             imageMimeType = this.normalizeMimeType(imageData.image_mime_type);
             imagePreview = this.toDataUrl(imageData.image_base64, imageMimeType);
 
-            const current = this.coupons.find((coupon) => coupon.id === row.id);
+            const current = this.allCoupons.find((coupon) => coupon.id === row.id);
             if (current) {
               current.imagePreview = imagePreview;
               current.imageMimeType = imageMimeType;
             }
+            this.refreshVisibleCoupons();
             this.filterBar.setDeleteCouponImagePreview(imagePreview, imageMimeType);
           } else {
             this.filterBar.setDeleteCouponImagePreview(null, '');
@@ -477,11 +483,12 @@ export class CouponsListComponent {
             imageMimeType = this.normalizeMimeType(imageData.image_mime_type);
             imagePreview = this.toDataUrl(imageData.image_base64, imageMimeType);
 
-            const current = this.coupons.find((coupon) => coupon.id === row.id);
+            const current = this.allCoupons.find((coupon) => coupon.id === row.id);
             if (current) {
               current.imagePreview = imagePreview;
               current.imageMimeType = imageMimeType;
             }
+            this.refreshVisibleCoupons();
             this.filterBar.setViewCouponImagePreview(imagePreview, imageMimeType);
           } else {
             this.filterBar.setViewCouponImagePreview(null, '');
@@ -545,8 +552,7 @@ export class CouponsListComponent {
   private loadCouponsFromMock(): void {
     this.service.getCoupons().subscribe((data) => {
       console.log('[COUPONS] mock data received', { rows: data.length });
-      this.coupons = data.map((coupon) => this.decorateCouponForTable(coupon));
-      this.cdr.detectChanges();
+      this.setCoupons(data.map((coupon) => this.decorateCouponForTable(coupon)));
     });
   }
 
@@ -560,8 +566,7 @@ export class CouponsListComponent {
 
     if (!token) {
       console.warn('[COUPONS] loadCompanyCouponsFromApi aborted: token missing');
-      this.coupons = [];
-      this.cdr.detectChanges();
+      this.setCoupons([]);
       return;
     }
 
@@ -584,7 +589,7 @@ export class CouponsListComponent {
 
     console.log('[COUPONS] filtered company coupons', { rows: mine.length });
 
-    this.coupons = mine.map((row) => ({
+    this.setCoupons(mine.map((row) => ({
       id: row.id,
       titulo: row.title,
       descripcion: this.auth.user?.companyName || this.auth.user?.username || row.description || '',
@@ -603,10 +608,9 @@ export class CouponsListComponent {
       descuento: this.toFiniteNumber(row.price_discount),
       imagePreview: null,
       imageMimeType: '',
-    }));
+    })));
 
-    console.log('[COUPONS] table rows assigned', { rows: this.coupons.length });
-    this.cdr.detectChanges();
+    console.log('[COUPONS] table rows assigned', { rows: this.allCoupons.length });
 
     // load images for each coupon so the table can show previews immediately
     try {
@@ -632,8 +636,8 @@ export class CouponsListComponent {
    * per-coupon basis are logged but do not abort the whole operation.
    */
   private async loadImagesForCoupons(token: string): Promise<void> {
-    if (!token || this.coupons.length === 0) return;
-    const promises = this.coupons.map(async (coupon) => {
+    if (!token || this.allCoupons.length === 0) return;
+    const promises = this.allCoupons.map(async (coupon) => {
       try {
         const imageData = await firstValueFrom(this.couponService.getCouponImage(token, coupon.id));
         if (imageData?.image_base64) {
@@ -647,8 +651,22 @@ export class CouponsListComponent {
     });
 
     await Promise.all(promises);
-    // ensure table re-renders after all previews are set
+    this.refreshVisibleCoupons();
+  }
+
+  private setCoupons(rows: Coupon[]): void {
+    this.allCoupons = rows;
+    this.refreshVisibleCoupons();
+  }
+
+  private refreshVisibleCoupons(): void {
+    this.coupons = this.applyStatusFilter(this.allCoupons);
     this.cdr.detectChanges();
+  }
+
+  private applyStatusFilter(rows: Coupon[]): Coupon[] {
+    if (this.couponStatusFilter === 'all') return rows;
+    return rows.filter((coupon) => coupon.estado === this.couponStatusFilter);
   }
 
   private normalizeMimeType(mimeType: string | null | undefined): string {
