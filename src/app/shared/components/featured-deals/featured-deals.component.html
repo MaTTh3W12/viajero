@@ -41,7 +41,7 @@
         <img [src]="getCardImage(idx)" [alt]="coupon.title" class="w-[120px] h-[150px] object-cover rounded-[18px] flex-shrink-0" />
         <div class="flex flex-col justify-between py-1 w-full min-w-0">
           <div>
-            <p class="text-[11px] text-gray-400 font-museo uppercase tracking-wide mb-1">{{ getCategoryName(coupon.category_id) }}</p>
+            <p class="text-[11px] text-gray-400 font-museo uppercase tracking-wide mb-1 truncate">{{ getCouponCommercialName(coupon) }}</p>
             <h3 class="text-[#0E225C] text-[16px] font-bold leading-tight mb-3 font-museo">{{ truncateTitle(coupon.title) }}</h3>
             <span class="inline-block bg-[#FFD6D6] text-[#FF3B3B] text-[12px] font-extrabold px-3 py-1.5 rounded-lg">{{ getBadgeLabel(coupon) }}</span>
           </div>
@@ -77,7 +77,7 @@
         <img [src]="getCardImage(idx)" [alt]="coupon.title" class="w-[120px] h-[150px] object-cover rounded-[18px] flex-shrink-0" />
         <div class="flex flex-col justify-between py-1 w-full min-w-0">
           <div>
-            <p class="text-[11px] text-gray-400 font-museo uppercase tracking-wide mb-1">{{ getCategoryName(coupon.category_id) }}</p>
+            <p class="text-[11px] text-gray-400 font-museo uppercase tracking-wide mb-1 truncate">{{ getCouponCommercialName(coupon) }}</p>
             <h3 class="text-[#0E225C] text-[16px] font-bold leading-tight mb-3 font-museo">{{ truncateTitle(coupon.title) }}</h3>
             <span class="inline-block bg-[#FFD6D6] text-[#FF3B3B] text-[12px] font-extrabold px-3 py-1.5 rounded-lg">{{ getBadgeLabel(coupon) }}</span>
           </div>

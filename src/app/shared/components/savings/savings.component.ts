@@ -1,8 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { Coupon, CouponService } from '../../../service/coupon.service';
-import { finalize, map, take, timeout } from 'rxjs';
+import { Coupon, CouponListResult, CouponService } from '../../../service/coupon.service';
+import { finalize, map, Observable, take, timeout } from 'rxjs';
 
 @Component({
   selector: 'app-savings',
@@ -23,9 +23,9 @@ export class SavingsComponent implements OnInit, OnChanges {
   currentPage = 1;
   loading = false;
   error = '';
-  readonly fixedCouponTitle = 'EL SALVADOR TOURS';
   readonly fixedCouponBrand = 'El Salvador Tours';
   readonly fixedAddress = 'San Salvador, El Salvador';
+  readonly defaultCommercialName = 'Comercio participante';
   private couponsFoundEmitVersion = 0;
 
   private readonly cardImages = [
@@ -163,6 +163,11 @@ export class SavingsComponent implements OnInit, OnChanges {
     return address || this.fixedAddress;
   }
 
+  getCouponCommercialName(coupon: Coupon): string {
+    const commercialName = coupon.user?.company_commercial_name?.trim();
+    return commercialName || this.defaultCommercialName;
+  }
+
   goToPage(page: number): void {
     if (!this.enablePagination) return;
     if (page < 1 || page > this.totalPages) return;
@@ -174,10 +179,10 @@ export class SavingsComponent implements OnInit, OnChanges {
     this.loading = true;
     this.error = '';
 
-    const request$ = this.useHomeFeaturedCoupons
+    const request$: Observable<Coupon[]> = this.useHomeFeaturedCoupons
       ? this.couponService.getHomeFeaturedCoupons()
       : this.couponService.getPublicCoupons({ limit: 40, offset: 0 }).pipe(
-          map((response) => (response.rows ?? []).filter((coupon) => coupon.published))
+          map((response: CouponListResult) => response.rows ?? [])
         );
 
     request$
@@ -190,11 +195,11 @@ export class SavingsComponent implements OnInit, OnChanges {
         })
       )
       .subscribe({
-        next: (coupons) => {
+        next: (coupons: Coupon[]) => {
           this.coupons = coupons;
           this.applyFiltersAndSort();
         },
-        error: (error) => {
+        error: (error: unknown) => {
           console.error('[SAVINGS] Error loading public coupons', error);
           this.error = 'No se pudieron cargar los cupones en este momento.';
           this.coupons = [];
