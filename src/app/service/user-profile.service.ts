@@ -156,7 +156,6 @@ export class UserProfileService {
         $last_name: String,
         $document_id: String,
         $document_type_id: String,
-        $phone: String,
         $country: bpchar,
         $city: String
       ) {
@@ -166,7 +165,6 @@ export class UserProfileService {
             last_name: $last_name,
             document_id: $document_id,
             document_type_id: $document_type_id,
-            phone: $phone,
             country: $country,
             city: $city,
           },
@@ -177,7 +175,6 @@ export class UserProfileService {
               last_name,
               document_id,
               document_type_id,
-              phone,
               country,
               city,
               updated_at
@@ -209,7 +206,6 @@ export class UserProfileService {
         $company_description: String,
         $company_address: String,
         $company_profile_completed: Boolean,
-        $phone: String,
         $country: bpchar,
         $city: String
       ) {
@@ -223,7 +219,6 @@ export class UserProfileService {
             company_description: $company_description,
             company_address: $company_address,
             company_profile_completed: $company_profile_completed,
-            phone: $phone,
             country: $country,
             city: $city
           },
@@ -238,7 +233,6 @@ export class UserProfileService {
               company_description,
               company_address,
               company_profile_completed,
-              phone,
               country,
               city,
               updated_at
@@ -336,7 +330,6 @@ export class UserProfileService {
             company_logo_url
             company_description
             company_address
-            phone
             country
             city
             email
@@ -362,7 +355,6 @@ export class UserProfileService {
           company_logo_url
           company_description
           company_address
-          phone
           country
           city
           email

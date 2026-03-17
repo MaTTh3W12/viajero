@@ -8,9 +8,12 @@
       Historial de mensajes
     </h1>
 
-    <button class="flex items-center gap-2 bg-[#538CFF] text-white px-5 py-2 rounded-full hover:bg-[#3c74e6] transition">
+    <button
+      (click)="openComposeModal()"
+      class="flex items-center gap-2 bg-[#538CFF] text-white px-5 py-2 rounded-full hover:bg-[#3c74e6] transition"
+    >
       <svg class="w-5 h-5">
-        <use href="assets/icons/sprite.svg#add"></use>
+        <use href="assets/icons/sprite.svg#sms-tracking"></use>
       </svg>
       Nuevo mensaje
     </button>
@@ -32,8 +35,14 @@
       [ngClass]="activeTab() === 'sent'
         ? 'bg-[#0E225C] text-white'
         : 'border border-gray-300 text-[#0E225C] hover:bg-white'"
-      class="px-4 py-2 rounded-lg transition">
+      class="px-4 py-2 rounded-lg transition flex items-center gap-2">
       Enviado
+      <span
+        *ngIf="unreadCount() > 0"
+        class="text-xs px-2 py-0.5 rounded-full bg-white text-[#0E225C]"
+      >
+        {{ unreadCount() }}
+      </span>
     </button>
 
     <button
@@ -57,6 +66,21 @@
 
   <!-- Lista -->
   <div class="space-y-5">
+
+    <div *ngIf="isLoading()" class="bg-white rounded-2xl border border-[#E2E8F0] p-6 text-[#0E225C]">
+      Cargando mensajes...
+    </div>
+
+    <div *ngIf="!isLoading() && errorMessage()" class="bg-white rounded-2xl border border-[#E2E8F0] p-6 text-red-600">
+      {{ errorMessage() }}
+    </div>
+
+    <div
+      *ngIf="!isLoading() && !errorMessage() && paginatedMessages().length === 0"
+      class="bg-white rounded-2xl border border-[#E2E8F0] p-6 text-gray-500"
+    >
+      No hay mensajes para el filtro seleccionado.
+    </div>
 
     <div
       *ngFor="let message of paginatedMessages()"
@@ -110,7 +134,7 @@
   </div>
 
   <!-- Paginación -->
-  <div class="flex justify-center items-center gap-3 mt-8">
+  <div *ngIf="totalPages() > 1" class="flex justify-center items-center gap-3 mt-8">
     <button
       *ngFor="let page of [].constructor(totalPages()) ; let i = index"
       (click)="goToPage(i+1)"
@@ -122,4 +146,81 @@
     </button>
   </div>
 
+</div>
+
+<div
+  *ngIf="isComposeModalOpen()"
+  class="fixed inset-0 z-50 bg-[#0E225C]/40 flex items-center justify-center p-4"
+>
+  <div class="w-full max-w-2xl bg-white rounded-2xl border border-[#E2E8F0] shadow-xl p-6 md:p-8">
+    <div class="flex items-center justify-between mb-6">
+      <h2 class="text-xl md:text-2xl font-semibold text-[#0E225C]">Nuevo mensaje</h2>
+      <button
+        type="button"
+        (click)="closeComposeModal()"
+        class="w-9 h-9 rounded-full border border-[#E2E8F0] flex items-center justify-center text-[#0E225C] hover:bg-[#F8FAFC] transition"
+      >
+        <svg class="w-5 h-5">
+          <use href="assets/icons/sprite.svg#close-circle"></use>
+        </svg>
+      </button>
+    </div>
+
+    <form (ngSubmit)="submitComposeMock()" class="space-y-5">
+      <div>
+        <label class="block text-sm font-medium text-[#0E225C] mb-2">Asunto</label>
+        <input
+          type="text"
+          [ngModel]="composeSubject()"
+          (ngModelChange)="composeSubject.set($event)"
+          name="subject"
+          placeholder="Escribe el asunto"
+          class="w-full rounded-xl border border-[#CBD5E1] px-4 py-3 outline-none focus:border-[#538CFF]"
+        />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-[#0E225C] mb-2">Tipo de mensaje</label>
+        <select
+          [ngModel]="composeType()"
+          (ngModelChange)="composeType.set($event)"
+          name="type"
+          class="w-full rounded-xl border border-[#CBD5E1] px-4 py-3 outline-none focus:border-[#538CFF]"
+        >
+          <option value="Consulta">Consulta</option>
+          <option value="Incidencia">Incidencia</option>
+          <option value="Soporte">Soporte</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-[#0E225C] mb-2">Mensaje</label>
+        <textarea
+          [ngModel]="composeMessage()"
+          (ngModelChange)="composeMessage.set($event)"
+          name="message"
+          rows="6"
+          placeholder="Describe tu consulta o incidencia"
+          class="w-full rounded-xl border border-[#CBD5E1] px-4 py-3 outline-none focus:border-[#538CFF] resize-none"
+        ></textarea>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button
+          type="button"
+          (click)="closeComposeModal()"
+          class="px-5 py-2 rounded-full border border-[#CBD5E1] text-[#0E225C] hover:bg-[#F8FAFC] transition"
+        >
+          Cancelar
+        </button>
+
+        <button
+          type="submit"
+          class="px-6 py-2 rounded-full bg-[#538CFF] text-white hover:bg-[#3c74e6] transition"
+        >
+          Enviar
+        </button>
+      </div>
+    </form>
+  </div>
 </div>

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, map, of } from 'rxjs';
 
 declare global {
   interface Window {
@@ -92,6 +92,10 @@ interface TransferCouponData {
 
 interface GetCouponsByIdsData {
   viajerosv_coupons: Coupon[];
+}
+
+interface GetUsersBasicByIdsData {
+  viajerosv_users: UserBasic[];
 }
 
 interface HasAcquiredCouponData {
@@ -198,6 +202,14 @@ export interface CouponOwner {
   user_id: number | string;
 }
 
+export interface UserBasic {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  company_commercial_name?: string | null;
+}
+
 export interface AcquiredCoupon {
   id: number | string;
   coupon_id: number | string;
@@ -216,6 +228,17 @@ export interface CouponAcquired {
   unique_code: string;
   acquired_at: string;
   redeemed_at: string | null;
+  coupon?: {
+    title: string | null;
+    description: string | null;
+    price_discount: string | number | null;
+    end_date: string | null;
+  } | null;
+  userByValidatedBy?: {
+    first_name: string | null;
+    last_name: string | null;
+    email?: string | null;
+  } | null;
 }
 
 export interface TransferCouponResult {
@@ -257,6 +280,7 @@ export interface GetCouponsVariables {
 export interface GetCouponsAcquiredVariables {
   limit?: number;
   offset?: number;
+  where?: Record<string, unknown>;
 }
 
 export interface InsertCouponVariables {
@@ -606,14 +630,19 @@ export class CouponService {
 
   getCouponsAcquired(
     token: string,
-    variables: GetCouponsAcquiredVariables = { limit: 10, offset: 0 }
+    variables: GetCouponsAcquiredVariables = { limit: 10, offset: 0, where: { redeemed: { _eq: true } } }
   ): Observable<CouponAcquiredListResult> {
     const query = `
-      query GetCouponsAcquired($limit: Int = 10, $offset: Int = 0) {
+      query GetCouponsAcquired(
+        $limit: Int!,
+        $offset: Int!,
+        $where: viajerosv_coupons_acquired_bool_exp!
+      ) {
         viajerosv_coupons_acquired(
           limit: $limit,
           offset: $offset,
-          order_by: { acquired_at: asc, redeemed_at: asc }
+          order_by: { acquired_at: desc },
+          where: $where
         ) {
           coupon_id
           id
@@ -623,8 +652,19 @@ export class CouponService {
           unique_code
           acquired_at
           redeemed_at
+          coupon {
+            title
+            description
+            price_discount
+            end_date
+          }
+          userByValidatedBy {
+            first_name
+            last_name
+            email
+          }
         }
-        viajerosv_coupons_acquired_aggregate {
+        viajerosv_coupons_acquired_aggregate(where: $where) {
           aggregate {
             count
           }
@@ -666,6 +706,29 @@ export class CouponService {
 
     return this.executeOperation<GetCouponsByIdsData, { ids: number[] }>(token, query, { ids: couponIds }).pipe(
       map((data) => data.viajerosv_coupons ?? [])
+    );
+  }
+
+  getUsersBasicByIds(token: string, userIds: string[]): Observable<UserBasic[]> {
+    const uniqueIds = [...new Set(userIds.filter((id) => !!id))];
+    if (uniqueIds.length === 0) {
+      return of([]);
+    }
+
+    const query = `
+      query GetUsersBasicByIds($ids: [uuid!]!) {
+        viajerosv_users(where: { id: { _in: $ids } }) {
+          id
+          first_name
+          last_name
+          email
+          company_commercial_name
+        }
+      }
+    `;
+
+    return this.executeOperation<GetUsersBasicByIdsData, { ids: string[] }>(token, query, { ids: uniqueIds }).pipe(
+      map((data) => data.viajerosv_users ?? [])
     );
   }
 
