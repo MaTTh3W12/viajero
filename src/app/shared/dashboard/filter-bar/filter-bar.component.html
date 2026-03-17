@@ -305,10 +305,14 @@
     <div class="flex items-center gap-3 px-3 md:px-0">
       <!-- Input -->
       <input type="text" placeholder="Ingresar código de cupón o nombre de usuario"
+        [(ngModel)]="historialCanjesSearch"
+        (keyup.enter)="submitHistorialCanjesFilters()"
         class="flex-1 bg-white rounded-xl px-4 py-3 text-[#0E225C] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40" />
 
       <!-- Botón Buscar -->
       <button
+        type="button"
+        (click)="submitHistorialCanjesFilters()"
         class="w-11 md:w-auto h-11 flex items-center justify-center bg-[#538CFF] text-white md:px-6 md:gap-2 rounded-full transition-all duration-300 hover:bg-[#3F7BFF] hover:shadow-md active:scale-95">
         <svg class="w-5 h-5" aria-hidden="true">
           <use href="assets/icons/sprite.svg#search"></use>
@@ -336,8 +340,10 @@
         <label class="text-sm text-[#0E225C] mb-1 block">Fecha inicio</label>
         <div class="relative">
           <input #statsStartDate type="date" placeholder="dd/mm/aaaa"
+            [(ngModel)]="historialCanjesStartDate"
             class="calendar-input w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C] placeholder:text-[#A0A7BC] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
-            (click)="openDatePicker(statsStartDate)" />
+            (click)="openDatePicker(statsStartDate)"
+            (change)="submitHistorialCanjesFilters()" />
           <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
             (click)="openDatePicker(statsStartDate)">
             <svg class="w-6 h-6" aria-hidden="true">
@@ -352,8 +358,10 @@
         <label class="text-sm text-[#0E225C] mb-1 block">Fecha fin</label>
         <div class="relative">
           <input #statsEndDate type="date" placeholder="dd/mm/aaaa"
+            [(ngModel)]="historialCanjesEndDate"
             class="calendar-input w-full bg-white rounded-xl px-4 py-3 pr-11 text-[#0E225C] placeholder:text-[#A0A7BC] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
-            (click)="openDatePicker(statsEndDate)" />
+            (click)="openDatePicker(statsEndDate)"
+            (change)="submitHistorialCanjesFilters()" />
           <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#538CFF]"
             (click)="openDatePicker(statsEndDate)">
             <svg class="w-6 h-6" aria-hidden="true">
@@ -367,6 +375,8 @@
       <div>
         <label class="text-sm text-[#0E225C] mb-1 block">Responsable del canje (empresa)</label>
         <input type="text" placeholder="Buscar por responsable de canje"
+          [(ngModel)]="historialCanjesResponsible"
+          (keyup.enter)="submitHistorialCanjesFilters()"
           class="w-full bg-white rounded-xl px-4 py-3 text-[#0E225C] placeholder:text-[#A0A7BC] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40" />
       </div>
     </div>

@@ -3,7 +3,10 @@
 <app-topbar location="Historial de canjes"></app-topbar>
 
 <!-- Barra de búsqueda con FilterBar -->
-<app-filter-bar variant="historial-canjes" [role]="role"></app-filter-bar>
+<app-filter-bar
+	variant="historial-canjes"
+	[role]="role"
+	(historialCanjesFilterChange)="onFiltersChange($event)"></app-filter-bar>
 
 <h2 class="lg:hidden text-xl font-semibold text-[#0E225C] px-3 pt-4 pb-2">Historial de canjes</h2>
 
@@ -41,7 +44,20 @@
 				</thead>
 
 				<tbody>
-					@for (row of pagedHistorial; track row.fechaHora + row.usuario + row.cuponOferta) {
+					@if (loading) {
+						<tr class="border-b border-[#D5DBE5]">
+							<td class="py-4 px-4 text-center text-[#3E4A66]" colspan="4">Cargando historial...</td>
+						</tr>
+					} @else if (loadError) {
+						<tr class="border-b border-[#D5DBE5]">
+							<td class="py-4 px-4 text-center text-red-600" colspan="4">{{ loadError }}</td>
+						</tr>
+					} @else if (pagedHistorial.length === 0) {
+						<tr class="border-b border-[#D5DBE5]">
+							<td class="py-4 px-4 text-center text-[#3E4A66]" colspan="4">No hay canjes para los filtros seleccionados.</td>
+						</tr>
+					} @else {
+					@for (row of pagedHistorial; track row.id) {
 						<tr class="border-b border-[#D5DBE5] hover:bg-[#F9FBFF] transition-colors">
 							<td class="py-3 px-4">{{ row.fechaHora }}</td>
 							<td class="py-3 px-4">
@@ -53,6 +69,7 @@
 							<td class="py-3 px-4">{{ row.usuario }}</td>
 							<td class="py-3 px-4">{{ row.responsableCanje }}</td>
 						</tr>
+					}
 					}
 				</tbody>
 			</table>
