@@ -496,12 +496,50 @@ export class CouponsListComponent {
     }
   }
 
-  openStats(row: Coupon): void {
+  async openStats(row: Coupon): Promise<void> {
     if (typeof row.onStats === 'function') {
       row.onStats(row);
       return;
     }
-    console.log('[COUPONS] stats action', { id: row.id, title: row.titulo });
+
+    if (!this.filterBar) return;
+
+    const publicados = row.disponiblesTotal ?? row.disponibles ?? 0;
+    const adquiridos = this.getAcquiredCouponsCount(row);
+
+    this.filterBar.openCouponStatistics({
+      id: row.id,
+      titulo: row.titulo,
+      fechaInicio: row.fechaInicio,
+      fechaFin: row.fechaFin,
+      publicados,
+      adquiridos,
+      canjeados: 0,
+    });
+    this.filterBar.setCouponStatisticsLoading(true);
+
+    if (this.role !== 'empresa' || !this.auth.isKeycloakLoggedIn()) {
+      this.filterBar.setCouponStatisticsLoading(false);
+      return;
+    }
+
+    const token = this.auth.token;
+    if (!token) {
+      this.filterBar.setCouponStatisticsLoading(false);
+      return;
+    }
+
+    try {
+      const stats = await firstValueFrom(this.couponService.getCouponStatistics(token, row.id));
+      this.filterBar.updateCouponStatistics({
+        adquiridos: stats.acquired,
+        canjeados: stats.redeemed,
+      });
+    } catch (error) {
+      console.warn('[COUPONS] No se pudieron cargar estadísticas del cupón', { id: row.id, error });
+    } finally {
+      this.filterBar.setCouponStatisticsLoading(false);
+    }
   }
 
   private loadCouponsFromMock(): void {
