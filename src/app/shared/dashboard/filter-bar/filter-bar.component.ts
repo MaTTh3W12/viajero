@@ -95,6 +95,7 @@ export class FilterBarComponent {
     onSuccess: () => void;
     onError: (message?: string) => void;
   }>();
+  @Output() couponStatusFilterChange = new EventEmitter<'all' | 'Borrador' | 'Publicado'>();
 
   // eventos específicos para canje de cupones
   @Output() scanQr = new EventEmitter<void>();
@@ -123,6 +124,8 @@ export class FilterBarComponent {
   // Estado para filtros de estadísticas
   statisticsFiltersOpen = false;
   statisticsMetricTypeOpen = false;
+  couponStatusFilter: 'all' | 'Borrador' | 'Publicado' = 'all';
+  couponStatusOpen = false;
 
   categories: Category[] = [];
   categoriesLoaded = false;
@@ -315,6 +318,22 @@ export class FilterBarComponent {
 
   toggleStatisticsFilters(): void {
     this.statisticsFiltersOpen = !this.statisticsFiltersOpen;
+  }
+
+  onCouponStatusFilterChange(): void {
+    this.couponStatusFilterChange.emit(this.couponStatusFilter);
+  }
+
+  getCouponStatusFilterLabel(): string {
+    if (this.couponStatusFilter === 'Borrador') return 'Borradores';
+    if (this.couponStatusFilter === 'Publicado') return 'Publicados';
+    return 'Todos';
+  }
+
+  selectCouponStatusFilter(filter: 'all' | 'Borrador' | 'Publicado'): void {
+    this.couponStatusFilter = filter;
+    this.couponStatusOpen = false;
+    this.onCouponStatusFilterChange();
   }
 
   selectStatisticsMetricType(option: string): void {
