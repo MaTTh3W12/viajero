@@ -102,6 +102,19 @@ interface HasAcquiredCouponData {
   };
 }
 
+interface GetCouponStatisticsData {
+  acquired: {
+    aggregate: {
+      count: number;
+    } | null;
+  };
+  redeemed: {
+    aggregate: {
+      count: number;
+    } | null;
+  };
+}
+
 interface HomeFeaturedCouponRow {
   id: number;
   title: string;
@@ -669,6 +682,32 @@ export class CouponService {
 
     return this.executeOperation<HasAcquiredCouponData, { coupon_id: number }>(token, query, { coupon_id: couponId }).pipe(
       map((data) => (data.viajerosv_coupons_acquired_aggregate.aggregate.count ?? 0) > 0)
+    );
+  }
+
+  getCouponStatistics(token: string, couponId: number): Observable<{ acquired: number; redeemed: number }> {
+    const query = `
+      query GetCouponStatistics($coupon_id: bigint!) {
+        acquired: viajerosv_coupons_acquired_aggregate(where: { coupon_id: { _eq: $coupon_id } }) {
+          aggregate {
+            count
+          }
+        }
+        redeemed: viajerosv_coupons_acquired_aggregate(
+          where: { coupon_id: { _eq: $coupon_id }, redeemed: { _eq: true } }
+        ) {
+          aggregate {
+            count
+          }
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCouponStatisticsData, { coupon_id: number }>(token, query, { coupon_id: couponId }).pipe(
+      map((data) => ({
+        acquired: data.acquired?.aggregate?.count ?? 0,
+        redeemed: data.redeemed?.aggregate?.count ?? 0,
+      }))
     );
   }
 
