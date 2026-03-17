@@ -22,6 +22,7 @@ export class FeaturedDealsComponent implements OnInit, OnDestroy {
   activeCoupons: Coupon[] = [];
   loading = false;
   error = '';
+  readonly defaultCommercialName = 'Comercio participante';
 
   private readonly cardImages = [
     'assets/img/card1.png',
@@ -108,6 +109,10 @@ export class FeaturedDealsComponent implements OnInit, OnDestroy {
     return coupon.user?.company_address?.trim() || 'Dirección no disponible';
   }
 
+  getCouponCommercialName(coupon: Coupon): string {
+    return coupon.user?.company_commercial_name?.trim() || this.defaultCommercialName;
+  }
+
   getBadgeLabel(coupon: Coupon): string {
     const discount = this.parseNumeric(coupon.price_discount);
     const price = this.parseNumeric(coupon.price);
@@ -124,10 +129,6 @@ export class FeaturedDealsComponent implements OnInit, OnDestroy {
   }
 
   getDateLabel(coupon: Coupon): string {
-    if (this.activeFilter === 'recent') {
-      return this.formatCreatedDate(coupon.created_at);
-    }
-
     return this.formatExpirationDate(coupon.end_date);
   }
 
@@ -200,19 +201,6 @@ export class FeaturedDealsComponent implements OnInit, OnDestroy {
     } else {
       container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
     }
-  }
-
-  private formatCreatedDate(createdAt: string): string {
-    if (!createdAt) return 'Publicado recientemente';
-
-    const parsedDate = new Date(createdAt);
-    if (Number.isNaN(parsedDate.getTime())) return 'Publicado recientemente';
-
-    const day = String(parsedDate.getDate()).padStart(2, '0');
-    const monthNames = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-    const month = monthNames[parsedDate.getMonth()] ?? '';
-    const year = parsedDate.getFullYear();
-    return `Publicado: ${day} ${month} ${year}`;
   }
 
   private formatExpirationDate(endDate: string): string {
