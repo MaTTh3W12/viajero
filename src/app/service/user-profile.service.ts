@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, catchError, map } from 'rxjs';
 
 declare global {
   interface Window {
@@ -332,6 +332,27 @@ export class UserProfileService {
             company_address
             country
             city
+            first_name
+            last_name
+            email
+          }
+        }
+      `;
+
+      const queryByEmailFallback = `
+        query GetUserByEmailFallback($email: String!) {
+          viajerosv_users(where: { email: { _eq: $email } }, limit: 1) {
+            id
+            company_commercial_name
+            company_nit
+            company_email
+            company_logo_url
+            company_description
+            company_address
+            country
+            city
+            first_name
+            last_name
             email
           }
         }
@@ -341,7 +362,16 @@ export class UserProfileService {
         token,
         queryByEmail,
         { email }
-      ).pipe(map((data) => data.viajerosv_users[0] ?? null));
+      ).pipe(
+        catchError(() =>
+          this.executeOperation<GetCurrentUserProfileData, GetUserByEmailVariables>(
+            token,
+            queryByEmailFallback,
+            { email }
+          )
+        ),
+        map((data) => data.viajerosv_users[0] ?? null)
+      );
     }
 
     const queryCurrent = `
@@ -357,6 +387,27 @@ export class UserProfileService {
           company_address
           country
           city
+          first_name
+          last_name
+          email
+        }
+      }
+    `;
+
+    const queryCurrentFallback = `
+      query GetCurrentUserProfileFallback {
+        viajerosv_users(limit: 1) {
+          id
+          company_commercial_name
+          company_nit
+          company_email
+          company_logo_url
+          company_description
+          company_address
+          country
+          city
+          first_name
+          last_name
           email
         }
       }
@@ -366,6 +417,15 @@ export class UserProfileService {
       token,
       queryCurrent,
       {}
-    ).pipe(map((data) => data.viajerosv_users[0] ?? null));
+    ).pipe(
+      catchError(() =>
+        this.executeOperation<GetCurrentUserProfileData, Record<string, never>>(
+          token,
+          queryCurrentFallback,
+          {}
+        )
+      ),
+      map((data) => data.viajerosv_users[0] ?? null)
+    );
   }
 }

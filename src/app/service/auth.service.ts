@@ -543,14 +543,22 @@ export class AuthService {
   }
 
   private applyCompanyNameToCurrentUser(profile: UserCompanyProfile | null): void {
-    if (!profile?.company_commercial_name) return;
-
     const currentUser = this._user.value;
     if (!currentUser) return;
 
+    const representativeName = [profile?.first_name, profile?.last_name]
+      .filter((value): value is string => !!value)
+      .join(' ')
+      .trim();
+
+    const companyName =
+      profile?.company_commercial_name?.trim() ||
+      representativeName ||
+      currentUser.username;
+
     const nextUser: AuthUser = {
       ...currentUser,
-      companyName: profile.company_commercial_name,
+      companyName,
     };
 
     this.ngZone.run(() => this._user.next(nextUser));
