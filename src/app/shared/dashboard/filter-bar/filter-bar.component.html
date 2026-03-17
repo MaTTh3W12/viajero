@@ -882,6 +882,100 @@
 </div>
 }
 
+@if (couponStatisticsOpen) {
+<div class="fixed inset-0 bg-black/40 z-40" (click)="closeCouponStatistics()"></div>
+
+<div class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4">
+  <div
+    class="relative w-full md:max-w-3xl bg-white rounded-t-2xl md:rounded-2xl shadow-xl ring-1 ring-black/5 coupon-modal flex flex-col max-h-[92vh] md:max-h-[85vh] overflow-hidden">
+    <div class="relative px-6 pt-6 pb-2">
+      <h2 class="text-2xl font-medium text-[#1A2440] text-center">Resultados estadísticos</h2>
+      <button class="absolute right-6 top-6 w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/5"
+        (click)="closeCouponStatistics()" aria-label="Cerrar">
+        <svg class="w-5 h-5 text-[#0E225C]">
+          <use href="assets/icons/sprite.svg#close-circle"></use>
+        </svg>
+      </button>
+    </div>
+
+    <div class="px-6 pb-6 flex-1 overflow-y-auto">
+      <div class="rounded-2xl bg-[#F4F7FD] p-5">
+        <div class="text-center text-3xl font-semibold text-[#1A2440] break-words">{{ statisticsTarget.titulo }}</div>
+        <div class="text-center text-[#1A2440] mt-2 font-semibold">
+          {{ statisticsTarget.fechaInicio }} &nbsp; - &nbsp; {{ statisticsTarget.fechaFin }}
+        </div>
+
+        <div class="mt-4 rounded-[36px] border-4 border-[#538CFF] p-5 bg-white/50">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+            <div class="flex items-center gap-3">
+              <span class="w-14 h-14 rounded-full bg-[#D7E8FF] flex items-center justify-center text-[#538CFF]">
+                <svg class="w-8 h-8">
+                  <use href="assets/icons/sprite.svg#statistics"></use>
+                </svg>
+              </span>
+              <div>
+                <p class="text-[22px] leading-6 text-[#1A2A64]">Total cupones adquiridos</p>
+                <p class="text-6xl leading-none text-[#1A2A64] mt-2">{{ statisticsTarget.adquiridos }}</p>
+              </div>
+            </div>
+
+            <div class="rounded-[28px] bg-[#EEF2FB] p-4">
+              <div class="grid grid-cols-3 gap-3 items-end h-[110px]">
+                <div class="flex flex-col items-center justify-end h-full">
+                  <div class="w-10 rounded-t-2xl bg-[#C6D8F8]" [style.height.%]="statisticsTarget.publicados > 0 ? 90 : 25"></div>
+                  <div class="mt-2 text-xl text-[#1A2A64]">{{ statisticsTarget.publicados }}</div>
+                  <div class="text-[#1A2A64]">Publicados</div>
+                </div>
+                <div class="flex flex-col items-center justify-end h-full">
+                  <div class="w-10 rounded-t-2xl bg-[#B2CBF6]" [style.height.%]="statisticsTarget.adquiridos > 0 ? 75 : 25"></div>
+                  <div class="mt-2 text-xl text-[#1A2A64]">{{ statisticsTarget.adquiridos }}</div>
+                  <div class="text-[#1A2A64]">Adquiridos</div>
+                </div>
+                <div class="flex flex-col items-center justify-end h-full">
+                  <div class="w-10 rounded-t-2xl bg-[#8FB3EE]" [style.height.%]="statisticsTarget.canjeados > 0 ? 90 : 25"></div>
+                  <div class="mt-2 text-xl text-[#1A2A64]">{{ statisticsTarget.canjeados }}</div>
+                  <div class="text-[#1A2A64]">Canjeados</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 rounded-2xl border border-[#E4EAF5] overflow-hidden">
+        <div class="grid grid-cols-2 bg-white text-[#1A2440] px-5 py-4 font-medium border-b border-[#E4EAF5]">
+          <div>Métrica</div>
+          <div>Valor</div>
+        </div>
+        <div class="grid grid-cols-2 px-5 py-4 border-b border-[#E4EAF5] text-[#1A2440]">
+          <div>Cupones publicados</div>
+          <div>{{ statisticsTarget.publicados }}</div>
+        </div>
+        <div class="grid grid-cols-2 px-5 py-4 border-b border-[#E4EAF5] text-[#1A2440]">
+          <div>Cupones adquiridos</div>
+          <div>{{ statisticsTarget.adquiridos }}</div>
+        </div>
+        <div class="grid grid-cols-2 px-5 py-4 text-[#1A2440]">
+          <div>Cupones canjeados</div>
+          <div>{{ statisticsTarget.canjeados }}</div>
+        </div>
+      </div>
+
+      @if (couponStatisticsLoading) {
+      <div class="mt-4 text-sm text-[#7A8499] text-center">Cargando estadísticas...</div>
+      }
+
+      <div class="mt-6 flex items-center justify-center gap-3">
+        <button type="button" class="px-6 py-3 rounded-full bg-white border border-[#0E225C] text-[#0E225C]"
+          (click)="closeCouponStatistics()">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+
 @if (editCouponOpen) {
 <!-- Overlay -->
 <div class="fixed inset-0 bg-black/40 z-40" (click)="closeEditCoupon()"></div>

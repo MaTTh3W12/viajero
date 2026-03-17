@@ -248,6 +248,26 @@ export class FilterBarComponent {
       imageMime: '',
     };
 
+  couponStatisticsOpen = false;
+  couponStatisticsLoading = false;
+  statisticsTarget: {
+    id: number | null;
+    titulo: string;
+    fechaInicio: string;
+    fechaFin: string;
+    publicados: number;
+    adquiridos: number;
+    canjeados: number;
+  } = {
+      id: null,
+      titulo: '',
+      fechaInicio: '',
+      fechaFin: '',
+      publicados: 0,
+      adquiridos: 0,
+      canjeados: 0,
+    };
+
   selectAuditType(option: string): void {
     this.auditTypeSelected = option;
     this.auditTypeOpen = false;
@@ -1098,6 +1118,53 @@ export class FilterBarComponent {
     this.clearViewCouponImageLoadingTimeout();
     this.viewTarget.image = null;
     this.viewTarget.imageMime = '';
+  }
+
+  openCouponStatistics(coupon: {
+    id: number;
+    titulo: string;
+    fechaInicio: string;
+    fechaFin: string;
+    publicados: number;
+    adquiridos: number;
+    canjeados: number;
+  }): void {
+    this.statisticsTarget = {
+      id: coupon.id,
+      titulo: coupon.titulo,
+      fechaInicio: this.toDisplayDate(coupon.fechaInicio),
+      fechaFin: this.toDisplayDate(coupon.fechaFin),
+      publicados: Math.max(0, Math.trunc(coupon.publicados ?? 0)),
+      adquiridos: Math.max(0, Math.trunc(coupon.adquiridos ?? 0)),
+      canjeados: Math.max(0, Math.trunc(coupon.canjeados ?? 0)),
+    };
+    this.couponStatisticsLoading = false;
+    this.couponStatisticsOpen = true;
+    this.setBodyModalLock(true);
+  }
+
+  setCouponStatisticsLoading(loading: boolean): void {
+    this.couponStatisticsLoading = loading;
+    this.cdr.detectChanges();
+  }
+
+  updateCouponStatistics(metrics: { publicados?: number; adquiridos?: number; canjeados?: number }): void {
+    if (metrics.publicados != null) {
+      this.statisticsTarget.publicados = Math.max(0, Math.trunc(metrics.publicados));
+    }
+    if (metrics.adquiridos != null) {
+      this.statisticsTarget.adquiridos = Math.max(0, Math.trunc(metrics.adquiridos));
+    }
+    if (metrics.canjeados != null) {
+      this.statisticsTarget.canjeados = Math.max(0, Math.trunc(metrics.canjeados));
+    }
+    this.cdr.detectChanges();
+  }
+
+  closeCouponStatistics(): void {
+    this.couponStatisticsOpen = false;
+    this.couponStatisticsLoading = false;
+    this.setBodyModalLock(false);
   }
 
   // Abrir modal de eliminación
