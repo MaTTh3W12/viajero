@@ -11,6 +11,13 @@ import { ZXingScannerModule } from '@zxing/ngx-scanner';
 import { firstValueFrom } from 'rxjs';
 import { take, timeout } from 'rxjs/operators';
 
+export interface HistorialCanjesFilters {
+  search: string;
+  startDate: string;
+  endDate: string;
+  responsible: string;
+}
+
 const FILTER_BG_MAP: Record<UserRole, Record<FilterVariant, string>> = {
   admin: {
     users: 'bg-[#D4FFF1]', // Todos los usuarios
@@ -96,6 +103,7 @@ export class FilterBarComponent {
     onError: (message?: string) => void;
   }>();
   @Output() couponStatusFilterChange = new EventEmitter<'all' | 'Borrador' | 'Publicado'>();
+  @Output() historialCanjesFilterChange = new EventEmitter<HistorialCanjesFilters>();
 
   // eventos específicos para canje de cupones
   @Output() scanQr = new EventEmitter<void>();
@@ -126,6 +134,10 @@ export class FilterBarComponent {
   statisticsMetricTypeOpen = false;
   couponStatusFilter: 'all' | 'Borrador' | 'Publicado' = 'all';
   couponStatusOpen = false;
+  historialCanjesSearch = '';
+  historialCanjesStartDate = '';
+  historialCanjesEndDate = '';
+  historialCanjesResponsible = '';
 
   categories: Category[] = [];
   categoriesLoaded = false;
@@ -317,7 +329,23 @@ export class FilterBarComponent {
   statisticsMetricTypeOptions = ['Canjes', 'Vistas', 'Conversión', 'Ingresos'];
 
   toggleStatisticsFilters(): void {
+    if (this.variant === 'historial-canjes') {
+      this.historialCanjesStartDate = '';
+      this.historialCanjesEndDate = '';
+      this.historialCanjesResponsible = '';
+      this.submitHistorialCanjesFilters();
+    }
+
     this.statisticsFiltersOpen = !this.statisticsFiltersOpen;
+  }
+
+  submitHistorialCanjesFilters(): void {
+    this.historialCanjesFilterChange.emit({
+      search: this.historialCanjesSearch.trim(),
+      startDate: this.historialCanjesStartDate,
+      endDate: this.historialCanjesEndDate,
+      responsible: this.historialCanjesResponsible.trim(),
+    });
   }
 
   onCouponStatusFilterChange(): void {
