@@ -151,6 +151,10 @@ export class RegisterComponent implements OnInit {
     this.email = kcUser.email ?? kcUser.username ?? this.email;
   }
 
+  goToLogin(): void {
+    this.auth.keycloakLogin();
+  }
+
   resetForm(): void {
     this.showValidation = false;
     this.emailFormatInvalid = false;

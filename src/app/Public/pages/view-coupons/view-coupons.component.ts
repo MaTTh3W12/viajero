@@ -194,7 +194,7 @@ export class ViewCouponsComponent implements OnInit {
 
   goToLogin(): void {
     this.closeLoginRequiredModal();
-    this.router.navigate(['/login']);
+    this.auth.keycloakLogin();
   }
 
   closeAcquireModal(): void {

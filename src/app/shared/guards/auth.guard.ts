@@ -8,7 +8,7 @@ const auth = inject(AuthService);
   const router = inject(Router);
 
   if (!auth.isLoggedIn()) {
-    router.navigate(['/login']);
+    auth.keycloakLogin();
     return false;
   }
 
@@ -26,7 +26,7 @@ export const empresaGuard: CanActivateFn = () => {
   const router = inject(Router);
 
   if (!auth.isLoggedIn()) {
-    router.navigate(['/login']);
+    auth.keycloakLogin();
     return false;
   }
 

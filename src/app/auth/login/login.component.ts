@@ -12,6 +12,7 @@ import { AuthService, AuthUser } from '../../service/auth.service';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
+  redirectingToKeycloak = true;
   username = '';
   password = '';
   errorMessage = '';
@@ -56,7 +57,10 @@ export class LoginComponent implements OnInit {
       }
 
       this.router.navigateByUrl('/');
+      return;
     }
+
+    this.auth.keycloakLogin();
   }
 
   onSubmit() {
