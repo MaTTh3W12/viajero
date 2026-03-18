@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, catchError, map } from 'rxjs';
 
 declare global {
   interface Window {
@@ -53,15 +53,34 @@ export interface UserCompanyProfile {
   company_nit?: string | null;
   company_email?: string | null;
   company_phone?: string | null;
+  company_mobile?: string | null;
   company_logo_url?: string | null;
   company_description?: string | null;
   company_address?: string | null;
+  company_category?: number | null;
+  company_website?: string | null;
+  company_map_url?: string | null;
+  company_facebook?: string | null;
+  company_instagram?: string | null;
+  company_twitter?: string | null;
+  company_youtube?: string | null;
+  company_profile_completed?: boolean | null;
   phone?: string | null;
   country?: string | null;
   city?: string | null;
   first_name?: string | null;
   last_name?: string | null;
+  document_id?: string | null;
+  document_type_id?: string | null;
+  active?: boolean | null;
+  created_at?: string | null;
+  updated_at?: string | null;
   email: string;
+  countryByCountry?: {
+    code: string;
+    phone_code: string | null;
+    name: string;
+  } | null;
 }
 
 export interface DocumentTypeOption {
@@ -101,10 +120,23 @@ export interface UpsertCompanyVariables {
   company_nit: string;
   company_email: string;
   company_phone: string;
+  company_mobile: string | null;
   company_logo_url: string | null;
   company_description: string | null;
   company_address: string;
+  company_category: number | null;
+  company_website: string | null;
+  company_map_url: string | null;
+  company_facebook: string | null;
+  company_instagram: string | null;
+  company_twitter: string | null;
+  company_youtube: string | null;
   company_profile_completed: boolean;
+  image: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  document_id: string | null;
+  document_type_id: string | null;
   phone: string | null;
   country: string | null;
   city: string | null;
@@ -202,10 +234,24 @@ export class UserProfileService {
         $company_nit: String,
         $company_email: String,
         $company_phone: String,
+        $company_mobile: String,
         $company_logo_url: String,
         $company_description: String,
         $company_address: String,
+        $company_category: bigint,
+        $company_website: String,
+        $company_map_url: String,
+        $company_facebook: String,
+        $company_instagram: String,
+        $company_twitter: String,
+        $company_youtube: String,
         $company_profile_completed: Boolean,
+        $image: String,
+        $first_name: String,
+        $last_name: String,
+        $document_id: String,
+        $document_type_id: String,
+        $phone: String,
         $country: bpchar,
         $city: String
       ) {
@@ -215,10 +261,24 @@ export class UserProfileService {
             company_nit: $company_nit,
             company_email: $company_email,
             company_phone: $company_phone,
+            company_mobile: $company_mobile,
             company_logo_url: $company_logo_url,
             company_description: $company_description,
             company_address: $company_address,
+            company_category: $company_category,
+            company_website: $company_website,
+            company_map_url: $company_map_url,
+            company_facebook: $company_facebook,
+            company_instagram: $company_instagram,
+            company_twitter: $company_twitter,
+            company_youtube: $company_youtube,
             company_profile_completed: $company_profile_completed,
+            company_logo_base64_upload: $image,
+            first_name: $first_name,
+            last_name: $last_name,
+            document_id: $document_id,
+            document_type_id: $document_type_id,
+            phone: $phone,
             country: $country,
             city: $city
           },
@@ -229,10 +289,24 @@ export class UserProfileService {
               company_nit,
               company_email,
               company_phone,
+              company_mobile,
               company_logo_url,
               company_description,
               company_address,
+              company_category,
+              company_website,
+              company_map_url,
+              company_facebook,
+              company_instagram,
+              company_twitter,
+              company_youtube,
               company_profile_completed,
+              company_logo_base64_upload,
+              first_name,
+              last_name,
+              document_id,
+              document_type_id,
+              phone,
               country,
               city,
               updated_at
@@ -240,6 +314,42 @@ export class UserProfileService {
           }
         ) {
           affected_rows
+          returning {
+            company_commercial_name
+            company_nit
+            company_email
+            company_phone
+            company_mobile
+            company_logo_url
+            company_description
+            company_address
+            company_category
+            company_website
+            company_map_url
+            company_facebook
+            company_instagram
+            company_twitter
+            company_youtube
+            company_profile_completed
+            id
+            role
+            email
+            first_name
+            last_name
+            document_id
+            document_type_id
+            phone
+            city
+            active
+            created_at
+            updated_at
+            country
+            countryByCountry {
+              code
+              phone_code
+              name
+            }
+          }
         }
       }
     `;
@@ -327,11 +437,39 @@ export class UserProfileService {
             company_nit
             company_email
             company_phone
+            company_profile_completed
+            company_logo_url
+            company_description
+            company_address
+            phone
+            country
+            city
+            first_name
+            last_name
+            document_id
+            document_type_id
+            email
+          }
+        }
+      `;
+
+      const queryByEmailFallback = `
+        query GetUserByEmailFallback($email: String!) {
+          viajerosv_users(where: { email: { _eq: $email } }, limit: 1) {
+            id
+            company_commercial_name
+            company_nit
+            company_email
+            company_profile_completed
             company_logo_url
             company_description
             company_address
             country
             city
+            first_name
+            last_name
+            document_id
+            document_type_id
             email
           }
         }
@@ -341,7 +479,16 @@ export class UserProfileService {
         token,
         queryByEmail,
         { email }
-      ).pipe(map((data) => data.viajerosv_users[0] ?? null));
+      ).pipe(
+        catchError(() =>
+          this.executeOperation<GetCurrentUserProfileData, GetUserByEmailVariables>(
+            token,
+            queryByEmailFallback,
+            { email }
+          )
+        ),
+        map((data) => data.viajerosv_users[0] ?? null)
+      );
     }
 
     const queryCurrent = `
@@ -352,11 +499,39 @@ export class UserProfileService {
           company_nit
           company_email
           company_phone
+          company_profile_completed
+          company_logo_url
+          company_description
+          company_address
+          phone
+          country
+          city
+          first_name
+          last_name
+          document_id
+          document_type_id
+          email
+        }
+      }
+    `;
+
+    const queryCurrentFallback = `
+      query GetCurrentUserProfileFallback {
+        viajerosv_users(limit: 1) {
+          id
+          company_commercial_name
+          company_nit
+          company_email
+          company_profile_completed
           company_logo_url
           company_description
           company_address
           country
           city
+          first_name
+          last_name
+          document_id
+          document_type_id
           email
         }
       }
@@ -366,6 +541,15 @@ export class UserProfileService {
       token,
       queryCurrent,
       {}
-    ).pipe(map((data) => data.viajerosv_users[0] ?? null));
+    ).pipe(
+      catchError(() =>
+        this.executeOperation<GetCurrentUserProfileData, Record<string, never>>(
+          token,
+          queryCurrentFallback,
+          {}
+        )
+      ),
+      map((data) => data.viajerosv_users[0] ?? null)
+    );
   }
 }

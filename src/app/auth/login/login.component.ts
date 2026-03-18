@@ -47,7 +47,10 @@ export class LoginComponent implements OnInit {
       const role = String(this.auth.getCurrentUser()?.role ?? '').toLowerCase();
       console.log('[AUTH] rol detectado en callback:', role || '(sin rol)');
       if (role === 'empresa' || role === 'company') {
-        this.router.navigateByUrl('/companies/dashboard');
+        const needsProfileCompletion = await this.auth.companyProfileNeedsCompletion();
+        this.router.navigateByUrl(
+          needsProfileCompletion ? '/register?type=company' : '/companies/dashboard'
+        );
         return;
       }
       if (role === 'admin') {
