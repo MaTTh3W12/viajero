@@ -143,6 +143,17 @@ export class TopbarComponent implements OnInit, OnDestroy {
     return this.user?.companyName?.trim() || this.user?.username || '';
   }
 
+  get avatarSrc(): string {
+    const raw = (this.user?.avatarUrl ?? '').trim();
+    if (!raw) return 'assets/img/Male01.png';
+
+    if (raw.startsWith('data:') || raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('/')) {
+      return raw;
+    }
+
+    return `data:image/png;base64,${raw}`;
+  }
+
   get bgClass() {
     return this.role === 'admin'
       ? 'bg-[#1A2440]'     // azul oscuro (admin)

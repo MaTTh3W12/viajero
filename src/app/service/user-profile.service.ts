@@ -30,6 +30,10 @@ interface GetCurrentUserProfileData {
   viajerosv_users: UserCompanyProfile[];
 }
 
+interface GetUserCompanyLogoData {
+  viajerosv_users_with_logo_base64: UserCompanyLogo[];
+}
+
 interface GetUserByEmailVariables {
   email: string;
 }
@@ -53,15 +57,33 @@ export interface UserCompanyProfile {
   company_nit?: string | null;
   company_email?: string | null;
   company_phone?: string | null;
+  company_mobile?: string | null;
   company_logo_url?: string | null;
   company_description?: string | null;
   company_address?: string | null;
+  company_category?: number | null;
+  company_website?: string | null;
+  company_map_url?: string | null;
+  company_facebook?: string | null;
+  company_instagram?: string | null;
+  company_twitter?: string | null;
+  company_youtube?: string | null;
+  company_profile_completed?: boolean | null;
   phone?: string | null;
   country?: string | null;
   city?: string | null;
   first_name?: string | null;
   last_name?: string | null;
+  document_id?: string | null;
+  document_type_id?: string | null;
   email: string;
+}
+
+export interface UserCompanyLogo {
+  id: string;
+  company_logo_base64: string | null;
+  company_logo_size: number | null;
+  company_logo_mime_type: string | null;
 }
 
 export interface DocumentTypeOption {
@@ -97,15 +119,28 @@ export interface UpsertUserVariables {
 }
 
 export interface UpsertCompanyVariables {
-  company_commercial_name: string;
-  company_nit: string;
-  company_email: string;
-  company_phone: string;
+  company_commercial_name: string | null;
+  company_nit: string | null;
+  company_email: string | null;
+  company_phone: string | null;
+  company_mobile?: string | null;
   company_logo_url: string | null;
   company_description: string | null;
-  company_address: string;
-  company_profile_completed: boolean;
-  phone: string | null;
+  company_address: string | null;
+  company_category?: number | null;
+  company_website?: string | null;
+  company_map_url?: string | null;
+  company_facebook?: string | null;
+  company_instagram?: string | null;
+  company_twitter?: string | null;
+  company_youtube?: string | null;
+  company_profile_completed: boolean | null;
+  image?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  document_id?: string | null;
+  document_type_id?: string | null;
+  phone?: string | null;
   country: string | null;
   city: string | null;
 }
@@ -202,10 +237,24 @@ export class UserProfileService {
         $company_nit: String,
         $company_email: String,
         $company_phone: String,
+        $company_mobile: String,
         $company_logo_url: String,
         $company_description: String,
         $company_address: String,
+        $company_category: bigint,
+        $company_website: String,
+        $company_map_url: String,
+        $company_facebook: String,
+        $company_instagram: String,
+        $company_twitter: String,
+        $company_youtube: String,
         $company_profile_completed: Boolean,
+        $image: String,
+        $first_name: String,
+        $last_name: String,
+        $document_id: String,
+        $document_type_id: String,
+        $phone: String,
         $country: bpchar,
         $city: String
       ) {
@@ -215,10 +264,24 @@ export class UserProfileService {
             company_nit: $company_nit,
             company_email: $company_email,
             company_phone: $company_phone,
+            company_mobile: $company_mobile,
             company_logo_url: $company_logo_url,
             company_description: $company_description,
             company_address: $company_address,
+            company_category: $company_category,
+            company_website: $company_website,
+            company_map_url: $company_map_url,
+            company_facebook: $company_facebook,
+            company_instagram: $company_instagram,
+            company_twitter: $company_twitter,
+            company_youtube: $company_youtube,
             company_profile_completed: $company_profile_completed,
+            company_logo_base64_upload: $image,
+            first_name: $first_name,
+            last_name: $last_name,
+            document_id: $document_id,
+            document_type_id: $document_type_id,
+            phone: $phone,
             country: $country,
             city: $city
           },
@@ -229,10 +292,24 @@ export class UserProfileService {
               company_nit,
               company_email,
               company_phone,
+              company_mobile,
               company_logo_url,
               company_description,
               company_address,
+              company_category,
+              company_website,
+              company_map_url,
+              company_facebook,
+              company_instagram,
+              company_twitter,
+              company_youtube,
               company_profile_completed,
+              company_logo_base64_upload,
+              first_name,
+              last_name,
+              document_id,
+              document_type_id,
+              phone,
               country,
               city,
               updated_at
@@ -240,6 +317,9 @@ export class UserProfileService {
           }
         ) {
           affected_rows
+          returning {
+            id
+          }
         }
       }
     `;
@@ -249,6 +329,23 @@ export class UserProfileService {
       mutation,
       data
     ).pipe(map(() => void 0));
+  }
+
+  getUserCompanyLogo(token: string, id: string): Observable<UserCompanyLogo | null> {
+    const query = `
+      query GetUserCompanyLogo($id: uuid!) {
+        viajerosv_users_with_logo_base64(where: { id: { _eq: $id } }) {
+          id
+          company_logo_base64
+          company_logo_size
+          company_logo_mime_type
+        }
+      }
+    `;
+
+    return this.executeOperation<GetUserCompanyLogoData, { id: string }>(token, query, { id }).pipe(
+      map((data) => data.viajerosv_users_with_logo_base64[0] ?? null)
+    );
   }
 
   getDocumentTypes(token: string): Observable<DocumentTypeOption[]> {
@@ -327,13 +424,25 @@ export class UserProfileService {
             company_nit
             company_email
             company_phone
+            company_mobile
             company_logo_url
             company_description
             company_address
+            company_category
+            company_website
+            company_map_url
+            company_facebook
+            company_instagram
+            company_twitter
+            company_youtube
+            company_profile_completed
             country
             city
             first_name
             last_name
+            document_id
+            document_type_id
+            phone
             email
           }
         }
@@ -347,13 +456,25 @@ export class UserProfileService {
             company_nit
             company_email
             company_phone: phone
+            company_mobile
             company_logo_url
             company_description
             company_address
+            company_category
+            company_website
+            company_map_url
+            company_facebook
+            company_instagram
+            company_twitter
+            company_youtube
+            company_profile_completed
             country
             city
             first_name
             last_name
+            document_id
+            document_type_id
+            phone
             email
           }
         }
@@ -366,13 +487,26 @@ export class UserProfileService {
             company_commercial_name
             company_nit
             company_email
+            company_phone
+            company_mobile
             company_logo_url
             company_description
             company_address
+            company_category
+            company_website
+            company_map_url
+            company_facebook
+            company_instagram
+            company_twitter
+            company_youtube
+            company_profile_completed
             country
             city
             first_name
             last_name
+            document_id
+            document_type_id
+            phone
             email
           }
         }
@@ -409,13 +543,25 @@ export class UserProfileService {
           company_nit
           company_email
           company_phone
+          company_mobile
           company_logo_url
           company_description
           company_address
+          company_category
+          company_website
+          company_map_url
+          company_facebook
+          company_instagram
+          company_twitter
+          company_youtube
+          company_profile_completed
           country
           city
           first_name
           last_name
+          document_id
+          document_type_id
+          phone
           email
         }
       }
@@ -429,13 +575,25 @@ export class UserProfileService {
           company_nit
           company_email
           company_phone: phone
+          company_mobile
           company_logo_url
           company_description
           company_address
+          company_category
+          company_website
+          company_map_url
+          company_facebook
+          company_instagram
+          company_twitter
+          company_youtube
+          company_profile_completed
           country
           city
           first_name
           last_name
+          document_id
+          document_type_id
+          phone
           email
         }
       }
@@ -448,13 +606,26 @@ export class UserProfileService {
           company_commercial_name
           company_nit
           company_email
+          company_phone
+          company_mobile
           company_logo_url
           company_description
           company_address
+          company_category
+          company_website
+          company_map_url
+          company_facebook
+          company_instagram
+          company_twitter
+          company_youtube
+          company_profile_completed
           country
           city
           first_name
           last_name
+          document_id
+          document_type_id
+          phone
           email
         }
       }

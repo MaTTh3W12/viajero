@@ -1,6 +1,6 @@
 import { Injectable, inject, NgZone, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
-import { BehaviorSubject, firstValueFrom } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, timeout } from 'rxjs';
 import { KeycloakService } from './keycloak.service';
 import { UpsertCompanyVariables, UpsertUserVariables, UserCompanyProfile, UserProfileService } from './user-profile.service';
 
@@ -14,6 +14,7 @@ export interface AuthUser {
   lastName?: string;
   role?: UserRole;
   companyName?: string;
+  avatarUrl?: string;
 }
 
 interface KeycloakToken {
@@ -56,6 +57,7 @@ interface DecodedJwtPayload {
   realm_access?: {
     roles?: string[];
   };
+  resource_access?: Record<string, { roles?: string[] }>;
   'https://hasura.io/jwt/claims'?: HasuraJwtClaims;
 }
 
@@ -222,9 +224,17 @@ export class AuthService {
 
   keycloakLogin(returnUrl?: string): void {
     if (this.isBrowser()) {
-      const fallbackUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
-      const nextUrl = (returnUrl ?? fallbackUrl ?? '/').trim();
-      if (nextUrl) {
+      sessionStorage.removeItem(KC_RETURN_URL_KEY);
+
+      const nextUrl = (returnUrl ?? '').trim();
+      const isValidReturnUrl =
+        !!nextUrl &&
+        nextUrl.startsWith('/') &&
+        !nextUrl.startsWith('//') &&
+        nextUrl !== '/' &&
+        !nextUrl.startsWith('/login');
+
+      if (isValidReturnUrl) {
         sessionStorage.setItem(KC_RETURN_URL_KEY, nextUrl);
       }
     }
@@ -345,7 +355,7 @@ export class AuthService {
         city: formData.city,
       };
 
-      await firstValueFrom(this.profile.upsertUser(token, variables));
+      await firstValueFrom(this.profile.upsertUser(token, variables).pipe(timeout(20000)));
       return true;
     } catch (error) {
       console.error('Error completing Keycloak profile in Hasura', error);
@@ -355,15 +365,28 @@ export class AuthService {
 
 
   async completeKeycloakCompanyProfile(formData: {
-    company_commercial_name: string;
-    company_nit: string;
-    company_email: string;
-    company_phone: string;
+    company_commercial_name: string | null;
+    company_nit: string | null;
+    company_email: string | null;
+    company_phone: string | null;
+    company_mobile?: string | null;
     company_logo_url: string | null;
     company_description: string | null;
-    company_address: string;
-    company_profile_completed: boolean;
-    phone: string | null;
+    company_address: string | null;
+    company_category?: number | null;
+    company_website?: string | null;
+    company_map_url?: string | null;
+    company_facebook?: string | null;
+    company_instagram?: string | null;
+    company_twitter?: string | null;
+    company_youtube?: string | null;
+    company_profile_completed: boolean | null;
+    image?: string | null;
+    first_name?: string | null;
+    last_name?: string | null;
+    document_id?: string | null;
+    document_type_id?: string | null;
+    phone?: string | null;
     country: string | null;
     city: string | null;
   }): Promise<boolean> {
@@ -388,28 +411,44 @@ export class AuthService {
         company_nit: formData.company_nit,
         company_email: formData.company_email,
         company_phone: formData.company_phone,
+        company_mobile: formData.company_mobile ?? null,
         company_logo_url: formData.company_logo_url,
         company_description: formData.company_description,
         company_address: formData.company_address,
+        company_category: formData.company_category ?? null,
+        company_website: formData.company_website ?? null,
+        company_map_url: formData.company_map_url ?? null,
+        company_facebook: formData.company_facebook ?? null,
+        company_instagram: formData.company_instagram ?? null,
+        company_twitter: formData.company_twitter ?? null,
+        company_youtube: formData.company_youtube ?? null,
         company_profile_completed: formData.company_profile_completed,
-        phone: formData.phone,
+        image: formData.image ?? null,
+        first_name: formData.first_name ?? user?.firstName ?? null,
+        last_name: formData.last_name ?? user?.lastName ?? null,
+        document_id: formData.document_id ?? null,
+        document_type_id: formData.document_type_id ?? null,
+        phone: formData.phone ?? null,
         country: formData.country,
         city: formData.city,
       };
 
       console.log('[AUTH] upsertCompany variables', variables);
-      await firstValueFrom(this.profile.upsertCompany(token, variables));
+      await firstValueFrom(this.profile.upsertCompany(token, variables).pipe(timeout(20000)));
       console.log('[AUTH] upsertCompany success');
 
       const current = this._user.value;
       if (current) {
         const nextUser: AuthUser = {
           ...current,
-          companyName: formData.company_commercial_name,
+          companyName: formData.company_commercial_name ?? current.companyName,
+          avatarUrl: formData.company_logo_url ?? current.avatarUrl,
         };
         this._user.next(nextUser);
         this.saveToStorage(nextUser);
       }
+
+      await this.loadCompanyNameFromHasura(token);
 
       return true;
     } catch (error) {
@@ -462,13 +501,25 @@ export class AuthService {
     });
 
     const realmRoles: string[] = payload.realm_access?.roles ?? [];
+    const resourceRoles: string[] = Object.values(payload.resource_access ?? {})
+      .flatMap((entry) => entry.roles ?? [])
+      .filter((role) => !!role);
+    const allTokenRoles = [...new Set([...realmRoles, ...resourceRoles])];
     const hasuraRole: string | undefined =
       payload['https://hasura.io/jwt/claims']?.['x-hasura-role'];
 
-    const chosenRoleRaw = hasuraRole ?? this.firstUsefulRealmRole(realmRoles) ?? 'USER';
+    const chosenRoleRaw = this.resolveBestRole(hasuraRole, allTokenRoles);
     sessionStorage.setItem(KC_ROLE_KEY, chosenRoleRaw);
 
     const normalizedRole = this.normalizeRole(chosenRoleRaw);
+
+    console.log('[AUTH] role resolution', {
+      hasuraRole: hasuraRole ?? null,
+      realmRoles,
+      resourceRoles,
+      chosenRoleRaw,
+      normalizedRole,
+    });
 
     const fullName = [payload.given_name, payload.family_name]
       .filter((value): value is string => !!value)
@@ -483,7 +534,7 @@ export class AuthService {
       email: payload.email ?? payload.preferred_username,
       firstName: payload.given_name,
       lastName: payload.family_name,
-      roles: realmRoles,
+      roles: allTokenRoles,
       role: chosenRoleRaw,
     };
 
@@ -522,8 +573,56 @@ export class AuthService {
   }
 
   private firstUsefulRealmRole(roles: string[]): string | null {
-    const ignore = new Set(['offline_access', 'uma_authorization', 'default-roles-viajero-realm']);
+    const ignore = new Set([
+      'offline_access',
+      'uma_authorization',
+      'default-roles-viajero-realm',
+      'manage-account',
+      'manage-account-links',
+      'view-profile',
+    ]);
     return roles.find(r => !ignore.has(r)) ?? roles[0] ?? null;
+  }
+
+  private resolveBestRole(hasuraRole: string | undefined, tokenRoles: string[]): string {
+    const hasura = (hasuraRole ?? '').trim();
+    const normalizedHasura = hasura.toLowerCase();
+
+    if (normalizedHasura.includes('admin')) {
+      return hasura || 'admin';
+    }
+
+    if (normalizedHasura.includes('company') || normalizedHasura.includes('empresa')) {
+      return hasura || 'empresa';
+    }
+
+    const tokenRole = this.pickRoleByPriority(tokenRoles);
+    if (tokenRole) {
+      return tokenRole;
+    }
+
+    if (hasura) {
+      return hasura;
+    }
+
+    return 'USER';
+  }
+
+  private pickRoleByPriority(roles: string[]): string | null {
+    if (!roles.length) return null;
+
+    const normalized = roles.map((role) => ({ raw: role, key: role.toLowerCase() }));
+
+    const admin = normalized.find((entry) => entry.key.includes('admin'));
+    if (admin) return admin.raw;
+
+    const company = normalized.find((entry) => entry.key.includes('company') || entry.key.includes('empresa'));
+    if (company) return company.raw;
+
+    const user = normalized.find((entry) => entry.key.includes('user') || entry.key.includes('usuario'));
+    if (user) return user.raw;
+
+    return this.firstUsefulRealmRole(roles);
   }
 
   private normalizeRole(raw?: string): UserRole {
@@ -560,14 +659,38 @@ export class AuthService {
     if (!currentUser || currentUser.role !== 'empresa') return;
 
     try {
-      const profile = await firstValueFrom(this.profile.getCurrentUserProfile(accessToken, email));
-      this.applyCompanyNameToCurrentUser(profile);
+      let profile = await firstValueFrom(this.profile.getCurrentUserProfile(accessToken, email).pipe(timeout(15000)));
+      if (!profile) {
+        profile = await firstValueFrom(this.profile.getCurrentUserProfile(accessToken, null).pipe(timeout(15000)));
+      }
+      const logoDataUrl = await this.loadCompanyLogoDataUrl(accessToken, profile?.id ?? null);
+      this.applyCompanyNameToCurrentUser(profile, logoDataUrl);
     } catch (error) {
       console.error('Error loading company name from Hasura', error);
     }
   }
 
-  private applyCompanyNameToCurrentUser(profile: UserCompanyProfile | null): void {
+  private async loadCompanyLogoDataUrl(accessToken: string, userId: number | string | null): Promise<string | null> {
+    if (!userId) return null;
+
+    try {
+      const logo = await firstValueFrom(
+        this.profile.getUserCompanyLogo(accessToken, String(userId)).pipe(timeout(15000))
+      );
+      if (!logo?.company_logo_base64) return null;
+
+      const mime = String(logo.company_logo_mime_type ?? 'image/png').replace(/^"+|"+$/g, '').trim() || 'image/png';
+      if (logo.company_logo_base64.startsWith('data:')) {
+        return logo.company_logo_base64;
+      }
+
+      return `data:${mime};base64,${logo.company_logo_base64}`;
+    } catch {
+      return null;
+    }
+  }
+
+  private applyCompanyNameToCurrentUser(profile: UserCompanyProfile | null, avatarDataUrl?: string | null): void {
     const currentUser = this._user.value;
     if (!currentUser) return;
 
@@ -584,6 +707,7 @@ export class AuthService {
     const nextUser: AuthUser = {
       ...currentUser,
       companyName,
+      avatarUrl: avatarDataUrl || profile?.company_logo_url?.trim() || currentUser.avatarUrl,
     };
 
     this.ngZone.run(() => this._user.next(nextUser));

@@ -46,18 +46,35 @@ export class LoginComponent implements OnInit {
       }
 
       const returnUrl = this.auth.consumeKeycloakReturnUrl();
-      if (returnUrl) {
+      const shouldUseReturnUrl =
+        !!returnUrl &&
+        returnUrl !== '/' &&
+        !returnUrl.startsWith('/login');
+
+      if (shouldUseReturnUrl) {
         this.router.navigateByUrl(returnUrl);
         return;
       }
 
-      const role = String(this.auth.getCurrentUser()?.role ?? '').toLowerCase();
-      console.log('[AUTH] rol detectado en callback:', role || '(sin rol)');
-      if (role === 'empresa' || role === 'company') {
+      const appRole = String(this.auth.getCurrentUser()?.role ?? '').toLowerCase();
+      const keycloakRoleRaw = String(this.auth.getKeycloakRole() ?? '').toLowerCase();
+      const isEmpresaRole =
+        appRole === 'empresa' ||
+        appRole === 'company' ||
+        keycloakRoleRaw.includes('empresa') ||
+        keycloakRoleRaw.includes('company');
+      const isAdminRole = appRole === 'admin' || keycloakRoleRaw.includes('admin');
+
+      console.log('[AUTH] rol detectado en callback:', {
+        appRole: appRole || '(sin rol)',
+        keycloakRoleRaw: keycloakRoleRaw || '(sin rol)',
+      });
+
+      if (isEmpresaRole) {
         this.router.navigateByUrl('/companies/dashboard');
         return;
       }
-      if (role === 'admin') {
+      if (isAdminRole) {
         this.router.navigateByUrl('/admin/dashboard');
         return;
       }
