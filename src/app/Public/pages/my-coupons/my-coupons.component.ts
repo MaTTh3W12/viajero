@@ -43,6 +43,7 @@ interface MyCouponItem {
   styleUrl: './my-coupons.component.css',
 })
 export class MyCouponsComponent implements OnInit {
+  private readonly debugImageLogs = true;
   loading = false;
   error = '';
   qrLoading = false;
@@ -60,6 +61,7 @@ export class MyCouponsComponent implements OnInit {
   transferEmail = '';
   transferTarget: MyCouponItem | null = null;
   transferConfirm = false;
+  private couponImageById = new Map<number, string>();
 
   coupons: MyCouponItem[] = [];
   searchText = '';
@@ -77,13 +79,6 @@ export class MyCouponsComponent implements OnInit {
     { key: 'food', label: 'Alimentos y bebidas', categoryId: 2, icon: 'assets/icons/dinner.svg', bgColor: '#ABE9FF' },
     { key: 'fun', label: 'Entretenimiento', categoryId: 4, icon: 'assets/icons/gift-bag1.svg', bgColor: '#FFD5D6' },
     { key: 'tourism', label: 'Turismo', categoryId: 3, icon: 'assets/icons/sunbed.svg', bgColor: '#D8D7FF' },
-  ];
-
-  private readonly cardImages = [
-    'assets/img/card1.png',
-    'assets/img/card2.png',
-    'assets/img/card3.png',
-    'assets/img/card4.png',
   ];
 
   private readonly categoryNames: Record<number, string> = {
@@ -352,8 +347,13 @@ export class MyCouponsComponent implements OnInit {
     this.currentPage = page;
   }
 
-  getCardImage(index: number): string {
-    return this.cardImages[index % this.cardImages.length];
+  getCardImage(item: MyCouponItem): string {
+    const couponId = Number(item.coupon.id);
+    return this.couponImageById.get(couponId) ?? '';
+  }
+
+  hasCardImage(item: MyCouponItem): boolean {
+    return !!this.getCardImage(item);
   }
 
   getCategoryName(categoryId: number): string {
@@ -436,12 +436,29 @@ export class MyCouponsComponent implements OnInit {
         )
       );
 
+      if (this.debugImageLogs) {
+        console.info('[MY-COUPONS][IMG] couponIds adquiridos', {
+          totalAcquiredRows: acquiredRows.length,
+          uniqueCouponIds: couponIds.length,
+          couponIds,
+        });
+      }
+
       const couponRows = await firstValueFrom(
         this.couponService.getCouponsByIds(token, couponIds).pipe(take(1), timeout(15000))
       );
 
+      if (this.debugImageLogs) {
+        console.info('[MY-COUPONS][IMG] cupones base cargados', {
+          totalCouponRows: couponRows.length,
+          couponIdsFromCoupons: couponRows.map((coupon) => Number(coupon.id)),
+        });
+      }
+
       const couponById = new Map<number, Coupon>();
       couponRows.forEach((coupon) => couponById.set(Number(coupon.id), coupon));
+
+      await this.loadImagesForCoupons(token, couponRows);
 
       this.coupons = acquiredRows
         .map((acquired) => {
@@ -482,5 +499,81 @@ export class MyCouponsComponent implements OnInit {
   private isValidEmail(value: string): boolean {
     if (!value) return false;
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  }
+
+  private async loadImagesForCoupons(token: string, rows: Coupon[]): Promise<void> {
+    this.couponImageById.clear();
+    if (!token || rows.length === 0) return;
+
+    const uniqueCouponIds = Array.from(
+      new Set(
+        rows
+          .map((coupon) => Number(coupon.id))
+          .filter((id) => Number.isFinite(id))
+      )
+    );
+
+    if (this.debugImageLogs) {
+      console.info('[MY-COUPONS][IMG] solicitando imágenes por IDs', {
+        totalRequested: uniqueCouponIds.length,
+        requestedIds: uniqueCouponIds,
+      });
+    }
+
+    try {
+      const images = await firstValueFrom(
+        this.couponService.getCouponImagesByIds(token, uniqueCouponIds).pipe(take(1), timeout(15000))
+      );
+
+      if (this.debugImageLogs) {
+        console.info('[MY-COUPONS][IMG] respuesta backend imágenes', {
+          totalRows: images.length,
+          rows: images.map((image) => ({
+            id: Number(image.id),
+            hasBase64: !!image.image_base64,
+            mime: image.image_mime_type,
+            size: image.image_size,
+          })),
+        });
+      }
+
+      images.forEach((imageData) => {
+        if (!imageData?.image_base64) return;
+        const couponId = Number(imageData.id);
+        if (!Number.isFinite(couponId)) return;
+
+        const mime = this.normalizeMimeType(imageData.image_mime_type);
+        const imageUrl = this.toDataUrl(imageData.image_base64, mime || 'image/jpeg');
+        this.couponImageById.set(couponId, imageUrl);
+      });
+
+      if (this.debugImageLogs) {
+        const loadedIds = Array.from(this.couponImageById.keys());
+        const missingIds = uniqueCouponIds.filter((id) => !this.couponImageById.has(id));
+
+        console.info('[MY-COUPONS][IMG] resultado mapeo imágenes', {
+          loadedCount: loadedIds.length,
+          loadedIds,
+          missingCount: missingIds.length,
+          missingIds,
+        });
+      }
+    } catch {
+      if (this.debugImageLogs) {
+        console.error('[MY-COUPONS][IMG] error cargando imágenes por lote');
+      }
+      return;
+    }
+  }
+
+  private toDataUrl(base64: string, mimeType: string): string {
+    if (!base64) return '';
+    if (base64.startsWith('data:')) return base64;
+    return `data:${mimeType};base64,${base64}`;
+  }
+
+  private normalizeMimeType(mimeType: string | null | undefined): string {
+    if (!mimeType) return '';
+    return String(mimeType).replace(/^"+|"+$/g, '').trim().toLowerCase();
   }
 }

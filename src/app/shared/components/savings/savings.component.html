@@ -12,7 +12,13 @@
     <div [routerLink]="['/view-coupons', coupon.id]"
       class="cursor-pointer bg-white rounded-[16px] md:rounded-[24px] shadow-md border border-gray-50 overflow-hidden flex flex-col h-full hover:shadow-xl transition-shadow duration-300">
       <div class="relative h-[110px] md:h-[180px] flex-shrink-0">
-        <img [src]="getCardImage(idx)" [alt]="coupon.title" class="w-full h-full object-cover" />
+        @if (hasCardImage(coupon)) {
+        <img [src]="getCardImage(coupon)" [alt]="coupon.title" class="w-full h-full object-cover" />
+        } @else {
+        <div class="w-full h-full bg-[#EAF0FF] flex items-center justify-center">
+          <img src="assets/icons/coupon1.svg" alt="Cupón" class="w-8 h-8 opacity-60" />
+        </div>
+        }
         <div
           class="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-4 md:w-12 md:h-6 bg-white rounded-b-full shadow-inner">
         </div>

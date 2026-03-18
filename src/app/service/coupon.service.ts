@@ -593,6 +593,50 @@ export class CouponService {
     );
   }
 
+  getCouponImagesByIds(token: string, ids: number[]): Observable<CouponImagePreview[]> {
+    const uniqueIds = Array.from(new Set(ids.filter((id) => Number.isFinite(id))));
+    if (uniqueIds.length === 0) {
+      return of([]);
+    }
+
+    const query = `
+      query GetCouponsImagesByIds($ids: [bigint!]!) {
+        viajerosv_coupons_with_image_base64(where: { id: { _in: $ids } }) {
+          id
+          image_base64
+          image_size
+          image_mime_type
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCouponImageData, { ids: number[] }>(token, query, { ids: uniqueIds }).pipe(
+      map((data) => data.viajerosv_coupons_with_image_base64 ?? [])
+    );
+  }
+
+  getPublicCouponImagesByIds(ids: number[]): Observable<CouponImagePreview[]> {
+    const uniqueIds = Array.from(new Set(ids.filter((id) => Number.isFinite(id))));
+    if (uniqueIds.length === 0) {
+      return of([]);
+    }
+
+    const query = `
+      query GetPublicCouponsImagesByIds($ids: [bigint!]!) {
+        viajerosv_coupons_with_image_base64(where: { id: { _in: $ids } }) {
+          id
+          image_base64
+          image_size
+          image_mime_type
+        }
+      }
+    `;
+
+    return this.executePublicOperation<GetCouponImageData, { ids: number[] }>(query, { ids: uniqueIds }).pipe(
+      map((data) => data.viajerosv_coupons_with_image_base64 ?? [])
+    );
+  }
+
 
   getCouponOwner(token: string, id: number): Observable<CouponOwner | null> {
     const query = `
@@ -672,7 +716,13 @@ export class CouponService {
       }
     `;
 
-    return this.executeOperation<GetCouponsAcquiredData, GetCouponsAcquiredVariables>(token, query, variables).pipe(
+    const safeVariables: Required<Pick<GetCouponsAcquiredVariables, 'limit' | 'offset' | 'where'>> = {
+      limit: variables.limit ?? 10,
+      offset: variables.offset ?? 0,
+      where: variables.where ?? {},
+    };
+
+    return this.executeOperation<GetCouponsAcquiredData, typeof safeVariables>(token, query, safeVariables).pipe(
       map((data) => ({
         rows: data.viajerosv_coupons_acquired,
         total: data.viajerosv_coupons_acquired_aggregate.aggregate.count,

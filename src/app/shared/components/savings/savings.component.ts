@@ -27,13 +27,7 @@ export class SavingsComponent implements OnInit, OnChanges {
   readonly fixedCouponBrand = 'El Salvador Tours';
   readonly fixedAddress = 'San Salvador, El Salvador';
   private couponsFoundEmitVersion = 0;
-
-  private readonly cardImages = [
-    'assets/img/card1.png',
-    'assets/img/card2.png',
-    'assets/img/card3.png',
-    'assets/img/card4.png',
-  ];
+  private couponImageById = new Map<number, string>();
   private readonly categoryNames: Record<number, string> = {
     1: 'Alojamiento',
     2: 'Alimentos y bebidas',
@@ -110,8 +104,13 @@ export class SavingsComponent implements OnInit, OnChanges {
     return Array.from({ length: this.totalPages }, (_, index) => index + 1);
   }
 
-  getCardImage(index: number): string {
-    return this.cardImages[index % this.cardImages.length];
+  getCardImage(coupon: Coupon): string {
+    const couponId = Number(coupon.id);
+    return this.couponImageById.get(couponId) ?? '';
+  }
+
+  hasCardImage(coupon: Coupon): boolean {
+    return !!this.getCardImage(coupon);
   }
 
   getPriceBadgeLabel(coupon: Coupon): string {
@@ -192,6 +191,7 @@ export class SavingsComponent implements OnInit, OnChanges {
       .subscribe({
         next: (coupons) => {
           this.coupons = coupons;
+          this.loadImagesForCoupons(coupons);
           this.applyFiltersAndSort();
         },
         error: (error) => {
@@ -243,6 +243,53 @@ export class SavingsComponent implements OnInit, OnChanges {
       return value.toString();
     }
     return value.toFixed(2).replace(/\.?0+$/, '');
+  }
+
+  private loadImagesForCoupons(coupons: Coupon[]): void {
+    this.couponImageById.clear();
+
+    const couponIds = Array.from(
+      new Set(
+        coupons
+          .map((coupon) => Number(coupon.id))
+          .filter((id) => Number.isFinite(id))
+      )
+    );
+
+    if (couponIds.length === 0) return;
+
+    this.couponService.getPublicCouponImagesByIds(couponIds).pipe(
+      take(1),
+      timeout(15000)
+    ).subscribe({
+      next: (images) => {
+        images.forEach((imageData) => {
+          if (!imageData?.image_base64) return;
+
+          const couponId = Number(imageData.id);
+          if (!Number.isFinite(couponId)) return;
+
+          const mime = this.normalizeMimeType(imageData.image_mime_type);
+          this.couponImageById.set(couponId, this.toDataUrl(imageData.image_base64, mime || 'image/jpeg'));
+        });
+
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        return;
+      },
+    });
+  }
+
+  private toDataUrl(base64: string, mimeType: string): string {
+    if (!base64) return '';
+    if (base64.startsWith('data:')) return base64;
+    return `data:${mimeType};base64,${base64}`;
+  }
+
+  private normalizeMimeType(mimeType: string | null | undefined): string {
+    if (!mimeType) return '';
+    return String(mimeType).replace(/^"+|"+$/g, '').trim().toLowerCase();
   }
 
 }

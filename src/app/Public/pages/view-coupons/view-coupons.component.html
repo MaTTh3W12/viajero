@@ -70,7 +70,7 @@
           </ul>
         }
 
-        @if (!isCouponAlreadyAcquired) {
+        @if (hasAvailableStock(coupon)) {
           <button
             type="button"
             (click)="onAcquireCoupon()"
@@ -215,7 +215,7 @@
             </div>
           </div>
 
-          @if (!isCouponAlreadyAcquired) {
+          @if (hasAvailableStock(coupon)) {
             <button
               type="button"
               (click)="onAcquireCoupon()"
@@ -279,7 +279,7 @@
           <h3 class="text-[24px] md:text-[32px] font-semibold text-[#1A2440] leading-[1.15] mb-3">Obtener cupón.</h3>
           <p class="text-[16px] md:text-[20px] text-[#1A2440] leading-[1.45] max-w-[640px] mb-6">
             Este cupón se asignará directamente a tu cuenta y quedará listo para usar.
-            Recuerda que solo puede adquirirse una vez.
+            Puedes adquirirlo múltiples veces mientras haya stock disponible.
           </p>
 
           @if (acquireError) {
