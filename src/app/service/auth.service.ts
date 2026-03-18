@@ -14,6 +14,7 @@ export interface AuthUser {
   lastName?: string;
   role?: UserRole;
   companyName?: string;
+  companyProfileCompleted?: boolean;
 }
 
 interface KeycloakToken {
@@ -334,16 +335,30 @@ export class AuthService {
     company_nit: string;
     company_email: string;
     company_phone: string;
+    company_mobile?: string | null;
     company_logo_url: string | null;
     company_description: string | null;
     company_address: string;
+    company_category?: number | null;
+    company_website?: string | null;
+    company_map_url?: string | null;
+    company_facebook?: string | null;
+    company_instagram?: string | null;
+    company_twitter?: string | null;
+    company_youtube?: string | null;
     company_profile_completed: boolean;
+    image?: string | null;
+    first_name?: string | null;
+    last_name?: string | null;
+    document_id?: string | null;
+    document_type_id?: string | null;
     phone: string | null;
     country: string | null;
     city: string | null;
   }): Promise<boolean> {
     const token = this.getKeycloakToken()?.access_token;
     const user = this.getKeycloakUser();
+    const current = this._user.value;
 
     console.log('[AUTH] completeKeycloakCompanyProfile start', {
       hasToken: !!token,
@@ -363,10 +378,23 @@ export class AuthService {
         company_nit: formData.company_nit,
         company_email: formData.company_email,
         company_phone: formData.company_phone,
+        company_mobile: formData.company_mobile ?? null,
         company_logo_url: formData.company_logo_url,
         company_description: formData.company_description,
         company_address: formData.company_address,
+        company_category: formData.company_category ?? null,
+        company_website: formData.company_website ?? null,
+        company_map_url: formData.company_map_url ?? null,
+        company_facebook: formData.company_facebook ?? null,
+        company_instagram: formData.company_instagram ?? null,
+        company_twitter: formData.company_twitter ?? null,
+        company_youtube: formData.company_youtube ?? null,
         company_profile_completed: formData.company_profile_completed,
+        image: formData.image ?? null,
+        first_name: formData.first_name ?? user?.firstName ?? current?.firstName ?? null,
+        last_name: formData.last_name ?? user?.lastName ?? current?.lastName ?? null,
+        document_id: formData.document_id ?? null,
+        document_type_id: formData.document_type_id ?? null,
         phone: formData.phone,
         country: formData.country,
         city: formData.city,
@@ -376,11 +404,11 @@ export class AuthService {
       await firstValueFrom(this.profile.upsertCompany(token, variables));
       console.log('[AUTH] upsertCompany success');
 
-      const current = this._user.value;
       if (current) {
         const nextUser: AuthUser = {
           ...current,
           companyName: formData.company_commercial_name,
+          companyProfileCompleted: true,
         };
         this._user.next(nextUser);
         this.saveToStorage(nextUser);
@@ -528,29 +556,60 @@ export class AuthService {
 
 
   private async loadCompanyNameFromHasura(accessToken: string): Promise<void> {
-    const payload = this.decodeJwt(accessToken);
-    const email = payload?.email ?? this._user.value?.email ?? this.getKeycloakUser()?.email ?? null;
-
     const currentUser = this._user.value;
     if (!currentUser || currentUser.role !== 'empresa') return;
 
     try {
-      const profile = await firstValueFrom(this.profile.getCurrentUserProfile(accessToken, email));
+      const profile = await this.getCompanyProfileFromHasura(accessToken);
       this.applyCompanyNameToCurrentUser(profile);
     } catch (error) {
       console.error('Error loading company name from Hasura', error);
     }
   }
 
-  private applyCompanyNameToCurrentUser(profile: UserCompanyProfile | null): void {
-    if (!profile?.company_commercial_name) return;
+  async companyProfileNeedsCompletion(accessToken?: string): Promise<boolean> {
+    const token = accessToken ?? this.getKeycloakToken()?.access_token ?? this._token.value;
+    const currentUser = this._user.value;
 
+    if (!token || !currentUser || currentUser.role !== 'empresa') {
+      return false;
+    }
+
+    try {
+      const profile = await this.getCompanyProfileFromHasura(token);
+      this.applyCompanyNameToCurrentUser(profile);
+      return !profile || profile.company_profile_completed !== true;
+    } catch (error) {
+      console.error('Error validating company profile completion', error);
+      return false;
+    }
+  }
+
+  private async getCompanyProfileFromHasura(accessToken: string): Promise<UserCompanyProfile | null> {
+    const payload = this.decodeJwt(accessToken);
+    const email = payload?.email ?? this._user.value?.email ?? this.getKeycloakUser()?.email ?? null;
+
+    return firstValueFrom(this.profile.getCurrentUserProfile(accessToken, email));
+  }
+
+  private applyCompanyNameToCurrentUser(profile: UserCompanyProfile | null): void {
     const currentUser = this._user.value;
     if (!currentUser) return;
 
+    const representativeName = [profile?.first_name, profile?.last_name]
+      .filter((value): value is string => !!value)
+      .join(' ')
+      .trim();
+
+    const companyName =
+      profile?.company_commercial_name?.trim() ||
+      representativeName ||
+      currentUser.username;
+
     const nextUser: AuthUser = {
       ...currentUser,
-      companyName: profile.company_commercial_name,
+      companyName,
+      companyProfileCompleted: profile?.company_profile_completed === true,
     };
 
     this.ngZone.run(() => this._user.next(nextUser));

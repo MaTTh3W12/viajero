@@ -21,7 +21,7 @@ const auth = inject(AuthService);
 };
 
 // Guard que permite solo empresas en /company
-export const empresaGuard: CanActivateFn = () => {
+export const empresaGuard: CanActivateFn = async () => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
@@ -31,6 +31,13 @@ export const empresaGuard: CanActivateFn = () => {
   }
 
   if (auth.isEmpresa()) {
+    const needsProfileCompletion = await auth.companyProfileNeedsCompletion();
+
+    if (needsProfileCompletion) {
+      router.navigate(['/register'], { queryParams: { type: 'company' } });
+      return false;
+    }
+
     return true;
   }
 
