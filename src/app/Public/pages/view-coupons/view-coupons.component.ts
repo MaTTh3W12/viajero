@@ -36,6 +36,7 @@ export class ViewCouponsComponent implements OnInit {
   acquireState: 'confirm' | 'loading' | 'success' = 'confirm';
   acquireError = '';
   acquiredCoupon: AcquiredCoupon | null = null;
+  isCouponAlreadyAcquired = false;
 
   readonly fixedCouponBrand = 'El Salvador Tours';
   readonly fixedAddress = 'Los Cóbanos, Sonsonate';
@@ -139,6 +140,7 @@ export class ViewCouponsComponent implements OnInit {
   private loadCoupon(id: number): void {
     this.loading = true;
     this.error = '';
+    this.isCouponAlreadyAcquired = false;
 
     this.couponService.getPublicCouponById(id).pipe(
       take(1),
@@ -148,6 +150,8 @@ export class ViewCouponsComponent implements OnInit {
         this.coupon = coupon && coupon.published ? coupon : null;
         if (!this.coupon) {
           this.error = 'No se encontró el cupón.';
+        } else {
+          this.checkIfCouponAlreadyAcquired(Number(this.coupon.id));
         }
         this.loading = false;
         this.cdr.detectChanges();
@@ -258,6 +262,32 @@ export class ViewCouponsComponent implements OnInit {
     const kcRole = (this.auth.getKeycloakRole() ?? '').toUpperCase();
     const isUsuario = user?.role === 'usuario' || kcRole === this.USER_ROLE_LABEL;
     return isUsuario && !!token;
+  }
+
+  private checkIfCouponAlreadyAcquired(couponId: number): void {
+    const currentUser = this.auth.getCurrentUser();
+    const token = this.auth.token;
+    const kcRole = (this.auth.getKeycloakRole() ?? '').toUpperCase();
+    const isUsuario = currentUser?.role === 'usuario' || kcRole === this.USER_ROLE_LABEL;
+
+    if (!isUsuario || !token) {
+      this.isCouponAlreadyAcquired = false;
+      return;
+    }
+
+    this.couponService.hasAcquiredCoupon(token, couponId).pipe(
+      take(1),
+      timeout(15000)
+    ).subscribe({
+      next: (alreadyAcquired) => {
+        this.isCouponAlreadyAcquired = alreadyAcquired;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.isCouponAlreadyAcquired = false;
+        this.cdr.detectChanges();
+      }
+    });
   }
 
 }

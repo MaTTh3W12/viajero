@@ -45,6 +45,12 @@ export class LoginComponent implements OnInit {
         return;
       }
 
+      const returnUrl = this.auth.consumeKeycloakReturnUrl();
+      if (returnUrl) {
+        this.router.navigateByUrl(returnUrl);
+        return;
+      }
+
       const role = String(this.auth.getCurrentUser()?.role ?? '').toLowerCase();
       console.log('[AUTH] rol detectado en callback:', role || '(sin rol)');
       if (role === 'empresa' || role === 'company') {

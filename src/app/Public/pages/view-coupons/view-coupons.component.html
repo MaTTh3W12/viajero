@@ -64,7 +64,7 @@
 
         @if (getTermsList(coupon.terms).length > 0) {
           <ul class="mt-4 list-disc pl-6 text-[#0E225C] text-[16px] leading-relaxed">
-            @for (term of getTermsList(coupon.terms); track term) {
+            @for (term of getTermsList(coupon.terms); track $index) {
               <li>{{ term }}</li>
             }
           </ul>
@@ -140,7 +140,7 @@
 
           @if (getTermsList(coupon.terms).length > 0) {
             <ul class="list-disc pl-6 text-[#0E225C] text-base md:text-[16px] leading-relaxed mb-6">
-              @for (term of getTermsList(coupon.terms); track term) {
+              @for (term of getTermsList(coupon.terms); track $index) {
                 <li>{{ term }}</li>
               }
             </ul>

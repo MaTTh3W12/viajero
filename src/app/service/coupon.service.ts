@@ -29,6 +29,12 @@ interface GetCouponsData {
   };
 }
 
+interface GetHomeFeaturedCouponsAggregateData {
+  aggregate: {
+    count: number;
+  };
+}
+
 interface GetCouponImageData {
   viajerosv_coupons_with_image_base64: CouponImagePreview[];
 }
@@ -126,9 +132,18 @@ interface HomeFeaturedCouponRow {
   price: number | string | null;
   price_discount: number | string | null;
   stock_available: number | null;
+  stock_total: number | null;
+  start_date: string | null;
+  end_date: string | null;
+  published: boolean;
+  auto_published: boolean;
   category_id: number;
+  user_id: number | string;
+  terms: string | null;
   created_at: string;
+  updated_at: string;
   user: {
+    company_commercial_name: string | null;
     company_address: string | null;
     company_map_url: string | null;
   } | null;
@@ -136,6 +151,7 @@ interface HomeFeaturedCouponRow {
 
 interface GetHomeFeaturedCouponsData {
   viajerosv_featured_coupons: HomeFeaturedCouponRow[];
+  viajerosv_featured_coupons_aggregate: GetHomeFeaturedCouponsAggregateData;
 }
 
 interface CouponHighlightRow {
@@ -145,10 +161,18 @@ interface CouponHighlightRow {
   price: number | string | null;
   price_discount: number | string | null;
   stock_available: number | null;
+  stock_total: number | null;
+  start_date: string | null;
   category_id: number;
+  published: boolean;
+  auto_published: boolean;
+  user_id: number | string;
+  terms: string | null;
   created_at?: string | null;
+  updated_at?: string | null;
   end_date?: string | null;
   user: {
+    company_commercial_name: string | null;
     company_address: string | null;
     company_map_url: string | null;
   } | null;
@@ -156,6 +180,11 @@ interface CouponHighlightRow {
 
 interface GetCouponsHighlightData {
   viajerosv_coupons: CouponHighlightRow[];
+  viajerosv_coupons_aggregate?: {
+    aggregate: {
+      count: number;
+    };
+  };
 }
 
 export interface Coupon {
@@ -176,6 +205,7 @@ export interface Coupon {
   created_at: string;
   updated_at: string;
   user?: {
+    company_commercial_name: string | null;
     company_address: string | null;
     company_map_url: string | null;
   } | null;
@@ -275,6 +305,7 @@ export interface CouponAcquiredWithImage {
 export interface GetCouponsVariables {
   limit?: number;
   offset?: number;
+  where?: Record<string, unknown>;
 }
 
 export interface GetCouponsAcquiredVariables {
@@ -332,26 +363,36 @@ export interface CouponAcquiredListResult {
 
 const DEFAULT_HASURA_ENDPOINT = 'https://api.grupoavanza.work/v1/graphql';
 const GET_COUPONS_QUERY = `
-  query GetCoupons($limit: Int, $offset: Int) {
-    viajerosv_coupons(limit: $limit, offset: $offset) {
+  query GetCoupons($limit: Int!, $offset: Int!, $where: viajerosv_coupons_bool_exp!) {
+    viajerosv_coupons(
+      limit: $limit,
+      offset: $offset,
+      order_by: { created_at: desc },
+      where: $where
+    ) {
       category_id
       id
       user_id
       auto_published
       published
       title
-      end_date
-      start_date
-      stock_available
-      stock_total
+      description
       price
       price_discount
-      description
+      stock_available
+      stock_total
+      start_date
+      end_date
       terms
       created_at
       updated_at
+      user {
+        company_commercial_name
+        company_address
+        company_map_url
+      }
     }
-    viajerosv_coupons_aggregate {
+    viajerosv_coupons_aggregate(where: $where) {
       aggregate {
         count
       }
@@ -368,11 +409,25 @@ const GET_HOME_FEATURED_COUPONS_QUERY = `
       price
       price_discount
       stock_available
+      stock_total
+      start_date
+      end_date
+      published
+      auto_published
       category_id
+      user_id
+      terms
       created_at
+      updated_at
       user {
+        company_commercial_name
         company_address
         company_map_url
+      }
+    }
+    viajerosv_featured_coupons_aggregate {
+      aggregate {
+        count
       }
     }
   }
@@ -398,11 +453,25 @@ const GET_EXPIRING_SOON_COUPONS_QUERY = `
       price
       price_discount
       stock_available
+      stock_total
+      start_date
       end_date
+      published
+      auto_published
       category_id
+      user_id
+      terms
+      created_at
+      updated_at
       user {
+        company_commercial_name
         company_address
         company_map_url
+      }
+    }
+    viajerosv_coupons_aggregate {
+      aggregate {
+        count
       }
     }
   }
@@ -426,9 +495,18 @@ const GET_LATEST_COUPONS_QUERY = `
       price
       price_discount
       stock_available
+      stock_total
+      start_date
+      end_date
+      published
+      auto_published
+      user_id
+      terms
       created_at
+      updated_at
       category_id
       user {
+        company_commercial_name
         company_address
         company_map_url
       }
@@ -441,6 +519,13 @@ const GET_LATEST_COUPONS_QUERY = `
 })
 export class CouponService {
   constructor(private http: HttpClient) {}
+
+  private readonly defaultPublicCouponsWhere: Record<string, unknown> = {
+    _and: [
+      { active: { _eq: true } },
+      { published: { _eq: true } },
+    ],
+  };
 
   private get endpoint(): string {
     if (typeof window === 'undefined') {
@@ -502,7 +587,13 @@ export class CouponService {
   }
 
   getCoupons(token: string, variables: GetCouponsVariables = {}): Observable<CouponListResult> {
-    return this.executeOperation<GetCouponsData, GetCouponsVariables>(token, GET_COUPONS_QUERY, variables).pipe(
+    const requestVariables: GetCouponsVariables = {
+      limit: variables.limit ?? 40,
+      offset: variables.offset ?? 0,
+      where: variables.where ?? {},
+    };
+
+    return this.executeOperation<GetCouponsData, GetCouponsVariables>(token, GET_COUPONS_QUERY, requestVariables).pipe(
       map((data) => ({
         rows: data.viajerosv_coupons,
         total: data.viajerosv_coupons_aggregate.aggregate.count,
@@ -511,7 +602,13 @@ export class CouponService {
   }
 
   getPublicCoupons(variables: GetCouponsVariables = {}): Observable<CouponListResult> {
-    return this.executePublicOperation<GetCouponsData, GetCouponsVariables>(GET_COUPONS_QUERY, variables).pipe(
+    const requestVariables: GetCouponsVariables = {
+      limit: variables.limit ?? 40,
+      offset: variables.offset ?? 0,
+      where: variables.where ?? this.defaultPublicCouponsWhere,
+    };
+
+    return this.executePublicOperation<GetCouponsData, GetCouponsVariables>(GET_COUPONS_QUERY, requestVariables).pipe(
       map((data) => ({
         rows: data.viajerosv_coupons,
         total: data.viajerosv_coupons_aggregate.aggregate.count,
@@ -1074,21 +1171,21 @@ export class CouponService {
   private mapCouponHighlight(coupon: CouponHighlightRow): Coupon {
     return {
       id: coupon.id,
-      user_id: 0,
+      user_id: coupon.user_id ?? 0,
       category_id: coupon.category_id,
-      auto_published: false,
-      published: true,
+      auto_published: coupon.auto_published ?? false,
+      published: coupon.published ?? true,
       title: coupon.title,
       end_date: coupon.end_date ?? '',
-      start_date: '',
+      start_date: coupon.start_date ?? '',
       stock_available: coupon.stock_available,
-      stock_total: null,
+      stock_total: coupon.stock_total ?? null,
       price: coupon.price != null ? String(coupon.price) : null,
       price_discount: coupon.price_discount != null ? String(coupon.price_discount) : null,
       description: coupon.description,
-      terms: null,
+      terms: coupon.terms ?? null,
       created_at: coupon.created_at ?? '',
-      updated_at: coupon.created_at ?? coupon.end_date ?? '',
+      updated_at: coupon.updated_at ?? coupon.created_at ?? coupon.end_date ?? '',
       user: coupon.user,
     };
   }

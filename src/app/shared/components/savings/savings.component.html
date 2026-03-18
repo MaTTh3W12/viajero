@@ -46,12 +46,12 @@
           </span>
         </div>
 
-        <p class="text-[9px] md:text-[11px] text-gray-400 mb-1 md:mb-2 font-museo tracking-wider">
-          {{ fixedCouponTitle }}
+        <p class="text-[9px] md:text-[11px] text-gray-400 mb-1 md:mb-2 font-museo tracking-wider truncate">
+          {{ getCouponCommercialName(coupon) }}
         </p>
         <h3
           class="text-[13px] md:text-[18px] font-bold text-[#0E225C] leading-tight md:leading-snug mb-3 md:mb-5 font-museo truncate max-w-[20ch]">
-          {{ coupon.title || fixedCouponTitle }}
+          {{ coupon.title || getCouponCommercialName(coupon) }}
         </h3>
 
         <div class="mt-auto">

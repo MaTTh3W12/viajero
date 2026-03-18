@@ -3,12 +3,12 @@ import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../../service/auth.service';
 
 // Guard que permite solo administradores en /admin
-export const adminGuard: CanActivateFn = () => {
-const auth = inject(AuthService);
+export const adminGuard: CanActivateFn = (_route, state) => {
+  const auth = inject(AuthService);
   const router = inject(Router);
 
   if (!auth.isLoggedIn()) {
-    auth.keycloakLogin();
+    auth.keycloakLogin(state.url);
     return false;
   }
 
@@ -21,12 +21,12 @@ const auth = inject(AuthService);
 };
 
 // Guard que permite solo empresas en /company
-export const empresaGuard: CanActivateFn = () => {
+export const empresaGuard: CanActivateFn = (_route, state) => {
   const auth = inject(AuthService);
   const router = inject(Router);
 
   if (!auth.isLoggedIn()) {
-    auth.keycloakLogin();
+    auth.keycloakLogin(state.url);
     return false;
   }
 
