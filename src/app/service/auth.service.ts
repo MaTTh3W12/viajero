@@ -64,6 +64,7 @@ const KC_TOKEN_KEY = 'viajero_kc_token';
 const KC_ROLE_KEY = 'viajero_kc_role';
 const KC_USER_KEY = 'viajero_kc_user';
 const KC_CLIENT_KEY = 'kc_client';
+const KC_RETURN_URL_KEY = 'viajero_kc_return_url';
 
 const KC_CLIENTS = {
   login: 'viajero-frontend',
@@ -219,7 +220,15 @@ export class AuthService {
     this.logout();
   }
 
-  keycloakLogin(): void {
+  keycloakLogin(returnUrl?: string): void {
+    if (this.isBrowser()) {
+      const fallbackUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+      const nextUrl = (returnUrl ?? fallbackUrl ?? '/').trim();
+      if (nextUrl) {
+        sessionStorage.setItem(KC_RETURN_URL_KEY, nextUrl);
+      }
+    }
+
     this.kc.login();
   }
 
@@ -235,7 +244,23 @@ export class AuthService {
     const idTokenHint = this.getKeycloakToken()?.id_token;
     const clientId = this.isBrowser() ? (sessionStorage.getItem(KC_CLIENT_KEY) ?? undefined) : undefined;
     this.logout();
+    if (this.isBrowser()) {
+      sessionStorage.removeItem(KC_RETURN_URL_KEY);
+    }
     this.kc.logout(clientId, idTokenHint);
+  }
+
+  consumeKeycloakReturnUrl(): string | null {
+    if (!this.isBrowser()) return null;
+
+    const raw = sessionStorage.getItem(KC_RETURN_URL_KEY);
+    if (!raw) return null;
+
+    sessionStorage.removeItem(KC_RETURN_URL_KEY);
+
+    if (!raw.startsWith('/')) return null;
+    if (raw.startsWith('//')) return null;
+    return raw;
   }
 
   shouldLogoutInKeycloak(): boolean {
