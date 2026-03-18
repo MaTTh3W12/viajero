@@ -339,6 +339,26 @@ export class UserProfileService {
         }
       `;
 
+      const queryByEmailPhoneAlias = `
+        query GetUserByEmailPhoneAlias($email: String!) {
+          viajerosv_users(where: { email: { _eq: $email } }, limit: 1) {
+            id
+            company_commercial_name
+            company_nit
+            company_email
+            company_phone: phone
+            company_logo_url
+            company_description
+            company_address
+            country
+            city
+            first_name
+            last_name
+            email
+          }
+        }
+      `;
+
       const queryByEmailFallback = `
         query GetUserByEmailFallback($email: String!) {
           viajerosv_users(where: { email: { _eq: $email } }, limit: 1) {
@@ -366,6 +386,13 @@ export class UserProfileService {
         catchError(() =>
           this.executeOperation<GetCurrentUserProfileData, GetUserByEmailVariables>(
             token,
+            queryByEmailPhoneAlias,
+            { email }
+          )
+        ),
+        catchError(() =>
+          this.executeOperation<GetCurrentUserProfileData, GetUserByEmailVariables>(
+            token,
             queryByEmailFallback,
             { email }
           )
@@ -382,6 +409,26 @@ export class UserProfileService {
           company_nit
           company_email
           company_phone
+          company_logo_url
+          company_description
+          company_address
+          country
+          city
+          first_name
+          last_name
+          email
+        }
+      }
+    `;
+
+    const queryCurrentPhoneAlias = `
+      query GetCurrentUserProfilePhoneAlias {
+        viajerosv_users(limit: 1) {
+          id
+          company_commercial_name
+          company_nit
+          company_email
+          company_phone: phone
           company_logo_url
           company_description
           company_address
@@ -418,6 +465,13 @@ export class UserProfileService {
       queryCurrent,
       {}
     ).pipe(
+      catchError(() =>
+        this.executeOperation<GetCurrentUserProfileData, Record<string, never>>(
+          token,
+          queryCurrentPhoneAlias,
+          {}
+        )
+      ),
       catchError(() =>
         this.executeOperation<GetCurrentUserProfileData, Record<string, never>>(
           token,
