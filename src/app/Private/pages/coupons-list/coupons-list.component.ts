@@ -1,4 +1,5 @@
 import { Component, ViewChild, ChangeDetectorRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { firstValueFrom } from 'rxjs';
 import { TopbarComponent } from '../../../shared/dashboard/topbar/topbar.component';
 import { DataTableComponent } from '../../../shared/dashboard/data-table/data-table.component';
@@ -14,14 +15,18 @@ import { CategoryService } from '../../../service/category.service';
 @Component({
   selector: 'app-coupons-list',
   standalone: true,
-  imports: [TopbarComponent, DataTableComponent, FilterBarComponent],
+  imports: [CommonModule, TopbarComponent, DataTableComponent, FilterBarComponent],
   templateUrl: './coupons-list.component.html',
   styleUrl: './coupons-list.component.css',
 })
 export class CouponsListComponent {
   allCoupons: Coupon[] = [];
   coupons: Coupon[] = [];
+  couponSearchTerm = '';
   couponStatusFilter: 'all' | 'Borrador' | 'Publicado' = 'all';
+  currentPage = 1;
+  readonly pageSize = 10;
+  totalCoupons = 0;
   @ViewChild(FilterBarComponent) filterBar!: FilterBarComponent;
 
   private currentUserDbId: string | number | null = null;
@@ -96,7 +101,78 @@ export class CouponsListComponent {
 
   onCouponStatusFilterChange(filter: 'all' | 'Borrador' | 'Publicado'): void {
     this.couponStatusFilter = filter;
+
+    if (this.role === 'empresa' && this.auth.isKeycloakLoggedIn()) {
+      this.currentPage = 1;
+      void this.loadCompanyCouponsFromApi();
+      return;
+    }
+
     this.refreshVisibleCoupons();
+  }
+
+  onCouponSearch(term: string): void {
+    this.couponSearchTerm = term.trim();
+
+    if (this.role === 'empresa' && this.auth.isKeycloakLoggedIn()) {
+      this.currentPage = 1;
+      void this.loadCompanyCouponsFromApi();
+      return;
+    }
+
+    this.refreshVisibleCoupons();
+  }
+
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.totalCoupons / this.pageSize));
+  }
+
+  get visiblePages(): number[] {
+    const totalPages = this.totalPages;
+    const windowSize = 5;
+
+    if (totalPages <= windowSize) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    const halfWindow = Math.floor(windowSize / 2);
+    let start = Math.max(1, this.currentPage - halfWindow);
+    let end = Math.min(totalPages, start + windowSize - 1);
+
+    if (end - start + 1 < windowSize) {
+      start = Math.max(1, end - windowSize + 1);
+    }
+
+    return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages || page === this.currentPage) return;
+
+    this.currentPage = page;
+
+    if (this.role === 'empresa' && this.auth.isKeycloakLoggedIn()) {
+      void this.loadCompanyCouponsFromApi();
+      return;
+    }
+
+    this.refreshVisibleCoupons();
+  }
+
+  goToFirstPage(): void {
+    this.goToPage(1);
+  }
+
+  goToPreviousPage(): void {
+    this.goToPage(this.currentPage - 1);
+  }
+
+  goToNextPage(): void {
+    this.goToPage(this.currentPage + 1);
+  }
+
+  goToLastPage(): void {
+    this.goToPage(this.totalPages);
   }
 
   async onCreateCoupon(payload: {
@@ -545,13 +621,13 @@ export class CouponsListComponent {
 
     await this.ensureCategoryMap(token);
 
-    const response = await firstValueFrom(this.couponService.getCoupons(token, { limit: 200, offset: 0 }));
+    const response = await firstValueFrom(this.couponService.getCoupons(token, {
+      limit: this.pageSize,
+      offset: (this.currentPage - 1) * this.pageSize,
+      where: this.buildCompanyCouponsWhere(),
+    }));
 
-    const mine = this.currentUserDbId != null
-      ? response.rows.filter((row) => this.idsMatch(row.user_id, this.currentUserDbId))
-      : response.rows;
-
-    this.setCoupons(mine.map((row) => ({
+    const rows = response.rows.map((row) => ({
       id: row.id,
       titulo: row.title,
       descripcion: this.auth.user?.companyName || this.auth.user?.username || row.description || '',
@@ -570,7 +646,12 @@ export class CouponsListComponent {
       descuento: this.toFiniteNumber(row.price_discount),
       imagePreview: null,
       imageMimeType: '',
-    })));
+    }));
+
+    this.allCoupons = rows;
+    this.coupons = rows;
+    this.totalCoupons = response.total;
+    this.cdr.detectChanges();
 
     // load images for each coupon so the table can show previews immediately
     try {
@@ -619,13 +700,37 @@ export class CouponsListComponent {
   }
 
   private refreshVisibleCoupons(): void {
-    this.coupons = this.applyStatusFilter(this.allCoupons);
+    if (this.role === 'empresa' && this.auth.isKeycloakLoggedIn()) {
+      this.coupons = [...this.allCoupons];
+      this.cdr.detectChanges();
+      return;
+    }
+
+    const filteredCoupons = this.applyFilters(this.allCoupons);
+    this.totalCoupons = filteredCoupons.length;
+
+    const safeCurrentPage = Math.min(this.currentPage, this.totalPages);
+    this.currentPage = Math.max(1, safeCurrentPage);
+
+    const start = (this.currentPage - 1) * this.pageSize;
+    this.coupons = filteredCoupons.slice(start, start + this.pageSize);
     this.cdr.detectChanges();
   }
 
-  private applyStatusFilter(rows: Coupon[]): Coupon[] {
-    if (this.couponStatusFilter === 'all') return rows;
-    return rows.filter((coupon) => coupon.estado === this.couponStatusFilter);
+  private applyFilters(rows: Coupon[]): Coupon[] {
+    const search = this.normalizeSearchTerm(this.couponSearchTerm);
+
+    return rows.filter((coupon) => {
+      const matchesStatus =
+        this.couponStatusFilter === 'all' || coupon.estado === this.couponStatusFilter;
+
+      const matchesSearch =
+        !search ||
+        this.normalizeSearchTerm(coupon.titulo).includes(search) ||
+        this.normalizeSearchTerm(coupon.rawDescripcion ?? coupon.descripcion).includes(search);
+
+      return matchesStatus && matchesSearch;
+    });
   }
 
   private normalizeMimeType(mimeType: string | null | undefined): string {
@@ -753,6 +858,45 @@ export class CouponsListComponent {
     const total = coupon.disponiblesTotal ?? coupon.disponibles ?? 0;
     const available = coupon.disponibles ?? 0;
     return Math.max(total - available, 0);
+  }
+
+  private buildCompanyCouponsWhere(): Record<string, unknown> {
+    const andConditions: Record<string, unknown>[] = [
+      { active: { _eq: true } },
+    ];
+
+    if (this.currentUserDbId != null) {
+      andConditions.push({
+        user_id: { _eq: this.currentUserDbId },
+      });
+    }
+
+    const searchTerm = this.couponSearchTerm.trim();
+    if (searchTerm.length > 0) {
+      const likeTerm = `%${searchTerm}%`;
+      andConditions.push({
+        _or: [
+          { title: { _ilike: likeTerm } },
+          { description: { _ilike: likeTerm } },
+        ],
+      });
+    }
+
+    if (this.couponStatusFilter === 'Publicado') {
+      andConditions.push({ published: { _eq: true } });
+    } else if (this.couponStatusFilter === 'Borrador') {
+      andConditions.push({ published: { _eq: false } });
+    }
+
+    return { _and: andConditions };
+  }
+
+  private normalizeSearchTerm(value: string | null | undefined): string {
+    return String(value ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
   }
 
   private truncateText(value: unknown, maxChars: number): string {
