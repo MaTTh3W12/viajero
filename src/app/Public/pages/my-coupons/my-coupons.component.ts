@@ -310,8 +310,16 @@ export class MyCouponsComponent implements OnInit {
   confirmTransfer(): void {
     const email = this.transferEmail.trim();
 
+    this.transferError = '';
+
     if (!this.isValidEmail(email)) {
       this.transferError = 'Ingresa un correo electrónico válido.';
+      return;
+    }
+
+    const uniqueCode = (this.transferTarget?.acquired.unique_code ?? '').trim();
+    if (!uniqueCode) {
+      this.transferError = 'El cupón no tiene un código válido para transferir.';
       return;
     }
 
@@ -323,6 +331,24 @@ export class MyCouponsComponent implements OnInit {
 
     const email = this.transferEmail.trim();
     const uniqueCode = (this.transferTarget.acquired.unique_code ?? '').trim();
+    const currentUser = this.auth.getCurrentUser();
+    const currentUserId = (currentUser?.sub ?? '').trim();
+    const couponOwnerId = String(this.transferTarget.acquired.user_id ?? '').trim();
+
+    if (!this.isValidEmail(email)) {
+      this.transferError = 'Ingresa un correo electrónico válido.';
+      return;
+    }
+
+    if (!uniqueCode) {
+      this.transferError = 'El cupón no tiene un código válido para transferir.';
+      return;
+    }
+
+    if (currentUserId && couponOwnerId && currentUserId !== couponOwnerId) {
+      this.transferError = 'No puedes transferir este cupón porque no pertenece a tu cuenta.';
+      return;
+    }
 
     const token = this.auth.token;
     if (!token) {
@@ -335,17 +361,36 @@ export class MyCouponsComponent implements OnInit {
 
     try {
       const transferred = await firstValueFrom(
-        this.couponService.transferCoupon(token, uniqueCode, email).pipe(take(1), timeout(15000))
+        this.couponService.transferCoupon(token, uniqueCode, email.toLowerCase()).pipe(take(1), timeout(15000))
       );
 
-      if (!transferred) throw new Error('No se pudo completar la transferencia.');
+      if (!transferred) {
+        const reconciled = await this.reconcileTransferState(uniqueCode);
+        if (reconciled) {
+          this.transferError = '';
+          this.transferSuccess = true;
+          return;
+        }
+        throw new Error('No se pudo completar la transferencia.');
+      }
 
       const transferredId = String(this.transferTarget.acquired.id);
       this.coupons = this.coupons.filter((item) => String(item.acquired.id) !== transferredId);
 
       this.transferSuccess = true;
     } catch (error) {
-      this.transferError = 'No se pudo transferir el cupón.';
+      const transferMessage = this.getTransferErrorMessage(error);
+
+      if (this.isOwnershipTransferError(error, transferMessage)) {
+        const reconciled = await this.reconcileTransferState(uniqueCode);
+        if (reconciled) {
+          this.transferError = '';
+          this.transferSuccess = true;
+          return;
+        }
+      }
+
+      this.transferError = transferMessage;
     } finally {
       this.transferring = false;
       this.cdr.detectChanges();
@@ -417,6 +462,10 @@ export class MyCouponsComponent implements OnInit {
   }
 
   canTransfer(item: MyCouponItem): boolean {
+    const currentUserId = this.getCurrentUserId();
+    const ownerId = String(item.acquired.user_id ?? '').trim();
+
+    if (currentUserId && ownerId && currentUserId !== ownerId) return false;
     if (item.acquired.redeemed) return false;
     const endDate = new Date(item.coupon.end_date);
     if (Number.isNaN(endDate.getTime())) return false;
@@ -528,12 +577,76 @@ export class MyCouponsComponent implements OnInit {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
   }
 
+  private getTransferErrorMessage(error: unknown): string {
+    const defaultMessage = 'No se pudo transferir el cupón.';
+
+    if (!(error instanceof Error)) return defaultMessage;
+
+    const rawMessage = error.message?.trim();
+    if (!rawMessage) return defaultMessage;
+
+    const normalized = rawMessage.toLowerCase();
+
+    if (normalized.includes('not found') || normalized.includes('no rows')) {
+      return 'No se encontró el cupón para transferir.';
+    }
+
+    if (normalized.includes('email') || normalized.includes('correo')) {
+      return 'El correo destino no es válido o no existe.';
+    }
+
+    if (
+      normalized.includes('permission') ||
+      normalized.includes('denied') ||
+      normalized.includes('forbidden') ||
+      normalized.includes('unauthorized')
+    ) {
+      return 'No tienes permisos para transferir este cupón.';
+    }
+
+    return rawMessage;
+  }
+
+  private isOwnershipTransferError(error: unknown, resolvedMessage: string): boolean {
+    const raw = error instanceof Error ? error.message.toLowerCase() : '';
+    const resolved = resolvedMessage.toLowerCase();
+
+    return (
+      raw.includes('you do not own this coupon') ||
+      resolved.includes('no tienes permisos para transferir este cupón') ||
+      resolved.includes('unauthorized')
+    );
+  }
+
+  private async reconcileTransferState(uniqueCode: string): Promise<boolean> {
+    try {
+      await this.loadCoupons();
+
+      if (this.error) return false;
+
+      const stillOwned = this.coupons.some(
+        (item) => (item.acquired.unique_code ?? '').trim() === uniqueCode
+      );
+
+      return !stillOwned;
+    } catch {
+      return false;
+    }
+  }
+
   private buildAcquiredWhere(): Record<string, unknown> {
+    const currentUserId = this.getCurrentUserId();
+    const ownerCondition = currentUserId ? { user_id: { _eq: currentUserId } } : null;
+
     if (this.selectedStatus !== 'canjeado') {
-      return {};
+      if (!ownerCondition) return {};
+      return ownerCondition;
     }
 
     const andConditions: Record<string, unknown>[] = [{ redeemed: { _eq: true } }];
+    if (ownerCondition) {
+      andConditions.push(ownerCondition);
+    }
     const search = this.searchText.trim();
 
     if (search) {
@@ -556,6 +669,10 @@ export class MyCouponsComponent implements OnInit {
     }
 
     return { _and: andConditions };
+  }
+
+  private getCurrentUserId(): string {
+    return String(this.auth.getCurrentUser()?.sub ?? '').trim();
   }
 
   private buildDateRange(from: string, to: string): Record<string, string> | null {

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, map, of } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
 
 declare global {
   interface Window {
@@ -13,6 +13,14 @@ declare global {
 
 interface GraphQLError {
   message: string;
+  extensions?: {
+    code?: string;
+    internal?: {
+      error?: {
+        message?: string;
+      };
+    };
+  };
 }
 
 interface GraphQLResponse<TData> {
@@ -45,6 +53,18 @@ interface GetCouponOwnerData {
 
 interface GetCouponByIdData {
   viajerosv_coupons_by_pk: Coupon | null;
+}
+
+interface GetCouponCompanySocialsData {
+  viajerosv_coupons_by_pk: {
+    user: CompanySocialLinks | null;
+  } | null;
+}
+
+interface GetCouponCompanySocialsPublicData {
+  viajerosv_coupons_by_pk: {
+    user_public: CompanySocialLinks | null;
+  } | null;
 }
 
 interface InsertCouponData {
@@ -362,6 +382,14 @@ export interface CouponAcquiredListResult {
   total: number;
 }
 
+export interface CompanySocialLinks {
+  company_facebook: string | null;
+  company_instagram: string | null;
+  company_youtube: string | null;
+  company_twitter: string | null;
+  company_website: string | null;
+}
+
 const DEFAULT_HASURA_ENDPOINT = 'https://api.grupoavanza.work/v1/graphql';
 const GET_COUPONS_QUERY = `
   query GetCoupons(
@@ -526,6 +554,17 @@ const GET_LATEST_COUPONS_QUERY = `
 export class CouponService {
   constructor(private http: HttpClient) {}
 
+  private getGraphQLErrorMessage(errors: GraphQLError[]): string {
+    const messages = errors
+      .map((error) => error.extensions?.internal?.error?.message || error.message)
+      .filter((message): message is string => !!message)
+      .map((message) => message.trim())
+      .filter((message) => message.length > 0);
+
+    if (!messages.length) return 'Error en operación GraphQL';
+    return Array.from(new Set(messages)).join(' | ');
+  }
+
   private readonly defaultPublicCouponsWhere: Record<string, unknown> = {
     _and: [
       { active: { _eq: true } },
@@ -555,7 +594,7 @@ export class CouponService {
       .pipe(
         map((response) => {
           if (response.errors?.length) {
-            throw new Error(response.errors.map((error) => error.message).join(' | '));
+            throw new Error(this.getGraphQLErrorMessage(response.errors));
           }
 
           if (!response.data) {
@@ -580,7 +619,7 @@ export class CouponService {
       .pipe(
         map((response) => {
           if (response.errors?.length) {
-            throw new Error(response.errors.map((error) => error.message).join(' | '));
+            throw new Error(this.getGraphQLErrorMessage(response.errors));
           }
 
           if (!response.data) {
@@ -655,6 +694,45 @@ export class CouponService {
 
     return this.executePublicOperation<GetCouponByIdData, { id: number }>(query, { id }).pipe(
       map((data) => data.viajerosv_coupons_by_pk ?? null)
+    );
+  }
+
+  getCouponCompanySocials(token: string, id: number): Observable<CompanySocialLinks | null> {
+    const queryFromUser = `
+      query GetCouponCompanySocials($id: bigint!) {
+        viajerosv_coupons_by_pk(id: $id) {
+          user {
+            company_facebook
+            company_instagram
+            company_youtube
+            company_twitter
+            company_website
+          }
+        }
+      }
+    `;
+
+    const queryFromUserPublic = `
+      query GetCouponCompanySocialsPublic($id: bigint!) {
+        viajerosv_coupons_by_pk(id: $id) {
+          user_public {
+            company_facebook
+            company_instagram
+            company_youtube
+            company_twitter
+            company_website
+          }
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCouponCompanySocialsData, { id: number }>(token, queryFromUser, { id }).pipe(
+      map((data) => data.viajerosv_coupons_by_pk?.user ?? null),
+      catchError(() =>
+        this.executeOperation<GetCouponCompanySocialsPublicData, { id: number }>(token, queryFromUserPublic, { id }).pipe(
+          map((data) => data.viajerosv_coupons_by_pk?.user_public ?? null)
+        )
+      )
     );
   }
 

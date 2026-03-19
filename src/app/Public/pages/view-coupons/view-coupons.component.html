@@ -83,18 +83,45 @@
             <div class="text-right">
               <p class="text-[#538CFF] text-sm mb-2">Síguenos en:</p>
               <div class="flex gap-3 justify-end">
-                <a href="" (click)="$event.preventDefault()" class="hover:scale-110 transition-transform duration-200 block">
-                  <img src="assets/icons/fb.png" class="w-5 h-5 object-contain block" alt="Facebook" />
-                </a>
-                <a href="" (click)="$event.preventDefault()" class="hover:scale-110 transition-transform duration-200 block">
-                  <img src="assets/icons/x.png" class="w-5 h-5 object-contain block" alt="X" />
-                </a>
-                <a href="" (click)="$event.preventDefault()" class="hover:scale-110 transition-transform duration-200 block">
-                  <img src="assets/icons/instagram.png" class="w-5 h-5 object-contain block" alt="Instagram" />
-                </a>
-                <a href="" (click)="$event.preventDefault()" aria-label="YouTube" class="hover:scale-110 transition-transform duration-200 block">
-                  <img src="assets/icons/youtube.png" class="w-5 h-5 object-contain block" alt="YouTube" />
-                </a>
+                @if (getFacebookUrl(); as facebookUrl) {
+                  <a [href]="facebookUrl" target="_blank" rel="noopener noreferrer" class="hover:scale-110 transition-transform duration-200 block">
+                    <img src="assets/icons/fb.png" class="w-5 h-5 object-contain block" alt="Facebook" />
+                  </a>
+                } @else {
+                  <span class="block opacity-50 cursor-default" aria-label="Facebook sin enlace">
+                    <img src="assets/icons/fb.png" class="w-5 h-5 object-contain block" alt="Facebook" />
+                  </span>
+                }
+
+                @if (getTwitterUrl(); as twitterUrl) {
+                  <a [href]="twitterUrl" target="_blank" rel="noopener noreferrer" class="hover:scale-110 transition-transform duration-200 block">
+                    <img src="assets/icons/x.png" class="w-5 h-5 object-contain block" alt="X" />
+                  </a>
+                } @else {
+                  <span class="block opacity-50 cursor-default" aria-label="X sin enlace">
+                    <img src="assets/icons/x.png" class="w-5 h-5 object-contain block" alt="X" />
+                  </span>
+                }
+
+                @if (getInstagramUrl(); as instagramUrl) {
+                  <a [href]="instagramUrl" target="_blank" rel="noopener noreferrer" class="hover:scale-110 transition-transform duration-200 block">
+                    <img src="assets/icons/instagram.png" class="w-5 h-5 object-contain block" alt="Instagram" />
+                  </a>
+                } @else {
+                  <span class="block opacity-50 cursor-default" aria-label="Instagram sin enlace">
+                    <img src="assets/icons/instagram.png" class="w-5 h-5 object-contain block" alt="Instagram" />
+                  </span>
+                }
+
+                @if (getYoutubeUrl(); as youtubeUrl) {
+                  <a [href]="youtubeUrl" target="_blank" rel="noopener noreferrer" aria-label="YouTube" class="hover:scale-110 transition-transform duration-200 block">
+                    <img src="assets/icons/youtube.png" class="w-5 h-5 object-contain block" alt="YouTube" />
+                  </a>
+                } @else {
+                  <span class="block opacity-50 cursor-default" aria-label="YouTube sin enlace">
+                    <img src="assets/icons/youtube.png" class="w-5 h-5 object-contain block" alt="YouTube" />
+                  </span>
+                }
               </div>
             </div>
           </div>

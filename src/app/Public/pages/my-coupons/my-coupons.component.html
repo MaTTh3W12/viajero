@@ -403,10 +403,15 @@
     <input [(ngModel)]="transferEmail" type="email" placeholder="correo@ejemplo.com"
       class="w-full h-11 px-4 rounded-xl bg-[#F4F7FD] border border-transparent focus:border-[#538CFF] focus:outline-none mb-6" />
 
+    @if (transferError) {
+    <p class="text-sm text-red-600 mb-4 text-center">{{ transferError }}</p>
+    }
+
     <div class="flex justify-center gap-3">
 
-      <button (click)="confirmTransfer()" class="px-6 h-11 rounded-full bg-[#A7A7A7] text-white font-medium">
-        Transferir cupón
+      <button (click)="confirmTransfer()" [disabled]="transferring"
+        class="px-6 h-11 rounded-full bg-[#A7A7A7] hover:bg-[#538CFF] text-white font-medium transition-colors disabled:opacity-60 disabled:bg-[#A7A7A7]">
+        {{ transferring ? 'Procesando...' : 'Transferir cupón' }}
       </button>
 
       <button (click)="closeTransferModal()"
@@ -432,10 +437,15 @@
         ¿Deseas transferir el cupón?
       </p>
 
+      @if (transferError) {
+      <p class="text-sm text-red-600 mb-4">{{ transferError }}</p>
+      }
+
       <div class="flex gap-4">
 
-        <button (click)="executeTransfer()" class="px-6 h-11 rounded-full bg-[#538CFF] text-white font-medium">
-          Transferir cupón
+        <button (click)="executeTransfer()" [disabled]="transferring"
+          class="px-6 h-11 rounded-full bg-[#A7A7A7] hover:bg-[#538CFF] text-white font-medium transition-colors disabled:opacity-60 disabled:bg-[#A7A7A7]">
+          {{ transferring ? 'Transfiriendo...' : 'Transferir cupón' }}
         </button>
 
         <button (click)="closeTransferModal()"

@@ -7,7 +7,7 @@ import { NavbarComponent } from '../../../shared/components/navbar/navbar.compon
 import { ContacUsComponent } from '../../../shared/components/contac-us/contac-us.component';
 import { RelatedPagesComponent } from '../../../shared/components/related-pages/related-pages.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
-import { AcquiredCoupon, Coupon, CouponService } from '../../../service/coupon.service';
+import { AcquiredCoupon, CompanySocialLinks, Coupon, CouponService } from '../../../service/coupon.service';
 import { AuthService, AuthUser } from '../../../service/auth.service';
 import { take, timeout } from 'rxjs';
 
@@ -37,6 +37,7 @@ export class ViewCouponsComponent implements OnInit {
   acquireError = '';
   acquiredCoupon: AcquiredCoupon | null = null;
   isCouponAlreadyAcquired = false;
+  companySocialLinks: CompanySocialLinks | null = null;
 
   private readonly categoryNames: Record<number, string> = {
     1: 'Alojamiento',
@@ -140,6 +141,31 @@ export class ViewCouponsComponent implements OnInit {
     return rawAddress || 'Ubicación no disponible';
   }
 
+  hasAnySocialNetwork(): boolean {
+    return !!(
+      this.getFacebookUrl() ||
+      this.getTwitterUrl() ||
+      this.getInstagramUrl() ||
+      this.getYoutubeUrl()
+    );
+  }
+
+  getFacebookUrl(): string | null {
+    return this.buildCompanySocialUrl(this.companySocialLinks?.company_facebook, 'facebook.com');
+  }
+
+  getTwitterUrl(): string | null {
+    return this.buildCompanySocialUrl(this.companySocialLinks?.company_twitter, 'x.com');
+  }
+
+  getInstagramUrl(): string | null {
+    return this.buildCompanySocialUrl(this.companySocialLinks?.company_instagram, 'instagram.com');
+  }
+
+  getYoutubeUrl(): string | null {
+    return this.buildCompanySocialUrl(this.companySocialLinks?.company_youtube, 'youtube.com');
+  }
+
   formatExpirationDate(endDate: string): string {
     return this.buildDateLabel(endDate, 'Vence');
   }
@@ -180,6 +206,7 @@ export class ViewCouponsComponent implements OnInit {
     this.loading = true;
     this.error = '';
     this.isCouponAlreadyAcquired = false;
+    this.companySocialLinks = null;
 
     this.couponService.getPublicCouponById(id).pipe(
       take(1),
@@ -191,6 +218,7 @@ export class ViewCouponsComponent implements OnInit {
           this.error = 'No se encontró el cupón.';
         } else {
           this.checkIfCouponAlreadyAcquired(Number(this.coupon.id));
+          this.loadCompanySocialLinks(Number(this.coupon.id));
         }
         this.loading = false;
         this.cdr.detectChanges();
@@ -207,6 +235,43 @@ export class ViewCouponsComponent implements OnInit {
     if (value == null) return null;
     const parsed = Number(value);
     return Number.isFinite(parsed) ? parsed : null;
+  }
+
+  private loadCompanySocialLinks(couponId: number): void {
+    const token = this.auth.token;
+    if (!token) return;
+
+    this.couponService.getCouponCompanySocials(token, couponId).pipe(
+      take(1),
+      timeout(15000)
+    ).subscribe({
+      next: (links) => {
+        this.companySocialLinks = links;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.companySocialLinks = null;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private buildCompanySocialUrl(rawValue: string | null | undefined, domain: string): string | null {
+    const raw = rawValue?.trim();
+    if (!raw) return null;
+
+    if (/^https?:\/\//i.test(raw)) {
+      return raw;
+    }
+
+    if (/^www\./i.test(raw) || raw.includes('.')) {
+      return `https://${raw}`;
+    }
+
+    const sanitizedHandle = raw.replace(/^@+/, '');
+    if (!sanitizedHandle) return null;
+
+    return `https://${domain}/${encodeURIComponent(sanitizedHandle)}`;
   }
 
   private formatNumber(value: number): string {
