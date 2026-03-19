@@ -38,9 +38,6 @@ export class ViewCouponsComponent implements OnInit {
   acquiredCoupon: AcquiredCoupon | null = null;
   isCouponAlreadyAcquired = false;
 
-  readonly fixedCouponBrand = 'El Salvador Tours';
-  readonly fixedAddress = 'Los Cóbanos, Sonsonate';
-
   private readonly categoryNames: Record<number, string> = {
     1: 'Alojamiento',
     2: 'Alimentos y bebidas',
@@ -123,18 +120,60 @@ export class ViewCouponsComponent implements OnInit {
       .filter(Boolean);
   }
 
-  formatExpirationDate(endDate: string): string {
-    const parsed = endDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!parsed) return 'Vence: Fecha no disponible';
+  getCouponMapUrl(coupon: Coupon): string | null {
+    const rawMapUrl = coupon.user?.company_map_url?.trim() ?? '';
+    if (!rawMapUrl) return null;
 
-    const [, year, month, day] = parsed;
+    if (/^https?:\/\//i.test(rawMapUrl)) {
+      return rawMapUrl;
+    }
+
+    if (/^www\./i.test(rawMapUrl)) {
+      return `https://${rawMapUrl}`;
+    }
+
+    return null;
+  }
+
+  getCouponAddress(coupon: Coupon): string {
+    const rawAddress = coupon.user?.company_address?.trim() ?? '';
+    return rawAddress || 'Ubicación no disponible';
+  }
+
+  formatExpirationDate(endDate: string): string {
+    return this.buildDateLabel(endDate, 'Vence');
+  }
+
+  private buildDateLabel(rawDate: string | null | undefined, prefix: string): string {
+    const parsedDateParts = this.parseDateParts(rawDate);
+    if (!parsedDateParts) return `${prefix}: Fecha no disponible`;
+
     const monthNames = [
       'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
       'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
     ];
-    const monthIndex = Number(month) - 1;
-    const monthName = monthNames[monthIndex] ?? month;
-    return `Vence: ${Number(day)} ${monthName} ${year}`;
+
+    const monthIndex = Number(parsedDateParts.month) - 1;
+    const monthName = monthNames[monthIndex] ?? parsedDateParts.month;
+    return `${prefix}: ${Number(parsedDateParts.day)} ${monthName} ${parsedDateParts.year}`;
+  }
+
+  private parseDateParts(rawDate: string | null | undefined): { year: string; month: string; day: string } | null {
+    if (!rawDate) return null;
+
+    const directMatch = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (directMatch) {
+      const [, year, month, day] = directMatch;
+      return { year, month, day };
+    }
+
+    const parsedDate = new Date(rawDate);
+    if (Number.isNaN(parsedDate.getTime())) return null;
+
+    const year = String(parsedDate.getUTCFullYear());
+    const month = String(parsedDate.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(parsedDate.getUTCDate()).padStart(2, '0');
+    return { year, month, day };
   }
 
   private loadCoupon(id: number): void {

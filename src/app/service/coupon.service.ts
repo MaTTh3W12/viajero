@@ -636,6 +636,11 @@ export class CouponService {
           terms
           created_at
           updated_at
+          user {
+            company_commercial_name
+            company_address
+            company_map_url
+          }
         }
       }
     `;

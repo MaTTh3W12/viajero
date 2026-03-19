@@ -23,7 +23,6 @@ export class SavingsComponent implements OnInit, OnChanges {
   currentPage = 1;
   loading = false;
   error = '';
-  readonly fixedCouponBrand = 'El Salvador Tours';
   readonly fixedAddress = 'San Salvador, El Salvador';
   readonly defaultCommercialName = 'Comercio participante';
   private couponsFoundEmitVersion = 0;

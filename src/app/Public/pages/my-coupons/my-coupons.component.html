@@ -151,14 +151,6 @@
               getCategoryName(item.coupon.category_id) }}</span>
           </div>
 
-          <div class="flex items-center gap-2 mb-3">
-            <span class="inline-flex items-center justify-center w-9 h-9 rounded-full bg-[#EEC45C]">
-              <img src="assets/icons/el-salvador.svg" alt="El Salvador" class="w-5 h-5 object-contain" />
-            </span>
-            <span class="text-[14px] md:text-[20px] text-[#538CFF] leading-none">El Salvador Tours</span>
-          </div>
-
-          <p class="text-[9px] md:text-[11px] text-gray-400 mb-1 tracking-wider">EL SALVADOR TOURS</p>
           <h3 class="text-[13px] md:text-[18px] font-bold text-[#0E225C] leading-tight mb-3 md:mb-4 truncate max-w-[20ch]">{{
             item.coupon.title }}</h3>
 
@@ -274,12 +266,6 @@
       <div class="rounded-[24px] md:rounded-[28px] border border-[#D8E3FF] p-4 md:p-6">
         <div class="flex items-center justify-between gap-3 border-b border-[#D8E3FF] pb-4 mb-4">
           <div class="flex items-center gap-2">
-            <span class="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[#EEC45C]">
-              <img src="assets/icons/el-salvador.svg" alt="El Salvador" class="w-6 h-6 object-contain" />
-            </span>
-            <span class="text-[#538CFF] text-[16px] md:text-[20px] leading-tight">El Salvador Tours</span>
-          </div>
-          <div class="flex items-center gap-2">
             <span class="inline-flex items-center justify-center w-10 h-10 rounded-full"
               [style.background-color]="getCategoryBgColor(qrSelectedItem.coupon.category_id)">
               <img [src]="getCategoryIconPath(qrSelectedItem.coupon.category_id)"
@@ -290,7 +276,6 @@
           </div>
         </div>
 
-        <p class="text-gray-400 text-[16px] md:text-[14px] mb-1">El Salvador Tours</p>
         <div class="flex items-start justify-between gap-4 mb-4">
           <h4 class="text-[#0E225C] text-[20px] md:text-[30px] leading-tight font-semibold">{{
             qrSelectedItem.coupon.title }}</h4>
