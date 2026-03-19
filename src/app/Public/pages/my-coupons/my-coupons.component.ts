@@ -69,6 +69,8 @@ export class MyCouponsComponent implements OnInit {
   categoryDropdownOpen = false;
   selectedStatus: CouponStatusFilter = 'activo';
   sortBy: 'recent' | 'oldest' = 'recent';
+  canjeadoDateFrom = '';
+  canjeadoDateTo = '';
 
   currentPage = 1;
   readonly pageSize = 8;
@@ -145,6 +147,25 @@ export class MyCouponsComponent implements OnInit {
       rows = rows.filter((item) => item.acquired.redeemed);
     }
 
+    if (this.selectedStatus !== 'activo') {
+      const fromTime = this.toRangeDateTime(this.canjeadoDateFrom, 'start');
+      const toTime = this.toRangeDateTime(this.canjeadoDateTo, 'end');
+
+      if (fromTime != null || toTime != null) {
+        rows = rows.filter((item) => {
+          const sourceDate = this.selectedStatus === 'canjeado'
+            ? (item.acquired.redeemed_at || item.acquired.acquired_at)
+            : item.coupon.end_date;
+
+          const itemTime = this.toRangeDateTime(sourceDate, 'start');
+          if (itemTime == null) return false;
+          if (fromTime != null && itemTime < fromTime) return false;
+          if (toTime != null && itemTime > toTime) return false;
+          return true;
+        });
+      }
+    }
+
     if (search) {
       rows = rows.filter((item) => {
         const title = this.normalizeText(item.coupon.title ?? '');
@@ -197,6 +218,7 @@ export class MyCouponsComponent implements OnInit {
   setStatus(status: CouponStatusFilter): void {
     this.selectedStatus = status;
     this.currentPage = 1;
+    void this.loadCoupons();
   }
 
   onSearchChange(): void {
@@ -206,6 +228,7 @@ export class MyCouponsComponent implements OnInit {
   applyFilters(): void {
     this.currentPage = 1;
     this.categoryDropdownOpen = false;
+    void this.loadCoupons();
   }
 
   onSortChange(value: 'recent' | 'oldest'): void {
@@ -419,7 +442,11 @@ export class MyCouponsComponent implements OnInit {
 
     try {
       const acquiredResponse = await firstValueFrom(
-        this.couponService.getCouponsAcquired(token, { limit: 200, offset: 0 }).pipe(take(1), timeout(15000))
+        this.couponService.getCouponsAcquired(token, {
+          limit: 200,
+          offset: 0,
+          where: this.buildAcquiredWhere(),
+        }).pipe(take(1), timeout(15000))
       );
 
       const acquiredRows = acquiredResponse.rows ?? [];
@@ -499,6 +526,67 @@ export class MyCouponsComponent implements OnInit {
   private isValidEmail(value: string): boolean {
     if (!value) return false;
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  }
+
+  private buildAcquiredWhere(): Record<string, unknown> {
+    if (this.selectedStatus !== 'canjeado') {
+      return {};
+    }
+
+    const andConditions: Record<string, unknown>[] = [{ redeemed: { _eq: true } }];
+    const search = this.searchText.trim();
+
+    if (search) {
+      andConditions.push({
+        _or: [
+          { unique_code: { _ilike: `%${search}%` } },
+          { coupon: { title: { _ilike: `%${search}%` } } },
+        ],
+      });
+    }
+
+    const acquiredRange = this.buildDateRange(this.canjeadoDateFrom, this.canjeadoDateTo);
+    if (acquiredRange) {
+      andConditions.push({ acquired_at: acquiredRange });
+    }
+
+    const redeemedRange = this.buildDateRange(this.canjeadoDateFrom, this.canjeadoDateTo);
+    if (redeemedRange) {
+      andConditions.push({ redeemed_at: redeemedRange });
+    }
+
+    return { _and: andConditions };
+  }
+
+  private buildDateRange(from: string, to: string): Record<string, string> | null {
+    const range: Record<string, string> = {};
+    const normalizedFrom = from?.trim();
+    const normalizedTo = to?.trim();
+
+    if (normalizedFrom) {
+      range['_gte'] = normalizedFrom;
+    }
+
+    if (normalizedTo) {
+      range['_lte'] = normalizedTo;
+    }
+
+    return Object.keys(range).length > 0 ? range : null;
+  }
+
+  private toRangeDateTime(value: string | null | undefined, boundary: 'start' | 'end'): number | null {
+    if (!value) return null;
+    const raw = value.slice(0, 10);
+    const [year, month, day] = raw.split('-').map((part) => Number(part));
+    if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+      return null;
+    }
+
+    if (boundary === 'end') {
+      return new Date(year, month - 1, day, 23, 59, 59, 999).getTime();
+    }
+
+    return new Date(year, month - 1, day, 0, 0, 0, 0).getTime();
   }
 
   private async loadImagesForCoupons(token: string, rows: Coupon[]): Promise<void> {

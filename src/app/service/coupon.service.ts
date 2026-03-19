@@ -806,15 +806,31 @@ export class CouponService {
           unique_code
           acquired_at
           redeemed_at
+          user_public {
+            id
+            first_name
+            last_name
+            email
+          }
           coupon {
+            id
             title
             description
             price_discount
             end_date
           }
-          userByValidatedBy {
+          userByValidatedBy: userPublicByValidatedBy {
+            id
             first_name
             last_name
+            company_commercial_name
+            company_address
+            company_map_url
+            company_facebook
+            company_instagram
+            company_youtube
+            company_twitter
+            company_website
             email
           }
         }
