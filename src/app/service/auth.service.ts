@@ -213,17 +213,46 @@ export class AuthService {
     if (!this.isBrowser()) return;
 
     localStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(STORAGE_KEY);
     sessionStorage.removeItem(KC_TOKEN_KEY);
     sessionStorage.removeItem(KC_ROLE_KEY);
     sessionStorage.removeItem(KC_USER_KEY);
+    sessionStorage.removeItem(KC_CLIENT_KEY);
   }
 
   clear(): void {
     this.logout();
   }
 
+  clearSessionIfFreshTabRequest(): void {
+    if (!this.isBrowser()) return;
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('freshSession') !== '1') return;
+
+    this.clearTokenExpiryTimer();
+    this._token.next(null);
+    this._user.next(null);
+    this._sessionExpired.next(false);
+
+    sessionStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(KC_TOKEN_KEY);
+    sessionStorage.removeItem(KC_ROLE_KEY);
+    sessionStorage.removeItem(KC_USER_KEY);
+    sessionStorage.removeItem(KC_CLIENT_KEY);
+    sessionStorage.removeItem(KC_RETURN_URL_KEY);
+
+    localStorage.removeItem(STORAGE_KEY);
+
+    params.delete('freshSession');
+    const nextQuery = params.toString();
+    const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}${window.location.hash}`;
+    window.history.replaceState({}, document.title, nextUrl);
+  }
+
   keycloakLogin(returnUrl?: string): void {
     if (this.isBrowser()) {
+      this.resetTransientKeycloakState();
       sessionStorage.removeItem(KC_RETURN_URL_KEY);
 
       const nextUrl = (returnUrl ?? '').trim();
@@ -298,6 +327,8 @@ export class AuthService {
     const code = params.get('code');
     if (!code) return false;
 
+    this.resetTransientKeycloakState();
+
     const tokenData = await this.kc.exchangeCode(code);
     if (!tokenData?.access_token) return false;
 
@@ -331,13 +362,6 @@ export class AuthService {
   }): Promise<boolean> {
     const token = this.getKeycloakToken()?.access_token;
     const user = this.getKeycloakUser();
-
-    console.log('[AUTH] completeKeycloakUserProfile start', {
-      hasToken: !!token,
-      keycloakSub: user?.sub ?? null,
-      keycloakUser: user,
-      formData,
-    });
 
     if (!token) {
       console.warn('[AUTH] completeKeycloakUserProfile aborted: missing token');
@@ -393,13 +417,6 @@ export class AuthService {
     const token = this.getKeycloakToken()?.access_token;
     const user = this.getKeycloakUser();
 
-    console.log('[AUTH] completeKeycloakCompanyProfile start', {
-      hasToken: !!token,
-      keycloakSub: user?.sub ?? null,
-      keycloakUser: user,
-      formData,
-    });
-
     if (!token) {
       console.warn('[AUTH] completeKeycloakCompanyProfile aborted: missing token');
       return false;
@@ -433,9 +450,7 @@ export class AuthService {
         city: formData.city,
       };
 
-      console.log('[AUTH] upsertCompany variables', variables);
       await firstValueFrom(this.profile.upsertCompany(token, variables).pipe(timeout(20000)));
-      console.log('[AUTH] upsertCompany success');
 
       const current = this._user.value;
       if (current) {
@@ -460,12 +475,13 @@ export class AuthService {
 
   private saveToStorage(user: AuthUser): void {
     if (!this.isBrowser()) return;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+    localStorage.removeItem(STORAGE_KEY);
   }
 
   private loadFromStorage(): AuthUser | null {
     if (!this.isBrowser()) return null;
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = sessionStorage.getItem(STORAGE_KEY);
     return raw ? (JSON.parse(raw) as AuthUser) : null;
   }
 
@@ -491,16 +507,6 @@ export class AuthService {
     const payload = this.decodeJwt(accessToken);
     if (!payload) return;
 
-    console.log('[AUTH] token claims check', {
-      sub: payload.sub,
-      preferred_username: payload.preferred_username,
-      email: payload.email,
-      given_name: payload.given_name,
-      family_name: payload.family_name,
-      has_given_name: !!payload.given_name,
-      has_family_name: !!payload.family_name,
-    });
-
     const realmRoles: string[] = payload.realm_access?.roles ?? [];
     const resourceRoles: string[] = Object.values(payload.resource_access ?? {})
       .flatMap((entry) => entry.roles ?? [])
@@ -513,14 +519,6 @@ export class AuthService {
     sessionStorage.setItem(KC_ROLE_KEY, chosenRoleRaw);
 
     const normalizedRole = this.normalizeRole(chosenRoleRaw);
-
-    console.log('[AUTH] role resolution', {
-      hasuraRole: hasuraRole ?? null,
-      realmRoles,
-      resourceRoles,
-      chosenRoleRaw,
-      normalizedRole,
-    });
 
     const fullName = [payload.given_name, payload.family_name]
       .filter((value): value is string => !!value)
@@ -593,20 +591,16 @@ export class AuthService {
       return hasura || 'admin';
     }
 
-    if (normalizedHasura.includes('company') || normalizedHasura.includes('empresa')) {
-      return hasura || 'empresa';
-    }
-
     const tokenRole = this.pickRoleByPriority(tokenRoles);
     if (tokenRole) {
       return tokenRole;
     }
 
-    if (hasura) {
-      return hasura;
+    if (normalizedHasura.includes('user') || normalizedHasura.includes('usuario')) {
+      return hasura || 'usuario';
     }
 
-    return 'USER';
+    return 'usuario';
   }
 
   private pickRoleByPriority(roles: string[]): string | null {
@@ -617,13 +611,28 @@ export class AuthService {
     const admin = normalized.find((entry) => entry.key.includes('admin'));
     if (admin) return admin.raw;
 
-    const company = normalized.find((entry) => entry.key.includes('company') || entry.key.includes('empresa'));
-    if (company) return company.raw;
-
     const user = normalized.find((entry) => entry.key.includes('user') || entry.key.includes('usuario'));
     if (user) return user.raw;
 
+    const company = normalized.find((entry) => entry.key.includes('company') || entry.key.includes('empresa'));
+    if (company) return company.raw;
+
     return this.firstUsefulRealmRole(roles);
+  }
+
+  private resetTransientKeycloakState(): void {
+    if (!this.isBrowser()) return;
+
+    this.clearTokenExpiryTimer();
+    this._token.next(null);
+    this._user.next(null);
+
+    sessionStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(KC_TOKEN_KEY);
+    sessionStorage.removeItem(KC_ROLE_KEY);
+    sessionStorage.removeItem(KC_USER_KEY);
+
+    localStorage.removeItem(STORAGE_KEY);
   }
 
   private normalizeRole(raw?: string): UserRole {
@@ -732,8 +741,6 @@ export class AuthService {
     const expiresAtMs = exp * 1000;
     const remainingMs = expiresAtMs - Date.now();
 
-    console.log('[AUTH] token expira en', this.formatDateTimeForElSalvador(expiresAtMs));
-
     if (remainingMs <= 0) {
       this.handleTokenExpired();
       return;
@@ -757,7 +764,6 @@ export class AuthService {
     if (!this.isBrowser()) return;
 
     this._sessionExpired.next(true);
-    console.log('[AUTH] sesión cerrada por expiración de token');
   }
 
   private formatDateTimeForElSalvador(timestamp: number): string {

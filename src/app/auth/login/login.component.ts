@@ -57,18 +57,8 @@ export class LoginComponent implements OnInit {
       }
 
       const appRole = String(this.auth.getCurrentUser()?.role ?? '').toLowerCase();
-      const keycloakRoleRaw = String(this.auth.getKeycloakRole() ?? '').toLowerCase();
-      const isEmpresaRole =
-        appRole === 'empresa' ||
-        appRole === 'company' ||
-        keycloakRoleRaw.includes('empresa') ||
-        keycloakRoleRaw.includes('company');
-      const isAdminRole = appRole === 'admin' || keycloakRoleRaw.includes('admin');
-
-      console.log('[AUTH] rol detectado en callback:', {
-        appRole: appRole || '(sin rol)',
-        keycloakRoleRaw: keycloakRoleRaw || '(sin rol)',
-      });
+      const isEmpresaRole = appRole === 'empresa' || appRole === 'company';
+      const isAdminRole = appRole === 'admin';
 
       if (isEmpresaRole) {
         this.router.navigateByUrl('/companies/dashboard');

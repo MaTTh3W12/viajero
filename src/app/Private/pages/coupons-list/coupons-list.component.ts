@@ -82,20 +82,11 @@ export class CouponsListComponent {
   ) {}
 
   async ngOnInit(): Promise<void> {
-    console.log('[COUPONS] ngOnInit start', {
-      role: this.role,
-      isKeycloakLoggedIn: this.auth.isKeycloakLoggedIn(),
-      authUser: this.auth.user,
-    });
-
     if (this.role === 'empresa' && this.auth.isKeycloakLoggedIn()) {
-      console.log('[COUPONS] ngOnInit -> loading company coupons from API');
       await this.loadCompanyCouponsFromApi();
-      console.log('[COUPONS] ngOnInit -> company coupons loaded', { rows: this.coupons.length });
       return;
     }
 
-    console.log('[COUPONS] ngOnInit -> loading coupons from mock');
     this.loadCouponsFromMock();
   }
 
@@ -168,13 +159,6 @@ export class CouponsListComponent {
         published: payload.estado === 'Publicado',
         image: payload.image ?? null,
       };
-
-      console.log('[COUPONS] creating coupon', {
-        title: payload.titulo,
-        categoryId: payload.categoriaId,
-        hasImage: !!payload.image,
-        imageChars: payload.image?.length ?? 0,
-      });
 
       await firstValueFrom(this.couponService.insertCoupon(token, variables));
 
@@ -275,13 +259,6 @@ export class CouponsListComponent {
         published: payload.estado === 'Publicado',
         ...(payload.image ? { image: payload.image } : {}),
       };
-
-      console.log('[COUPONS] updating coupon', {
-        id: payload.id,
-        stock_available: payload.disponibles,
-        hasImage: !!payload.image,
-        imageChars: payload.image?.length ?? 0,
-      });
 
       await firstValueFrom(this.couponService.updateCoupon(token, variables));
 
@@ -551,18 +528,12 @@ export class CouponsListComponent {
 
   private loadCouponsFromMock(): void {
     this.service.getCoupons().subscribe((data) => {
-      console.log('[COUPONS] mock data received', { rows: data.length });
       this.setCoupons(data.map((coupon) => this.decorateCouponForTable(coupon)));
     });
   }
 
   private async loadCompanyCouponsFromApi(): Promise<void> {
     const token = this.auth.token;
-    console.log('[COUPONS] loadCompanyCouponsFromApi', {
-      hasToken: !!token,
-      authUserSub: this.auth.user?.sub,
-      authKeycloakSub: this.auth.getKeycloakUser()?.sub,
-    });
 
     if (!token) {
       console.warn('[COUPONS] loadCompanyCouponsFromApi aborted: token missing');
@@ -572,22 +543,13 @@ export class CouponsListComponent {
 
     await this.resolveCurrentUserDbId(token);
 
-    console.log('[COUPONS] resolved currentUserDbId', { currentUserDbId: this.currentUserDbId });
-
     await this.ensureCategoryMap(token);
 
     const response = await firstValueFrom(this.couponService.getCoupons(token, { limit: 200, offset: 0 }));
-    console.log('[COUPONS] coupons API response', {
-      totalRows: response.rows.length,
-      userIds: response.rows.map((row) => row.user_id),
-      companyUserId: this.currentUserDbId,
-    });
 
     const mine = this.currentUserDbId != null
       ? response.rows.filter((row) => this.idsMatch(row.user_id, this.currentUserDbId))
       : response.rows;
-
-    console.log('[COUPONS] filtered company coupons', { rows: mine.length });
 
     this.setCoupons(mine.map((row) => ({
       id: row.id,
@@ -610,12 +572,9 @@ export class CouponsListComponent {
       imageMimeType: '',
     })));
 
-    console.log('[COUPONS] table rows assigned', { rows: this.allCoupons.length });
-
     // load images for each coupon so the table can show previews immediately
     try {
       await this.loadImagesForCoupons(token);
-      console.log('[COUPONS] images loaded for coupons');
     } catch (imgErr) {
       console.warn('[COUPONS] some images failed to load', imgErr);
     }
@@ -679,21 +638,15 @@ export class CouponsListComponent {
 
     const categories = await firstValueFrom(this.categoryService.getCategories(token));
     this.categoryNameById = new Map(categories.map((category) => [category.id, category.name]));
-    console.log('[COUPONS] categories loaded', {
-      rows: categories.length,
-      ids: categories.map((category) => category.id),
-    });
   }
 
   private async resolveCurrentUserDbId(token: string): Promise<void> {
     if (this.currentUserDbId != null) return;
 
     const email = this.auth.user?.email ?? this.auth.getKeycloakUser()?.email ?? null;
-    console.log('[COUPONS] resolveCurrentUserDbId', { email });
 
     try {
       const profile = await firstValueFrom(this.userProfileService.getCurrentUserProfile(token, email));
-      console.log('[COUPONS] getCurrentUserProfile response', profile);
       this.currentUserDbId = profile?.id ?? null;
     } catch (error) {
       console.error('[COUPONS] resolveCurrentUserDbId failed', error);

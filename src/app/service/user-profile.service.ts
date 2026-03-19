@@ -229,8 +229,6 @@ export class UserProfileService {
   }
 
   upsertCompany(token: string, data: UpsertCompanyVariables): Observable<void> {
-    console.log('[USER-PROFILE] upsertCompany request', { endpoint: this.endpoint, data });
-
     const mutation = `
       mutation UpsertCompanyProfile(
         $company_commercial_name: String,
