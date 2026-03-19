@@ -13,7 +13,9 @@ import { finalize, map, Observable, take, timeout } from 'rxjs';
 })
 export class SavingsComponent implements OnInit, OnChanges {
   @Input() selectedCategoryId: number | null = null;
-  @Input() sortBy: 'recent' = 'recent';
+  @Input() sortBy: 'recent' | 'expiring' = 'recent';
+  @Input() dateFrom: string | null = null;
+  @Input() dateTo: string | null = null;
   @Input() enablePagination = false;
   @Input() pageSize = 8;
   @Input() useHomeFeaturedCoupons = false;
@@ -23,17 +25,10 @@ export class SavingsComponent implements OnInit, OnChanges {
   currentPage = 1;
   loading = false;
   error = '';
-  readonly fixedCouponBrand = 'El Salvador Tours';
   readonly fixedAddress = 'San Salvador, El Salvador';
   readonly defaultCommercialName = 'Comercio participante';
   private couponsFoundEmitVersion = 0;
-
-  private readonly cardImages = [
-    'assets/img/card1.png',
-    'assets/img/card2.png',
-    'assets/img/card3.png',
-    'assets/img/card4.png',
-  ];
+  private couponImageById = new Map<number, string>();
   private readonly categoryNames: Record<number, string> = {
     1: 'Alojamiento',
     2: 'Alimentos y bebidas',
@@ -84,9 +79,16 @@ export class SavingsComponent implements OnInit, OnChanges {
       return;
     }
 
+    if (changes['sortBy'] && !changes['sortBy'].firstChange && !this.useHomeFeaturedCoupons) {
+      this.currentPage = 1;
+      this.loadCoupons();
+      return;
+    }
+
     if (
       changes['selectedCategoryId'] ||
-      changes['sortBy'] ||
+      changes['dateFrom'] ||
+      changes['dateTo'] ||
       changes['enablePagination'] ||
       changes['pageSize']
     ) {
@@ -110,8 +112,13 @@ export class SavingsComponent implements OnInit, OnChanges {
     return Array.from({ length: this.totalPages }, (_, index) => index + 1);
   }
 
-  getCardImage(index: number): string {
-    return this.cardImages[index % this.cardImages.length];
+  getCardImage(coupon: Coupon): string {
+    const couponId = Number(coupon.id);
+    return this.couponImageById.get(couponId) ?? '';
+  }
+
+  hasCardImage(coupon: Coupon): boolean {
+    return !!this.getCardImage(coupon);
   }
 
   getPriceBadgeLabel(coupon: Coupon): string {
@@ -181,7 +188,11 @@ export class SavingsComponent implements OnInit, OnChanges {
 
     const request$: Observable<Coupon[]> = this.useHomeFeaturedCoupons
       ? this.couponService.getHomeFeaturedCoupons()
-      : this.couponService.getPublicCoupons({ limit: 40, offset: 0 }).pipe(
+      : this.couponService.getPublicCoupons({
+          limit: 40,
+          offset: 0,
+          order_by: this.getOrderByForCurrentSort(),
+        }).pipe(
           map((response: CouponListResult) => response.rows ?? [])
         );
 
@@ -197,6 +208,7 @@ export class SavingsComponent implements OnInit, OnChanges {
       .subscribe({
         next: (coupons: Coupon[]) => {
           this.coupons = coupons;
+          this.loadImagesForCoupons(coupons);
           this.applyFiltersAndSort();
         },
         error: (error: unknown) => {
@@ -216,13 +228,38 @@ export class SavingsComponent implements OnInit, OnChanges {
       rows = rows.filter((coupon) => Number(coupon.category_id) === Number(this.selectedCategoryId));
     }
 
-    if (this.sortBy === 'recent') {
-      rows.sort((a, b) => {
-        const aDate = new Date(a.created_at).getTime();
-        const bDate = new Date(b.created_at).getTime();
-        return bDate - aDate;
+    const fromTime = this.normalizeDateToTime(this.dateFrom, 'start');
+    const toTime = this.normalizeDateToTime(this.dateTo, 'end');
+
+    if (fromTime != null || toTime != null) {
+      rows = rows.filter((coupon) => {
+        const couponDate = this.normalizeDateToTime(coupon.end_date, 'start');
+        if (couponDate == null) return false;
+        if (fromTime != null && couponDate < fromTime) return false;
+        if (toTime != null && couponDate > toTime) return false;
+        return true;
       });
     }
+
+    rows.sort((a, b) => {
+      if (this.sortBy === 'expiring') {
+        const aEnd = new Date(a.end_date).getTime();
+        const bEnd = new Date(b.end_date).getTime();
+        if (aEnd !== bEnd) return aEnd - bEnd;
+
+        const aCreated = new Date(a.created_at).getTime();
+        const bCreated = new Date(b.created_at).getTime();
+        return bCreated - aCreated;
+      }
+
+      const aCreated = new Date(a.created_at).getTime();
+      const bCreated = new Date(b.created_at).getTime();
+      if (aCreated !== bCreated) return bCreated - aCreated;
+
+      const aEnd = new Date(a.end_date).getTime();
+      const bEnd = new Date(b.end_date).getTime();
+      return aEnd - bEnd;
+    });
 
     this.displayedCoupons = rows;
     this.currentPage = Math.min(this.currentPage, this.totalPages);
@@ -248,6 +285,76 @@ export class SavingsComponent implements OnInit, OnChanges {
       return value.toString();
     }
     return value.toFixed(2).replace(/\.?0+$/, '');
+  }
+
+  private getOrderByForCurrentSort(): Array<Record<string, 'asc' | 'desc'>> {
+    if (this.sortBy === 'expiring') {
+      return [{ end_date: 'asc' }, { created_at: 'desc' }];
+    }
+
+    return [{ created_at: 'desc' }, { end_date: 'asc' }];
+  }
+
+  private loadImagesForCoupons(coupons: Coupon[]): void {
+    this.couponImageById.clear();
+
+    const couponIds = Array.from(
+      new Set(
+        coupons
+          .map((coupon) => Number(coupon.id))
+          .filter((id) => Number.isFinite(id))
+      )
+    );
+
+    if (couponIds.length === 0) return;
+
+    this.couponService.getPublicCouponImagesByIds(couponIds).pipe(
+      take(1),
+      timeout(15000)
+    ).subscribe({
+      next: (images) => {
+        images.forEach((imageData) => {
+          if (!imageData?.image_base64) return;
+
+          const couponId = Number(imageData.id);
+          if (!Number.isFinite(couponId)) return;
+
+          const mime = this.normalizeMimeType(imageData.image_mime_type);
+          this.couponImageById.set(couponId, this.toDataUrl(imageData.image_base64, mime || 'image/jpeg'));
+        });
+
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        return;
+      },
+    });
+  }
+
+  private toDataUrl(base64: string, mimeType: string): string {
+    if (!base64) return '';
+    if (base64.startsWith('data:')) return base64;
+    return `data:${mimeType};base64,${base64}`;
+  }
+
+  private normalizeMimeType(mimeType: string | null | undefined): string {
+    if (!mimeType) return '';
+    return String(mimeType).replace(/^"+|"+$/g, '').trim().toLowerCase();
+  }
+
+  private normalizeDateToTime(dateValue: string | null | undefined, boundary: 'start' | 'end'): number | null {
+    if (!dateValue) return null;
+
+    const [year, month, day] = dateValue.slice(0, 10).split('-').map((value) => Number(value));
+    if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+      return null;
+    }
+
+    if (boundary === 'end') {
+      return new Date(year, month - 1, day, 23, 59, 59, 999).getTime();
+    }
+
+    return new Date(year, month - 1, day, 0, 0, 0, 0).getTime();
   }
 
 }

@@ -38,7 +38,13 @@
       <a
         [routerLink]="['/view-coupons', coupon.id]"
         class="snap-center flex-shrink-0 w-[340px] md:w-[400px] flex gap-4 p-4 bg-[#F6F9FF] rounded-[24px] text-left border border-transparent hover:border-blue-100 transition-all">
-        <img [src]="getCardImage(idx)" [alt]="coupon.title" class="w-[120px] h-[150px] object-cover rounded-[18px] flex-shrink-0" />
+        @if (hasCardImage(coupon)) {
+          <img [src]="getCardImage(coupon)" [alt]="coupon.title" class="w-[120px] h-[150px] object-cover rounded-[18px] flex-shrink-0" />
+        } @else {
+          <div class="w-[120px] h-[150px] rounded-[18px] flex-shrink-0 bg-[#EAF0FF] flex items-center justify-center">
+            <img src="assets/icons/coupon1.svg" alt="Cupón" class="w-8 h-8 opacity-60" />
+          </div>
+        }
         <div class="flex flex-col justify-between py-1 w-full min-w-0">
           <div>
             <p class="text-[11px] text-gray-400 font-museo uppercase tracking-wide mb-1 truncate">{{ getCouponCommercialName(coupon) }}</p>
@@ -74,7 +80,13 @@
       <a
         [routerLink]="['/view-coupons', coupon.id]"
         class="snap-center flex-shrink-0 w-[340px] md:w-[400px] flex gap-4 p-4 bg-[#F6F9FF] rounded-[24px] text-left border border-transparent hover:border-blue-100 transition-all">
-        <img [src]="getCardImage(idx)" [alt]="coupon.title" class="w-[120px] h-[150px] object-cover rounded-[18px] flex-shrink-0" />
+        @if (hasCardImage(coupon)) {
+          <img [src]="getCardImage(coupon)" [alt]="coupon.title" class="w-[120px] h-[150px] object-cover rounded-[18px] flex-shrink-0" />
+        } @else {
+          <div class="w-[120px] h-[150px] rounded-[18px] flex-shrink-0 bg-[#EAF0FF] flex items-center justify-center">
+            <img src="assets/icons/coupon1.svg" alt="Cupón" class="w-8 h-8 opacity-60" />
+          </div>
+        }
         <div class="flex flex-col justify-between py-1 w-full min-w-0">
           <div>
             <p class="text-[11px] text-gray-400 font-museo uppercase tracking-wide mb-1 truncate">{{ getCouponCommercialName(coupon) }}</p>

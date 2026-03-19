@@ -32,19 +32,19 @@ export class CompaniesComponent {
         iconId: 'tick-square',
         bgClass: 'bg-[#E6EEFF] text-[#538CFF]',
         show: row => row.estado === 'Pendiente',
-        action: row => console.log('Aprobar', row),
+        action: () => undefined,
       },
       {
         iconId: 'close-circle',
         bgClass: 'bg-[#E6EEFF] text-[#1A2440]',
         show: row => row.estado === 'Pendiente',
-        action: row => console.log('Rechazar', row),
+        action: () => undefined,
       },
       {
         iconId: 'edit',
         bgClass: 'bg-[#E6EEFF] text-[#538CFF]',
         show: row => row.estado === 'Activa',
-        action: row => console.log('Editar', row),
+        action: () => undefined,
       },
     ],
   };

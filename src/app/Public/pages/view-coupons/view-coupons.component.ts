@@ -7,7 +7,7 @@ import { NavbarComponent } from '../../../shared/components/navbar/navbar.compon
 import { ContacUsComponent } from '../../../shared/components/contac-us/contac-us.component';
 import { RelatedPagesComponent } from '../../../shared/components/related-pages/related-pages.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
-import { AcquiredCoupon, Coupon, CouponService } from '../../../service/coupon.service';
+import { AcquiredCoupon, CompanySocialLinks, Coupon, CouponService } from '../../../service/coupon.service';
 import { AuthService, AuthUser } from '../../../service/auth.service';
 import { take, timeout } from 'rxjs';
 
@@ -37,9 +37,7 @@ export class ViewCouponsComponent implements OnInit {
   acquireError = '';
   acquiredCoupon: AcquiredCoupon | null = null;
   isCouponAlreadyAcquired = false;
-
-  readonly fixedCouponBrand = 'El Salvador Tours';
-  readonly fixedAddress = 'Los Cóbanos, Sonsonate';
+  companySocialLinks: CompanySocialLinks | null = null;
 
   private readonly categoryNames: Record<number, string> = {
     1: 'Alojamiento',
@@ -110,6 +108,11 @@ export class ViewCouponsComponent implements OnInit {
     return `${amount} cupones`;
   }
 
+  hasAvailableStock(coupon: Coupon): boolean {
+    const amount = typeof coupon.stock_available === 'number' ? coupon.stock_available : 0;
+    return amount > 0;
+  }
+
   getTermsList(terms: string | null): string[] {
     if (!terms) return [];
     return terms
@@ -118,24 +121,92 @@ export class ViewCouponsComponent implements OnInit {
       .filter(Boolean);
   }
 
-  formatExpirationDate(endDate: string): string {
-    const parsed = endDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!parsed) return 'Vence: Fecha no disponible';
+  getCouponMapUrl(coupon: Coupon): string | null {
+    const rawMapUrl = coupon.user?.company_map_url?.trim() ?? '';
+    if (!rawMapUrl) return null;
 
-    const [, year, month, day] = parsed;
+    if (/^https?:\/\//i.test(rawMapUrl)) {
+      return rawMapUrl;
+    }
+
+    if (/^www\./i.test(rawMapUrl)) {
+      return `https://${rawMapUrl}`;
+    }
+
+    return null;
+  }
+
+  getCouponAddress(coupon: Coupon): string {
+    const rawAddress = coupon.user?.company_address?.trim() ?? '';
+    return rawAddress || 'Ubicación no disponible';
+  }
+
+  hasAnySocialNetwork(): boolean {
+    return !!(
+      this.getFacebookUrl() ||
+      this.getTwitterUrl() ||
+      this.getInstagramUrl() ||
+      this.getYoutubeUrl()
+    );
+  }
+
+  getFacebookUrl(): string | null {
+    return this.buildCompanySocialUrl(this.companySocialLinks?.company_facebook, 'facebook.com');
+  }
+
+  getTwitterUrl(): string | null {
+    return this.buildCompanySocialUrl(this.companySocialLinks?.company_twitter, 'x.com');
+  }
+
+  getInstagramUrl(): string | null {
+    return this.buildCompanySocialUrl(this.companySocialLinks?.company_instagram, 'instagram.com');
+  }
+
+  getYoutubeUrl(): string | null {
+    return this.buildCompanySocialUrl(this.companySocialLinks?.company_youtube, 'youtube.com');
+  }
+
+  formatExpirationDate(endDate: string): string {
+    return this.buildDateLabel(endDate, 'Vence');
+  }
+
+  private buildDateLabel(rawDate: string | null | undefined, prefix: string): string {
+    const parsedDateParts = this.parseDateParts(rawDate);
+    if (!parsedDateParts) return `${prefix}: Fecha no disponible`;
+
     const monthNames = [
       'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
       'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
     ];
-    const monthIndex = Number(month) - 1;
-    const monthName = monthNames[monthIndex] ?? month;
-    return `Vence: ${Number(day)} ${monthName} ${year}`;
+
+    const monthIndex = Number(parsedDateParts.month) - 1;
+    const monthName = monthNames[monthIndex] ?? parsedDateParts.month;
+    return `${prefix}: ${Number(parsedDateParts.day)} ${monthName} ${parsedDateParts.year}`;
+  }
+
+  private parseDateParts(rawDate: string | null | undefined): { year: string; month: string; day: string } | null {
+    if (!rawDate) return null;
+
+    const directMatch = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (directMatch) {
+      const [, year, month, day] = directMatch;
+      return { year, month, day };
+    }
+
+    const parsedDate = new Date(rawDate);
+    if (Number.isNaN(parsedDate.getTime())) return null;
+
+    const year = String(parsedDate.getUTCFullYear());
+    const month = String(parsedDate.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(parsedDate.getUTCDate()).padStart(2, '0');
+    return { year, month, day };
   }
 
   private loadCoupon(id: number): void {
     this.loading = true;
     this.error = '';
     this.isCouponAlreadyAcquired = false;
+    this.companySocialLinks = null;
 
     this.couponService.getPublicCouponById(id).pipe(
       take(1),
@@ -147,6 +218,7 @@ export class ViewCouponsComponent implements OnInit {
           this.error = 'No se encontró el cupón.';
         } else {
           this.checkIfCouponAlreadyAcquired(Number(this.coupon.id));
+          this.loadCompanySocialLinks(Number(this.coupon.id));
         }
         this.loading = false;
         this.cdr.detectChanges();
@@ -165,13 +237,50 @@ export class ViewCouponsComponent implements OnInit {
     return Number.isFinite(parsed) ? parsed : null;
   }
 
+  private loadCompanySocialLinks(couponId: number): void {
+    const token = this.auth.token;
+    if (!token) return;
+
+    this.couponService.getCouponCompanySocials(token, couponId).pipe(
+      take(1),
+      timeout(15000)
+    ).subscribe({
+      next: (links) => {
+        this.companySocialLinks = links;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.companySocialLinks = null;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private buildCompanySocialUrl(rawValue: string | null | undefined, domain: string): string | null {
+    const raw = rawValue?.trim();
+    if (!raw) return null;
+
+    if (/^https?:\/\//i.test(raw)) {
+      return raw;
+    }
+
+    if (/^www\./i.test(raw) || raw.includes('.')) {
+      return `https://${raw}`;
+    }
+
+    const sanitizedHandle = raw.replace(/^@+/, '');
+    if (!sanitizedHandle) return null;
+
+    return `https://${domain}/${encodeURIComponent(sanitizedHandle)}`;
+  }
+
   private formatNumber(value: number): string {
     if (Number.isInteger(value)) return value.toString();
     return value.toFixed(2).replace(/\.?0+$/, '');
   }
 
   onAcquireCoupon(): void {
-    if (this.isCouponAlreadyAcquired) return;
+    if (!this.coupon || !this.hasAvailableStock(this.coupon)) return;
 
     const currentUser = this.auth.getCurrentUser();
     const kcRole = (this.auth.getKeycloakRole() ?? '').toUpperCase();
@@ -193,7 +302,7 @@ export class ViewCouponsComponent implements OnInit {
 
   goToLogin(): void {
     this.closeLoginRequiredModal();
-    this.router.navigate(['/login']);
+    this.auth.keycloakLogin(this.router.url);
   }
 
   closeAcquireModal(): void {
@@ -204,7 +313,7 @@ export class ViewCouponsComponent implements OnInit {
   }
 
   confirmAcquireCoupon(): void {
-    if (!this.coupon || this.isCouponAlreadyAcquired) return;
+    if (!this.coupon || !this.hasAvailableStock(this.coupon)) return;
 
     const currentUser = this.auth.getCurrentUser();
     const token = this.auth.token;
@@ -224,7 +333,12 @@ export class ViewCouponsComponent implements OnInit {
     ).subscribe({
       next: (result) => {
         this.acquiredCoupon = result;
-        this.isCouponAlreadyAcquired = true;
+        if (this.coupon && typeof this.coupon.stock_available === 'number' && this.coupon.stock_available > 0) {
+          this.coupon = {
+            ...this.coupon,
+            stock_available: this.coupon.stock_available - 1,
+          };
+        }
         this.acquireState = 'success';
         this.cdr.detectChanges();
       },

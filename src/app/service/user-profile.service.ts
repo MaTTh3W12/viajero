@@ -30,6 +30,10 @@ interface GetCurrentUserProfileData {
   viajerosv_users: UserCompanyProfile[];
 }
 
+interface GetUserCompanyLogoData {
+  viajerosv_users_with_logo_base64: UserCompanyLogo[];
+}
+
 interface GetUserByEmailVariables {
   email: string;
 }
@@ -72,15 +76,14 @@ export interface UserCompanyProfile {
   last_name?: string | null;
   document_id?: string | null;
   document_type_id?: string | null;
-  active?: boolean | null;
-  created_at?: string | null;
-  updated_at?: string | null;
   email: string;
-  countryByCountry?: {
-    code: string;
-    phone_code: string | null;
-    name: string;
-  } | null;
+}
+
+export interface UserCompanyLogo {
+  id: string;
+  company_logo_base64: string | null;
+  company_logo_size: number | null;
+  company_logo_mime_type: string | null;
 }
 
 export interface DocumentTypeOption {
@@ -116,28 +119,28 @@ export interface UpsertUserVariables {
 }
 
 export interface UpsertCompanyVariables {
-  company_commercial_name: string;
-  company_nit: string;
-  company_email: string;
-  company_phone: string;
-  company_mobile: string | null;
+  company_commercial_name: string | null;
+  company_nit: string | null;
+  company_email: string | null;
+  company_phone: string | null;
+  company_mobile?: string | null;
   company_logo_url: string | null;
   company_description: string | null;
-  company_address: string;
-  company_category: number | null;
-  company_website: string | null;
-  company_map_url: string | null;
-  company_facebook: string | null;
-  company_instagram: string | null;
-  company_twitter: string | null;
-  company_youtube: string | null;
-  company_profile_completed: boolean;
-  image: string | null;
-  first_name: string | null;
-  last_name: string | null;
-  document_id: string | null;
-  document_type_id: string | null;
-  phone: string | null;
+  company_address: string | null;
+  company_category?: number | null;
+  company_website?: string | null;
+  company_map_url?: string | null;
+  company_facebook?: string | null;
+  company_instagram?: string | null;
+  company_twitter?: string | null;
+  company_youtube?: string | null;
+  company_profile_completed: boolean | null;
+  image?: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  document_id?: string | null;
+  document_type_id?: string | null;
+  phone?: string | null;
   country: string | null;
   city: string | null;
 }
@@ -226,8 +229,6 @@ export class UserProfileService {
   }
 
   upsertCompany(token: string, data: UpsertCompanyVariables): Observable<void> {
-    console.log('[USER-PROFILE] upsertCompany request', { endpoint: this.endpoint, data });
-
     const mutation = `
       mutation UpsertCompanyProfile(
         $company_commercial_name: String,
@@ -315,40 +316,7 @@ export class UserProfileService {
         ) {
           affected_rows
           returning {
-            company_commercial_name
-            company_nit
-            company_email
-            company_phone
-            company_mobile
-            company_logo_url
-            company_description
-            company_address
-            company_category
-            company_website
-            company_map_url
-            company_facebook
-            company_instagram
-            company_twitter
-            company_youtube
-            company_profile_completed
             id
-            role
-            email
-            first_name
-            last_name
-            document_id
-            document_type_id
-            phone
-            city
-            active
-            created_at
-            updated_at
-            country
-            countryByCountry {
-              code
-              phone_code
-              name
-            }
           }
         }
       }
@@ -359,6 +327,40 @@ export class UserProfileService {
       mutation,
       data
     ).pipe(map(() => void 0));
+  }
+
+  getUserCompanyLogo(token: string, id: string): Observable<UserCompanyLogo | null> {
+    const query = `
+      query GetUserCompanyLogo($id: uuid!) {
+        viajerosv_users_with_logo_base64(where: { id: { _eq: $id } }) {
+          id
+          company_logo_base64
+          company_logo_size
+          company_logo_mime_type
+        }
+      }
+    `;
+
+    return this.executeOperation<GetUserCompanyLogoData, { id: string }>(token, query, { id }).pipe(
+      map((data) => data.viajerosv_users_with_logo_base64[0] ?? null)
+    );
+  }
+
+  getCurrentUserCompanyLogo(token: string): Observable<UserCompanyLogo | null> {
+    const query = `
+      query GetCurrentUserCompanyLogo {
+        viajerosv_users_with_logo_base64(limit: 1) {
+          id
+          company_logo_base64
+          company_logo_size
+          company_logo_mime_type
+        }
+      }
+    `;
+
+    return this.executeOperation<GetUserCompanyLogoData, Record<string, never>>(token, query, {}).pipe(
+      map((data) => data.viajerosv_users_with_logo_base64[0] ?? null)
+    );
   }
 
   getDocumentTypes(token: string): Observable<DocumentTypeOption[]> {
@@ -437,17 +439,57 @@ export class UserProfileService {
             company_nit
             company_email
             company_phone
-            company_profile_completed
+            company_mobile
             company_logo_url
             company_description
             company_address
-            phone
+            company_category
+            company_website
+            company_map_url
+            company_facebook
+            company_instagram
+            company_twitter
+            company_youtube
+            company_profile_completed
             country
             city
             first_name
             last_name
             document_id
             document_type_id
+            phone
+            email
+          }
+        }
+      `;
+
+      const queryByEmailPhoneAlias = `
+        query GetUserByEmailPhoneAlias($email: String!) {
+          viajerosv_users(where: { email: { _eq: $email } }, limit: 1) {
+            id
+            company_commercial_name
+            company_nit
+            company_email
+            company_phone: phone
+            company_mobile
+            company_logo_url
+            company_description
+            company_address
+            company_category
+            company_website
+            company_map_url
+            company_facebook
+            company_instagram
+            company_twitter
+            company_youtube
+            company_profile_completed
+            country
+            city
+            first_name
+            last_name
+            document_id
+            document_type_id
+            phone
             email
           }
         }
@@ -460,16 +502,26 @@ export class UserProfileService {
             company_commercial_name
             company_nit
             company_email
-            company_profile_completed
+            company_phone
+            company_mobile
             company_logo_url
             company_description
             company_address
+            company_category
+            company_website
+            company_map_url
+            company_facebook
+            company_instagram
+            company_twitter
+            company_youtube
+            company_profile_completed
             country
             city
             first_name
             last_name
             document_id
             document_type_id
+            phone
             email
           }
         }
@@ -480,6 +532,13 @@ export class UserProfileService {
         queryByEmail,
         { email }
       ).pipe(
+        catchError(() =>
+          this.executeOperation<GetCurrentUserProfileData, GetUserByEmailVariables>(
+            token,
+            queryByEmailPhoneAlias,
+            { email }
+          )
+        ),
         catchError(() =>
           this.executeOperation<GetCurrentUserProfileData, GetUserByEmailVariables>(
             token,
@@ -499,17 +558,57 @@ export class UserProfileService {
           company_nit
           company_email
           company_phone
-          company_profile_completed
+          company_mobile
           company_logo_url
           company_description
           company_address
-          phone
+          company_category
+          company_website
+          company_map_url
+          company_facebook
+          company_instagram
+          company_twitter
+          company_youtube
+          company_profile_completed
           country
           city
           first_name
           last_name
           document_id
           document_type_id
+          phone
+          email
+        }
+      }
+    `;
+
+    const queryCurrentPhoneAlias = `
+      query GetCurrentUserProfilePhoneAlias {
+        viajerosv_users(limit: 1) {
+          id
+          company_commercial_name
+          company_nit
+          company_email
+          company_phone: phone
+          company_mobile
+          company_logo_url
+          company_description
+          company_address
+          company_category
+          company_website
+          company_map_url
+          company_facebook
+          company_instagram
+          company_twitter
+          company_youtube
+          company_profile_completed
+          country
+          city
+          first_name
+          last_name
+          document_id
+          document_type_id
+          phone
           email
         }
       }
@@ -522,16 +621,26 @@ export class UserProfileService {
           company_commercial_name
           company_nit
           company_email
-          company_profile_completed
+          company_phone
+          company_mobile
           company_logo_url
           company_description
           company_address
+          company_category
+          company_website
+          company_map_url
+          company_facebook
+          company_instagram
+          company_twitter
+          company_youtube
+          company_profile_completed
           country
           city
           first_name
           last_name
           document_id
           document_type_id
+          phone
           email
         }
       }
@@ -542,6 +651,13 @@ export class UserProfileService {
       queryCurrent,
       {}
     ).pipe(
+      catchError(() =>
+        this.executeOperation<GetCurrentUserProfileData, Record<string, never>>(
+          token,
+          queryCurrentPhoneAlias,
+          {}
+        )
+      ),
       catchError(() =>
         this.executeOperation<GetCurrentUserProfileData, Record<string, never>>(
           token,

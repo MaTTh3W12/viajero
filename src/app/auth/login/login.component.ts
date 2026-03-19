@@ -12,6 +12,7 @@ import { AuthService, AuthUser } from '../../service/auth.service';
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
+  redirectingToKeycloak = true;
   username = '';
   password = '';
   errorMessage = '';
@@ -44,22 +45,43 @@ export class LoginComponent implements OnInit {
         return;
       }
 
-      const role = String(this.auth.getCurrentUser()?.role ?? '').toLowerCase();
-      console.log('[AUTH] rol detectado en callback:', role || '(sin rol)');
-      if (role === 'empresa' || role === 'company') {
-        const needsProfileCompletion = await this.auth.companyProfileNeedsCompletion();
-        this.router.navigateByUrl(
-          needsProfileCompletion ? '/register?type=company' : '/companies/dashboard'
-        );
+      const returnUrl = this.auth.consumeKeycloakReturnUrl();
+      const shouldUseReturnUrl =
+        !!returnUrl &&
+        returnUrl !== '/' &&
+        !returnUrl.startsWith('/login');
+
+      if (shouldUseReturnUrl) {
+        this.router.navigateByUrl(returnUrl);
         return;
       }
-      if (role === 'admin') {
+
+      const currentUser = this.auth.getCurrentUser();
+      const appRole = String(currentUser?.role ?? '').toLowerCase();
+      const isEmpresaRole = appRole === 'empresa' || appRole === 'company';
+      const isAdminRole = appRole === 'admin';
+
+      console.info(
+        '[LOGIN] Redirigiendo post-login →',
+        'usuario:', currentUser?.username,
+        '| email:', currentUser?.email,
+        '| rol:', appRole
+      );
+
+      if (isEmpresaRole) {
+        this.router.navigateByUrl('/companies/dashboard');
+        return;
+      }
+      if (isAdminRole) {
         this.router.navigateByUrl('/admin/dashboard');
         return;
       }
 
       this.router.navigateByUrl('/');
+      return;
     }
+
+    this.auth.keycloakLogin();
   }
 
   onSubmit() {
