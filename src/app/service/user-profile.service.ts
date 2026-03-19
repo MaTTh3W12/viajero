@@ -348,6 +348,23 @@ export class UserProfileService {
     );
   }
 
+  getCurrentUserCompanyLogo(token: string): Observable<UserCompanyLogo | null> {
+    const query = `
+      query GetCurrentUserCompanyLogo {
+        viajerosv_users_with_logo_base64(limit: 1) {
+          id
+          company_logo_base64
+          company_logo_size
+          company_logo_mime_type
+        }
+      }
+    `;
+
+    return this.executeOperation<GetUserCompanyLogoData, Record<string, never>>(token, query, {}).pipe(
+      map((data) => data.viajerosv_users_with_logo_base64[0] ?? null)
+    );
+  }
+
   getDocumentTypes(token: string): Observable<DocumentTypeOption[]> {
     const query = `
       query GetDocumentTypes {

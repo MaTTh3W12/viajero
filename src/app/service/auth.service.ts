@@ -439,10 +439,11 @@ export class AuthService {
 
       const current = this._user.value;
       if (current) {
+        const nextAvatar = (formData.company_logo_url ?? '').trim() || current.avatarUrl;
         const nextUser: AuthUser = {
           ...current,
           companyName: formData.company_commercial_name ?? current.companyName,
-          avatarUrl: formData.company_logo_url ?? current.avatarUrl,
+          avatarUrl: nextAvatar,
         };
         this._user.next(nextUser);
         this.saveToStorage(nextUser);

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { firstValueFrom, timeout } from 'rxjs';
 import { AuthService } from '../../../service/auth.service';
@@ -23,6 +23,15 @@ type CompanyProfileFormValue = {
   youtube: string;
 };
 
+type CompanyProfileFormInput = {
+  [K in keyof CompanyProfileFormValue]?: string | null;
+};
+
+interface CompanyCategoryOption {
+  id: number;
+  label: string;
+}
+
 @Component({
   selector: 'app-company-profile',
   standalone: true,
@@ -32,40 +41,62 @@ type CompanyProfileFormValue = {
 })
 export class CompanyProfileComponent implements OnInit {
   private static readonly MAX_LOGO_FILE_SIZE_BYTES = 300 * 1024;
+  private static readonly LOGO_SYNC_TIMEOUT_MS = 12000;
+  private static readonly MIN_PHONE_DIGITS = 8;
+  private static readonly MAX_PHONE_DIGITS = 15;
   private static readonly ALLOWED_LOGO_MIME_TYPES = new Set([
     'image/jpeg',
     'image/jpg',
     'image/png',
   ]);
 
+  readonly minPhoneDigits = CompanyProfileComponent.MIN_PHONE_DIGITS;
+  readonly maxPhoneDigits = CompanyProfileComponent.MAX_PHONE_DIGITS;
+
   selectedLogoName = '';
   private selectedLogoBase64: string | null = null;
+  logoPreviewUrl = '';
+  logoChanged = false;
+  logoLoading = false;
+  logoSyncingAfterSave = false;
+  logoRemoved = false;
+  profileReady = false;
+  showRemoveLogoModal = false;
   private backendProfile: UserCompanyProfile | null = null;
   saving = false;
   saveError = '';
   saveSuccess = '';
+  showSaveSuccessOverlay = false;
+  showSaveErrorOverlay = false;
+  private saveWatchdogTimer: ReturnType<typeof setTimeout> | null = null;
+  private logoLoadPromise: Promise<void> | null = null;
   private initialFormValue: CompanyProfileFormValue = this.getEmptyFormValue();
   profileForm;
 
-  categories = [
-    'Restaurantes',
-    'Hoteles',
-    'Turismo',
-    'Entretenimiento',
-    'Servicios'
+  categories: CompanyCategoryOption[] = [
+    { id: 1, label: 'Alojamiento' },
+    { id: 2, label: 'Alimentos y bebidas' },
+    { id: 3, label: 'Turismo' },
+    { id: 4, label: 'Entretenimiento' },
+    { id: 5, label: 'Cuidado personal' },
+    { id: 6, label: 'Productos nostálgicos' },
+    { id: 7, label: 'Productos y servicios' },
+    { id: 8, label: 'Tour operadores' },
+    { id: 9, label: 'Transporte' },
   ];
 
   constructor(
     private fb: FormBuilder,
     private auth: AuthService,
-    private userProfileService: UserProfileService
+    private userProfileService: UserProfileService,
+    private cdr: ChangeDetectorRef
   ) {
     this.profileForm = this.fb.group({
       commercialName: ['', Validators.required],
       nit: ['', Validators.required],
       businessEmail: ['', [Validators.required, Validators.email]],
-      phone: [''],
-      mobile: [''],
+      phone: ['', [Validators.pattern(/^\d*$/), Validators.minLength(this.minPhoneDigits), Validators.maxLength(this.maxPhoneDigits)]],
+      mobile: ['', [Validators.pattern(/^\d*$/), Validators.minLength(this.minPhoneDigits), Validators.maxLength(this.maxPhoneDigits)]],
       category: [''],
       description: [''],
       address: [''],
@@ -79,19 +110,27 @@ export class CompanyProfileComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.profileReady = false;
     this.prefillFromSessionAndToken();
+    void this.requestLogoPreviewLoad();
     void this.prefillFromBackendProfile();
   }
 
   onLogoSelected(event: Event): void {
+    if (this.isLogoBusy) {
+      return;
+    }
+
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     this.saveError = '';
     this.saveSuccess = '';
+    this.logoLoading = false;
 
     if (!file) {
       this.selectedLogoName = '';
       this.selectedLogoBase64 = null;
+      this.logoChanged = false;
       return;
     }
 
@@ -99,6 +138,7 @@ export class CompanyProfileComponent implements OnInit {
     if (!CompanyProfileComponent.ALLOWED_LOGO_MIME_TYPES.has(mimeType)) {
       this.selectedLogoName = '';
       this.selectedLogoBase64 = null;
+      this.logoChanged = false;
       input.value = '';
       this.saveError = 'Formato inválido. Solo se permiten JPG o PNG.';
       return;
@@ -107,31 +147,108 @@ export class CompanyProfileComponent implements OnInit {
     if (file.size > CompanyProfileComponent.MAX_LOGO_FILE_SIZE_BYTES) {
       this.selectedLogoName = '';
       this.selectedLogoBase64 = null;
+      this.logoChanged = false;
       input.value = '';
       this.saveError = 'El logo excede el tamaño permitido (máximo 300 KB).';
       return;
     }
 
     this.selectedLogoName = file.name;
+    this.logoRemoved = false;
+    this.showRemoveLogoModal = false;
+    this.logoLoading = true;
 
     const reader = new FileReader();
     reader.onerror = () => {
       this.selectedLogoName = '';
       this.selectedLogoBase64 = null;
+      this.logoChanged = false;
+      this.logoLoading = false;
       input.value = '';
       this.saveError = 'No se pudo leer el archivo de logo. Intenta nuevamente.';
+      this.cdr.detectChanges();
     };
     reader.onload = () => {
       const result = String(reader.result ?? '');
       const commaIndex = result.indexOf(',');
       this.selectedLogoBase64 = commaIndex >= 0 ? result.slice(commaIndex + 1) : result;
+      this.logoPreviewUrl = result;
+      this.logoChanged = true;
+      this.logoLoading = false;
+      this.cdr.detectChanges();
     };
     reader.readAsDataURL(file);
+  }
+
+  onLogoInputClick(event: Event): void {
+    if (this.isLogoBusy) {
+      event.preventDefault();
+      return;
+    }
+
+    const input = event.target as HTMLInputElement;
+    input.value = '';
+  }
+
+  openRemoveLogoModal(): void {
+    if (this.isLogoBusy || !this.logoPreviewUrl) return;
+    this.showRemoveLogoModal = true;
+  }
+
+  cancelRemoveLogo(): void {
+    this.showRemoveLogoModal = false;
+  }
+
+  confirmRemoveLogo(): void {
+    this.selectedLogoName = '';
+    this.selectedLogoBase64 = null;
+    this.logoPreviewUrl = '';
+    this.logoRemoved = true;
+    this.logoChanged = true;
+    this.showRemoveLogoModal = false;
+    this.saveError = '';
+    this.saveSuccess = '';
+  }
+
+  onMobileInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const onlyDigits = (input.value ?? '').replace(/\D/g, '');
+    input.value = onlyDigits;
+    this.profileForm.patchValue({ mobile: onlyDigits }, { emitEvent: false });
+  }
+
+  onPhoneInput(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const onlyDigits = (input.value ?? '').replace(/\D/g, '');
+    input.value = onlyDigits;
+    this.profileForm.patchValue({ phone: onlyDigits }, { emitEvent: false });
+  }
+
+  get hasPendingChanges(): boolean {
+    if (!this.profileReady) {
+      return false;
+    }
+
+    if (this.logoRemoved || !!this.selectedLogoBase64) {
+      return true;
+    }
+
+    const current = this.normalizeFormValue(this.profileForm.getRawValue());
+    const initial = this.normalizeFormValue(this.initialFormValue);
+
+    return JSON.stringify(current) !== JSON.stringify(initial);
+  }
+
+  get isLogoBusy(): boolean {
+    return this.logoLoading || this.logoSyncingAfterSave || this.saving;
   }
 
   async saveChanges(): Promise<void> {
     this.saveError = '';
     this.saveSuccess = '';
+    this.logoSyncingAfterSave = false;
+    this.showSaveSuccessOverlay = false;
+    this.showSaveErrorOverlay = false;
     this.profileForm.markAllAsTouched();
 
     if (this.profileForm.invalid) {
@@ -146,17 +263,29 @@ export class CompanyProfileComponent implements OnInit {
     }
 
     this.saving = true;
+    this.startSaveWatchdog();
 
     const form = this.profileForm.getRawValue();
     const current = this.auth.getCurrentUser();
+    const hadLogoRemovalRequest = this.logoRemoved;
+    const hadLogoUploadRequest = !!this.selectedLogoBase64;
+    const previousLogoPreview = this.normalizeLogoSource(this.logoPreviewUrl) ?? '';
 
     if (this.selectedLogoBase64 && this.selectedLogoBase64.length > 420000) {
       this.saveError = 'El logo seleccionado genera una carga demasiado grande. Usa una imagen más liviana.';
       this.saving = false;
+      this.showSaveErrorOverlay = true;
+      this.clearSaveWatchdog();
       return;
     }
 
     try {
+      const nextCompanyLogoUrl = this.logoRemoved
+        ? null
+        : (this.selectedLogoBase64
+            ? this.logoPreviewUrl
+            : (this.backendProfile?.company_logo_url ?? null));
+
       const completed = await Promise.race<boolean>([
         this.auth.completeKeycloakCompanyProfile({
         company_commercial_name: form.commercialName || null,
@@ -164,7 +293,7 @@ export class CompanyProfileComponent implements OnInit {
         company_email: form.businessEmail || null,
         company_phone: form.phone || null,
         company_mobile: form.mobile || null,
-        company_logo_url: this.backendProfile?.company_logo_url ?? null,
+        company_logo_url: nextCompanyLogoUrl,
         company_description: form.description || null,
         company_address: form.address || null,
         company_category: this.parseCategoryId(form.category),
@@ -175,7 +304,7 @@ export class CompanyProfileComponent implements OnInit {
         company_twitter: form.x || null,
         company_youtube: form.youtube || null,
         company_profile_completed: true,
-        image: this.selectedLogoBase64,
+        image: this.logoRemoved ? null : this.selectedLogoBase64,
         first_name: current?.firstName ?? null,
         last_name: current?.lastName ?? null,
         document_id: this.backendProfile?.document_id ?? null,
@@ -189,30 +318,120 @@ export class CompanyProfileComponent implements OnInit {
 
       if (!completed) {
         this.saveError = 'No se pudieron guardar los cambios. Si subiste logo, intenta con una imagen más pequeña (máx. 300 KB).';
+        this.showSaveErrorOverlay = true;
         return;
       }
 
-      await this.prefillFromBackendProfile();
+      this.saving = false;
+      this.clearSaveWatchdog();
+
       this.selectedLogoBase64 = null;
       this.selectedLogoName = '';
+      this.logoRemoved = false;
+      this.logoChanged = false;
       this.saveSuccess = 'Cambios guardados correctamente.';
+      this.showSaveSuccessOverlay = true;
+
+      if (hadLogoRemovalRequest || hadLogoUploadRequest) {
+        this.logoSyncingAfterSave = true;
+        await this.syncLogoAfterSave(previousLogoPreview, hadLogoRemovalRequest);
+      } else {
+        await this.prefillFromBackendProfile();
+      }
     } catch {
       this.saveError = 'No se pudieron guardar los cambios. Si subiste logo, intenta con una imagen más pequeña (máx. 300 KB).';
+      this.showSaveErrorOverlay = true;
     } finally {
       this.saving = false;
+      this.logoSyncingAfterSave = false;
+      this.clearSaveWatchdog();
+      this.cdr.detectChanges();
     }
+  }
+
+  closeSaveSuccessOverlay(): void {
+    this.showSaveSuccessOverlay = false;
+  }
+
+  closeSaveErrorOverlay(): void {
+    this.showSaveErrorOverlay = false;
+  }
+
+  private startSaveWatchdog(): void {
+    this.clearSaveWatchdog();
+    this.saveWatchdogTimer = setTimeout(() => {
+      if (!this.saving) return;
+      this.saving = false;
+      this.saveError = 'La operación tardó demasiado. Verifica tu conexión e intenta nuevamente.';
+      this.showSaveErrorOverlay = true;
+    }, 30000);
+  }
+
+  private clearSaveWatchdog(): void {
+    if (!this.saveWatchdogTimer) return;
+    clearTimeout(this.saveWatchdogTimer);
+    this.saveWatchdogTimer = null;
   }
 
   cancelChanges(): void {
     this.profileForm.reset(this.initialFormValue);
 
     this.selectedLogoName = '';
+    this.selectedLogoBase64 = null;
+    this.logoRemoved = false;
+    this.logoChanged = false;
+    this.logoSyncingAfterSave = false;
+    void this.requestLogoPreviewLoad(this.backendProfile?.id);
+  }
+
+  private async syncLogoAfterSave(previousLogoPreview: string, logoWasRemoved: boolean): Promise<void> {
+    this.logoLoading = true;
+
+    try {
+      await Promise.race<void>([
+        this.trySyncLogoAfterSave(previousLogoPreview, logoWasRemoved),
+        this.delay(CompanyProfileComponent.LOGO_SYNC_TIMEOUT_MS),
+      ]);
+    } finally {
+      this.logoLoading = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  private async trySyncLogoAfterSave(previousLogoPreview: string, logoWasRemoved: boolean): Promise<void> {
+    const maxAttempts = 3;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      await this.prefillFromBackendProfile();
+
+      const currentLogoPreview = this.normalizeLogoSource(this.logoPreviewUrl) ?? '';
+      const logoUpdated = logoWasRemoved
+        ? !currentLogoPreview
+        : !!currentLogoPreview && currentLogoPreview !== previousLogoPreview;
+
+      if (logoUpdated) {
+        return;
+      }
+
+      if (attempt < maxAttempts - 1) {
+        await this.delay(900);
+      }
+    }
+  }
+
+  private delay(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private prefillFromSessionAndToken(): void {
     const authUser = this.auth.getCurrentUser();
     const keycloakUser = this.auth.getKeycloakUser();
     const claims = this.decodeJwtClaims(this.auth.token);
+    const avatarFromSession = this.normalizeLogoSource(authUser?.avatarUrl ?? null);
+
+    if (avatarFromSession && !this.selectedLogoBase64 && !this.logoRemoved) {
+      this.logoPreviewUrl = avatarFromSession;
+    }
 
     this.profileForm.patchValue({
       commercialName: authUser?.companyName ?? '',
@@ -229,7 +448,10 @@ export class CompanyProfileComponent implements OnInit {
 
   private async prefillFromBackendProfile(): Promise<void> {
     const token = this.auth.token;
-    if (!token) return;
+    if (!token) {
+      this.profileReady = true;
+      return;
+    }
 
     const email =
       this.profileForm.value.businessEmail ||
@@ -243,16 +465,25 @@ export class CompanyProfileComponent implements OnInit {
       );
       if (!profile) {
         this.backendProfile = null;
+        if (!this.logoPreviewUrl && !this.selectedLogoBase64 && !this.logoRemoved) {
+          await this.requestLogoPreviewLoad();
+        }
         this.captureInitialFormValue();
+        this.profileReady = true;
         return;
       }
 
       this.backendProfile = profile;
       this.applyProfileToForm(profile);
+      if (!this.selectedLogoBase64 && !this.logoRemoved) {
+        await this.requestLogoPreviewLoad(profile.id);
+      }
       this.captureInitialFormValue();
+      this.profileReady = true;
     } catch (error) {
       console.error('[COMPANY-PROFILE] Error cargando perfil', error);
       this.captureInitialFormValue();
+      this.profileReady = true;
     }
   }
 
@@ -273,6 +504,105 @@ export class CompanyProfileComponent implements OnInit {
       x: profile.company_twitter ?? '',
       youtube: profile.company_youtube ?? '',
     });
+  }
+
+  private async requestLogoPreviewLoad(userId?: number | string): Promise<void> {
+    if (this.selectedLogoBase64 || this.logoRemoved) {
+      return;
+    }
+
+    if (this.logoLoadPromise) {
+      await this.logoLoadPromise;
+      return;
+    }
+
+    this.logoLoading = true;
+    this.logoLoadPromise = this.loadCompanyLogoPreview(userId)
+      .finally(() => {
+        this.logoLoading = false;
+        this.logoLoadPromise = null;
+        this.cdr.detectChanges();
+      });
+
+    await this.logoLoadPromise;
+  }
+
+  private async loadCompanyLogoPreview(userId?: number | string): Promise<void> {
+    if (this.selectedLogoBase64 || this.logoRemoved) {
+      return;
+    }
+
+    const token = this.auth.token;
+    if (!token) {
+      return;
+    }
+
+    if (this.backendProfile?.company_logo_url) {
+      const logoUrl = this.normalizeLogoSource(this.backendProfile.company_logo_url);
+      if (logoUrl) {
+        this.logoPreviewUrl = logoUrl;
+        this.cdr.detectChanges();
+        return;
+      }
+    }
+
+    try {
+      let logo = await firstValueFrom(
+        this.userProfileService.getCurrentUserCompanyLogo(token).pipe(timeout(6000))
+      );
+
+      if (!logo?.company_logo_base64) {
+        const profileId = String(userId ?? '').trim();
+        if (profileId && this.isUuid(profileId)) {
+          logo = await firstValueFrom(
+            this.userProfileService.getUserCompanyLogo(token, profileId).pipe(timeout(4000))
+          );
+        }
+      }
+
+      if (!logo?.company_logo_base64) {
+        return;
+      }
+
+      if (logo.company_logo_base64.startsWith('data:')) {
+        this.logoPreviewUrl = this.normalizeLogoSource(logo.company_logo_base64) ?? logo.company_logo_base64;
+        this.cdr.detectChanges();
+        return;
+      }
+
+      const mime = String(logo.company_logo_mime_type ?? 'image/png').replace(/^"+|"+$/g, '').trim() || 'image/png';
+      this.logoPreviewUrl = `data:${mime};base64,${logo.company_logo_base64}`;
+      this.cdr.detectChanges();
+    } catch {
+      return;
+    }
+  }
+
+  private isUuid(value: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  }
+
+  private normalizeLogoSource(value: string | null | undefined): string | null {
+    const raw = String(value ?? '').trim();
+    if (!raw) return null;
+
+    if (
+      raw.startsWith('data:') ||
+      raw.startsWith('http://') ||
+      raw.startsWith('https://') ||
+      raw.startsWith('blob:') ||
+      raw.startsWith('/')
+    ) {
+      return raw;
+    }
+
+    const compact = raw.replace(/\s/g, '');
+    const looksLikeBase64 = compact.length >= 80 && /^[A-Za-z0-9+/=]+$/.test(compact);
+    if (looksLikeBase64) {
+      return `data:image/png;base64,${compact}`;
+    }
+
+    return raw;
   }
 
   private parseCategoryId(value: string | null | undefined): number | null {
@@ -317,6 +647,25 @@ export class CompanyProfileComponent implements OnInit {
       instagram: '',
       x: '',
       youtube: ''
+    };
+  }
+
+  private normalizeFormValue(value: CompanyProfileFormInput): CompanyProfileFormValue {
+    return {
+      commercialName: String(value.commercialName ?? '').trim(),
+      nit: String(value.nit ?? '').trim(),
+      businessEmail: String(value.businessEmail ?? '').trim(),
+      phone: String(value.phone ?? '').trim(),
+      mobile: String(value.mobile ?? '').trim(),
+      category: String(value.category ?? '').trim(),
+      description: String(value.description ?? '').trim(),
+      address: String(value.address ?? '').trim(),
+      website: String(value.website ?? '').trim(),
+      mapsUrl: String(value.mapsUrl ?? '').trim(),
+      facebook: String(value.facebook ?? '').trim(),
+      instagram: String(value.instagram ?? '').trim(),
+      x: String(value.x ?? '').trim(),
+      youtube: String(value.youtube ?? '').trim(),
     };
   }
 
