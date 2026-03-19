@@ -145,6 +145,65 @@ interface GetCouponStatisticsData {
   };
 }
 
+interface CompanyCouponStatsRow {
+  company_id: number | string;
+  total_acquired: number | null;
+  total_redeemed: number | null;
+  total_expired: number | null;
+  total_upcoming_expiration: number | null;
+}
+
+interface GetCompanyCouponStatsData {
+  viajerosv_company_coupon_stats: CompanyCouponStatsRow[];
+}
+
+interface RedemptionPerformanceRow {
+  redemption_date: string;
+  redemption_count: number | null;
+  coupon_id: number | string | null;
+  coupon_title: string | null;
+}
+
+interface GetMonthlyRedemptionPerformanceData {
+  viajerosv_redemption_performance: RedemptionPerformanceRow[];
+}
+
+interface CompanyTopRedeemedCouponRow {
+  coupon_id: number | string;
+  coupon_name: string | null;
+  redemption_count: number | null;
+}
+
+interface GetCompanyTopRedeemedCouponsData {
+  viajerosv_company_top_redeemed_coupons: CompanyTopRedeemedCouponRow[];
+}
+
+interface AuditLogRow {
+  id: number | string;
+  reference_id: number | string | null;
+  action_type: string | null;
+  entity: string | null;
+  details: string | null;
+  ip_address: string | null;
+  created_at: string;
+  user_id: string | null;
+  user_public: {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    email: string | null;
+  } | null;
+}
+
+interface GetAuditLogsDynamicData {
+  viajerosv_audit_logs: AuditLogRow[];
+  viajerosv_audit_logs_aggregate: {
+    aggregate: {
+      count: number;
+    };
+  };
+}
+
 interface HomeFeaturedCouponRow {
   id: number;
   title: string;
@@ -320,6 +379,57 @@ export interface CouponAcquiredWithImage {
   user_id: number | string;
   validated_by: number | string | null;
   coupon_with_image_base64: CouponWithImageDetails | null;
+}
+
+export interface CompanyCouponStats {
+  companyId: number | string;
+  totalAcquired: number;
+  totalRedeemed: number;
+  totalExpired: number;
+  totalUpcomingExpiration: number;
+}
+
+export interface MonthlyRedemptionPerformance {
+  redemptionDate: string;
+  redemptionCount: number;
+  couponId: number | string | null;
+  couponTitle: string | null;
+}
+
+export interface CompanyTopRedeemedCoupon {
+  couponId: number | string;
+  couponName: string;
+  redemptionCount: number;
+}
+
+export interface AuditLogUser {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+}
+
+export interface AuditLog {
+  id: number | string;
+  referenceId: number | string | null;
+  actionType: string;
+  entity: string;
+  details: string | null;
+  ipAddress: string | null;
+  createdAt: string;
+  userId: string | null;
+  userPublic: AuditLogUser | null;
+}
+
+export interface GetAuditLogsVariables {
+  limit: number;
+  offset: number;
+  where: Record<string, unknown>;
+}
+
+export interface AuditLogListResult {
+  rows: AuditLog[];
+  total: number;
 }
 
 export interface GetCouponsVariables {
@@ -1024,6 +1134,147 @@ export class CouponService {
       map((data) => ({
         acquired: data.acquired?.aggregate?.count ?? 0,
         redeemed: data.redeemed?.aggregate?.count ?? 0,
+      }))
+    );
+  }
+
+  getCompanyCouponStats(token: string): Observable<CompanyCouponStats | null> {
+    const query = `
+      query GetCompanyCouponStats {
+        viajerosv_company_coupon_stats {
+          company_id
+          total_acquired
+          total_redeemed
+          total_expired
+          total_upcoming_expiration
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCompanyCouponStatsData, Record<string, never>>(token, query, {}).pipe(
+      map((data) => {
+        const row = data.viajerosv_company_coupon_stats?.[0];
+        if (!row) {
+          return null;
+        }
+
+        return {
+          companyId: row.company_id,
+          totalAcquired: row.total_acquired ?? 0,
+          totalRedeemed: row.total_redeemed ?? 0,
+          totalExpired: row.total_expired ?? 0,
+          totalUpcomingExpiration: row.total_upcoming_expiration ?? 0,
+        };
+      })
+    );
+  }
+
+  getMonthlyRedemptionPerformance(token: string): Observable<MonthlyRedemptionPerformance[]> {
+    const query = `
+      query GetMonthlyRedemptionPerformance {
+        viajerosv_redemption_performance(order_by: { redemption_date: asc }) {
+          redemption_date
+          redemption_count
+          coupon_id
+          coupon_title
+        }
+      }
+    `;
+
+    return this.executeOperation<GetMonthlyRedemptionPerformanceData, Record<string, never>>(token, query, {}).pipe(
+      map((data) =>
+        (data.viajerosv_redemption_performance ?? []).map((row) => ({
+          redemptionDate: row.redemption_date,
+          redemptionCount: row.redemption_count ?? 0,
+          couponId: row.coupon_id ?? null,
+          couponTitle: row.coupon_title ?? null,
+        }))
+      )
+    );
+  }
+
+  getCompanyTopRedeemedCoupons(token: string): Observable<CompanyTopRedeemedCoupon[]> {
+    const query = `
+      query GetMyTop5Coupons {
+        viajerosv_company_top_redeemed_coupons(
+          limit: 5
+          order_by: { redemption_count: desc }
+        ) {
+          coupon_id
+          coupon_name
+          redemption_count
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCompanyTopRedeemedCouponsData, Record<string, never>>(token, query, {}).pipe(
+      map((data) =>
+        (data.viajerosv_company_top_redeemed_coupons ?? []).map((row) => ({
+          couponId: row.coupon_id,
+          couponName: row.coupon_name?.trim() || 'Cupón sin nombre',
+          redemptionCount: row.redemption_count ?? 0,
+        }))
+      )
+    );
+  }
+
+  getAuditLogsDynamic(token: string, variables: GetAuditLogsVariables): Observable<AuditLogListResult> {
+    const query = `
+      query GetAuditLogsDynamic(
+        $limit: Int!
+        $offset: Int!
+        $where: viajerosv_audit_logs_bool_exp!
+      ) {
+        viajerosv_audit_logs(
+          limit: $limit
+          offset: $offset
+          order_by: { created_at: desc }
+          where: $where
+        ) {
+          id
+          reference_id
+          action_type
+          entity
+          details
+          ip_address
+          created_at
+          user_id
+          user_public {
+            id
+            first_name
+            last_name
+            email
+          }
+        }
+        viajerosv_audit_logs_aggregate(where: $where) {
+          aggregate {
+            count
+          }
+        }
+      }
+    `;
+
+    return this.executeOperation<GetAuditLogsDynamicData, GetAuditLogsVariables>(token, query, variables).pipe(
+      map((data) => ({
+        rows: (data.viajerosv_audit_logs ?? []).map((row) => ({
+          id: row.id,
+          referenceId: row.reference_id,
+          actionType: row.action_type ?? '',
+          entity: row.entity ?? '',
+          details: row.details ?? null,
+          ipAddress: row.ip_address ?? null,
+          createdAt: row.created_at,
+          userId: row.user_id ?? null,
+          userPublic: row.user_public
+            ? {
+                id: row.user_public.id,
+                firstName: row.user_public.first_name ?? null,
+                lastName: row.user_public.last_name ?? null,
+                email: row.user_public.email ?? null,
+              }
+            : null,
+        })),
+        total: data.viajerosv_audit_logs_aggregate?.aggregate?.count ?? 0,
       }))
     );
   }
