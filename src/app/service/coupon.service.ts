@@ -306,6 +306,7 @@ export interface GetCouponsVariables {
   limit?: number;
   offset?: number;
   where?: Record<string, unknown>;
+  order_by?: Array<Record<string, 'asc' | 'desc' | 'asc_nulls_first' | 'asc_nulls_last' | 'desc_nulls_first' | 'desc_nulls_last'>>;
 }
 
 export interface GetCouponsAcquiredVariables {
@@ -363,11 +364,16 @@ export interface CouponAcquiredListResult {
 
 const DEFAULT_HASURA_ENDPOINT = 'https://api.grupoavanza.work/v1/graphql';
 const GET_COUPONS_QUERY = `
-  query GetCoupons($limit: Int!, $offset: Int!, $where: viajerosv_coupons_bool_exp!) {
+  query GetCoupons(
+    $limit: Int!,
+    $offset: Int!,
+    $where: viajerosv_coupons_bool_exp!,
+    $order_by: [viajerosv_coupons_order_by!]
+  ) {
     viajerosv_coupons(
       limit: $limit,
       offset: $offset,
-      order_by: { created_at: desc },
+      order_by: $order_by,
       where: $where
     ) {
       category_id
@@ -591,6 +597,7 @@ export class CouponService {
       limit: variables.limit ?? 40,
       offset: variables.offset ?? 0,
       where: variables.where ?? {},
+      order_by: variables.order_by ?? [{ created_at: 'desc' }],
     };
 
     return this.executeOperation<GetCouponsData, GetCouponsVariables>(token, GET_COUPONS_QUERY, requestVariables).pipe(
@@ -606,6 +613,7 @@ export class CouponService {
       limit: variables.limit ?? 40,
       offset: variables.offset ?? 0,
       where: variables.where ?? this.defaultPublicCouponsWhere,
+      order_by: variables.order_by ?? [{ created_at: 'desc' }],
     };
 
     return this.executePublicOperation<GetCouponsData, GetCouponsVariables>(GET_COUPONS_QUERY, requestVariables).pipe(
