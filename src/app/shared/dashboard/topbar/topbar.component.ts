@@ -28,6 +28,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
   isLoggingOut = false;
   isLoggedOutSuccess = false;
   showSessionExpiredModal = false;
+  avatarLoadError = false;
   private sessionExpiredSub?: Subscription;
   private userSub?: Subscription;
 
@@ -51,6 +52,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
     this.userSub = this.auth.user$.subscribe((user) => {
       this.user = user;
       this.role = user?.role ?? null;
+      this.avatarLoadError = false;
       this.cdr.detectChanges();
     });
   }
@@ -143,15 +145,27 @@ export class TopbarComponent implements OnInit, OnDestroy {
     return this.user?.companyName?.trim() || this.user?.username || '';
   }
 
-  get avatarSrc(): string {
+  get avatarSrc(): string | null {
+    if (this.avatarLoadError) return null;
+
     const raw = (this.user?.avatarUrl ?? '').trim();
-    if (!raw) return 'assets/img/Male01.png';
+    if (!raw) return null;
+
+    const normalizedRaw = raw.toLowerCase();
+    if (normalizedRaw === 'null' || normalizedRaw === 'undefined' || normalizedRaw === 'n/a') {
+      return null;
+    }
 
     if (raw.startsWith('data:') || raw.startsWith('http://') || raw.startsWith('https://') || raw.startsWith('/')) {
       return raw;
     }
 
     return `data:image/png;base64,${raw}`;
+  }
+
+  onAvatarError(): void {
+    this.avatarLoadError = true;
+    this.cdr.detectChanges();
   }
 
   get bgClass() {

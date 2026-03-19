@@ -67,6 +67,8 @@ const KC_ROLE_KEY = 'viajero_kc_role';
 const KC_USER_KEY = 'viajero_kc_user';
 const KC_CLIENT_KEY = 'kc_client';
 const KC_RETURN_URL_KEY = 'viajero_kc_return_url';
+const KC_ACTIVE_SESSION_KEY = 'viajero_kc_active';
+const KC_ID_TOKEN_HINT_KEY = 'viajero_kc_id_token_hint';
 
 const KC_CLIENTS = {
   login: 'viajero-frontend',
@@ -213,11 +215,14 @@ export class AuthService {
     if (!this.isBrowser()) return;
 
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(KC_ACTIVE_SESSION_KEY);
+    localStorage.removeItem(KC_ID_TOKEN_HINT_KEY);
     sessionStorage.removeItem(STORAGE_KEY);
     sessionStorage.removeItem(KC_TOKEN_KEY);
     sessionStorage.removeItem(KC_ROLE_KEY);
     sessionStorage.removeItem(KC_USER_KEY);
     sessionStorage.removeItem(KC_CLIENT_KEY);
+    sessionStorage.removeItem(KC_RETURN_URL_KEY);
   }
 
   clear(): void {
@@ -229,6 +234,8 @@ export class AuthService {
 
     const params = new URLSearchParams(window.location.search);
     if (params.get('freshSession') !== '1') return;
+    const shouldResetSso = params.get('resetSso') === '1';
+    const ssoResetDone = params.get('resetSsoDone') === '1';
 
     this.clearTokenExpiryTimer();
     this._token.next(null);
@@ -243,8 +250,27 @@ export class AuthService {
     sessionStorage.removeItem(KC_RETURN_URL_KEY);
 
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(KC_ACTIVE_SESSION_KEY);
+
+    if (shouldResetSso && !ssoResetDone) {
+      const idTokenHint = localStorage.getItem(KC_ID_TOKEN_HINT_KEY) ?? undefined;
+
+      params.delete('freshSession');
+      params.delete('resetSso');
+      params.set('resetSsoDone', '1');
+
+      const postLogoutQuery = params.toString();
+      const postLogoutUrl = `${window.location.pathname}${postLogoutQuery ? `?${postLogoutQuery}` : ''}${window.location.hash}`;
+
+      this.kc.logoutAndRedirectTo(postLogoutUrl, idTokenHint);
+      return;
+    }
+
+    localStorage.removeItem(KC_ID_TOKEN_HINT_KEY);
 
     params.delete('freshSession');
+    params.delete('resetSso');
+    params.delete('resetSsoDone');
     const nextQuery = params.toString();
     const nextUrl = `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}${window.location.hash}`;
     window.history.replaceState({}, document.title, nextUrl);
@@ -265,6 +291,17 @@ export class AuthService {
 
       if (isValidReturnUrl) {
         sessionStorage.setItem(KC_RETURN_URL_KEY, nextUrl);
+      }
+
+      // Si hay una sesión SSO activa de otro usuario/rol (ej: empresa),
+      // cerrarla primero para evitar que Keycloak reutilice esa sesión.
+      const hadActiveSession = localStorage.getItem(KC_ACTIVE_SESSION_KEY);
+      if (hadActiveSession) {
+        const idTokenHint = localStorage.getItem(KC_ID_TOKEN_HINT_KEY) ?? undefined;
+        localStorage.removeItem(KC_ACTIVE_SESSION_KEY);
+        console.info('[AUTH] Sesión SSO previa detectada. Cerrando antes de nuevo login...');
+        this.kc.logoutAndRedirectTo('/login', idTokenHint);
+        return;
       }
     }
 
@@ -454,11 +491,11 @@ export class AuthService {
 
       const current = this._user.value;
       if (current) {
-        const nextAvatar = (formData.company_logo_url ?? '').trim() || current.avatarUrl;
+        const nextAvatar = this.normalizeAvatarValue(formData.company_logo_url);
         const nextUser: AuthUser = {
           ...current,
           companyName: formData.company_commercial_name ?? current.companyName,
-          avatarUrl: nextAvatar,
+          avatarUrl: nextAvatar ?? undefined,
         };
         this._user.next(nextUser);
         this.saveToStorage(nextUser);
@@ -488,6 +525,11 @@ export class AuthService {
   private saveKeycloakToken(token: KeycloakToken): void {
     if (!this.isBrowser()) return;
     sessionStorage.setItem(KC_TOKEN_KEY, JSON.stringify(token));
+
+    if (token.id_token) {
+      localStorage.setItem(KC_ID_TOKEN_HINT_KEY, token.id_token);
+    }
+
     this._token.next(token.access_token ?? null);
 
     if (token.access_token) {
@@ -520,6 +562,14 @@ export class AuthService {
 
     const normalizedRole = this.normalizeRole(chosenRoleRaw);
 
+    console.info(
+      '[AUTH] Rol resuelto →',
+      'JWT roles:', allTokenRoles,
+      '| Hasura role:', hasuraRole ?? '(vacío)',
+      '| Rol elegido:', chosenRoleRaw,
+      '| Normalizado:', normalizedRole
+    );
+
     const fullName = [payload.given_name, payload.family_name]
       .filter((value): value is string => !!value)
       .join(' ')
@@ -550,6 +600,9 @@ export class AuthService {
 
     this.ngZone.run(() => this._user.next(appUser));
     this.saveToStorage(appUser);
+
+    // Marcar que existe una sesión SSO activa de Keycloak (cross-tab via localStorage)
+    localStorage.setItem(KC_ACTIVE_SESSION_KEY, '1');
   }
 
   private decodeJwt(token: string): DecodedJwtPayload | null {
@@ -587,17 +640,27 @@ export class AuthService {
     const hasura = (hasuraRole ?? '').trim();
     const normalizedHasura = hasura.toLowerCase();
 
+    // 1) Admin siempre tiene máxima prioridad (desde cualquier fuente)
     if (normalizedHasura.includes('admin')) {
       return hasura || 'admin';
     }
 
     const tokenRole = this.pickRoleByPriority(tokenRoles);
-    if (tokenRole) {
+    if (tokenRole && tokenRole.toLowerCase().includes('admin')) {
       return tokenRole;
     }
 
+    // 2) Hasura JWT claim como fuente primaria para roles no-admin
+    if (normalizedHasura.includes('company') || normalizedHasura.includes('empresa')) {
+      return hasura;
+    }
     if (normalizedHasura.includes('user') || normalizedHasura.includes('usuario')) {
-      return hasura || 'usuario';
+      return hasura;
+    }
+
+    // 3) Fallback a roles del token si Hasura no contiene un rol útil
+    if (tokenRole) {
+      return tokenRole;
     }
 
     return 'usuario';
@@ -631,6 +694,7 @@ export class AuthService {
     sessionStorage.removeItem(KC_TOKEN_KEY);
     sessionStorage.removeItem(KC_ROLE_KEY);
     sessionStorage.removeItem(KC_USER_KEY);
+    sessionStorage.removeItem(KC_RETURN_URL_KEY);
 
     localStorage.removeItem(STORAGE_KEY);
   }
@@ -717,11 +781,23 @@ export class AuthService {
     const nextUser: AuthUser = {
       ...currentUser,
       companyName,
-      avatarUrl: avatarDataUrl || profile?.company_logo_url?.trim() || currentUser.avatarUrl,
+      avatarUrl: this.normalizeAvatarValue(avatarDataUrl) ?? this.normalizeAvatarValue(profile?.company_logo_url) ?? undefined,
     };
 
     this.ngZone.run(() => this._user.next(nextUser));
     this.saveToStorage(nextUser);
+  }
+
+  private normalizeAvatarValue(value: string | null | undefined): string | null {
+    const raw = String(value ?? '').trim();
+    if (!raw) return null;
+
+    const normalized = raw.toLowerCase();
+    if (normalized === 'null' || normalized === 'undefined' || normalized === 'n/a') {
+      return null;
+    }
+
+    return raw;
   }
 
 

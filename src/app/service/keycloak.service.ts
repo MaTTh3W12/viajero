@@ -68,6 +68,23 @@ export class KeycloakService {
     window.location.href = `${this.authBase}/realms/${REALM}/protocol/openid-connect/logout?${params.toString()}`;
   }
 
+  /**
+   * Cierra la sesión SSO de Keycloak y redirige a una ruta de la app.
+   * Se usa para limpiar la sesión anterior antes de un nuevo login.
+   */
+  logoutAndRedirectTo(path: string, idTokenHint?: string) {
+    const params = new URLSearchParams({
+      client_id: CLIENTS.login,
+      post_logout_redirect_uri: `${this.redirectUriBase}${path}`
+    });
+
+    if (idTokenHint) {
+      params.set('id_token_hint', idTokenHint);
+    }
+
+    window.location.href = `${this.authBase}/realms/${REALM}/protocol/openid-connect/logout?${params.toString()}`;
+  }
+
   private redirect(clientId: string, endpoint: string, path: string, options: RedirectOptions = {}) {
     const redirectUri = `${this.redirectUriBase}${path}`;
 

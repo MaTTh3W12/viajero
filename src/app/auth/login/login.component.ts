@@ -56,9 +56,17 @@ export class LoginComponent implements OnInit {
         return;
       }
 
-      const appRole = String(this.auth.getCurrentUser()?.role ?? '').toLowerCase();
+      const currentUser = this.auth.getCurrentUser();
+      const appRole = String(currentUser?.role ?? '').toLowerCase();
       const isEmpresaRole = appRole === 'empresa' || appRole === 'company';
       const isAdminRole = appRole === 'admin';
+
+      console.info(
+        '[LOGIN] Redirigiendo post-login →',
+        'usuario:', currentUser?.username,
+        '| email:', currentUser?.email,
+        '| rol:', appRole
+      );
 
       if (isEmpresaRole) {
         this.router.navigateByUrl('/companies/dashboard');

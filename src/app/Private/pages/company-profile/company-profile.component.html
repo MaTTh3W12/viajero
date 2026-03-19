@@ -156,7 +156,23 @@
             </div>
 
             <div class="h-full flex flex-col items-center justify-center gap-3">
-              <img [src]="logoPreviewUrl" alt="Logo empresa" class="w-24 h-24 rounded-lg object-cover border border-[#CFE0FF] bg-white" />
+              <img
+                [src]="logoPreviewUrl"
+                alt="Logo empresa"
+                class="w-24 h-24 rounded-lg object-cover border border-[#CFE0FF] bg-white"
+                (error)="onLogoImageError()"
+                (load)="onLogoImageLoad()"
+                [class.hidden]="!logoImageReady"
+              />
+
+              @if (!logoImageReady) {
+                <div class="w-24 h-24 rounded-lg border border-[#CFE0FF] bg-[#F4F7FD] flex items-center justify-center text-[#1A2440]">
+                  <svg class="w-12 h-12" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#user-avatar"></use>
+                  </svg>
+                </div>
+              }
+
               <p class="text-[#1A2440] font-semibold text-base">Cambiar imagen de logo</p>
             </div>
 
@@ -177,7 +193,14 @@
               <p class="text-xs text-[#A0AEC0]">Puedes esperar o seleccionar una imagen nueva.</p>
             </div>
           } @else {
-            <p class="text-[#1A2440] font-semibold text-lg">Subir imagen de logo</p>
+            <div class="h-full flex flex-col items-center justify-center gap-3 py-2">
+              <div class="w-24 h-24 rounded-lg border border-[#CFE0FF] bg-[#F4F7FD] flex items-center justify-center text-[#1A2440]">
+                <svg class="w-12 h-12" aria-hidden="true">
+                  <use href="assets/icons/sprite.svg#user-avatar"></use>
+                </svg>
+              </div>
+              <p class="text-[#1A2440] font-semibold text-lg">Subir imagen de logo</p>
+            </div>
             <p class="text-xs text-[#A0AEC0] mt-2">Solo se permiten archivos tipo: JPG, JPEG, PNG. (Tamaño máximo: 300 KB)</p>
           }
 

@@ -56,6 +56,7 @@ export class CompanyProfileComponent implements OnInit {
   selectedLogoName = '';
   private selectedLogoBase64: string | null = null;
   logoPreviewUrl = '';
+  logoImageReady = false;
   logoChanged = false;
   logoLoading = false;
   logoSyncingAfterSave = false;
@@ -112,7 +113,6 @@ export class CompanyProfileComponent implements OnInit {
   ngOnInit(): void {
     this.profileReady = false;
     this.prefillFromSessionAndToken();
-    void this.requestLogoPreviewLoad();
     void this.prefillFromBackendProfile();
   }
 
@@ -173,6 +173,7 @@ export class CompanyProfileComponent implements OnInit {
       const commaIndex = result.indexOf(',');
       this.selectedLogoBase64 = commaIndex >= 0 ? result.slice(commaIndex + 1) : result;
       this.logoPreviewUrl = result;
+      this.logoImageReady = false;
       this.logoChanged = true;
       this.logoLoading = false;
       this.cdr.detectChanges();
@@ -190,6 +191,17 @@ export class CompanyProfileComponent implements OnInit {
     input.value = '';
   }
 
+  onLogoImageError(): void {
+    this.logoPreviewUrl = '';
+    this.logoImageReady = false;
+    this.cdr.detectChanges();
+  }
+
+  onLogoImageLoad(): void {
+    this.logoImageReady = true;
+    this.cdr.detectChanges();
+  }
+
   openRemoveLogoModal(): void {
     if (this.isLogoBusy || !this.logoPreviewUrl) return;
     this.showRemoveLogoModal = true;
@@ -203,6 +215,7 @@ export class CompanyProfileComponent implements OnInit {
     this.selectedLogoName = '';
     this.selectedLogoBase64 = null;
     this.logoPreviewUrl = '';
+    this.logoImageReady = false;
     this.logoRemoved = true;
     this.logoChanged = true;
     this.showRemoveLogoModal = false;
@@ -269,6 +282,9 @@ export class CompanyProfileComponent implements OnInit {
     const current = this.auth.getCurrentUser();
     const hadLogoRemovalRequest = this.logoRemoved;
     const hadLogoUploadRequest = !!this.selectedLogoBase64;
+    const uploadedLogoPreview = hadLogoUploadRequest
+      ? (this.normalizeLogoSource(this.logoPreviewUrl) ?? '')
+      : '';
     const previousLogoPreview = this.normalizeLogoSource(this.logoPreviewUrl) ?? '';
 
     if (this.selectedLogoBase64 && this.selectedLogoBase64.length > 420000) {
@@ -335,6 +351,18 @@ export class CompanyProfileComponent implements OnInit {
       if (hadLogoRemovalRequest || hadLogoUploadRequest) {
         this.logoSyncingAfterSave = true;
         await this.syncLogoAfterSave(previousLogoPreview, hadLogoRemovalRequest);
+
+        const currentLogoPreview = this.normalizeLogoSource(this.logoPreviewUrl) ?? '';
+        const backendReturnedStaleLogo =
+          hadLogoUploadRequest &&
+          !!uploadedLogoPreview &&
+          (!currentLogoPreview || currentLogoPreview === previousLogoPreview);
+
+        if (backendReturnedStaleLogo) {
+          this.applyLogoPreview(uploadedLogoPreview);
+          this.logoLoading = false;
+          this.cdr.detectChanges();
+        }
       } else {
         await this.prefillFromBackendProfile();
       }
@@ -427,11 +455,6 @@ export class CompanyProfileComponent implements OnInit {
     const authUser = this.auth.getCurrentUser();
     const keycloakUser = this.auth.getKeycloakUser();
     const claims = this.decodeJwtClaims(this.auth.token);
-    const avatarFromSession = this.normalizeLogoSource(authUser?.avatarUrl ?? null);
-
-    if (avatarFromSession && !this.selectedLogoBase64 && !this.logoRemoved) {
-      this.logoPreviewUrl = avatarFromSession;
-    }
 
     this.profileForm.patchValue({
       commercialName: authUser?.companyName ?? '',
@@ -465,9 +488,8 @@ export class CompanyProfileComponent implements OnInit {
       );
       if (!profile) {
         this.backendProfile = null;
-        if (!this.logoPreviewUrl && !this.selectedLogoBase64 && !this.logoRemoved) {
-          await this.requestLogoPreviewLoad();
-        }
+        this.logoPreviewUrl = '';
+        this.logoImageReady = false;
         this.captureInitialFormValue();
         this.profileReady = true;
         return;
@@ -537,45 +559,61 @@ export class CompanyProfileComponent implements OnInit {
       return;
     }
 
+    const profileId = String(userId ?? this.backendProfile?.id ?? '').trim();
+    if (!profileId || !this.isUuid(profileId)) {
+      this.applyLogoPreview(null);
+      return;
+    }
+
     if (this.backendProfile?.company_logo_url) {
       const logoUrl = this.normalizeLogoSource(this.backendProfile.company_logo_url);
       if (logoUrl) {
-        this.logoPreviewUrl = logoUrl;
+        this.applyLogoPreview(logoUrl);
         this.cdr.detectChanges();
         return;
       }
     }
 
     try {
-      let logo = await firstValueFrom(
-        this.userProfileService.getCurrentUserCompanyLogo(token).pipe(timeout(6000))
+      const logo = await firstValueFrom(
+        this.userProfileService.getUserCompanyLogo(token, profileId).pipe(timeout(6000))
       );
 
       if (!logo?.company_logo_base64) {
-        const profileId = String(userId ?? '').trim();
-        if (profileId && this.isUuid(profileId)) {
-          logo = await firstValueFrom(
-            this.userProfileService.getUserCompanyLogo(token, profileId).pipe(timeout(4000))
-          );
-        }
-      }
-
-      if (!logo?.company_logo_base64) {
+        this.applyLogoPreview(null);
         return;
       }
 
       if (logo.company_logo_base64.startsWith('data:')) {
-        this.logoPreviewUrl = this.normalizeLogoSource(logo.company_logo_base64) ?? logo.company_logo_base64;
+        this.applyLogoPreview(this.normalizeLogoSource(logo.company_logo_base64) ?? logo.company_logo_base64);
         this.cdr.detectChanges();
         return;
       }
 
       const mime = String(logo.company_logo_mime_type ?? 'image/png').replace(/^"+|"+$/g, '').trim() || 'image/png';
-      this.logoPreviewUrl = `data:${mime};base64,${logo.company_logo_base64}`;
+      this.applyLogoPreview(`data:${mime};base64,${logo.company_logo_base64}`);
       this.cdr.detectChanges();
     } catch {
       return;
     }
+  }
+
+  private applyLogoPreview(value: string | null | undefined): void {
+    const nextLogo = this.normalizeLogoSource(value) ?? '';
+    const currentLogo = this.normalizeLogoSource(this.logoPreviewUrl) ?? '';
+
+    if (!nextLogo) {
+      this.logoPreviewUrl = '';
+      this.logoImageReady = false;
+      return;
+    }
+
+    if (nextLogo === currentLogo) {
+      return;
+    }
+
+    this.logoPreviewUrl = nextLogo;
+    this.logoImageReady = false;
   }
 
   private isUuid(value: string): boolean {
@@ -585,6 +623,11 @@ export class CompanyProfileComponent implements OnInit {
   private normalizeLogoSource(value: string | null | undefined): string | null {
     const raw = String(value ?? '').trim();
     if (!raw) return null;
+
+    const normalizedRaw = raw.toLowerCase();
+    if (normalizedRaw === 'null' || normalizedRaw === 'undefined' || normalizedRaw === 'n/a') {
+      return null;
+    }
 
     if (
       raw.startsWith('data:') ||
