@@ -151,6 +151,10 @@ export class RegisterComponent implements OnInit {
     this.email = kcUser.email ?? kcUser.username ?? this.email;
   }
 
+  goToLogin(): void {
+    this.auth.keycloakLogin();
+  }
+
   resetForm(): void {
     this.showValidation = false;
     this.emailFormatInvalid = false;
@@ -237,11 +241,6 @@ export class RegisterComponent implements OnInit {
   async onSubmit(event: Event): Promise<void> {
     event.preventDefault();
 
-    console.log('[REGISTER] submit click', {
-      isCompany: this.isCompany,
-      isKeycloakLoggedIn: this.auth.isKeycloakLoggedIn(),
-    });
-
     this.showValidation = false;
     this.registerSuccess = false;
 
@@ -268,7 +267,6 @@ export class RegisterComponent implements OnInit {
       });
 
       this.registering = false;
-      console.log('[REGISTER] completeKeycloakCompanyProfile result', { completed });
       if (completed) {
         this.registerSuccess = true;
       } else {
@@ -279,14 +277,6 @@ export class RegisterComponent implements OnInit {
     }
 
     if (this.isCompany && this.auth.isKeycloakLoggedIn()) {
-      console.log('[REGISTER] calling completeKeycloakCompanyProfile', {
-        nombreComercial: this.nombreComercial,
-        razonSocial: this.razonSocial,
-        email: this.email,
-        telefono: this.telefono,
-        direccion: this.direccion,
-        nit: this.nit,
-      });
       const completed = await this.auth.completeKeycloakCompanyProfile({
         company_commercial_name: this.nombreComercial,
         company_nit: this.nit,
@@ -302,7 +292,6 @@ export class RegisterComponent implements OnInit {
       });
 
       this.registering = false;
-      console.log('[REGISTER] completeKeycloakCompanyProfile result', { completed });
       if (completed) {
         this.registerSuccess = true;
       } else {

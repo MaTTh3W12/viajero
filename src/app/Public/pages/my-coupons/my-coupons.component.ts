@@ -43,6 +43,7 @@ interface MyCouponItem {
   styleUrl: './my-coupons.component.css',
 })
 export class MyCouponsComponent implements OnInit {
+  private readonly debugImageLogs = true;
   loading = false;
   error = '';
   qrLoading = false;
@@ -60,6 +61,7 @@ export class MyCouponsComponent implements OnInit {
   transferEmail = '';
   transferTarget: MyCouponItem | null = null;
   transferConfirm = false;
+  private couponImageById = new Map<number, string>();
 
   coupons: MyCouponItem[] = [];
   searchText = '';
@@ -67,6 +69,8 @@ export class MyCouponsComponent implements OnInit {
   categoryDropdownOpen = false;
   selectedStatus: CouponStatusFilter = 'activo';
   sortBy: 'recent' | 'oldest' = 'recent';
+  canjeadoDateFrom = '';
+  canjeadoDateTo = '';
 
   currentPage = 1;
   readonly pageSize = 8;
@@ -77,13 +81,6 @@ export class MyCouponsComponent implements OnInit {
     { key: 'food', label: 'Alimentos y bebidas', categoryId: 2, icon: 'assets/icons/dinner.svg', bgColor: '#ABE9FF' },
     { key: 'fun', label: 'Entretenimiento', categoryId: 4, icon: 'assets/icons/gift-bag1.svg', bgColor: '#FFD5D6' },
     { key: 'tourism', label: 'Turismo', categoryId: 3, icon: 'assets/icons/sunbed.svg', bgColor: '#D8D7FF' },
-  ];
-
-  private readonly cardImages = [
-    'assets/img/card1.png',
-    'assets/img/card2.png',
-    'assets/img/card3.png',
-    'assets/img/card4.png',
   ];
 
   private readonly categoryNames: Record<number, string> = {
@@ -150,6 +147,25 @@ export class MyCouponsComponent implements OnInit {
       rows = rows.filter((item) => item.acquired.redeemed);
     }
 
+    if (this.selectedStatus !== 'activo') {
+      const fromTime = this.toRangeDateTime(this.canjeadoDateFrom, 'start');
+      const toTime = this.toRangeDateTime(this.canjeadoDateTo, 'end');
+
+      if (fromTime != null || toTime != null) {
+        rows = rows.filter((item) => {
+          const sourceDate = this.selectedStatus === 'canjeado'
+            ? (item.acquired.redeemed_at || item.acquired.acquired_at)
+            : item.coupon.end_date;
+
+          const itemTime = this.toRangeDateTime(sourceDate, 'start');
+          if (itemTime == null) return false;
+          if (fromTime != null && itemTime < fromTime) return false;
+          if (toTime != null && itemTime > toTime) return false;
+          return true;
+        });
+      }
+    }
+
     if (search) {
       rows = rows.filter((item) => {
         const title = this.normalizeText(item.coupon.title ?? '');
@@ -202,6 +218,7 @@ export class MyCouponsComponent implements OnInit {
   setStatus(status: CouponStatusFilter): void {
     this.selectedStatus = status;
     this.currentPage = 1;
+    void this.loadCoupons();
   }
 
   onSearchChange(): void {
@@ -211,6 +228,7 @@ export class MyCouponsComponent implements OnInit {
   applyFilters(): void {
     this.currentPage = 1;
     this.categoryDropdownOpen = false;
+    void this.loadCoupons();
   }
 
   onSortChange(value: 'recent' | 'oldest'): void {
@@ -292,8 +310,16 @@ export class MyCouponsComponent implements OnInit {
   confirmTransfer(): void {
     const email = this.transferEmail.trim();
 
+    this.transferError = '';
+
     if (!this.isValidEmail(email)) {
       this.transferError = 'Ingresa un correo electrónico válido.';
+      return;
+    }
+
+    const uniqueCode = (this.transferTarget?.acquired.unique_code ?? '').trim();
+    if (!uniqueCode) {
+      this.transferError = 'El cupón no tiene un código válido para transferir.';
       return;
     }
 
@@ -305,6 +331,24 @@ export class MyCouponsComponent implements OnInit {
 
     const email = this.transferEmail.trim();
     const uniqueCode = (this.transferTarget.acquired.unique_code ?? '').trim();
+    const currentUser = this.auth.getCurrentUser();
+    const currentUserId = (currentUser?.sub ?? '').trim();
+    const couponOwnerId = String(this.transferTarget.acquired.user_id ?? '').trim();
+
+    if (!this.isValidEmail(email)) {
+      this.transferError = 'Ingresa un correo electrónico válido.';
+      return;
+    }
+
+    if (!uniqueCode) {
+      this.transferError = 'El cupón no tiene un código válido para transferir.';
+      return;
+    }
+
+    if (currentUserId && couponOwnerId && currentUserId !== couponOwnerId) {
+      this.transferError = 'No puedes transferir este cupón porque no pertenece a tu cuenta.';
+      return;
+    }
 
     const token = this.auth.token;
     if (!token) {
@@ -317,17 +361,36 @@ export class MyCouponsComponent implements OnInit {
 
     try {
       const transferred = await firstValueFrom(
-        this.couponService.transferCoupon(token, uniqueCode, email).pipe(take(1), timeout(15000))
+        this.couponService.transferCoupon(token, uniqueCode, email.toLowerCase()).pipe(take(1), timeout(15000))
       );
 
-      if (!transferred) throw new Error('No se pudo completar la transferencia.');
+      if (!transferred) {
+        const reconciled = await this.reconcileTransferState(uniqueCode);
+        if (reconciled) {
+          this.transferError = '';
+          this.transferSuccess = true;
+          return;
+        }
+        throw new Error('No se pudo completar la transferencia.');
+      }
 
       const transferredId = String(this.transferTarget.acquired.id);
       this.coupons = this.coupons.filter((item) => String(item.acquired.id) !== transferredId);
 
       this.transferSuccess = true;
     } catch (error) {
-      this.transferError = 'No se pudo transferir el cupón.';
+      const transferMessage = this.getTransferErrorMessage(error);
+
+      if (this.isOwnershipTransferError(error, transferMessage)) {
+        const reconciled = await this.reconcileTransferState(uniqueCode);
+        if (reconciled) {
+          this.transferError = '';
+          this.transferSuccess = true;
+          return;
+        }
+      }
+
+      this.transferError = transferMessage;
     } finally {
       this.transferring = false;
       this.cdr.detectChanges();
@@ -352,8 +415,13 @@ export class MyCouponsComponent implements OnInit {
     this.currentPage = page;
   }
 
-  getCardImage(index: number): string {
-    return this.cardImages[index % this.cardImages.length];
+  getCardImage(item: MyCouponItem): string {
+    const couponId = Number(item.coupon.id);
+    return this.couponImageById.get(couponId) ?? '';
+  }
+
+  hasCardImage(item: MyCouponItem): boolean {
+    return !!this.getCardImage(item);
   }
 
   getCategoryName(categoryId: number): string {
@@ -394,6 +462,10 @@ export class MyCouponsComponent implements OnInit {
   }
 
   canTransfer(item: MyCouponItem): boolean {
+    const currentUserId = this.getCurrentUserId();
+    const ownerId = String(item.acquired.user_id ?? '').trim();
+
+    if (currentUserId && ownerId && currentUserId !== ownerId) return false;
     if (item.acquired.redeemed) return false;
     const endDate = new Date(item.coupon.end_date);
     if (Number.isNaN(endDate.getTime())) return false;
@@ -419,7 +491,11 @@ export class MyCouponsComponent implements OnInit {
 
     try {
       const acquiredResponse = await firstValueFrom(
-        this.couponService.getCouponsAcquired(token, { limit: 200, offset: 0 }).pipe(take(1), timeout(15000))
+        this.couponService.getCouponsAcquired(token, {
+          limit: 200,
+          offset: 0,
+          where: this.buildAcquiredWhere(),
+        }).pipe(take(1), timeout(15000))
       );
 
       const acquiredRows = acquiredResponse.rows ?? [];
@@ -436,12 +512,29 @@ export class MyCouponsComponent implements OnInit {
         )
       );
 
+      if (this.debugImageLogs) {
+        console.info('[MY-COUPONS][IMG] couponIds adquiridos', {
+          totalAcquiredRows: acquiredRows.length,
+          uniqueCouponIds: couponIds.length,
+          couponIds,
+        });
+      }
+
       const couponRows = await firstValueFrom(
         this.couponService.getCouponsByIds(token, couponIds).pipe(take(1), timeout(15000))
       );
 
+      if (this.debugImageLogs) {
+        console.info('[MY-COUPONS][IMG] cupones base cargados', {
+          totalCouponRows: couponRows.length,
+          couponIdsFromCoupons: couponRows.map((coupon) => Number(coupon.id)),
+        });
+      }
+
       const couponById = new Map<number, Coupon>();
       couponRows.forEach((coupon) => couponById.set(Number(coupon.id), coupon));
+
+      await this.loadImagesForCoupons(token, couponRows);
 
       this.coupons = acquiredRows
         .map((acquired) => {
@@ -482,5 +575,210 @@ export class MyCouponsComponent implements OnInit {
   private isValidEmail(value: string): boolean {
     if (!value) return false;
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+  }
+
+  private getTransferErrorMessage(error: unknown): string {
+    const defaultMessage = 'No se pudo transferir el cupón.';
+
+    if (!(error instanceof Error)) return defaultMessage;
+
+    const rawMessage = error.message?.trim();
+    if (!rawMessage) return defaultMessage;
+
+    const normalized = rawMessage.toLowerCase();
+
+    if (normalized.includes('not found') || normalized.includes('no rows')) {
+      return 'No se encontró el cupón para transferir.';
+    }
+
+    if (normalized.includes('email') || normalized.includes('correo')) {
+      return 'El correo destino no es válido o no existe.';
+    }
+
+    if (
+      normalized.includes('permission') ||
+      normalized.includes('denied') ||
+      normalized.includes('forbidden') ||
+      normalized.includes('unauthorized')
+    ) {
+      return 'No tienes permisos para transferir este cupón.';
+    }
+
+    return rawMessage;
+  }
+
+  private isOwnershipTransferError(error: unknown, resolvedMessage: string): boolean {
+    const raw = error instanceof Error ? error.message.toLowerCase() : '';
+    const resolved = resolvedMessage.toLowerCase();
+
+    return (
+      raw.includes('you do not own this coupon') ||
+      resolved.includes('no tienes permisos para transferir este cupón') ||
+      resolved.includes('unauthorized')
+    );
+  }
+
+  private async reconcileTransferState(uniqueCode: string): Promise<boolean> {
+    try {
+      await this.loadCoupons();
+
+      if (this.error) return false;
+
+      const stillOwned = this.coupons.some(
+        (item) => (item.acquired.unique_code ?? '').trim() === uniqueCode
+      );
+
+      return !stillOwned;
+    } catch {
+      return false;
+    }
+  }
+
+  private buildAcquiredWhere(): Record<string, unknown> {
+    const currentUserId = this.getCurrentUserId();
+    const ownerCondition = currentUserId ? { user_id: { _eq: currentUserId } } : null;
+
+    if (this.selectedStatus !== 'canjeado') {
+      if (!ownerCondition) return {};
+      return ownerCondition;
+    }
+
+    const andConditions: Record<string, unknown>[] = [{ redeemed: { _eq: true } }];
+    if (ownerCondition) {
+      andConditions.push(ownerCondition);
+    }
+    const search = this.searchText.trim();
+
+    if (search) {
+      andConditions.push({
+        _or: [
+          { unique_code: { _ilike: `%${search}%` } },
+          { coupon: { title: { _ilike: `%${search}%` } } },
+        ],
+      });
+    }
+
+    const acquiredRange = this.buildDateRange(this.canjeadoDateFrom, this.canjeadoDateTo);
+    if (acquiredRange) {
+      andConditions.push({ acquired_at: acquiredRange });
+    }
+
+    const redeemedRange = this.buildDateRange(this.canjeadoDateFrom, this.canjeadoDateTo);
+    if (redeemedRange) {
+      andConditions.push({ redeemed_at: redeemedRange });
+    }
+
+    return { _and: andConditions };
+  }
+
+  private getCurrentUserId(): string {
+    return String(this.auth.getCurrentUser()?.sub ?? '').trim();
+  }
+
+  private buildDateRange(from: string, to: string): Record<string, string> | null {
+    const range: Record<string, string> = {};
+    const normalizedFrom = from?.trim();
+    const normalizedTo = to?.trim();
+
+    if (normalizedFrom) {
+      range['_gte'] = normalizedFrom;
+    }
+
+    if (normalizedTo) {
+      range['_lte'] = normalizedTo;
+    }
+
+    return Object.keys(range).length > 0 ? range : null;
+  }
+
+  private toRangeDateTime(value: string | null | undefined, boundary: 'start' | 'end'): number | null {
+    if (!value) return null;
+    const raw = value.slice(0, 10);
+    const [year, month, day] = raw.split('-').map((part) => Number(part));
+    if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day)) {
+      return null;
+    }
+
+    if (boundary === 'end') {
+      return new Date(year, month - 1, day, 23, 59, 59, 999).getTime();
+    }
+
+    return new Date(year, month - 1, day, 0, 0, 0, 0).getTime();
+  }
+
+  private async loadImagesForCoupons(token: string, rows: Coupon[]): Promise<void> {
+    this.couponImageById.clear();
+    if (!token || rows.length === 0) return;
+
+    const uniqueCouponIds = Array.from(
+      new Set(
+        rows
+          .map((coupon) => Number(coupon.id))
+          .filter((id) => Number.isFinite(id))
+      )
+    );
+
+    if (this.debugImageLogs) {
+      console.info('[MY-COUPONS][IMG] solicitando imágenes por IDs', {
+        totalRequested: uniqueCouponIds.length,
+        requestedIds: uniqueCouponIds,
+      });
+    }
+
+    try {
+      const images = await firstValueFrom(
+        this.couponService.getCouponImagesByIds(token, uniqueCouponIds).pipe(take(1), timeout(15000))
+      );
+
+      if (this.debugImageLogs) {
+        console.info('[MY-COUPONS][IMG] respuesta backend imágenes', {
+          totalRows: images.length,
+          rows: images.map((image) => ({
+            id: Number(image.id),
+            hasBase64: !!image.image_base64,
+            mime: image.image_mime_type,
+            size: image.image_size,
+          })),
+        });
+      }
+
+      images.forEach((imageData) => {
+        if (!imageData?.image_base64) return;
+        const couponId = Number(imageData.id);
+        if (!Number.isFinite(couponId)) return;
+
+        const mime = this.normalizeMimeType(imageData.image_mime_type);
+        const imageUrl = this.toDataUrl(imageData.image_base64, mime || 'image/jpeg');
+        this.couponImageById.set(couponId, imageUrl);
+      });
+
+      if (this.debugImageLogs) {
+        const loadedIds = Array.from(this.couponImageById.keys());
+        const missingIds = uniqueCouponIds.filter((id) => !this.couponImageById.has(id));
+
+        console.info('[MY-COUPONS][IMG] resultado mapeo imágenes', {
+          loadedCount: loadedIds.length,
+          loadedIds,
+          missingCount: missingIds.length,
+          missingIds,
+        });
+      }
+    } catch {
+      if (this.debugImageLogs) {
+        console.error('[MY-COUPONS][IMG] error cargando imágenes por lote');
+      }
+      return;
+    }
+  }
+
+  private toDataUrl(base64: string, mimeType: string): string {
+    if (!base64) return '';
+    if (base64.startsWith('data:')) return base64;
+    return `data:${mimeType};base64,${base64}`;
+  }
+
+  private normalizeMimeType(mimeType: string | null | undefined): string {
+    if (!mimeType) return '';
+    return String(mimeType).replace(/^"+|"+$/g, '').trim().toLowerCase();
   }
 }

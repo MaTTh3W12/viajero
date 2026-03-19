@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar.component';
 import { ContacUsComponent } from '../../../shared/components/contac-us/contac-us.component';
@@ -25,7 +26,8 @@ interface CouponCategoryFilter {
     ContacUsComponent,
     RelatedPagesComponent,
     FooterComponent,
-    CommonModule
+    CommonModule,
+    FormsModule
   ],
   templateUrl: './coupons.component.html',
   styleUrls: ['./coupons.component.css']
@@ -34,7 +36,13 @@ export class CouponsComponent implements OnInit {
 
   selectedCategory = 'all';
   selectedCategoryId: number | null = null;
-  sortBy: 'recent' = 'recent';
+  sortBy: 'recent' | 'expiring' = 'recent';
+  dateDropdownOpen = false;
+  sortDropdownOpen = false;
+  dateFrom: string | null = null;
+  dateTo: string | null = null;
+  pendingDateFrom = '';
+  pendingDateTo = '';
   foundCoupons = 0;
   readonly categoryFilters: CouponCategoryFilter[] = [
     {
@@ -135,6 +143,64 @@ export class CouponsComponent implements OnInit {
 
   onCouponsFound(total: number): void {
     this.foundCoupons = total;
+  }
+
+  setSortBy(sort: 'recent' | 'expiring'): void {
+    if (this.sortBy === sort) return;
+    this.sortBy = sort;
+  }
+
+  toggleSortDropdown(): void {
+    this.dateDropdownOpen = false;
+    this.sortDropdownOpen = !this.sortDropdownOpen;
+  }
+
+  toggleDateDropdown(): void {
+    this.sortDropdownOpen = false;
+    this.pendingDateFrom = this.dateFrom ?? '';
+    this.pendingDateTo = this.dateTo ?? '';
+    this.dateDropdownOpen = !this.dateDropdownOpen;
+  }
+
+  applyDateRange(): void {
+    const from = this.pendingDateFrom?.trim() || '';
+    const to = this.pendingDateTo?.trim() || '';
+
+    if (from && to && from > to) {
+      this.dateFrom = to;
+      this.dateTo = from;
+    } else {
+      this.dateFrom = from || null;
+      this.dateTo = to || null;
+    }
+
+    this.dateDropdownOpen = false;
+  }
+
+  clearDateRange(): void {
+    this.pendingDateFrom = '';
+    this.pendingDateTo = '';
+    this.dateFrom = null;
+    this.dateTo = null;
+    this.dateDropdownOpen = false;
+  }
+
+  selectSortOption(sort: 'recent' | 'expiring'): void {
+    this.setSortBy(sort);
+    this.dateDropdownOpen = false;
+    this.sortDropdownOpen = false;
+  }
+
+  get sortByLabel(): string {
+    return this.sortBy === 'expiring' ? 'Por vencer' : 'Más recientes';
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: Event): void {
+    const target = event.target as HTMLElement | null;
+    if (target?.closest('.sort-dropdown') || target?.closest('.date-dropdown')) return;
+    this.dateDropdownOpen = false;
+    this.sortDropdownOpen = false;
   }
 
   ngOnInit(): void {

@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { finalize, forkJoin, take } from 'rxjs';
+import { finalize, forkJoin, take, timeout } from 'rxjs';
 import { Coupon, CouponService } from '../../../service/coupon.service';
 
 @Component({
@@ -23,13 +23,7 @@ export class FeaturedDealsComponent implements OnInit, OnDestroy {
   loading = false;
   error = '';
   readonly defaultCommercialName = 'Comercio participante';
-
-  private readonly cardImages = [
-    'assets/img/card1.png',
-    'assets/img/card2.png',
-    'assets/img/card3.png',
-    'assets/img/card4.png',
-  ];
+  private couponImageById = new Map<number, string>();
 
   private autoScrollInterval: ReturnType<typeof setInterval> | null = null;
   private initTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -85,8 +79,13 @@ export class FeaturedDealsComponent implements OnInit, OnDestroy {
     }
   }
 
-  getCardImage(index: number): string {
-    return this.cardImages[index % this.cardImages.length];
+  getCardImage(coupon: Coupon): string {
+    const couponId = Number(coupon.id);
+    return this.couponImageById.get(couponId) ?? '';
+  }
+
+  hasCardImage(coupon: Coupon): boolean {
+    return !!this.getCardImage(coupon);
   }
 
   getCategoryName(categoryId: number): string {
@@ -161,6 +160,7 @@ export class FeaturedDealsComponent implements OnInit, OnDestroy {
         next: ({ recent, expiring }) => {
           this.recentCoupons = recent;
           this.expiringCoupons = expiring;
+          this.loadImagesForCoupons([...recent, ...expiring]);
           this.updateActiveCoupons();
           this.scheduleAutoScrollRestart();
           this.cdr.detectChanges();
@@ -226,5 +226,52 @@ export class FeaturedDealsComponent implements OnInit, OnDestroy {
     }
 
     return value.toFixed(2).replace(/\.?0+$/, '');
+  }
+
+  private loadImagesForCoupons(coupons: Coupon[]): void {
+    this.couponImageById.clear();
+
+    const couponIds = Array.from(
+      new Set(
+        coupons
+          .map((coupon) => Number(coupon.id))
+          .filter((id) => Number.isFinite(id))
+      )
+    );
+
+    if (couponIds.length === 0) return;
+
+    this.couponService.getPublicCouponImagesByIds(couponIds).pipe(
+      take(1),
+      timeout(15000)
+    ).subscribe({
+      next: (images) => {
+        images.forEach((imageData) => {
+          if (!imageData?.image_base64) return;
+
+          const couponId = Number(imageData.id);
+          if (!Number.isFinite(couponId)) return;
+
+          const mime = this.normalizeMimeType(imageData.image_mime_type);
+          this.couponImageById.set(couponId, this.toDataUrl(imageData.image_base64, mime || 'image/jpeg'));
+        });
+
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        return;
+      },
+    });
+  }
+
+  private toDataUrl(base64: string, mimeType: string): string {
+    if (!base64) return '';
+    if (base64.startsWith('data:')) return base64;
+    return `data:${mimeType};base64,${base64}`;
+  }
+
+  private normalizeMimeType(mimeType: string | null | undefined): string {
+    if (!mimeType) return '';
+    return String(mimeType).replace(/^"+|"+$/g, '').trim().toLowerCase();
   }
 }

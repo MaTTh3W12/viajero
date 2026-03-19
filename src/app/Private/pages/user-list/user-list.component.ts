@@ -32,7 +32,7 @@ export class UserListComponent {
       {
         iconId: 'edit',
         bgClass: 'bg-[#E6EEFF] text-[#538CFF]',
-        action: row => console.log('Editar', row),
+        action: () => undefined,
       }]
   };
 

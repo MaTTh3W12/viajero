@@ -570,14 +570,6 @@ export class FilterBarComponent {
       }
     }, 15000);
 
-    console.log('[FILTER-BAR] submitCreateCoupon', {
-      title: this.couponForm.titulo,
-      categoryId: categoria.id,
-      hasImage: !!this.couponForm.image,
-      imageName: this.couponForm.imageName,
-      imageChars: this.couponForm.image?.length ?? 0,
-    });
-
     this.createCoupon.emit({
       titulo: this.couponForm.titulo,
       cantidad: this.couponForm.cantidad,
@@ -748,13 +740,6 @@ export class FilterBarComponent {
       this.couponForm.image = base64;
       this.couponForm.imageName = file.name;
       this.couponForm.imageMime = file.type;
-
-      console.log('[FILTER-BAR] coupon image selected', {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        base64Chars: base64.length,
-      });
     } catch (error) {
       console.error('[FILTER-BAR] error reading coupon image', error);
       this.couponImageError = 'No se pudo leer el archivo seleccionado.';
@@ -838,13 +823,6 @@ export class FilterBarComponent {
       this.editForm.image = base64;
       this.editForm.imageName = file.name;
       this.editForm.imageMime = file.type;
-
-      console.log('[FILTER-BAR] edit coupon image selected', {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        base64Chars: base64.length,
-      });
     } catch (error) {
       console.error('[FILTER-BAR] error reading edit coupon image', error);
       this.editCouponImageError = 'No se pudo leer el archivo seleccionado.';
@@ -955,15 +933,6 @@ export class FilterBarComponent {
         this.onUpdateCouponError('La actualización tardó demasiado. Intenta nuevamente.');
       }
     }, 15000);
-
-    console.log('[FILTER-BAR] submitEditCoupon', {
-      id: this.editForm.id,
-      title: this.editForm.titulo,
-      stock_available: this.editForm.cantidad,
-      hasImage: !!this.editForm.image,
-      imageName: this.editForm.imageName,
-      imageChars: this.editForm.image?.length ?? 0,
-    });
 
     this.updateCoupon.emit({
       id: this.editForm.id!,

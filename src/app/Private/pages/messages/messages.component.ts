@@ -46,17 +46,17 @@ export class MessagesComponent {
       {
         icon: 'assets/icons/eye.svg',
         bgClass: 'bg-[#E6FFF4]',
-        action: row => console.log('Ver mensaje', row),
+        action: () => undefined,
       },
       {
         iconId: 'tick-square',
         bgClass: 'bg-[#E6EEFF] text-[#538CFF]',
-        action: row => console.log('Marcar como leído', row),
+        action: () => undefined,
       },
       {
         iconId: 'trash',
         bgClass: 'bg-[#FFE6E0] text-[#C82333]',
-        action: row => console.log('Eliminar', row),
+        action: () => undefined,
       },
     ],
   };

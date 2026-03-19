@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, map, of } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
 
 declare global {
   interface Window {
@@ -13,6 +13,14 @@ declare global {
 
 interface GraphQLError {
   message: string;
+  extensions?: {
+    code?: string;
+    internal?: {
+      error?: {
+        message?: string;
+      };
+    };
+  };
 }
 
 interface GraphQLResponse<TData> {
@@ -45,6 +53,18 @@ interface GetCouponOwnerData {
 
 interface GetCouponByIdData {
   viajerosv_coupons_by_pk: Coupon | null;
+}
+
+interface GetCouponCompanySocialsData {
+  viajerosv_coupons_by_pk: {
+    user: CompanySocialLinks | null;
+  } | null;
+}
+
+interface GetCouponCompanySocialsPublicData {
+  viajerosv_coupons_by_pk: {
+    user_public: CompanySocialLinks | null;
+  } | null;
 }
 
 interface InsertCouponData {
@@ -122,6 +142,65 @@ interface GetCouponStatisticsData {
     aggregate: {
       count: number;
     } | null;
+  };
+}
+
+interface CompanyCouponStatsRow {
+  company_id: number | string;
+  total_acquired: number | null;
+  total_redeemed: number | null;
+  total_expired: number | null;
+  total_upcoming_expiration: number | null;
+}
+
+interface GetCompanyCouponStatsData {
+  viajerosv_company_coupon_stats: CompanyCouponStatsRow[];
+}
+
+interface RedemptionPerformanceRow {
+  redemption_date: string;
+  redemption_count: number | null;
+  coupon_id: number | string | null;
+  coupon_title: string | null;
+}
+
+interface GetMonthlyRedemptionPerformanceData {
+  viajerosv_redemption_performance: RedemptionPerformanceRow[];
+}
+
+interface CompanyTopRedeemedCouponRow {
+  coupon_id: number | string;
+  coupon_name: string | null;
+  redemption_count: number | null;
+}
+
+interface GetCompanyTopRedeemedCouponsData {
+  viajerosv_company_top_redeemed_coupons: CompanyTopRedeemedCouponRow[];
+}
+
+interface AuditLogRow {
+  id: number | string;
+  reference_id: number | string | null;
+  action_type: string | null;
+  entity: string | null;
+  details: string | null;
+  ip_address: string | null;
+  created_at: string;
+  user_id: string | null;
+  user_public: {
+    id: string;
+    first_name: string | null;
+    last_name: string | null;
+    email: string | null;
+  } | null;
+}
+
+interface GetAuditLogsDynamicData {
+  viajerosv_audit_logs: AuditLogRow[];
+  viajerosv_audit_logs_aggregate: {
+    aggregate: {
+      count: number;
+    };
   };
 }
 
@@ -302,10 +381,62 @@ export interface CouponAcquiredWithImage {
   coupon_with_image_base64: CouponWithImageDetails | null;
 }
 
+export interface CompanyCouponStats {
+  companyId: number | string;
+  totalAcquired: number;
+  totalRedeemed: number;
+  totalExpired: number;
+  totalUpcomingExpiration: number;
+}
+
+export interface MonthlyRedemptionPerformance {
+  redemptionDate: string;
+  redemptionCount: number;
+  couponId: number | string | null;
+  couponTitle: string | null;
+}
+
+export interface CompanyTopRedeemedCoupon {
+  couponId: number | string;
+  couponName: string;
+  redemptionCount: number;
+}
+
+export interface AuditLogUser {
+  id: string;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+}
+
+export interface AuditLog {
+  id: number | string;
+  referenceId: number | string | null;
+  actionType: string;
+  entity: string;
+  details: string | null;
+  ipAddress: string | null;
+  createdAt: string;
+  userId: string | null;
+  userPublic: AuditLogUser | null;
+}
+
+export interface GetAuditLogsVariables {
+  limit: number;
+  offset: number;
+  where: Record<string, unknown>;
+}
+
+export interface AuditLogListResult {
+  rows: AuditLog[];
+  total: number;
+}
+
 export interface GetCouponsVariables {
   limit?: number;
   offset?: number;
   where?: Record<string, unknown>;
+  order_by?: Array<Record<string, 'asc' | 'desc' | 'asc_nulls_first' | 'asc_nulls_last' | 'desc_nulls_first' | 'desc_nulls_last'>>;
 }
 
 export interface GetCouponsAcquiredVariables {
@@ -361,13 +492,26 @@ export interface CouponAcquiredListResult {
   total: number;
 }
 
+export interface CompanySocialLinks {
+  company_facebook: string | null;
+  company_instagram: string | null;
+  company_youtube: string | null;
+  company_twitter: string | null;
+  company_website: string | null;
+}
+
 const DEFAULT_HASURA_ENDPOINT = 'https://api.grupoavanza.work/v1/graphql';
 const GET_COUPONS_QUERY = `
-  query GetCoupons($limit: Int!, $offset: Int!, $where: viajerosv_coupons_bool_exp!) {
+  query GetCoupons(
+    $limit: Int!,
+    $offset: Int!,
+    $where: viajerosv_coupons_bool_exp!,
+    $order_by: [viajerosv_coupons_order_by!]
+  ) {
     viajerosv_coupons(
       limit: $limit,
       offset: $offset,
-      order_by: { created_at: desc },
+      order_by: $order_by,
       where: $where
     ) {
       category_id
@@ -520,6 +664,17 @@ const GET_LATEST_COUPONS_QUERY = `
 export class CouponService {
   constructor(private http: HttpClient) {}
 
+  private getGraphQLErrorMessage(errors: GraphQLError[]): string {
+    const messages = errors
+      .map((error) => error.extensions?.internal?.error?.message || error.message)
+      .filter((message): message is string => !!message)
+      .map((message) => message.trim())
+      .filter((message) => message.length > 0);
+
+    if (!messages.length) return 'Error en operación GraphQL';
+    return Array.from(new Set(messages)).join(' | ');
+  }
+
   private readonly defaultPublicCouponsWhere: Record<string, unknown> = {
     _and: [
       { active: { _eq: true } },
@@ -549,7 +704,7 @@ export class CouponService {
       .pipe(
         map((response) => {
           if (response.errors?.length) {
-            throw new Error(response.errors.map((error) => error.message).join(' | '));
+            throw new Error(this.getGraphQLErrorMessage(response.errors));
           }
 
           if (!response.data) {
@@ -574,7 +729,7 @@ export class CouponService {
       .pipe(
         map((response) => {
           if (response.errors?.length) {
-            throw new Error(response.errors.map((error) => error.message).join(' | '));
+            throw new Error(this.getGraphQLErrorMessage(response.errors));
           }
 
           if (!response.data) {
@@ -591,6 +746,7 @@ export class CouponService {
       limit: variables.limit ?? 40,
       offset: variables.offset ?? 0,
       where: variables.where ?? {},
+      order_by: variables.order_by ?? [{ created_at: 'desc' }],
     };
 
     return this.executeOperation<GetCouponsData, GetCouponsVariables>(token, GET_COUPONS_QUERY, requestVariables).pipe(
@@ -606,6 +762,7 @@ export class CouponService {
       limit: variables.limit ?? 40,
       offset: variables.offset ?? 0,
       where: variables.where ?? this.defaultPublicCouponsWhere,
+      order_by: variables.order_by ?? [{ created_at: 'desc' }],
     };
 
     return this.executePublicOperation<GetCouponsData, GetCouponsVariables>(GET_COUPONS_QUERY, requestVariables).pipe(
@@ -636,12 +793,56 @@ export class CouponService {
           terms
           created_at
           updated_at
+          user {
+            company_commercial_name
+            company_address
+            company_map_url
+          }
         }
       }
     `;
 
     return this.executePublicOperation<GetCouponByIdData, { id: number }>(query, { id }).pipe(
       map((data) => data.viajerosv_coupons_by_pk ?? null)
+    );
+  }
+
+  getCouponCompanySocials(token: string, id: number): Observable<CompanySocialLinks | null> {
+    const queryFromUser = `
+      query GetCouponCompanySocials($id: bigint!) {
+        viajerosv_coupons_by_pk(id: $id) {
+          user {
+            company_facebook
+            company_instagram
+            company_youtube
+            company_twitter
+            company_website
+          }
+        }
+      }
+    `;
+
+    const queryFromUserPublic = `
+      query GetCouponCompanySocialsPublic($id: bigint!) {
+        viajerosv_coupons_by_pk(id: $id) {
+          user_public {
+            company_facebook
+            company_instagram
+            company_youtube
+            company_twitter
+            company_website
+          }
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCouponCompanySocialsData, { id: number }>(token, queryFromUser, { id }).pipe(
+      map((data) => data.viajerosv_coupons_by_pk?.user ?? null),
+      catchError(() =>
+        this.executeOperation<GetCouponCompanySocialsPublicData, { id: number }>(token, queryFromUserPublic, { id }).pipe(
+          map((data) => data.viajerosv_coupons_by_pk?.user_public ?? null)
+        )
+      )
     );
   }
 
@@ -687,6 +888,50 @@ export class CouponService {
 
     return this.executeOperation<GetCouponImageData, { id: number }>(token, query, { id }).pipe(
       map((data) => data.viajerosv_coupons_with_image_base64[0] ?? null)
+    );
+  }
+
+  getCouponImagesByIds(token: string, ids: number[]): Observable<CouponImagePreview[]> {
+    const uniqueIds = Array.from(new Set(ids.filter((id) => Number.isFinite(id))));
+    if (uniqueIds.length === 0) {
+      return of([]);
+    }
+
+    const query = `
+      query GetCouponsImagesByIds($ids: [bigint!]!) {
+        viajerosv_coupons_with_image_base64(where: { id: { _in: $ids } }) {
+          id
+          image_base64
+          image_size
+          image_mime_type
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCouponImageData, { ids: number[] }>(token, query, { ids: uniqueIds }).pipe(
+      map((data) => data.viajerosv_coupons_with_image_base64 ?? [])
+    );
+  }
+
+  getPublicCouponImagesByIds(ids: number[]): Observable<CouponImagePreview[]> {
+    const uniqueIds = Array.from(new Set(ids.filter((id) => Number.isFinite(id))));
+    if (uniqueIds.length === 0) {
+      return of([]);
+    }
+
+    const query = `
+      query GetPublicCouponsImagesByIds($ids: [bigint!]!) {
+        viajerosv_coupons_with_image_base64(where: { id: { _in: $ids } }) {
+          id
+          image_base64
+          image_size
+          image_mime_type
+        }
+      }
+    `;
+
+    return this.executePublicOperation<GetCouponImageData, { ids: number[] }>(query, { ids: uniqueIds }).pipe(
+      map((data) => data.viajerosv_coupons_with_image_base64 ?? [])
     );
   }
 
@@ -749,15 +994,31 @@ export class CouponService {
           unique_code
           acquired_at
           redeemed_at
+          user_public {
+            id
+            first_name
+            last_name
+            email
+          }
           coupon {
+            id
             title
             description
             price_discount
             end_date
           }
-          userByValidatedBy {
+          userByValidatedBy: userPublicByValidatedBy {
+            id
             first_name
             last_name
+            company_commercial_name
+            company_address
+            company_map_url
+            company_facebook
+            company_instagram
+            company_youtube
+            company_twitter
+            company_website
             email
           }
         }
@@ -769,7 +1030,13 @@ export class CouponService {
       }
     `;
 
-    return this.executeOperation<GetCouponsAcquiredData, GetCouponsAcquiredVariables>(token, query, variables).pipe(
+    const safeVariables: Required<Pick<GetCouponsAcquiredVariables, 'limit' | 'offset' | 'where'>> = {
+      limit: variables.limit ?? 10,
+      offset: variables.offset ?? 0,
+      where: variables.where ?? {},
+    };
+
+    return this.executeOperation<GetCouponsAcquiredData, typeof safeVariables>(token, query, safeVariables).pipe(
       map((data) => ({
         rows: data.viajerosv_coupons_acquired,
         total: data.viajerosv_coupons_acquired_aggregate.aggregate.count,
@@ -867,6 +1134,147 @@ export class CouponService {
       map((data) => ({
         acquired: data.acquired?.aggregate?.count ?? 0,
         redeemed: data.redeemed?.aggregate?.count ?? 0,
+      }))
+    );
+  }
+
+  getCompanyCouponStats(token: string): Observable<CompanyCouponStats | null> {
+    const query = `
+      query GetCompanyCouponStats {
+        viajerosv_company_coupon_stats {
+          company_id
+          total_acquired
+          total_redeemed
+          total_expired
+          total_upcoming_expiration
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCompanyCouponStatsData, Record<string, never>>(token, query, {}).pipe(
+      map((data) => {
+        const row = data.viajerosv_company_coupon_stats?.[0];
+        if (!row) {
+          return null;
+        }
+
+        return {
+          companyId: row.company_id,
+          totalAcquired: row.total_acquired ?? 0,
+          totalRedeemed: row.total_redeemed ?? 0,
+          totalExpired: row.total_expired ?? 0,
+          totalUpcomingExpiration: row.total_upcoming_expiration ?? 0,
+        };
+      })
+    );
+  }
+
+  getMonthlyRedemptionPerformance(token: string): Observable<MonthlyRedemptionPerformance[]> {
+    const query = `
+      query GetMonthlyRedemptionPerformance {
+        viajerosv_redemption_performance(order_by: { redemption_date: asc }) {
+          redemption_date
+          redemption_count
+          coupon_id
+          coupon_title
+        }
+      }
+    `;
+
+    return this.executeOperation<GetMonthlyRedemptionPerformanceData, Record<string, never>>(token, query, {}).pipe(
+      map((data) =>
+        (data.viajerosv_redemption_performance ?? []).map((row) => ({
+          redemptionDate: row.redemption_date,
+          redemptionCount: row.redemption_count ?? 0,
+          couponId: row.coupon_id ?? null,
+          couponTitle: row.coupon_title ?? null,
+        }))
+      )
+    );
+  }
+
+  getCompanyTopRedeemedCoupons(token: string): Observable<CompanyTopRedeemedCoupon[]> {
+    const query = `
+      query GetMyTop5Coupons {
+        viajerosv_company_top_redeemed_coupons(
+          limit: 5
+          order_by: { redemption_count: desc }
+        ) {
+          coupon_id
+          coupon_name
+          redemption_count
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCompanyTopRedeemedCouponsData, Record<string, never>>(token, query, {}).pipe(
+      map((data) =>
+        (data.viajerosv_company_top_redeemed_coupons ?? []).map((row) => ({
+          couponId: row.coupon_id,
+          couponName: row.coupon_name?.trim() || 'Cupón sin nombre',
+          redemptionCount: row.redemption_count ?? 0,
+        }))
+      )
+    );
+  }
+
+  getAuditLogsDynamic(token: string, variables: GetAuditLogsVariables): Observable<AuditLogListResult> {
+    const query = `
+      query GetAuditLogsDynamic(
+        $limit: Int!
+        $offset: Int!
+        $where: viajerosv_audit_logs_bool_exp!
+      ) {
+        viajerosv_audit_logs(
+          limit: $limit
+          offset: $offset
+          order_by: { created_at: desc }
+          where: $where
+        ) {
+          id
+          reference_id
+          action_type
+          entity
+          details
+          ip_address
+          created_at
+          user_id
+          user_public {
+            id
+            first_name
+            last_name
+            email
+          }
+        }
+        viajerosv_audit_logs_aggregate(where: $where) {
+          aggregate {
+            count
+          }
+        }
+      }
+    `;
+
+    return this.executeOperation<GetAuditLogsDynamicData, GetAuditLogsVariables>(token, query, variables).pipe(
+      map((data) => ({
+        rows: (data.viajerosv_audit_logs ?? []).map((row) => ({
+          id: row.id,
+          referenceId: row.reference_id,
+          actionType: row.action_type ?? '',
+          entity: row.entity ?? '',
+          details: row.details ?? null,
+          ipAddress: row.ip_address ?? null,
+          createdAt: row.created_at,
+          userId: row.user_id ?? null,
+          userPublic: row.user_public
+            ? {
+                id: row.user_public.id,
+                firstName: row.user_public.first_name ?? null,
+                lastName: row.user_public.last_name ?? null,
+                email: row.user_public.email ?? null,
+              }
+            : null,
+        })),
+        total: data.viajerosv_audit_logs_aggregate?.aggregate?.count ?? 0,
       }))
     );
   }
