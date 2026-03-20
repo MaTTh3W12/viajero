@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, NgZone, OnDestroy, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { firstValueFrom } from 'rxjs';
 import {
@@ -140,6 +140,7 @@ export class CategoryListComponent implements OnInit, OnDestroy {
 
   constructor(
     private readonly cdr: ChangeDetectorRef,
+    private readonly ngZone: NgZone,
     private readonly auth: AuthService,
     private readonly categoryService: CategoryService
   ) {}
@@ -401,22 +402,28 @@ export class CategoryListComponent implements OnInit, OnDestroy {
     try {
       const result = await firstValueFrom(
         this.categoryService.getCategoriesPaged(token, {
-          limit: this.pageSize,
-          offset: (this.currentPage - 1) * this.pageSize,
+        limit: this.pageSize,
+        offset: (this.currentPage - 1) * this.pageSize,
           where: this.buildWhere(),
         })
       );
 
-      this.rows = this.toTableRows(result.rows ?? []);
-      this.totalRows = result.total ?? 0;
+      this.ngZone.run(() => {
+        this.rows = this.toTableRows(result.rows ?? []);
+        this.totalRows = result.total ?? 0;
+      });
     } catch (error) {
       console.error('[CategoryList] Error loading categories', error);
-      this.rows = [];
-      this.totalRows = 0;
-      this.errorMessage = 'No se pudieron cargar las categorías.';
+      this.ngZone.run(() => {
+        this.rows = [];
+        this.totalRows = 0;
+        this.errorMessage = 'No se pudieron cargar las categorías.';
+      });
     } finally {
-      this.loading = false;
-      this.cdr.detectChanges();
+      this.ngZone.run(() => {
+        this.loading = false;
+        this.cdr.detectChanges();
+      });
     }
   }
 
@@ -432,9 +439,11 @@ export class CategoryListComponent implements OnInit, OnDestroy {
       })
     );
 
-    this.rows = this.toTableRows(result.rows ?? []);
-    this.totalRows = result.total ?? 0;
-    this.cdr.detectChanges();
+    this.ngZone.run(() => {
+      this.rows = this.toTableRows(result.rows ?? []);
+      this.totalRows = result.total ?? 0;
+      this.cdr.detectChanges();
+    });
   }
 
   private buildWhere(): Record<string, unknown> {
