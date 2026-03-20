@@ -17,12 +17,6 @@ export const ADMIN_ROUTES: Routes = [
             .then(m => m.HomeComponent)
       },
       {
-        path: 'users-list',
-        loadComponent: () =>
-          import('./pages/user-list/user-list.component')
-            .then(m => m.UserListComponent)
-      },
-      {
         path: 'audit-list',
         loadComponent: () =>
           import('./pages/audit-list/audit-list.component')

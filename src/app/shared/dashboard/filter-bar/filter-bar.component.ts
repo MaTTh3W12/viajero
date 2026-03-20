@@ -18,6 +18,16 @@ export interface HistorialCanjesFilters {
   responsible: string;
 }
 
+type StatisticsTransactionType = 'Canje' | 'Adquisición';
+type StatisticsTransactionSortField = 'fecha' | 'cliente' | 'tipo';
+
+interface StatisticsTransactionRow {
+  fecha: string;
+  cliente: string;
+  tipo: StatisticsTransactionType;
+  createdAtTimestamp: number;
+}
+
 const FILTER_BG_MAP: Record<UserRole, Record<FilterVariant, string>> = {
   admin: {
     users: 'bg-[#D4FFF1]', // Todos los usuarios
@@ -267,12 +277,19 @@ export class FilterBarComponent {
 
   couponStatisticsOpen = false;
   couponStatisticsLoading = false;
+  statisticsMonthlyHistory: Array<{ monthLabel: string; redemptions: number }> = [];
+  statisticsTransactions: StatisticsTransactionRow[] = [];
+  private statisticsTransactionsSource: StatisticsTransactionRow[] = [];
+  statisticsTransactionsSortField: StatisticsTransactionSortField = 'fecha';
+  statisticsTransactionsSortDirection: 'asc' | 'desc' = 'desc';
+  private readonly statisticsTransactionsVisibleLimit = 5;
   statisticsTarget: {
     id: number | null;
     titulo: string;
     fechaInicio: string;
     fechaFin: string;
     publicados: number;
+    disponibles: number;
     adquiridos: number;
     canjeados: number;
   } = {
@@ -281,9 +298,29 @@ export class FilterBarComponent {
       fechaInicio: '',
       fechaFin: '',
       publicados: 0,
+      disponibles: 0,
       adquiridos: 0,
       canjeados: 0,
     };
+
+  get statisticsTotalLabel(): string {
+    return `${this.statisticsTarget.canjeados}/${this.statisticsTarget.publicados}`;
+  }
+
+  get statisticsHistoryBars(): Array<{ monthLabel: string; redemptions: number; height: number; active: boolean }> {
+    const maxValue = Math.max(...this.statisticsMonthlyHistory.map((item) => item.redemptions), 0);
+    const activeIndex = this.statisticsMonthlyHistory.length - 1;
+
+    return this.statisticsMonthlyHistory.map((item, index) => {
+      const normalized = maxValue > 0 ? Math.round((item.redemptions / maxValue) * 100) : 0;
+      return {
+        monthLabel: item.monthLabel,
+        redemptions: item.redemptions,
+        height: Math.max(30, normalized),
+        active: index === activeIndex,
+      };
+    });
+  }
 
   selectAuditType(option: string): void {
     this.auditTypeSelected = option;
@@ -1148,15 +1185,26 @@ export class FilterBarComponent {
     fechaInicio: string;
     fechaFin: string;
     publicados: number;
+    disponibles?: number;
     adquiridos: number;
     canjeados: number;
   }): void {
+    this.statisticsMonthlyHistory = this.buildRecentMonthsWindow(4).map((item) => ({
+      monthLabel: item.monthLabel,
+      redemptions: 0,
+    }));
+    this.statisticsTransactionsSource = [];
+    this.statisticsTransactions = [];
+    this.statisticsTransactionsSortField = 'fecha';
+    this.statisticsTransactionsSortDirection = 'desc';
+
     this.statisticsTarget = {
       id: coupon.id,
       titulo: coupon.titulo,
       fechaInicio: this.toDisplayDate(coupon.fechaInicio),
       fechaFin: this.toDisplayDate(coupon.fechaFin),
       publicados: Math.max(0, Math.trunc(coupon.publicados ?? 0)),
+      disponibles: Math.max(0, Math.trunc(coupon.disponibles ?? 0)),
       adquiridos: Math.max(0, Math.trunc(coupon.adquiridos ?? 0)),
       canjeados: Math.max(0, Math.trunc(coupon.canjeados ?? 0)),
     };
@@ -1170,9 +1218,12 @@ export class FilterBarComponent {
     this.cdr.detectChanges();
   }
 
-  updateCouponStatistics(metrics: { publicados?: number; adquiridos?: number; canjeados?: number }): void {
+  updateCouponStatistics(metrics: { publicados?: number; disponibles?: number; adquiridos?: number; canjeados?: number }): void {
     if (metrics.publicados != null) {
       this.statisticsTarget.publicados = Math.max(0, Math.trunc(metrics.publicados));
+    }
+    if (metrics.disponibles != null) {
+      this.statisticsTarget.disponibles = Math.max(0, Math.trunc(metrics.disponibles));
     }
     if (metrics.adquiridos != null) {
       this.statisticsTarget.adquiridos = Math.max(0, Math.trunc(metrics.adquiridos));
@@ -1181,6 +1232,63 @@ export class FilterBarComponent {
       this.statisticsTarget.canjeados = Math.max(0, Math.trunc(metrics.canjeados));
     }
     this.cdr.detectChanges();
+  }
+
+  updateCouponStatisticsHistory(rows: Array<{ monthName: string; redemptionYear?: number; totalRedemptions: number }>): void {
+    const recentMonths = this.buildRecentMonthsWindow(4);
+    const redemptionsByMonth = new Map<string, number>();
+
+    for (const row of rows ?? []) {
+      const monthNumber = this.toMonthNumber(row.monthName);
+      if (!monthNumber) continue;
+
+      const year = typeof row.redemptionYear === 'number' && Number.isFinite(row.redemptionYear)
+        ? Math.trunc(row.redemptionYear)
+        : new Date().getFullYear();
+      const key = this.buildMonthKey(year, monthNumber);
+      const current = redemptionsByMonth.get(key) ?? 0;
+      const next = current + Math.max(0, Math.trunc(row.totalRedemptions ?? 0));
+      redemptionsByMonth.set(key, next);
+    }
+
+    this.statisticsMonthlyHistory = recentMonths.map((item) => ({
+      monthLabel: item.monthLabel,
+      redemptions: redemptionsByMonth.get(this.buildMonthKey(item.year, item.month)) ?? 0,
+    }));
+    this.cdr.detectChanges();
+  }
+
+  updateCouponStatisticsTransactions(rows: Array<{
+    createdAt: string;
+    userEmail?: string | null;
+    userFirstName?: string | null;
+    userLastName?: string | null;
+    actionType?: string | null;
+  }>): void {
+    this.statisticsTransactionsSource = (rows ?? []).map((row) => ({
+      fecha: this.toDisplayDateTime(row.createdAt),
+      cliente: this.resolveAuditClientLabel(row.userEmail ?? null, row.userFirstName ?? null, row.userLastName ?? null),
+      tipo: this.normalizeAuditType(row.actionType ?? ''),
+      createdAtTimestamp: this.toTimestamp(row.createdAt),
+    }));
+    this.applyStatisticsTransactionsSortAndLimit();
+    this.cdr.detectChanges();
+  }
+
+  sortStatisticsTransactions(field: StatisticsTransactionSortField): void {
+    if (this.statisticsTransactionsSortField === field) {
+      this.statisticsTransactionsSortDirection = this.statisticsTransactionsSortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.statisticsTransactionsSortField = field;
+      this.statisticsTransactionsSortDirection = field === 'fecha' ? 'desc' : 'asc';
+    }
+
+    this.applyStatisticsTransactionsSortAndLimit();
+    this.cdr.detectChanges();
+  }
+
+  isStatisticsTransactionsSortActive(field: StatisticsTransactionSortField): boolean {
+    return this.statisticsTransactionsSortField === field;
   }
 
   closeCouponStatistics(): void {
@@ -1356,6 +1464,132 @@ export class FilterBarComponent {
       return `${d}/${m}/${y}`;
     }
     return dateStr;
+  }
+
+  private toDisplayDateTime(input: string): string {
+    if (!input) return '-';
+
+    const date = new Date(input);
+    if (Number.isNaN(date.getTime())) return input;
+
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yyyy = date.getFullYear();
+    const hh = String(date.getHours()).padStart(2, '0');
+    const min = String(date.getMinutes()).padStart(2, '0');
+
+    return `${dd}/${mm}/${yyyy} - ${hh}:${min}`;
+  }
+
+  private toTimestamp(input: string): number {
+    const timestamp = new Date(input).getTime();
+    return Number.isFinite(timestamp) ? timestamp : 0;
+  }
+
+  private applyStatisticsTransactionsSortAndLimit(): void {
+    const direction = this.statisticsTransactionsSortDirection === 'asc' ? 1 : -1;
+    const field = this.statisticsTransactionsSortField;
+    const sorted = [...this.statisticsTransactionsSource].sort((a, b) => {
+      if (field === 'fecha') {
+        return (a.createdAtTimestamp - b.createdAtTimestamp) * direction;
+      }
+
+      if (field === 'tipo') {
+        const byType = a.tipo.localeCompare(b.tipo, 'es', { sensitivity: 'base' });
+        if (byType !== 0) return byType * direction;
+        return (a.createdAtTimestamp - b.createdAtTimestamp) * -1;
+      }
+
+      const byClient = a.cliente.localeCompare(b.cliente, 'es', { sensitivity: 'base' });
+      if (byClient !== 0) return byClient * direction;
+      return (a.createdAtTimestamp - b.createdAtTimestamp) * -1;
+    });
+
+    this.statisticsTransactions = sorted.slice(0, this.statisticsTransactionsVisibleLimit);
+  }
+
+  private toMonthShortLabel(monthName: string): string {
+    const normalized = String(monthName ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toUpperCase();
+
+    if (!normalized) return '---';
+
+    const byPrefix: Record<string, string> = {
+      ENE: 'ENE', ENERO: 'ENE',
+      FEB: 'FEB', FEBRERO: 'FEB',
+      MAR: 'MAR', MARZO: 'MAR',
+      ABR: 'ABR', ABRIL: 'ABR',
+      MAY: 'MAY', MAYO: 'MAY',
+      JUN: 'JUN', JUNIO: 'JUN',
+      JUL: 'JUL', JULIO: 'JUL',
+      AGO: 'AGO', AGOSTO: 'AGO',
+      SEP: 'SEP', SEPT: 'SEP', SEPTIEMBRE: 'SEP',
+      OCT: 'OCT', OCTUBRE: 'OCT',
+      NOV: 'NOV', NOVIEMBRE: 'NOV',
+      DIC: 'DIC', DICIEMBRE: 'DIC',
+    };
+
+    return byPrefix[normalized] ?? normalized.slice(0, 3);
+  }
+
+  private toMonthNumber(monthName: string): number | null {
+    const normalized = this.toMonthShortLabel(monthName);
+    const monthMap: Record<string, number> = {
+      ENE: 1, JAN: 1,
+      FEB: 2,
+      MAR: 3,
+      ABR: 4, APR: 4,
+      MAY: 5,
+      JUN: 6,
+      JUL: 7,
+      AGO: 8, AUG: 8,
+      SEP: 9,
+      OCT: 10,
+      NOV: 11,
+      DIC: 12, DEC: 12,
+    };
+
+    return monthMap[normalized] ?? null;
+  }
+
+  private buildRecentMonthsWindow(size: number): Array<{ year: number; month: number; monthLabel: string }> {
+    const safeSize = Math.max(1, Math.trunc(size));
+    const now = new Date();
+    const cursor = new Date(now.getFullYear(), now.getMonth(), 1);
+    const monthLabels = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+    const result: Array<{ year: number; month: number; monthLabel: string }> = [];
+
+    for (let offset = safeSize - 1; offset >= 0; offset -= 1) {
+      const current = new Date(cursor.getFullYear(), cursor.getMonth() - offset, 1);
+      const month = current.getMonth() + 1;
+      result.push({
+        year: current.getFullYear(),
+        month,
+        monthLabel: monthLabels[month - 1] ?? '---',
+      });
+    }
+
+    return result;
+  }
+
+  private buildMonthKey(year: number, month: number): string {
+    return `${year}-${String(month).padStart(2, '0')}`;
+  }
+
+  private resolveAuditClientLabel(email: string | null, firstName: string | null, lastName: string | null): string {
+    const fullName = `${String(firstName ?? '').trim()} ${String(lastName ?? '').trim()}`.trim();
+    if (fullName) return fullName;
+    if (email) return email;
+    return 'Sin cliente';
+  }
+
+  private normalizeAuditType(actionType: string): 'Canje' | 'Adquisición' {
+    const value = String(actionType ?? '').toUpperCase();
+    if (value.includes('REDEEM') || value.includes('CANJE')) return 'Canje';
+    return 'Adquisición';
   }
 
   private buildTodayIso(): string {

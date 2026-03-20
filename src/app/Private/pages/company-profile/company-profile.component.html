@@ -41,40 +41,31 @@
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-[#1A2440] mb-2">Teléfono fijo</label>
+          <label class="block text-sm font-medium text-[#1A2440] mb-2">Razón social</label>
           <input
             type="text"
-            formControlName="phone"
-            (input)="onPhoneInput($event)"
-            inputmode="numeric"
-            pattern="[0-9]*"
-            placeholder="Agregar título"
+            formControlName="socialReason"
+            placeholder="Agregar razón social"
             class="w-full h-12 rounded-lg bg-[#F4F7FD] border border-transparent focus:border-[#538CFF] focus:outline-none px-4 text-[#1A2440] placeholder:text-[#A0AEC0]"
           />
-          @if (profileForm.get('phone')?.touched && profileForm.get('phone')?.hasError('pattern')) {
-            <p class="text-xs text-red-600 mt-1">El teléfono fijo solo permite números.</p>
-          }
-          @if (profileForm.get('phone')?.touched && (profileForm.get('phone')?.hasError('minlength') || profileForm.get('phone')?.hasError('maxlength'))) {
-            <p class="text-xs text-red-600 mt-1">El teléfono fijo debe tener entre {{ minPhoneDigits }} y {{ maxPhoneDigits }} dígitos.</p>
-          }
         </div>
 
         <div>
-          <label class="block text-sm font-medium text-[#1A2440] mb-2">Celular</label>
+          <label class="block text-sm font-medium text-[#1A2440] mb-2">Teléfono</label>
           <input
             type="text"
             formControlName="mobile"
             (input)="onMobileInput($event)"
             inputmode="numeric"
-            pattern="[0-9]*"
+            pattern="[0-9-]*"
             placeholder="Agregar título"
             class="w-full h-12 rounded-lg bg-[#F4F7FD] border border-transparent focus:border-[#538CFF] focus:outline-none px-4 text-[#1A2440] placeholder:text-[#A0AEC0]"
           />
           @if (profileForm.get('mobile')?.touched && profileForm.get('mobile')?.hasError('pattern')) {
-            <p class="text-xs text-red-600 mt-1">El celular solo permite números.</p>
+            <p class="text-xs text-red-600 mt-1">El teléfono solo permite números y guion (-).</p>
           }
           @if (profileForm.get('mobile')?.touched && (profileForm.get('mobile')?.hasError('minlength') || profileForm.get('mobile')?.hasError('maxlength'))) {
-            <p class="text-xs text-red-600 mt-1">El celular debe tener entre {{ minPhoneDigits }} y {{ maxPhoneDigits }} dígitos.</p>
+            <p class="text-xs text-red-600 mt-1">El teléfono debe tener entre {{ minPhoneDigits }} y {{ maxPhoneDigits }} dígitos.</p>
           }
         </div>
 

@@ -1,6 +1,7 @@
 import { Component, ViewChild, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, forkJoin, of } from 'rxjs';
+import { catchError, filter, take, timeout } from 'rxjs/operators';
 import { TopbarComponent } from '../../../shared/dashboard/topbar/topbar.component';
 import { DataTableComponent } from '../../../shared/dashboard/data-table/data-table.component';
 import { DataTableConfig } from '../../../service/data-table.model';
@@ -8,7 +9,7 @@ import { CouponsMockService } from '../../../service/coupons-mock.service';
 import { Coupon } from '../../../service/coupon.interface';
 import { FilterBarComponent } from '../../../shared/dashboard/filter-bar/filter-bar.component';
 import { AuthService, UserRole } from '../../../service/auth.service';
-import { CouponService, InsertCouponVariables, UpdateCouponVariables } from '../../../service/coupon.service';
+import { AuditLog, CouponService, InsertCouponVariables, UpdateCouponVariables } from '../../../service/coupon.service';
 import { UserProfileService } from '../../../service/user-profile.service';
 import { CategoryService } from '../../../service/category.service';
 
@@ -212,7 +213,7 @@ export class CouponsListComponent {
         return;
       }
 
-      const token = this.auth.token;
+      const token = await this.getAuthTokenForApi();
       if (!token) {
         payload.onError('No hay sesión activa para crear el cupón.');
         return;
@@ -292,7 +293,7 @@ export class CouponsListComponent {
         return;
       }
 
-      const token = this.auth.token;
+      const token = await this.getAuthTokenForApi();
       if (!token) {
         payload.onError('No hay sesión activa para actualizar el cupón.');
         return;
@@ -374,7 +375,7 @@ export class CouponsListComponent {
     if (row.imagePreview) return;
 
     if (this.role !== 'empresa' || !this.auth.isKeycloakLoggedIn()) return;
-    const token = this.auth.token;
+    const token = await this.getAuthTokenForApi();
     if (!token) return;
 
     this.filterBar.setEditCouponImageLoading(true);
@@ -432,7 +433,7 @@ export class CouponsListComponent {
         return;
       }
 
-      const token = this.auth.token;
+      const token = await this.getAuthTokenForApi();
       if (!token) {
         payload.onError('No hay sesión activa para eliminar el cupón.');
         return;
@@ -478,7 +479,7 @@ export class CouponsListComponent {
     let imageMimeType = this.normalizeMimeType(row.imageMimeType);
 
     if (this.role === 'empresa' && this.auth.isKeycloakLoggedIn()) {
-      const token = this.auth.token;
+      const token = await this.getAuthTokenForApi();
       if (token) {
         this.filterBar.setDeleteCouponImageLoading(true);
         try {
@@ -527,7 +528,7 @@ export class CouponsListComponent {
     let imageMimeType = this.normalizeMimeType(row.imageMimeType);
 
     if (this.role === 'empresa' && this.auth.isKeycloakLoggedIn()) {
-      const token = this.auth.token;
+      const token = await this.getAuthTokenForApi();
       if (token) {
         this.filterBar.setViewCouponImageLoading(true);
         try {
@@ -573,28 +574,124 @@ export class CouponsListComponent {
       fechaInicio: row.fechaInicio,
       fechaFin: row.fechaFin,
       publicados,
+      disponibles: row.disponibles ?? 0,
       adquiridos,
       canjeados: 0,
     });
     this.filterBar.setCouponStatisticsLoading(true);
 
-    if (this.role !== 'empresa' || !this.auth.isKeycloakLoggedIn()) {
+    if (!this.auth.isKeycloakLoggedIn()) {
       this.filterBar.setCouponStatisticsLoading(false);
       return;
     }
 
-    const token = this.auth.token;
+    const token = await this.getAuthTokenForApi();
     if (!token) {
       this.filterBar.setCouponStatisticsLoading(false);
       return;
     }
 
     try {
-      const stats = await firstValueFrom(this.couponService.getCouponStatistics(token, row.id));
-      this.filterBar.updateCouponStatistics({
-        adquiridos: stats.acquired,
-        canjeados: stats.redeemed,
+      const { stats, monthlyHistory, acquired } = await firstValueFrom(
+        forkJoin({
+          stats: this.couponService.getCouponStatsWithCompany(token, row.id).pipe(
+            catchError((error) => {
+              console.warn('[COUPONS] getCouponStatsWithCompany falló en openStats', { id: row.id, error });
+              return of(null);
+            })
+          ),
+          monthlyHistory: this.couponService.getMonthlyRedemptionHistory(token, row.id).pipe(
+            catchError((error) => {
+              console.warn('[COUPONS] getMonthlyRedemptionHistory falló en openStats', { id: row.id, error });
+              return of([]);
+            })
+          ),
+          acquired: this.couponService.getCouponsAcquired(token, {
+            limit: 300,
+            offset: 0,
+            where: { coupon_id: { _eq: row.id } },
+          }).pipe(
+            catchError((error) => {
+              console.warn('[COUPONS] getCouponsAcquired falló en openStats', {
+                id: row.id,
+                error,
+              });
+              return of({ rows: [], total: 0 });
+            })
+          ),
+        })
+      );
+
+      const acquiredRows = acquired.rows ?? [];
+      const acquiredIds = acquiredRows
+        .map((item) => this.toNumberOrNull(item.id))
+        .filter((id): id is number => id != null);
+      const acquiredUniqueCodes = acquiredRows
+        .map((item) => this.normalizeUniqueCode(item.unique_code))
+        .filter((code): code is string => code.length > 0);
+
+      const baseAuditWhere = this.buildCouponAuditWhere(row.id, acquiredIds);
+      const primaryAudit = await firstValueFrom(
+        this.couponService.getAuditLogsDynamic(token, {
+          limit: 100,
+          offset: 0,
+          where: baseAuditWhere,
+        }).pipe(
+          catchError((error) => {
+            console.warn('[COUPONS] getAuditLogsDynamic falló con filtro principal', {
+              id: row.id,
+              where: baseAuditWhere,
+              error,
+            });
+            return of({ rows: [], total: 0 });
+          })
+        )
+      );
+
+      const targetCouponId = this.toNumberOrNull(row.id);
+      let auditRows = (primaryAudit.rows ?? []).filter((log) =>
+        this.auditLogBelongsToCoupon(log, targetCouponId, acquiredIds, acquiredUniqueCodes)
+      );
+      if (auditRows.length === 0) {
+        console.info('[COUPONS] openStats: sin filas con filtro principal, intentando búsqueda amplia', {
+          couponId: row.id,
+        });
+        const broadAudit = await firstValueFrom(
+          this.couponService.getAuditLogsDynamic(token, {
+            limit: 300,
+            offset: 0,
+            where: {},
+          })
+        );
+        auditRows = (broadAudit.rows ?? [])
+          .filter((log) => this.auditLogBelongsToCoupon(log, targetCouponId, acquiredIds, acquiredUniqueCodes))
+          .slice(0, 10);
+      }
+
+      console.info('[COUPONS] openStats: filas finales de auditoría', {
+        couponId: row.id,
+        rows: auditRows.length,
       });
+
+      this.filterBar.updateCouponStatistics({
+        publicados: stats?.stockTotal ?? publicados,
+        disponibles: stats?.stockAvailable ?? row.disponibles ?? 0,
+        adquiridos: stats?.totalAcquired ?? adquiridos,
+        canjeados: stats?.totalRedeemed ?? 0,
+      });
+
+      this.filterBar.updateCouponStatisticsHistory(monthlyHistory);
+      this.filterBar.updateCouponStatisticsTransactions(
+        auditRows
+          .slice(0, 10)
+          .map((log) => ({
+          createdAt: log.createdAt,
+          userEmail: log.userPublic?.email ?? null,
+          userFirstName: log.userPublic?.firstName ?? null,
+          userLastName: log.userPublic?.lastName ?? null,
+          actionType: log.actionType,
+        }))
+      );
     } catch (error) {
       console.warn('[COUPONS] No se pudieron cargar estadísticas del cupón', { id: row.id, error });
     } finally {
@@ -608,8 +705,29 @@ export class CouponsListComponent {
     });
   }
 
-  private async loadCompanyCouponsFromApi(): Promise<void> {
+  private async getAuthTokenForApi(): Promise<string | null> {
     const token = this.auth.token;
+    if (token) return token;
+
+    if (!this.auth.isKeycloakLoggedIn()) {
+      return null;
+    }
+
+    try {
+      return await firstValueFrom(
+        this.auth.token$.pipe(
+          filter((value): value is string => typeof value === 'string' && value.trim().length > 0),
+          take(1),
+          timeout(3000)
+        )
+      );
+    } catch {
+      return null;
+    }
+  }
+
+  private async loadCompanyCouponsFromApi(): Promise<void> {
+    const token = await this.getAuthTokenForApi();
 
     if (!token) {
       console.warn('[COUPONS] loadCompanyCouponsFromApi aborted: token missing');
@@ -621,11 +739,20 @@ export class CouponsListComponent {
 
     await this.ensureCategoryMap(token);
 
-    const response = await firstValueFrom(this.couponService.getCoupons(token, {
+    let response = await firstValueFrom(this.couponService.getCoupons(token, {
       limit: this.pageSize,
       offset: (this.currentPage - 1) * this.pageSize,
-      where: this.buildCompanyCouponsWhere(),
+      where: this.buildCompanyCouponsWhere(true),
     }));
+
+    if (response.total === 0 && this.currentUserDbId != null) {
+      console.warn('[COUPONS] Empty result with user_id filter, retrying without user_id constraint');
+      response = await firstValueFrom(this.couponService.getCoupons(token, {
+        limit: this.pageSize,
+        offset: (this.currentPage - 1) * this.pageSize,
+        where: this.buildCompanyCouponsWhere(false),
+      }));
+    }
 
     const rows = response.rows.map((row) => ({
       id: row.id,
@@ -860,12 +987,17 @@ export class CouponsListComponent {
     return Math.max(total - available, 0);
   }
 
-  private buildCompanyCouponsWhere(): Record<string, unknown> {
+  private buildCompanyCouponsWhere(includeUserIdFilter = true): Record<string, unknown> {
     const andConditions: Record<string, unknown>[] = [
-      { active: { _eq: true } },
+      {
+        _or: [
+          { active: { _eq: true } },
+          { active: { _is_null: true } },
+        ],
+      },
     ];
 
-    if (this.currentUserDbId != null) {
+    if (includeUserIdFilter && this.currentUserDbId != null) {
       andConditions.push({
         user_id: { _eq: this.currentUserDbId },
       });
@@ -889,6 +1021,129 @@ export class CouponsListComponent {
     }
 
     return { _and: andConditions };
+  }
+
+  private auditLogBelongsToCoupon(
+    log: AuditLog,
+    targetCouponId: number | null,
+    acquiredIds: number[] = [],
+    acquiredUniqueCodes: string[] = []
+  ): boolean {
+    if (targetCouponId == null) return false;
+
+    const details = this.parseAuditDetails(log.details);
+    const couponIdsFromDetails = this.extractCouponIdsFromDetails(details);
+
+    // Si details trae coupon_id, ese dato manda (reference_id suele ser id de adquisición).
+    if (couponIdsFromDetails.length > 0) {
+      return couponIdsFromDetails.includes(targetCouponId);
+    }
+
+    const normalizedUniqueCode = this.extractUniqueCodeFromDetails(details);
+    if (normalizedUniqueCode && acquiredUniqueCodes.includes(normalizedUniqueCode)) {
+      return true;
+    }
+
+    const referenceId = this.toNumberOrNull(log.referenceId);
+    if (referenceId != null && acquiredIds.includes(referenceId)) {
+      return true;
+    }
+
+    if (referenceId == null || referenceId !== targetCouponId) return false;
+
+    const entity = String(log.entity ?? '').toUpperCase().trim();
+    return entity.includes('COUPON');
+  }
+
+  private parseAuditDetails(details: string | null): Record<string, unknown> | null {
+    if (!details) return null;
+
+    try {
+      const parsed = JSON.parse(details);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, unknown>;
+      }
+    } catch {
+      return null;
+    }
+
+    return null;
+  }
+
+  private extractCouponIdsFromDetails(details: Record<string, unknown> | null): number[] {
+    if (!details) return [];
+
+    const candidateValues: unknown[] = [
+      details['coupon_id'],
+      details['couponId'],
+      details['coupon_id_fk'],
+      details['couponIdFk'],
+      details['coupon_id_before'],
+      details['coupon_id_after'],
+    ];
+
+    const couponNode = details['coupon'];
+    if (couponNode && typeof couponNode === 'object' && !Array.isArray(couponNode)) {
+      const couponRecord = couponNode as Record<string, unknown>;
+      candidateValues.push(couponRecord['id'], couponRecord['coupon_id'], couponRecord['couponId']);
+    }
+
+    const parsed = candidateValues
+      .map((value) => this.toNumberOrNull(value))
+      .filter((value): value is number => value != null);
+
+    return Array.from(new Set(parsed));
+  }
+
+  private extractUniqueCodeFromDetails(details: Record<string, unknown> | null): string {
+    if (!details) return '';
+
+    const rawCode = details['unique_code'] ?? details['uniqueCode'];
+    return this.normalizeUniqueCode(rawCode);
+  }
+
+  private normalizeUniqueCode(value: unknown): string {
+    if (typeof value !== 'string') return '';
+    return value.trim().toLowerCase();
+  }
+
+  private buildCouponAuditWhere(couponId: number, acquiredIds: number[]): Record<string, unknown> {
+    const referenceClauses: Record<string, unknown>[] = [{ reference_id: { _eq: couponId } }];
+
+    if (acquiredIds.length > 0) {
+      referenceClauses.push({ reference_id: { _in: acquiredIds } });
+    }
+
+    return {
+      _and: [
+        {
+          _or: [
+            { entity: { _eq: 'COUPON' } },
+            { entity: { _eq: 'COUPON_ACQUIRED' } },
+          ],
+        },
+        {
+          _or: referenceClauses,
+        },
+      ],
+    };
+  }
+
+  private toNumberOrNull(value: unknown): number | null {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return Math.trunc(value);
+    }
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed.length) return null;
+      const parsed = Number(trimmed);
+      if (Number.isFinite(parsed)) {
+        return Math.trunc(parsed);
+      }
+    }
+
+    return null;
   }
 
   private normalizeSearchTerm(value: string | null | undefined): string {

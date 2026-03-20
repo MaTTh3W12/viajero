@@ -10,7 +10,7 @@ type CompanyProfileFormValue = {
   commercialName: string;
   nit: string;
   businessEmail: string;
-  phone: string;
+  socialReason: string;
   mobile: string;
   category: string;
   description: string;
@@ -96,8 +96,8 @@ export class CompanyProfileComponent implements OnInit {
       commercialName: ['', Validators.required],
       nit: ['', Validators.required],
       businessEmail: ['', [Validators.required, Validators.email]],
-      phone: ['', [Validators.pattern(/^\d*$/), Validators.minLength(this.minPhoneDigits), Validators.maxLength(this.maxPhoneDigits)]],
-      mobile: ['', [Validators.pattern(/^\d*$/), Validators.minLength(this.minPhoneDigits), Validators.maxLength(this.maxPhoneDigits)]],
+      socialReason: [''],
+      mobile: ['', [Validators.pattern(/^[0-9-]*$/), Validators.minLength(this.minPhoneDigits), Validators.maxLength(this.maxPhoneDigits)]],
       category: [''],
       description: [''],
       address: [''],
@@ -225,16 +225,9 @@ export class CompanyProfileComponent implements OnInit {
 
   onMobileInput(event: Event): void {
     const input = event.target as HTMLInputElement;
-    const onlyDigits = (input.value ?? '').replace(/\D/g, '');
-    input.value = onlyDigits;
-    this.profileForm.patchValue({ mobile: onlyDigits }, { emitEvent: false });
-  }
-
-  onPhoneInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const onlyDigits = (input.value ?? '').replace(/\D/g, '');
-    input.value = onlyDigits;
-    this.profileForm.patchValue({ phone: onlyDigits }, { emitEvent: false });
+    const allowedChars = (input.value ?? '').replace(/[^0-9-]/g, '');
+    input.value = allowedChars;
+    this.profileForm.patchValue({ mobile: allowedChars }, { emitEvent: false });
   }
 
   get hasPendingChanges(): boolean {
@@ -307,10 +300,11 @@ export class CompanyProfileComponent implements OnInit {
         company_commercial_name: form.commercialName || null,
         company_nit: form.nit || null,
         company_email: form.businessEmail || null,
-        company_phone: form.phone || null,
+        company_phone: this.backendProfile?.company_phone ?? null,
         company_mobile: form.mobile || null,
         company_logo_url: nextCompanyLogoUrl,
-        company_description: form.description || null,
+        company_description: form.socialReason || null,
+        description: form.description || null,
         company_address: form.address || null,
         company_category: this.parseCategoryId(form.category),
         company_website: form.website || null,
@@ -514,10 +508,10 @@ export class CompanyProfileComponent implements OnInit {
       commercialName: profile.company_commercial_name ?? this.profileForm.value.commercialName ?? '',
       nit: profile.company_nit ?? '',
       businessEmail: profile.company_email ?? profile.email ?? this.profileForm.value.businessEmail ?? '',
-      phone: profile.company_phone ?? '',
+      socialReason: profile.company_description ?? '',
       mobile: profile.company_mobile ?? profile.phone ?? '',
       category: profile.company_category != null ? String(profile.company_category) : '',
-      description: profile.company_description ?? '',
+      description: profile.description ?? '',
       address: profile.company_address ?? '',
       website: profile.company_website ?? '',
       mapsUrl: profile.company_map_url ?? '',
@@ -660,7 +654,7 @@ export class CompanyProfileComponent implements OnInit {
       commercialName: rawValue.commercialName ?? '',
       nit: rawValue.nit ?? '',
       businessEmail: rawValue.businessEmail ?? '',
-      phone: rawValue.phone ?? '',
+      socialReason: rawValue.socialReason ?? '',
       mobile: rawValue.mobile ?? '',
       category: rawValue.category ?? '',
       description: rawValue.description ?? '',
@@ -679,7 +673,7 @@ export class CompanyProfileComponent implements OnInit {
       commercialName: '',
       nit: '',
       businessEmail: '',
-      phone: '',
+      socialReason: '',
       mobile: '',
       category: '',
       description: '',
@@ -698,7 +692,7 @@ export class CompanyProfileComponent implements OnInit {
       commercialName: String(value.commercialName ?? '').trim(),
       nit: String(value.nit ?? '').trim(),
       businessEmail: String(value.businessEmail ?? '').trim(),
-      phone: String(value.phone ?? '').trim(),
+      socialReason: String(value.socialReason ?? '').trim(),
       mobile: String(value.mobile ?? '').trim(),
       category: String(value.category ?? '').trim(),
       description: String(value.description ?? '').trim(),
