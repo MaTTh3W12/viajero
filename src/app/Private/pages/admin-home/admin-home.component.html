@@ -1,0 +1,121 @@
+<app-topbar location="Dashboard"></app-topbar>
+
+<div class="min-h-screen bg-white px-4 py-5 md:p-8">
+  <div class="admin-dashboard-shell mx-auto flex max-w-[1500px] flex-col gap-5 rounded-[28px] bg-[#F4F7FD] p-4 md:gap-6 md:p-5">
+    <section class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <article
+        *ngFor="let stat of stats; trackBy: trackByStatLabel"
+        class="rounded-[22px] bg-white px-5 py-4 shadow-sm ring-1 ring-[#E5EBF5]"
+      >
+        <div class="flex min-h-[120px] flex-col justify-between gap-4">
+          <h2 class="max-w-[180px] text-[17px] font-medium leading-[1.05] text-[#1B2B59]">
+            {{ stat.label }}
+          </h2>
+
+          <div class="flex items-center gap-3">
+            <div
+              class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full"
+              [ngClass]="stat.colorClass"
+            >
+              <svg class="h-7 w-7 text-[#1A2440]" aria-hidden="true">
+                <use [attr.href]="'assets/icons/sprite.svg#' + stat.iconId"></use>
+              </svg>
+            </div>
+
+            <p class="text-[42px] font-semibold leading-none tracking-[-0.03em] text-[#152758]">
+              {{ stat.value }}
+            </p>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="grid grid-cols-1 gap-5 xl:grid-cols-[1.12fr_1fr]">
+      <article class="rounded-[22px] bg-white p-4 shadow-sm ring-1 ring-[#E5EBF5] md:p-5">
+        <h2 class="text-[18px] font-semibold text-[#1A2440]">Rendimiento por cupón (Top 5)</h2>
+
+        <div class="mt-5 rounded-[18px] border border-[#E5EBF5] bg-[#FBFCFF] p-4">
+          <div class="admin-performance-chart h-[240px] md:h-[250px]">
+            <canvas
+              baseChart
+              [data]="performanceChartData"
+              [options]="performanceChartOptions"
+              [type]="'bar'"
+            ></canvas>
+          </div>
+        </div>
+      </article>
+
+      <article class="rounded-[22px] bg-white p-4 shadow-sm ring-1 ring-[#E5EBF5] md:p-5">
+        <h2 class="text-[18px] font-semibold text-[#1A2440]">Canjes por empresa (30 días)</h2>
+
+        <div class="mt-5 grid gap-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:items-center">
+          <div class="admin-donut-chart-wrapper mx-auto h-[260px] w-[260px]">
+            <canvas
+              baseChart
+              [data]="donutChartData"
+              [options]="donutChartOptions"
+              [type]="'doughnut'"
+            ></canvas>
+          </div>
+
+          <ul class="space-y-4">
+            <li *ngFor="let item of companyRedeemLegend; trackBy: trackByLegend" class="flex items-center gap-3 text-sm text-[#1A2440]">
+              <span class="inline-block h-3.5 w-3.5 rounded-full" [style.background]="item.color"></span>
+              <span>{{ item.name }} ({{ item.percentage }}%)</span>
+            </li>
+            <li *ngIf="companyRedeemLegend.length === 0" class="text-sm text-[#6C7A96]">
+              Sin datos disponibles.
+            </li>
+          </ul>
+        </div>
+      </article>
+    </section>
+
+    <section class="grid grid-cols-1 gap-5 xl:grid-cols-[1.35fr_0.65fr]">
+      <article class="rounded-[22px] bg-white p-4 shadow-sm ring-1 ring-[#E5EBF5] md:p-5">
+        <div class="flex items-center justify-between gap-3">
+          <h2 class="text-[18px] font-semibold text-[#1A2440]">Reciente en auditoría</h2>
+          <button class="text-sm font-medium text-[#538CFF] underline underline-offset-4">Ver bitácora completa</button>
+        </div>
+
+        <div class="mt-5 overflow-x-auto rounded-[18px] border border-[#E5EBF5]">
+          <table class="min-w-[720px] w-full bg-white text-sm">
+            <thead class="border-b border-[#E5EBF5] text-left text-[#6C7A96]">
+              <tr>
+                <th class="px-4 py-3 font-medium">Fecha y hora</th>
+                <th class="px-4 py-3 font-medium">Evento</th>
+                <th class="px-4 py-3 font-medium">Usuario</th>
+                <th class="px-4 py-3 font-medium">Entidad afectada</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of auditRows; trackBy: trackByAuditRow" class="border-b border-[#EEF2F8] last:border-b-0">
+                <td class="px-4 py-3 text-[#1A2440]">{{ row.date }}</td>
+                <td class="px-4 py-3 text-[#1A2440]">{{ row.event }}</td>
+                <td class="px-4 py-3 text-[#1A2440]">{{ row.user }}</td>
+                <td class="px-4 py-3 text-[#1A2440]">{{ row.entity }}</td>
+              </tr>
+              <tr *ngIf="auditRows.length === 0">
+                <td colspan="4" class="px-4 py-6 text-center text-sm text-[#6C7A96]">
+                  No hay movimientos recientes.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="rounded-[22px] bg-white p-4 shadow-sm ring-1 ring-[#E5EBF5] md:p-5">
+        <h2 class="text-[18px] font-semibold text-[#1A2440]">Gestión inmediata</h2>
+
+        <div class="mt-5 divide-y divide-[#E8EEF8]">
+          <div *ngFor="let item of quickActions; trackBy: trackByQuickAction" class="flex items-center justify-between gap-4 py-4">
+            <span class="text-sm text-[#1A2440]">{{ item.label }}</span>
+            <span class="text-sm font-semibold text-[#1A2440]">{{ item.total }}</span>
+          </div>
+        </div>
+      </article>
+    </section>
+  </div>
+</div>

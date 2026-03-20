@@ -13,14 +13,8 @@ export const ADMIN_ROUTES: Routes = [
       {
         path: '',
         loadComponent: () =>
-          import('./pages/home/home.component')
-            .then(m => m.HomeComponent)
-      },
-      {
-        path: 'users-list',
-        loadComponent: () =>
-          import('./pages/user-list/user-list.component')
-            .then(m => m.UserListComponent)
+          import('./pages/admin-home/admin-home.component')
+            .then(m => m.AdminHomeComponent)
       },
       {
         path: 'audit-list',
