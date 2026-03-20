@@ -71,6 +71,7 @@ interface CompanyListRow {
   company_description: string | null;
   company_address: string | null;
   company_profile_completed: boolean | null;
+  company_legal_name?: string | null;
   company_email: string | null;
   company_phone: string | null;
   company_logo_url: string | null;
@@ -107,8 +108,8 @@ export interface UserCompanyProfile {
   company_phone?: string | null;
   company_mobile?: string | null;
   company_logo_url?: string | null;
+  company_legal_name?: string | null;
   company_description?: string | null;
-  description?: string | null;
   company_address?: string | null;
   company_category?: number | null;
   company_website?: string | null;
@@ -181,6 +182,7 @@ export interface CompanyListItem {
   companyDescription: string | null;
   companyAddress: string | null;
   companyProfileCompleted: boolean | null;
+  companyLegalName: string | null;
   companyEmail: string | null;
   companyPhone: string | null;
   companyLogoUrl: string | null;
@@ -216,8 +218,8 @@ export interface UpsertCompanyVariables {
   company_phone: string | null;
   company_mobile?: string | null;
   company_logo_url: string | null;
+  company_legal_name?: string | null;
   company_description: string | null;
-  description?: string | null;
   company_address: string | null;
   company_category?: number | null;
   company_website?: string | null;
@@ -243,6 +245,10 @@ const DEFAULT_HASURA_ENDPOINT = 'https://api.grupoavanza.work/v1/graphql';
   providedIn: 'root',
 })
 export class UserProfileService {
+  private supportsCompanyLegalNameField: boolean | null = null;
+  private supportsLegacyDescriptionField: boolean | null = null;
+  private supportsCompanyPhoneField: boolean | null = null;
+
   constructor(private http: HttpClient) {}
 
   private get endpoint(): string {
@@ -345,7 +351,103 @@ export class UserProfileService {
   }
 
   upsertCompany(token: string, data: UpsertCompanyVariables): Observable<void> {
-    const mutationWithDescription = `
+    const mutationWithLegalName = `
+      mutation UpsertCompanyProfile(
+        $company_commercial_name: String,
+        $company_nit: String,
+        $company_email: String,
+        $company_phone: String,
+        $company_mobile: String,
+        $company_logo_url: String,
+        $company_legal_name: String,
+        $company_description: String,
+        $company_address: String,
+        $company_category: bigint,
+        $company_website: String,
+        $company_map_url: String,
+        $company_facebook: String,
+        $company_instagram: String,
+        $company_twitter: String,
+        $company_youtube: String,
+        $company_profile_completed: Boolean,
+        $image: String,
+        $first_name: String,
+        $last_name: String,
+        $document_id: String,
+        $document_type_id: String,
+        $phone: String,
+        $country: bpchar,
+        $city: String
+      ) {
+        insert_viajerosv_users(
+          objects: {
+            company_commercial_name: $company_commercial_name,
+            company_nit: $company_nit,
+            company_email: $company_email,
+            company_phone: $company_phone,
+            company_mobile: $company_mobile,
+            company_logo_url: $company_logo_url,
+            company_legal_name: $company_legal_name,
+            company_description: $company_description,
+            company_address: $company_address,
+            company_category: $company_category,
+            company_website: $company_website,
+            company_map_url: $company_map_url,
+            company_facebook: $company_facebook,
+            company_instagram: $company_instagram,
+            company_twitter: $company_twitter,
+            company_youtube: $company_youtube,
+            company_profile_completed: $company_profile_completed,
+            company_logo_base64_upload: $image,
+            first_name: $first_name,
+            last_name: $last_name,
+            document_id: $document_id,
+            document_type_id: $document_type_id,
+            phone: $phone,
+            country: $country,
+            city: $city
+          },
+          on_conflict: {
+            constraint: users_pkey,
+            update_columns: [
+              company_commercial_name,
+              company_nit,
+              company_email,
+              company_phone,
+              company_mobile,
+              company_logo_url,
+              company_legal_name,
+              company_description,
+              company_address,
+              company_category,
+              company_website,
+              company_map_url,
+              company_facebook,
+              company_instagram,
+              company_twitter,
+              company_youtube,
+              company_profile_completed,
+              company_logo_base64_upload,
+              first_name,
+              last_name,
+              document_id,
+              document_type_id,
+              phone,
+              country,
+              city,
+              updated_at
+            ]
+          }
+        ) {
+          affected_rows
+          returning {
+            id
+          }
+        }
+      }
+    `;
+
+    const mutationLegacyWithDescription = `
       mutation UpsertCompanyProfile(
         $company_commercial_name: String,
         $company_nit: String,
@@ -441,7 +543,7 @@ export class UserProfileService {
       }
     `;
 
-    const mutationFallback = `
+    const mutationLegacyNoDescription = `
       mutation UpsertCompanyProfile(
         $company_commercial_name: String,
         $company_nit: String,
@@ -534,19 +636,37 @@ export class UserProfileService {
       }
     `;
 
-    const fallbackData: Omit<UpsertCompanyVariables, 'description'> = { ...data };
-    delete (fallbackData as { description?: string | null }).description;
+    const legacyWithDescriptionData = {
+      ...data,
+      company_description: data.company_description ?? data.company_legal_name ?? null,
+      description: data.company_legal_name ?? null,
+    };
+    delete (legacyWithDescriptionData as { company_legal_name?: string | null }).company_legal_name;
+
+    const legacyNoDescriptionData = {
+      ...data,
+      company_description: data.company_description ?? data.company_legal_name ?? null,
+    };
+    delete (legacyNoDescriptionData as { company_legal_name?: string | null }).company_legal_name;
+    delete (legacyNoDescriptionData as { description?: string | null }).description;
 
     return this.executeOperation<UpsertMutationData, UpsertCompanyVariables>(
       token,
-      mutationWithDescription,
+      mutationWithLegalName,
       data
     ).pipe(
       catchError(() =>
-        this.executeOperation<UpsertMutationData, Omit<UpsertCompanyVariables, 'description'>>(
+        this.executeOperation<UpsertMutationData, Omit<UpsertCompanyVariables, 'company_legal_name'>>(
           token,
-          mutationFallback,
-          fallbackData
+          mutationLegacyWithDescription,
+          legacyWithDescriptionData
+        )
+      ),
+      catchError(() =>
+        this.executeOperation<UpsertMutationData, Omit<UpsertCompanyVariables, 'company_legal_name' | 'description'>>(
+          token,
+          mutationLegacyNoDescription,
+          legacyNoDescriptionData
         )
       ),
       map(() => void 0)
@@ -657,6 +777,55 @@ export class UserProfileService {
     token: string,
     variables: GetCompaniesPagedVariables
   ): Observable<CompaniesPagedResult> {
+    const queryWithCategoryAndLegalName = `
+      query GetCompanies(
+        $limit: Int!,
+        $offset: Int!,
+        $where: viajerosv_users_bool_exp!,
+        $order_by: [viajerosv_users_order_by!]
+      ) {
+        viajerosv_users(
+          limit: $limit,
+          offset: $offset,
+          where: $where,
+          order_by: $order_by
+        ) {
+          id
+          active
+          created_at
+          updated_at
+          company_commercial_name
+          company_nit
+          company_description
+          company_address
+          company_profile_completed
+          company_legal_name
+          company_email
+          company_phone
+          company_logo_url
+          company_category
+          city
+          country
+          first_name
+          last_name
+          email
+          countryByCountry {
+            code
+            phone_code
+            name
+          }
+          company_statuses {
+            value
+          }
+        }
+        viajerosv_users_aggregate(where: $where) {
+          aggregate {
+            count
+          }
+        }
+      }
+    `;
+
     const queryWithCategory = `
       query GetCompanies(
         $limit: Int!,
@@ -683,6 +852,54 @@ export class UserProfileService {
           company_phone
           company_logo_url
           company_category
+          city
+          country
+          first_name
+          last_name
+          email
+          countryByCountry {
+            code
+            phone_code
+            name
+          }
+          company_statuses {
+            value
+          }
+        }
+        viajerosv_users_aggregate(where: $where) {
+          aggregate {
+            count
+          }
+        }
+      }
+    `;
+
+    const queryFallbackWithLegalName = `
+      query GetCompanies(
+        $limit: Int!,
+        $offset: Int!,
+        $where: viajerosv_users_bool_exp!,
+        $order_by: [viajerosv_users_order_by!]
+      ) {
+        viajerosv_users(
+          limit: $limit,
+          offset: $offset,
+          where: $where,
+          order_by: $order_by
+        ) {
+          id
+          active
+          created_at
+          updated_at
+          company_commercial_name
+          company_nit
+          company_description
+          company_address
+          company_profile_completed
+          company_legal_name
+          company_email
+          company_phone
+          company_logo_url
           city
           country
           first_name
@@ -754,9 +971,23 @@ export class UserProfileService {
 
     return this.executeOperation<GetCompaniesData, GetCompaniesPagedVariables>(
       token,
-      queryWithCategory,
+      queryWithCategoryAndLegalName,
       variables
     ).pipe(
+      catchError(() =>
+        this.executeOperation<GetCompaniesData, GetCompaniesPagedVariables>(
+          token,
+          queryWithCategory,
+          variables
+        )
+      ),
+      catchError(() =>
+        this.executeOperation<GetCompaniesData, GetCompaniesPagedVariables>(
+          token,
+          queryFallbackWithLegalName,
+          variables
+        )
+      ),
       catchError(() =>
         this.executeOperation<GetCompaniesData, GetCompaniesPagedVariables>(
           token,
@@ -802,325 +1033,334 @@ export class UserProfileService {
   }
 
   getCurrentUserProfile(token: string, email?: string | null): Observable<UserCompanyProfile | null> {
+    type QueryOptions = {
+      phoneAlias: boolean;
+      legalNameSource: 'company_legal_name' | 'description' | 'none';
+      descriptionSource: 'company_description' | 'description';
+    };
+    type QueryPlan = {
+      query: string;
+      options: QueryOptions;
+    };
+
+    const buildProfileFields = (options: QueryOptions): string => `
+      id
+      company_commercial_name
+      company_nit
+      company_email
+      ${options.phoneAlias ? 'company_phone: phone' : 'company_phone'}
+      company_mobile
+      company_logo_url
+      ${
+        options.legalNameSource === 'company_legal_name'
+          ? 'company_legal_name'
+          : options.legalNameSource === 'description'
+            ? 'company_legal_name: description'
+            : ''
+      }
+      ${options.descriptionSource === 'description' ? 'company_description: description' : 'company_description'}
+      company_address
+      company_category
+      company_website
+      company_map_url
+      company_facebook
+      company_instagram
+      company_twitter
+      company_youtube
+      company_profile_completed
+      country
+      city
+      first_name
+      last_name
+      document_id
+      document_type_id
+      phone
+      email
+    `;
+
+    const buildQueryByEmail = (queryName: string, options: QueryOptions): string => `
+      query ${queryName}($email: String!) {
+        viajerosv_users(where: { email: { _eq: $email } }, limit: 1) {
+          ${buildProfileFields(options)}
+        }
+      }
+    `;
+
+    const buildCurrentQuery = (queryName: string, options: QueryOptions): string => `
+      query ${queryName} {
+        viajerosv_users(limit: 1) {
+          ${buildProfileFields(options)}
+        }
+      }
+    `;
+
+    const keepSupportedQueries = (plans: QueryPlan[]): string[] => {
+      return plans.map((plan) => plan.query);
+    };
+
     if (email) {
-      const queryByEmail = `
-        query GetUserByEmail($email: String!) {
-          viajerosv_users(where: { email: { _eq: $email } }, limit: 1) {
-            id
-            company_commercial_name
-            company_nit
-            company_email
-            company_phone
-            company_mobile
-            company_logo_url
-            company_description
-            description
-            company_address
-            company_category
-            company_website
-            company_map_url
-            company_facebook
-            company_instagram
-            company_twitter
-            company_youtube
-            company_profile_completed
-            country
-            city
-            first_name
-            last_name
-            document_id
-            document_type_id
-            phone
-            email
-          }
-        }
-      `;
+      const plans: QueryPlan[] = [
+        {
+          query: buildQueryByEmail('GetUserByEmail', {
+            phoneAlias: false,
+            legalNameSource: 'company_legal_name',
+            descriptionSource: 'company_description',
+          }),
+          options: {
+            phoneAlias: false,
+            legalNameSource: 'company_legal_name',
+            descriptionSource: 'company_description',
+          },
+        },
+        {
+          query: buildQueryByEmail('GetUserByEmailPhoneAlias', {
+            phoneAlias: true,
+            legalNameSource: 'company_legal_name',
+            descriptionSource: 'company_description',
+          }),
+          options: {
+            phoneAlias: true,
+            legalNameSource: 'company_legal_name',
+            descriptionSource: 'company_description',
+          },
+        },
+        {
+          query: buildQueryByEmail('GetUserByEmailLegacyNoLegal', {
+            phoneAlias: false,
+            legalNameSource: 'none',
+            descriptionSource: 'company_description',
+          }),
+          options: {
+            phoneAlias: false,
+            legalNameSource: 'none',
+            descriptionSource: 'company_description',
+          },
+        },
+        {
+          query: buildQueryByEmail('GetUserByEmailPhoneAliasLegacyNoLegal', {
+            phoneAlias: true,
+            legalNameSource: 'none',
+            descriptionSource: 'company_description',
+          }),
+          options: {
+            phoneAlias: true,
+            legalNameSource: 'none',
+            descriptionSource: 'company_description',
+          },
+        },
+        {
+          query: buildQueryByEmail('GetUserByEmailLegacyLegal', {
+            phoneAlias: false,
+            legalNameSource: 'description',
+            descriptionSource: 'company_description',
+          }),
+          options: {
+            phoneAlias: false,
+            legalNameSource: 'description',
+            descriptionSource: 'company_description',
+          },
+        },
+        {
+          query: buildQueryByEmail('GetUserByEmailPhoneAliasLegacyLegal', {
+            phoneAlias: true,
+            legalNameSource: 'description',
+            descriptionSource: 'company_description',
+          }),
+          options: {
+            phoneAlias: true,
+            legalNameSource: 'description',
+            descriptionSource: 'company_description',
+          },
+        },
+        {
+          query: buildQueryByEmail('GetUserByEmailLegacyDescriptionOnly', {
+            phoneAlias: false,
+            legalNameSource: 'description',
+            descriptionSource: 'description',
+          }),
+          options: {
+            phoneAlias: false,
+            legalNameSource: 'description',
+            descriptionSource: 'description',
+          },
+        },
+        {
+          query: buildQueryByEmail('GetUserByEmailPhoneAliasLegacyDescriptionOnly', {
+            phoneAlias: true,
+            legalNameSource: 'description',
+            descriptionSource: 'description',
+          }),
+          options: {
+            phoneAlias: true,
+            legalNameSource: 'description',
+            descriptionSource: 'description',
+          },
+        },
+      ];
 
-      const queryByEmailPhoneAlias = `
-        query GetUserByEmailPhoneAlias($email: String!) {
-          viajerosv_users(where: { email: { _eq: $email } }, limit: 1) {
-            id
-            company_commercial_name
-            company_nit
-            company_email
-            company_phone: phone
-            company_mobile
-            company_logo_url
-            company_description
-            description
-            company_address
-            company_category
-            company_website
-            company_map_url
-            company_facebook
-            company_instagram
-            company_twitter
-            company_youtube
-            company_profile_completed
-            country
-            city
-            first_name
-            last_name
-            document_id
-            document_type_id
-            phone
-            email
-          }
-        }
-      `;
+      const queries = keepSupportedQueries(plans);
 
-      const queryByEmailFallback = `
-        query GetUserByEmailFallback($email: String!) {
-          viajerosv_users(where: { email: { _eq: $email } }, limit: 1) {
-            id
-            company_commercial_name
-            company_nit
-            company_email
-            company_phone
-            company_mobile
-            company_logo_url
-            company_description
-            company_address
-            company_category
-            company_website
-            company_map_url
-            company_facebook
-            company_instagram
-            company_twitter
-            company_youtube
-            company_profile_completed
-            country
-            city
-            first_name
-            last_name
-            document_id
-            document_type_id
-            phone
-            email
-          }
-        }
-      `;
-
-      const queryByEmailPhoneAliasFallback = `
-        query GetUserByEmailPhoneAliasFallback($email: String!) {
-          viajerosv_users(where: { email: { _eq: $email } }, limit: 1) {
-            id
-            company_commercial_name
-            company_nit
-            company_email
-            company_phone: phone
-            company_mobile
-            company_logo_url
-            company_description
-            company_address
-            company_category
-            company_website
-            company_map_url
-            company_facebook
-            company_instagram
-            company_twitter
-            company_youtube
-            company_profile_completed
-            country
-            city
-            first_name
-            last_name
-            document_id
-            document_type_id
-            phone
-            email
-          }
-        }
-      `;
-
-      return this.executeOperation<GetCurrentUserProfileData, GetUserByEmailVariables>(
-        token,
-        queryByEmail,
-        { email }
-      ).pipe(
-        catchError(() =>
-          this.executeOperation<GetCurrentUserProfileData, GetUserByEmailVariables>(
-            token,
-            queryByEmailPhoneAlias,
-            { email }
-          )
-        ),
-        catchError(() =>
-          this.executeOperation<GetCurrentUserProfileData, GetUserByEmailVariables>(
-            token,
-            queryByEmailFallback,
-            { email }
-          )
-        ),
-        catchError(() =>
-          this.executeOperation<GetCurrentUserProfileData, GetUserByEmailVariables>(
-            token,
-            queryByEmailPhoneAliasFallback,
-            { email }
-          )
-        ),
+      return this.executeProfileQueryWithFallback<GetUserByEmailVariables>(token, queries, { email }).pipe(
         map((data) => data.viajerosv_users[0] ?? null)
       );
     }
 
-    const queryCurrent = `
-      query GetCurrentUserProfile {
-        viajerosv_users(limit: 1) {
-          id
-          company_commercial_name
-          company_nit
-          company_email
-          company_phone
-          company_mobile
-          company_logo_url
-          company_description
-          description
-          company_address
-          company_category
-          company_website
-          company_map_url
-          company_facebook
-          company_instagram
-          company_twitter
-          company_youtube
-          company_profile_completed
-          country
-          city
-          first_name
-          last_name
-          document_id
-          document_type_id
-          phone
-          email
-        }
-      }
-    `;
+    const plans: QueryPlan[] = [
+      {
+        query: buildCurrentQuery('GetCurrentUserProfile', {
+          phoneAlias: false,
+          legalNameSource: 'company_legal_name',
+          descriptionSource: 'company_description',
+        }),
+        options: {
+          phoneAlias: false,
+          legalNameSource: 'company_legal_name',
+          descriptionSource: 'company_description',
+        },
+      },
+      {
+        query: buildCurrentQuery('GetCurrentUserProfilePhoneAlias', {
+          phoneAlias: true,
+          legalNameSource: 'company_legal_name',
+          descriptionSource: 'company_description',
+        }),
+        options: {
+          phoneAlias: true,
+          legalNameSource: 'company_legal_name',
+          descriptionSource: 'company_description',
+        },
+      },
+      {
+        query: buildCurrentQuery('GetCurrentUserProfileLegacyNoLegal', {
+          phoneAlias: false,
+          legalNameSource: 'none',
+          descriptionSource: 'company_description',
+        }),
+        options: {
+          phoneAlias: false,
+          legalNameSource: 'none',
+          descriptionSource: 'company_description',
+        },
+      },
+      {
+        query: buildCurrentQuery('GetCurrentUserProfilePhoneAliasLegacyNoLegal', {
+          phoneAlias: true,
+          legalNameSource: 'none',
+          descriptionSource: 'company_description',
+        }),
+        options: {
+          phoneAlias: true,
+          legalNameSource: 'none',
+          descriptionSource: 'company_description',
+        },
+      },
+      {
+        query: buildCurrentQuery('GetCurrentUserProfileLegacyLegal', {
+          phoneAlias: false,
+          legalNameSource: 'description',
+          descriptionSource: 'company_description',
+        }),
+        options: {
+          phoneAlias: false,
+          legalNameSource: 'description',
+          descriptionSource: 'company_description',
+        },
+      },
+      {
+        query: buildCurrentQuery('GetCurrentUserProfilePhoneAliasLegacyLegal', {
+          phoneAlias: true,
+          legalNameSource: 'description',
+          descriptionSource: 'company_description',
+        }),
+        options: {
+          phoneAlias: true,
+          legalNameSource: 'description',
+          descriptionSource: 'company_description',
+        },
+      },
+      {
+        query: buildCurrentQuery('GetCurrentUserProfileLegacyDescriptionOnly', {
+          phoneAlias: false,
+          legalNameSource: 'description',
+          descriptionSource: 'description',
+        }),
+        options: {
+          phoneAlias: false,
+          legalNameSource: 'description',
+          descriptionSource: 'description',
+        },
+      },
+      {
+        query: buildCurrentQuery('GetCurrentUserProfilePhoneAliasLegacyDescriptionOnly', {
+          phoneAlias: true,
+          legalNameSource: 'description',
+          descriptionSource: 'description',
+        }),
+        options: {
+          phoneAlias: true,
+          legalNameSource: 'description',
+          descriptionSource: 'description',
+        },
+      },
+    ];
 
-    const queryCurrentPhoneAlias = `
-      query GetCurrentUserProfilePhoneAlias {
-        viajerosv_users(limit: 1) {
-          id
-          company_commercial_name
-          company_nit
-          company_email
-          company_phone: phone
-          company_mobile
-          company_logo_url
-          company_description
-          description
-          company_address
-          company_category
-          company_website
-          company_map_url
-          company_facebook
-          company_instagram
-          company_twitter
-          company_youtube
-          company_profile_completed
-          country
-          city
-          first_name
-          last_name
-          document_id
-          document_type_id
-          phone
-          email
-        }
-      }
-    `;
+    const queries = keepSupportedQueries(plans);
 
-    const queryCurrentFallback = `
-      query GetCurrentUserProfileFallback {
-        viajerosv_users(limit: 1) {
-          id
-          company_commercial_name
-          company_nit
-          company_email
-          company_phone
-          company_mobile
-          company_logo_url
-          company_description
-          company_address
-          company_category
-          company_website
-          company_map_url
-          company_facebook
-          company_instagram
-          company_twitter
-          company_youtube
-          company_profile_completed
-          country
-          city
-          first_name
-          last_name
-          document_id
-          document_type_id
-          phone
-          email
-        }
-      }
-    `;
-
-    const queryCurrentPhoneAliasFallback = `
-      query GetCurrentUserProfilePhoneAliasFallback {
-        viajerosv_users(limit: 1) {
-          id
-          company_commercial_name
-          company_nit
-          company_email
-          company_phone: phone
-          company_mobile
-          company_logo_url
-          company_description
-          company_address
-          company_category
-          company_website
-          company_map_url
-          company_facebook
-          company_instagram
-          company_twitter
-          company_youtube
-          company_profile_completed
-          country
-          city
-          first_name
-          last_name
-          document_id
-          document_type_id
-          phone
-          email
-        }
-      }
-    `;
-
-    return this.executeOperation<GetCurrentUserProfileData, Record<string, never>>(
-      token,
-      queryCurrent,
-      {}
-    ).pipe(
-      catchError(() =>
-        this.executeOperation<GetCurrentUserProfileData, Record<string, never>>(
-          token,
-          queryCurrentPhoneAlias,
-          {}
-        )
-      ),
-      catchError(() =>
-        this.executeOperation<GetCurrentUserProfileData, Record<string, never>>(
-          token,
-          queryCurrentFallback,
-          {}
-        )
-      ),
-      catchError(() =>
-        this.executeOperation<GetCurrentUserProfileData, Record<string, never>>(
-          token,
-          queryCurrentPhoneAliasFallback,
-          {}
-        )
-      ),
+    return this.executeProfileQueryWithFallback<Record<string, never>>(token, queries, {}).pipe(
       map((data) => data.viajerosv_users[0] ?? null)
     );
+  }
+
+  private executeProfileQueryWithFallback<TVariables extends object>(
+    token: string,
+    queries: string[],
+    variables: TVariables
+  ): Observable<GetCurrentUserProfileData> {
+    if (!queries.length) {
+      return throwError(() => new Error('No se definieron queries para obtener el perfil de usuario.'));
+    }
+
+    let request$ = this.executeOperation<GetCurrentUserProfileData, TVariables>(
+      token,
+      queries[0],
+      variables
+    ).pipe(
+      catchError((error) => {
+        this.markUnsupportedProfileFields(error);
+        return throwError(() => error);
+      })
+    );
+
+    for (const query of queries.slice(1)) {
+      request$ = request$.pipe(
+        catchError(() =>
+          this.executeOperation<GetCurrentUserProfileData, TVariables>(token, query, variables).pipe(
+            catchError((error) => {
+              this.markUnsupportedProfileFields(error);
+              return throwError(() => error);
+            })
+          )
+        )
+      );
+    }
+
+    return request$;
+  }
+
+  private markUnsupportedProfileFields(error: unknown): void {
+    const message = error instanceof Error ? error.message : String(error ?? '');
+
+    if (message.includes("field 'company_legal_name' not found")) {
+      this.supportsCompanyLegalNameField = false;
+    }
+
+    if (message.includes("field 'description' not found")) {
+      this.supportsLegacyDescriptionField = false;
+    }
+
+    if (message.includes("field 'company_phone' not found")) {
+      this.supportsCompanyPhoneField = false;
+    }
   }
 
   private updateCompanyAccessState(
@@ -1237,6 +1477,7 @@ export class UserProfileService {
       companyDescription: row.company_description ?? null,
       companyAddress: row.company_address ?? null,
       companyProfileCompleted: row.company_profile_completed ?? null,
+      companyLegalName: row.company_legal_name ?? null,
       companyEmail: row.company_email ?? null,
       companyPhone: row.company_phone ?? null,
       companyLogoUrl: row.company_logo_url ?? null,
