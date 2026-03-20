@@ -1,7 +1,320 @@
-<app-topbar location="Categorías">
-</app-topbar>
-<app-filter-bar
-  variant="category"
-  [role]="role">
-  </app-filter-bar>
-<app-data-table [config]="tableConfig" [data]="categories"></app-data-table>
+<div class="min-h-screen bg-white px-4 py-4 md:px-6 md:py-5">
+  <div class="mx-auto flex max-w-[1500px] flex-col overflow-hidden rounded-[32px] bg-white shadow-sm ring-1 ring-[#E3EAF6]">
+    <app-topbar location="Categorías"></app-topbar>
+
+    <section class="bg-[#FFDCD4] px-4 py-4 md:px-6 md:py-4">
+      <label class="mb-2 block text-sm font-medium text-[#1A2440]">Buscar</label>
+
+      <div class="flex flex-col gap-3 xl:flex-row xl:items-center">
+        <input
+          type="text"
+          [(ngModel)]="searchTerm"
+          (keyup.enter)="onSearch()"
+          class="category-search-input xl:min-w-0 xl:flex-1"
+          placeholder="Buscar cupón"
+        />
+
+        <button type="button" class="category-search-button shrink-0" (click)="onSearch()">
+          <svg class="h-5 w-5" aria-hidden="true">
+            <use href="assets/icons/sprite.svg#search"></use>
+          </svg>
+          Buscar
+        </button>
+
+        <button type="button" class="category-create-button shrink-0" (click)="openCreateModal()">
+          <svg class="h-5 w-5" aria-hidden="true">
+            <use href="assets/icons/sprite.svg#add"></use>
+          </svg>
+          Crear categoría
+        </button>
+
+        <div class="relative shrink-0">
+          <button type="button" class="category-filter-button" (click)="toggleStatusDropdown()">
+            <svg class="h-5 w-5" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#filter"></use>
+            </svg>
+          </button>
+
+          <div *ngIf="showStatusDropdown" class="category-filter-dropdown">
+            <button type="button" class="category-filter-item" (click)="selectStatusFilter('all')">
+              Todas
+            </button>
+            <button type="button" class="category-filter-item" (click)="selectStatusFilter('active')">
+              Activas
+            </button>
+            <button type="button" class="category-filter-item" (click)="selectStatusFilter('inactive')">
+              No activas
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-white px-0 pb-3">
+      <div class="category-table-scroll overflow-x-auto overflow-y-auto">
+        <table class="min-w-[980px] w-full text-sm">
+          <thead class="border-b border-[#E5EBF5] text-left text-[#6C7A96]">
+            <tr>
+              <th class="px-4 py-4 font-medium">
+                <span class="inline-flex items-center gap-1">
+                  Categoría
+                  <svg class="h-4 w-4 text-[#C5CEDF]" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#arrow-up-down"></use>
+                  </svg>
+                </span>
+              </th>
+              <th class="px-4 py-4 font-medium">
+                <span class="inline-flex items-center gap-1">
+                  Descripción
+                  <svg class="h-4 w-4 text-[#C5CEDF]" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#arrow-up-down"></use>
+                  </svg>
+                </span>
+              </th>
+              <th class="px-4 py-4 font-medium">
+                <span class="inline-flex items-center gap-1">
+                  Estado actual
+                  <svg class="h-4 w-4 text-[#C5CEDF]" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#arrow-up-down"></use>
+                  </svg>
+                </span>
+              </th>
+              <th class="px-4 py-4 font-medium text-center">Opciones</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngIf="loading">
+              <td colspan="4" class="px-4 py-10 text-center text-[#6C7A96]">
+                Cargando categorías...
+              </td>
+            </tr>
+
+            <tr *ngIf="!loading && errorMessage">
+              <td colspan="4" class="px-4 py-10 text-center text-[#D94B67]">
+                {{ errorMessage }}
+              </td>
+            </tr>
+
+            <tr *ngIf="!loading && !errorMessage && !hasRows">
+              <td colspan="4" class="px-4 py-10 text-center text-[#6C7A96]">
+                No hay categorías para esos filtros.
+              </td>
+            </tr>
+
+            <tr *ngFor="let row of rows; trackBy: trackRow" class="border-b border-[#EEF2F8]">
+              <td class="px-4 py-4 text-[#1A2440]">{{ row.name }}</td>
+              <td class="px-4 py-4 text-[#1A2440]">{{ row.description }}</td>
+              <td class="px-4 py-4">
+                <span class="inline-flex rounded-full px-4 py-1.5 text-sm font-medium" [ngClass]="row.statusClass">
+                  {{ row.statusLabel }}
+                </span>
+              </td>
+              <td class="px-4 py-4">
+                <div class="flex justify-center">
+                  <button type="button" class="category-option-button" (click)="openEditModal(row)">
+                    <svg class="h-4 w-4" aria-hidden="true">
+                      <use href="assets/icons/sprite.svg#edit"></use>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-center gap-2 px-4 pt-5">
+        <button type="button" class="category-page-button" [disabled]="currentPage === 1" (click)="goToFirstPage()">
+          <span class="tracking-[-0.2em]">‹‹</span>
+        </button>
+        <button type="button" class="category-page-button" [disabled]="currentPage === 1" (click)="goToPreviousPage()">
+          ‹
+        </button>
+
+        <ng-container *ngFor="let page of visiblePages; trackBy: trackPage">
+          <span *ngIf="page === '...'" class="px-2 text-[#1A2440]">...</span>
+          <button
+            *ngIf="page !== '...'"
+            type="button"
+            class="category-page-button"
+            [class.category-page-button-active]="page === currentPage"
+            (click)="goToPage(page)"
+          >
+            {{ page }}
+          </button>
+        </ng-container>
+
+        <button type="button" class="category-page-button" [disabled]="currentPage >= totalPages" (click)="goToNextPage()">
+          ›
+        </button>
+        <button type="button" class="category-page-button" [disabled]="currentPage >= totalPages" (click)="goToLastPage()">
+          <span class="tracking-[-0.2em]">››</span>
+        </button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div *ngIf="showCategoryModal" class="fixed inset-0 z-[10000] flex items-center justify-center bg-black/45 px-4">
+  <div class="relative w-full max-w-[760px] rounded-[28px] bg-white px-8 pb-7 pt-8 shadow-2xl">
+    <button
+      type="button"
+      class="absolute right-5 top-5 inline-flex h-8 w-8 items-center justify-center rounded-full text-[#1A2440] transition hover:bg-[#F4F7FD]"
+      (click)="closeModal()"
+    >
+      <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+
+    <h2 class="text-center text-[24px] font-medium text-[#373737]">{{ modalTitle }}</h2>
+
+    <div class="mt-7 grid gap-6">
+      <div class="grid gap-6 md:grid-cols-[1fr_265px]">
+        <div>
+          <label class="mb-2 block text-sm font-medium text-[#1A2440]">Nombre de la categoría</label>
+          <input
+            type="text"
+            [(ngModel)]="categoryForm.name"
+            class="category-modal-input"
+            placeholder="Agregar nombre"
+          />
+        </div>
+
+        <div class="relative">
+          <label class="mb-2 block text-sm font-medium text-[#1A2440]">Icono</label>
+          <button type="button" class="category-icon-select" (click)="toggleIconDropdown()">
+            <span class="inline-flex items-center gap-3">
+              <span
+                class="inline-flex h-8 w-8 items-center justify-center rounded-full"
+                [style.background]="selectedIconOption.bgColor"
+              >
+                <img
+                  [src]="selectedIconOption.iconSrc"
+                  [alt]="selectedIconOption.label"
+                  class="h-5 w-5"
+                  [class.brightness-0]="selectedIconOption.invertIcon"
+                  [class.invert]="selectedIconOption.invertIcon"
+                />
+              </span>
+              <span class="text-[#B0B7C6]">{{ selectedIconOption.label }}</span>
+            </span>
+            <svg class="h-5 w-5 text-[#538CFF]" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#arrow-down1"></use>
+            </svg>
+          </button>
+
+          <div *ngIf="showIconDropdown" class="category-icon-dropdown">
+            <button
+              *ngFor="let icon of iconOptions; trackBy: trackIcon"
+              type="button"
+              class="category-icon-option"
+              [title]="icon.label"
+              (click)="selectIcon(icon)"
+            >
+              <span
+                class="inline-flex h-12 w-12 items-center justify-center rounded-full"
+                [style.background]="icon.bgColor"
+              >
+                <img
+                  [src]="icon.iconSrc"
+                  [alt]="icon.label"
+                  class="h-7 w-7"
+                  [class.brightness-0]="icon.invertIcon"
+                  [class.invert]="icon.invertIcon"
+                />
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label class="mb-2 block text-sm font-medium text-[#1A2440]">Descripción (Opcional)</label>
+        <textarea
+          [(ngModel)]="categoryForm.description"
+          class="category-modal-textarea"
+          placeholder="Agregar descripción"
+        ></textarea>
+      </div>
+
+      <div>
+        <label class="mb-2 block text-sm font-medium text-[#1A2440]">Estado</label>
+        <div class="relative">
+          <select [(ngModel)]="categoryForm.active" class="category-modal-input category-modal-select">
+            <option [ngValue]="true">Activa</option>
+            <option [ngValue]="false">No activa</option>
+          </select>
+          <svg class="category-modal-select-icon h-5 w-5" aria-hidden="true">
+            <use href="assets/icons/sprite.svg#arrow-down1"></use>
+          </svg>
+        </div>
+      </div>
+
+      <div *ngIf="modalError" class="rounded-[14px] border border-[#FFD0D7] bg-[#FFF4F6] px-4 py-3 text-sm text-[#D94B67]">
+        {{ modalError }}
+      </div>
+
+      <div class="flex items-center justify-center gap-4">
+        <button
+          type="button"
+          class="category-primary-button"
+          [disabled]="!canSubmitCategory"
+          (click)="openConfirmationStep()"
+        >
+          {{ primaryButtonLabel }}
+        </button>
+
+        <button type="button" class="category-secondary-button" (click)="closeModal()">
+          Cancelar
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="modalStep !== 'form'" class="absolute inset-0 rounded-[28px] bg-white/92 backdrop-blur-[1px]">
+      <div class="flex h-full flex-col items-center justify-center px-8 text-center">
+        <ng-container [ngSwitch]="modalStep">
+          <ng-container *ngSwitchCase="'confirm'">
+            <svg class="h-11 w-11 text-[#1A2440]" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#loading"></use>
+            </svg>
+            <h3 class="mt-3 text-[20px] font-semibold text-[#1A2440]">¿Deseas guardar los cambios realizados?</h3>
+            <p class="mt-3 text-[16px] text-[#1A2440]">La operación quedará registrada en auditoría.</p>
+
+            <div class="mt-7 flex items-center justify-center gap-4">
+              <button type="button" class="category-primary-button" (click)="submitCategory()">
+                Confirmar
+              </button>
+              <button type="button" class="category-secondary-button" (click)="backToFormStep()">
+                Cancelar
+              </button>
+            </div>
+          </ng-container>
+
+          <ng-container *ngSwitchCase="'processing'">
+            <svg class="h-11 w-11 animate-spin text-[#1A2440]" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#loading"></use>
+            </svg>
+            <h3 class="mt-3 text-[20px] font-semibold text-[#1A2440]">Procesando solicitud...</h3>
+            <p class="mt-3 text-[16px] text-[#1A2440]">Por favor no cierres esta ventana.</p>
+          </ng-container>
+
+          <ng-container *ngSwitchCase="'success'">
+            <svg class="h-11 w-11 text-[#226C34]" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#check-circle"></use>
+            </svg>
+            <h3 class="mt-3 text-[20px] font-semibold text-[#1A2440]">{{ successMessage }}</h3>
+            <p class="mt-3 text-[16px] text-[#1A2440]">Evento de auditoría registrado.</p>
+
+            <div class="mt-7">
+              <button type="button" class="category-primary-button" (click)="finishSuccessFlow()">
+                Volver al listado
+              </button>
+            </div>
+          </ng-container>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</div>

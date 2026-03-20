@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { UiService } from '../../../service/ui.service';
 import { Subscription } from 'rxjs';
+import { ContactCenterService } from '../../../service/contact-center.service';
 
 type TopbarVariant =
   | 'dashboard'
@@ -29,14 +30,18 @@ export class TopbarComponent implements OnInit, OnDestroy {
   isLoggedOutSuccess = false;
   showSessionExpiredModal = false;
   avatarLoadError = false;
+  unreadMessagesCount = 0;
   private sessionExpiredSub?: Subscription;
   private userSub?: Subscription;
+  private unreadCountPollingTimer: ReturnType<typeof setInterval> | null = null;
+  private isLoadingUnreadCount = false;
 
   constructor(
     private auth: AuthService,
     private router: Router,
     private cdr: ChangeDetectorRef,
-    private uiService: UiService
+    private uiService: UiService,
+    private contactCenterService: ContactCenterService
   ) {
     this.user = this.auth.getCurrentUser();
     this.role = this.user?.role ?? null;
@@ -44,6 +49,9 @@ export class TopbarComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.loadUnreadMessagesCount();
+    this.startUnreadCountPolling();
+
     this.sessionExpiredSub = this.auth.sessionExpired$.subscribe(expired => {
       this.showSessionExpiredModal = expired;
       this.cdr.detectChanges();
@@ -53,6 +61,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
       this.user = user;
       this.role = user?.role ?? null;
       this.avatarLoadError = false;
+      this.loadUnreadMessagesCount();
       this.cdr.detectChanges();
     });
   }
@@ -60,6 +69,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.sessionExpiredSub?.unsubscribe();
     this.userSub?.unsubscribe();
+    this.stopUnreadCountPolling();
   }
 
   toggleSidebar() {
@@ -132,6 +142,27 @@ export class TopbarComponent implements OnInit, OnDestroy {
     this.router.navigate(['/']);
   }
 
+  goToContactCenter(): void {
+    const currentUrl = this.router.url;
+
+    if (this.isEmpresaPortal || currentUrl.startsWith('/companies/')) {
+      this.router.navigate(['/companies/dashboard/contacto']);
+      return;
+    }
+
+    this.router.navigate(['/admin/dashboard/contacto']);
+  }
+
+  get hasUnreadNotifications(): boolean {
+    return this.unreadMessagesCount > 0;
+  }
+
+  get unreadBadgeLabel(): string {
+    if (this.unreadMessagesCount > 99) {
+      return '99+';
+    }
+    return String(this.unreadMessagesCount);
+  }
 
   get displayFullName(): string {
     const first = this.user?.firstName?.trim() ?? '';
@@ -177,6 +208,70 @@ export class TopbarComponent implements OnInit, OnDestroy {
   get isEmpresaPortal(): boolean {
     const normalizedRole = String(this.role ?? '').toLowerCase();
     return normalizedRole === 'empresa' || normalizedRole === 'company';
+  }
+
+  private loadUnreadMessagesCount(): void {
+    if (this.isLoadingUnreadCount) {
+      return;
+    }
+
+    const token = this.auth.token;
+    if (!token) {
+      this.unreadMessagesCount = 0;
+      this.isLoadingUnreadCount = false;
+      return;
+    }
+
+    this.isLoadingUnreadCount = true;
+    const where = this.buildNotificationWhere();
+
+    this.contactCenterService.getUnreadMessagesCount(token, where).subscribe({
+      next: (count) => {
+        this.unreadMessagesCount = Math.max(0, count ?? 0);
+        this.isLoadingUnreadCount = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.unreadMessagesCount = 0;
+        this.isLoadingUnreadCount = false;
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private buildNotificationWhere(): Record<string, unknown> {
+    const currentUrl = this.router.url;
+    const isCompanyPortal = this.isEmpresaPortal || currentUrl.startsWith('/companies/');
+
+    if (isCompanyPortal) {
+      return {
+        status: {
+          _in: ['RECEIVED_BY_ADMIN', 'ANSWERED'],
+        },
+      };
+    }
+
+    return {
+      status: {
+        _eq: 'SENT',
+      },
+    };
+  }
+
+  private startUnreadCountPolling(): void {
+    this.stopUnreadCountPolling();
+    this.unreadCountPollingTimer = setInterval(() => {
+      this.loadUnreadMessagesCount();
+    }, 30000);
+  }
+
+  private stopUnreadCountPolling(): void {
+    if (!this.unreadCountPollingTimer) {
+      return;
+    }
+
+    clearInterval(this.unreadCountPollingTimer);
+    this.unreadCountPollingTimer = null;
   }
 
 }

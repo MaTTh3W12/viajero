@@ -24,6 +24,15 @@ interface GetCategoriesData {
   viajerosv_categories: Category[];
 }
 
+interface GetCategoriesPagedData {
+  viajerosv_categories: Category[];
+  viajerosv_categories_aggregate: {
+    aggregate: {
+      count: number;
+    } | null;
+  } | null;
+}
+
 interface UpsertCategoryData {
   insert_viajerosv_categories: {
     affected_rows: number;
@@ -31,16 +40,38 @@ interface UpsertCategoryData {
   };
 }
 
+interface ChangeCategoryStatusData {
+  viajerosv_change_category_status: Category[];
+}
+
 export interface Category {
-  id: number;
+  id: number | string;
   name: string;
   description: string | null;
   active: boolean;
+  icon?: string | null;
 }
 
 export interface UpsertCategoryVariables {
   name: string;
   description: string | null;
+  active: boolean;
+  icon?: string | null;
+}
+
+export interface GetCategoriesPagedVariables {
+  limit: number;
+  offset: number;
+  where: Record<string, unknown>;
+}
+
+export interface GetCategoriesPagedResult {
+  rows: Category[];
+  total: number;
+}
+
+export interface ChangeCategoryStatusVariables {
+  id: string;
   active: boolean;
 }
 
@@ -91,23 +122,72 @@ export class CategoryService {
           active
           name
           description
+          icon
         }
       }
     `;
 
     return this.executeOperation<GetCategoriesData, Record<string, never>>(token, query, {}).pipe(
-      map((data) => data.viajerosv_categories)
+      map((data) =>
+        (data.viajerosv_categories ?? [])
+          .map((row) => this.mapCategory(row))
+          .filter((row): row is Category => row !== null)
+      )
+    );
+  }
+
+  getCategoriesPaged(
+    token: string,
+    variables: GetCategoriesPagedVariables
+  ): Observable<GetCategoriesPagedResult> {
+    const query = `
+      query GetCategoriesPaged(
+        $limit: Int!,
+        $offset: Int!,
+        $where: viajerosv_categories_bool_exp!
+      ) {
+        viajerosv_categories(
+          limit: $limit,
+          offset: $offset,
+          order_by: { name: asc },
+          where: $where
+        ) {
+          id
+          name
+          description
+          active
+          icon
+        }
+        viajerosv_categories_aggregate(where: $where) {
+          aggregate {
+            count
+          }
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCategoriesPagedData, GetCategoriesPagedVariables>(
+      token,
+      query,
+      variables
+    ).pipe(
+      map((data) => ({
+        rows: (data.viajerosv_categories ?? [])
+          .map((row) => this.mapCategory(row))
+          .filter((row): row is Category => row !== null),
+        total: data.viajerosv_categories_aggregate?.aggregate?.count ?? 0,
+      }))
     );
   }
 
   upsertCategory(token: string, variables: UpsertCategoryVariables): Observable<Category | null> {
     const mutation = `
-      mutation UpsertCategory($name: String!, $description: String, $active: Boolean!) {
+      mutation UpsertCategory($name: String!, $description: String, $active: Boolean!, $icon: String) {
         insert_viajerosv_categories(
-          objects: { name: $name, description: $description, active: $active },
+          objects: { name: $name, description: $description, active: $active, icon: $icon },
           on_conflict: {
             constraint: categories_name_key,
-            update_columns: [name, description, active]
+            update_columns: [name, description, active, icon]
           }
         ) {
           affected_rows
@@ -116,6 +196,7 @@ export class CategoryService {
             name
             description
             active
+            icon
           }
         }
       }
@@ -125,6 +206,46 @@ export class CategoryService {
       token,
       mutation,
       variables
-    ).pipe(map((data) => data.insert_viajerosv_categories.returning[0] ?? null));
+    ).pipe(map((data) => this.mapCategory(data.insert_viajerosv_categories.returning[0] ?? null)));
+  }
+
+  changeCategoryStatus(
+    token: string,
+    variables: ChangeCategoryStatusVariables
+  ): Observable<Category | null> {
+    const mutation = `
+      mutation ChangeCategoryStatus($id: uuid!, $active: Boolean!) {
+        viajerosv_change_category_status(
+          args: {
+            p_category_id: $id
+            p_active: $active
+          }
+        ) {
+          id
+          name
+          active
+          icon
+          description
+        }
+      }
+    `;
+
+    return this.executeOperation<ChangeCategoryStatusData, ChangeCategoryStatusVariables>(
+      token,
+      mutation,
+      variables
+    ).pipe(map((data) => this.mapCategory(data.viajerosv_change_category_status?.[0] ?? null)));
+  }
+
+  private mapCategory(category: Category | null | undefined): Category | null {
+    if (!category) return null;
+
+    return {
+      id: category.id,
+      name: category.name,
+      description: category.description ?? null,
+      active: Boolean(category.active),
+      icon: category.icon ?? null,
+    };
   }
 }
