@@ -932,8 +932,10 @@
 <div class="fixed inset-0 z-50 flex items-end md:items-center justify-center p-0 md:p-4">
   <div
     class="relative w-full md:max-w-3xl bg-white rounded-t-2xl md:rounded-2xl shadow-xl ring-1 ring-black/5 coupon-modal flex flex-col max-h-[92vh] md:max-h-[85vh] overflow-hidden">
-    <div class="relative px-6 pt-6 pb-2">
-      <h2 class="text-2xl font-medium text-[#1A2440] text-center">Resultados estadísticos</h2>
+    <div class="relative px-6 pt-6 pb-3">
+      <h2 class="mx-auto max-w-[calc(100%-3.5rem)] text-[26px] md:text-[36px] leading-tight font-medium text-[#1A2440] text-center">
+        Estadísticas de cupón: {{ statisticsTarget.titulo }}
+      </h2>
       <button class="absolute right-6 top-6 w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/5"
         (click)="closeCouponStatistics()" aria-label="Cerrar">
         <svg class="w-5 h-5 text-[#0E225C]">
@@ -943,65 +945,127 @@
     </div>
 
     <div class="px-6 pb-6 flex-1 overflow-y-auto">
-      <div class="rounded-2xl bg-[#F4F7FD] p-5">
-        <div class="text-center text-3xl font-semibold text-[#1A2440] break-words">{{ statisticsTarget.titulo }}</div>
-        <div class="text-center text-[#1A2440] mt-2 font-semibold">
-          {{ statisticsTarget.fechaInicio }} &nbsp; - &nbsp; {{ statisticsTarget.fechaFin }}
+      <div class="rounded-2xl bg-[#F4F7FD] p-4 md:p-5">
+        <div class="text-center text-[#1A2440] mt-1 text-[16px] md:text-[24px] font-semibold leading-tight min-h-[1.5rem]">
+          @if (statisticsTarget.fechaInicio || statisticsTarget.fechaFin) {
+            <span class="inline-flex items-center justify-center flex-wrap gap-x-2 gap-y-1">
+              @if (statisticsTarget.fechaInicio) {
+                <span>{{ statisticsTarget.fechaInicio }}</span>
+              }
+              @if (statisticsTarget.fechaInicio && statisticsTarget.fechaFin) {
+                <span>-</span>
+              }
+              @if (statisticsTarget.fechaFin) {
+                <span>{{ statisticsTarget.fechaFin }}</span>
+              }
+            </span>
+          } @else {
+            <span class="text-[13px] md:text-[18px] font-medium text-[#7A8499]">Sin rango de fechas</span>
+          }
         </div>
 
-        <div class="mt-4 rounded-[36px] border-4 border-[#538CFF] p-5 bg-white/50">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-            <div class="flex items-center gap-3">
-              <span class="w-14 h-14 rounded-full bg-[#D7E8FF] flex items-center justify-center text-[#538CFF]">
-                <svg class="w-8 h-8">
-                  <use href="assets/icons/sprite.svg#statistics"></use>
-                </svg>
-              </span>
-              <div>
-                <p class="text-[22px] leading-6 text-[#1A2A64]">Total cupones adquiridos</p>
-                <p class="text-6xl leading-none text-[#1A2A64] mt-2">{{ statisticsTarget.adquiridos }}</p>
+        <div class="mt-4 rounded-[36px] border-4 border-[#538CFF] p-4 md:p-5 bg-white/50">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 items-center">
+            <div class="px-2 w-full max-w-[360px] mx-auto">
+              <p class="text-[24px] md:text-[26px] leading-none text-[#1A2A64] mb-4 text-center">Total de canjes</p>
+
+              <div class="flex items-center justify-center gap-4 md:gap-5">
+                <span class="w-16 h-16 md:w-[74px] md:h-[74px] rounded-full bg-[#D7E8FF] flex items-center justify-center text-[#538CFF] shrink-0">
+                  <svg class="w-10 h-10 md:w-11 md:h-11">
+                    <use href="assets/icons/sprite.svg#stats-total-custom"></use>
+                  </svg>
+                </span>
+
+                <p class="text-[48px] md:text-[54px] leading-[0.9] text-[#1A2A64] whitespace-nowrap">{{ statisticsTarget.canjeados }}</p>
+              </div>
+
+              <div class="mt-6 w-full max-w-[230px] mx-auto space-y-3 text-[#1A2A64] text-[15px] md:text-[17px] leading-none">
+                <div class="flex items-center justify-between gap-3">
+                  <span>Publicados</span>
+                  <span class="font-semibold text-[#538CFF] min-w-[2.5ch] text-right">{{ statisticsTarget.publicados }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-3">
+                  <span>Disponibles</span>
+                  <span class="font-semibold text-[#538CFF] min-w-[2.5ch] text-right">{{ statisticsTarget.disponibles }}</span>
+                </div>
+                <div class="flex items-center justify-between gap-3">
+                  <span>Canjeados</span>
+                  <span class="font-semibold text-[#538CFF] min-w-[2.5ch] text-right">{{ statisticsTarget.canjeados }}</span>
+                </div>
               </div>
             </div>
 
-            <div class="rounded-[28px] bg-[#EEF2FB] p-4">
-              <div class="grid grid-cols-3 gap-3 items-end h-[110px]">
-                <div class="flex flex-col items-center justify-end h-full">
-                  <div class="w-10 rounded-t-2xl bg-[#C6D8F8]" [style.height.%]="statisticsTarget.publicados > 0 ? 90 : 25"></div>
-                  <div class="mt-2 text-xl text-[#1A2A64]">{{ statisticsTarget.publicados }}</div>
-                  <div class="text-[#1A2A64]">Publicados</div>
-                </div>
-                <div class="flex flex-col items-center justify-end h-full">
-                  <div class="w-10 rounded-t-2xl bg-[#B2CBF6]" [style.height.%]="statisticsTarget.adquiridos > 0 ? 75 : 25"></div>
-                  <div class="mt-2 text-xl text-[#1A2A64]">{{ statisticsTarget.adquiridos }}</div>
-                  <div class="text-[#1A2A64]">Adquiridos</div>
-                </div>
-                <div class="flex flex-col items-center justify-end h-full">
-                  <div class="w-10 rounded-t-2xl bg-[#8FB3EE]" [style.height.%]="statisticsTarget.canjeados > 0 ? 90 : 25"></div>
-                  <div class="mt-2 text-xl text-[#1A2A64]">{{ statisticsTarget.canjeados }}</div>
-                  <div class="text-[#1A2A64]">Canjeados</div>
-                </div>
+            <div class="rounded-[28px] bg-[#EEF2FB] p-4 md:p-5 w-full max-w-[350px] mx-auto">
+              <div class="text-center text-[#1A2A64] text-[24px] md:text-[26px] leading-none mb-3">Historial de canjes</div>
+              <div class="grid grid-cols-4 gap-2 md:gap-3 items-end h-[145px] md:h-[155px]">
+                @for (item of statisticsHistoryBars; track item.monthLabel) {
+                  <div class="flex flex-col items-center justify-end h-full">
+                    <div class="w-10 md:w-11 rounded-t-2xl" [ngClass]="item.active ? 'bg-[#9CBEF2]' : 'bg-[#C6D8F8]'"
+                      [style.height.%]="item.height"></div>
+                    <div class="mt-2 text-[18px] md:text-[20px] leading-none text-[#538CFF] font-semibold">{{ item.redemptions }}</div>
+                    <div class="text-[#1A2A64] text-[15px] md:text-[16px] leading-none font-semibold tracking-wide mt-1">{{ item.monthLabel }}</div>
+                  </div>
+                }
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      <div class="mt-6 rounded-2xl border border-[#E4EAF5] overflow-hidden">
-        <div class="grid grid-cols-2 bg-white text-[#1A2440] px-5 py-4 font-medium border-b border-[#E4EAF5]">
-          <div>Métrica</div>
-          <div>Valor</div>
+      <div class="mt-6">
+        <div class="text-[#2F333B] text-[18px] md:text-[28px] font-semibold leading-none">
+          Últimas transacciones
         </div>
-        <div class="grid grid-cols-2 px-5 py-4 border-b border-[#E4EAF5] text-[#1A2440]">
-          <div>Cupones publicados</div>
-          <div>{{ statisticsTarget.publicados }}</div>
-        </div>
-        <div class="grid grid-cols-2 px-5 py-4 border-b border-[#E4EAF5] text-[#1A2440]">
-          <div>Cupones adquiridos</div>
-          <div>{{ statisticsTarget.adquiridos }}</div>
-        </div>
-        <div class="grid grid-cols-2 px-5 py-4 text-[#1A2440]">
-          <div>Cupones canjeados</div>
-          <div>{{ statisticsTarget.canjeados }}</div>
+
+        <div class="mt-4 overflow-hidden">
+          <div class="grid grid-cols-[1.2fr_1fr_0.9fr] md:grid-cols-3 bg-white text-[#2F333B] px-4 md:px-5 py-2.5 md:py-3 font-medium border-b border-[#D8DEE8] text-[13px] md:text-[15px]">
+            <button type="button" (click)="sortStatisticsTransactions('fecha')"
+              class="w-full flex items-center justify-start gap-1.5 text-left transition-colors"
+              [ngClass]="isStatisticsTransactionsSortActive('fecha') ? 'text-[#1A2A64]' : 'text-[#2F333B]'">
+              <span>Fecha</span>
+              <svg class="w-4 h-4 transition-colors"
+                [ngClass]="isStatisticsTransactionsSortActive('fecha') ? 'text-[#538CFF]' : 'text-[#D2D5DB]'">
+                <use href="assets/icons/sprite.svg#arrow-up-down"></use>
+              </svg>
+            </button>
+            <button type="button" (click)="sortStatisticsTransactions('cliente')"
+              class="w-full flex items-center justify-start gap-1.5 text-left transition-colors"
+              [ngClass]="isStatisticsTransactionsSortActive('cliente') ? 'text-[#1A2A64]' : 'text-[#2F333B]'">
+              <span>Cliente</span>
+              <svg class="w-4 h-4 transition-colors"
+                [ngClass]="isStatisticsTransactionsSortActive('cliente') ? 'text-[#538CFF]' : 'text-[#D2D5DB]'">
+                <use href="assets/icons/sprite.svg#arrow-up-down"></use>
+              </svg>
+            </button>
+            <button type="button" (click)="sortStatisticsTransactions('tipo')"
+              class="w-full flex items-center justify-start gap-1.5 text-left transition-colors"
+              [ngClass]="isStatisticsTransactionsSortActive('tipo') ? 'text-[#1A2A64]' : 'text-[#2F333B]'">
+              <span>Tipo</span>
+              <svg class="w-4 h-4 transition-colors"
+                [ngClass]="isStatisticsTransactionsSortActive('tipo') ? 'text-[#538CFF]' : 'text-[#D2D5DB]'">
+                <use href="assets/icons/sprite.svg#arrow-up-down"></use>
+              </svg>
+            </button>
+          </div>
+
+          @if (statisticsTransactions.length > 0) {
+            <div class="min-h-[240px]">
+              @for (item of statisticsTransactions; track $index) {
+                <div class="grid grid-cols-[1.2fr_1fr_0.9fr] md:grid-cols-3 px-4 md:px-5 py-2.5 md:py-3 text-[#2F333B] border-b border-[#D8DEE8] text-[13px] md:text-[15px]">
+                  <div class="truncate pr-2 md:pr-3" [title]="item.fecha">{{ item.fecha }}</div>
+                  <div class="truncate pr-2 md:pr-3" [title]="item.cliente">{{ item.cliente }}</div>
+                  <div>
+                    <span class="inline-flex min-w-[96px] md:min-w-[114px] justify-center items-center px-3 md:px-4 py-1.5 rounded-full text-[12px] md:text-[14px] leading-none"
+                      [ngClass]="item.tipo === 'Canje' ? 'bg-[#C8E8D2] text-[#1E6D3D]' : 'bg-[#B8D5F3] text-[#0C56A5]'">
+                      {{ item.tipo }}
+                    </span>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="px-5 py-6 text-[#7A8499]">No hay transacciones para este cupón.</div>
+          }
         </div>
       </div>
 
@@ -1009,12 +1073,6 @@
       <div class="mt-4 text-sm text-[#7A8499] text-center">Cargando estadísticas...</div>
       }
 
-      <div class="mt-6 flex items-center justify-center gap-3">
-        <button type="button" class="px-6 py-3 rounded-full bg-white border border-[#0E225C] text-[#0E225C]"
-          (click)="closeCouponStatistics()">
-          Cerrar
-        </button>
-      </div>
     </div>
   </div>
 </div>

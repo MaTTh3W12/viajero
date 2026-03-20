@@ -145,6 +145,31 @@ interface GetCouponStatisticsData {
   };
 }
 
+interface CouponStatsWithCompanyRow {
+  coupon_id: number | string;
+  company_id: number | string;
+  title: string | null;
+  stock_total: number | null;
+  stock_available: number | null;
+  total_acquired: number | null;
+  total_redeemed: number | null;
+  total_pending: number | null;
+}
+
+interface GetCouponStatsWithCompanyData {
+  viajerosv_coupon_statistics: CouponStatsWithCompanyRow[];
+}
+
+interface CouponMonthlyRedemptionHistoryRow {
+  month_name: string;
+  redemption_year: number;
+  total_redemptions: number | null;
+}
+
+interface GetCouponMonthlyRedemptionHistoryData {
+  viajerosv_coupon_redemption_monthly_stats: CouponMonthlyRedemptionHistoryRow[];
+}
+
 interface CompanyCouponStatsRow {
   company_id: number | string;
   total_acquired: number | null;
@@ -454,6 +479,23 @@ export interface CompanyTopRedeemedCoupon {
   redemptionCount: number;
 }
 
+export interface CouponStatsWithCompany {
+  couponId: number | string;
+  companyId: number | string;
+  title: string;
+  stockTotal: number;
+  stockAvailable: number;
+  totalAcquired: number;
+  totalRedeemed: number;
+  totalPending: number;
+}
+
+export interface CouponMonthlyRedemptionHistory {
+  monthName: string;
+  redemptionYear: number;
+  totalRedemptions: number;
+}
+
 export interface AuditLogUser {
   id: string;
   firstName: string | null;
@@ -581,12 +623,13 @@ const GET_COUPONS_QUERY = `
   query GetCoupons(
     $limit: Int!,
     $offset: Int!,
-    $where: viajerosv_coupons_bool_exp!
+    $where: viajerosv_coupons_bool_exp!,
+    $order_by: [viajerosv_coupons_order_by!]
   ) {
     viajerosv_coupons(
       limit: $limit,
       offset: $offset,
-      order_by: {created_at: desc},
+      order_by: $order_by,
       where: $where
     ) {
       id
@@ -1220,6 +1263,66 @@ export class CouponService {
         acquired: data.acquired?.aggregate?.count ?? 0,
         redeemed: data.redeemed?.aggregate?.count ?? 0,
       }))
+    );
+  }
+
+  getCouponStatsWithCompany(token: string, couponId: number): Observable<CouponStatsWithCompany | null> {
+    const query = `
+      query GetCouponStatsWithCompany($coupon_id: bigint!) {
+        viajerosv_coupon_statistics(where: { coupon_id: { _eq: $coupon_id } }) {
+          coupon_id
+          company_id
+          title
+          stock_total
+          stock_available
+          total_acquired
+          total_redeemed
+          total_pending
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCouponStatsWithCompanyData, { coupon_id: number }>(token, query, { coupon_id: couponId }).pipe(
+      map((data) => {
+        const row = data.viajerosv_coupon_statistics?.[0];
+        if (!row) return null;
+
+        return {
+          couponId: row.coupon_id,
+          companyId: row.company_id,
+          title: row.title?.trim() || 'Cupón sin nombre',
+          stockTotal: row.stock_total ?? 0,
+          stockAvailable: row.stock_available ?? 0,
+          totalAcquired: row.total_acquired ?? 0,
+          totalRedeemed: row.total_redeemed ?? 0,
+          totalPending: row.total_pending ?? 0,
+        };
+      })
+    );
+  }
+
+  getMonthlyRedemptionHistory(token: string, couponId: number): Observable<CouponMonthlyRedemptionHistory[]> {
+    const query = `
+      query GetMonthlyRedemptionHistory($coupon_id: bigint!) {
+        viajerosv_coupon_redemption_monthly_stats(
+          where: { coupon_id: { _eq: $coupon_id } }
+          order_by: { redemption_year: asc, redemption_month: asc }
+        ) {
+          month_name
+          redemption_year
+          total_redemptions
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCouponMonthlyRedemptionHistoryData, { coupon_id: number }>(token, query, { coupon_id: couponId }).pipe(
+      map((data) =>
+        (data.viajerosv_coupon_redemption_monthly_stats ?? []).map((row) => ({
+          monthName: row.month_name,
+          redemptionYear: row.redemption_year,
+          totalRedemptions: row.total_redemptions ?? 0,
+        }))
+      )
     );
   }
 

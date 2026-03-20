@@ -1,5 +1,224 @@
-<app-topbar location="Auditoría">
-</app-topbar>
-<app-filter-bar
-  variant="audit"
-  [role]="role">
+<div class="min-h-screen bg-white px-4 py-4 md:px-6 md:py-5">
+  <div class="mx-auto flex max-w-[1500px] flex-col overflow-hidden rounded-[32px] bg-[#F4F7FD] shadow-sm ring-1 ring-[#E3EAF6]">
+    <app-topbar location="Auditoría"></app-topbar>
+
+    <section class="bg-[#FFE3C1] px-4 py-4 md:px-6 md:py-5">
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div>
+          <label class="mb-2 block text-sm font-medium text-[#1A2440]">Fecha inicio</label>
+          <div class="audit-input-wrap">
+            <input
+              type="date"
+              [(ngModel)]="startDate"
+              class="audit-input audit-date-input"
+              placeholder="Seleccione"
+            />
+            <svg class="audit-input-icon pointer-events-none h-5 w-5" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#calendar"></use>
+            </svg>
+          </div>
+        </div>
+
+        <div>
+          <label class="mb-2 block text-sm font-medium text-[#1A2440]">Fecha fin</label>
+          <div class="audit-input-wrap">
+            <input
+              type="date"
+              [(ngModel)]="endDate"
+              class="audit-input audit-date-input"
+              placeholder="Seleccione"
+            />
+            <svg class="audit-input-icon pointer-events-none h-5 w-5" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#calendar"></use>
+            </svg>
+          </div>
+        </div>
+
+        <div>
+          <label class="mb-2 block text-sm font-medium text-[#1A2440]">Tipo de evento</label>
+          <div class="audit-input-wrap">
+            <select [(ngModel)]="selectedActionType" class="audit-input audit-select">
+              <option *ngFor="let option of actionTypeOptions" [ngValue]="option.value">{{ option.label }}</option>
+            </select>
+            <svg class="audit-input-icon pointer-events-none h-4 w-4" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#arrow-down1"></use>
+            </svg>
+          </div>
+        </div>
+
+        <div>
+          <label class="mb-2 block text-sm font-medium text-[#1A2440]">Usuario</label>
+          <input
+            type="text"
+            [(ngModel)]="userSearch"
+            placeholder="Buscar usuario"
+            class="audit-input"
+            (keyup.enter)="onSearch()"
+          />
+        </div>
+
+        <div>
+          <label class="mb-2 block text-sm font-medium text-[#1A2440]">Entidad afectada</label>
+          <div class="audit-input-wrap">
+            <select [(ngModel)]="selectedEntity" class="audit-input audit-select">
+              <option *ngFor="let option of entityOptions" [ngValue]="option.value">{{ option.label }}</option>
+            </select>
+            <svg class="audit-input-icon pointer-events-none h-4 w-4" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#arrow-down1"></use>
+            </svg>
+          </div>
+        </div>
+
+        <div class="flex items-end">
+          <button type="button" class="audit-search-button" (click)="onSearch()">
+            <svg class="h-5 w-5" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#search"></use>
+            </svg>
+            Buscar
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-white px-0 pb-3">
+      <div class="audit-table-scroll overflow-x-auto overflow-y-auto">
+        <table class="min-w-[1020px] w-full text-sm">
+          <thead class="border-b border-[#E5EBF5] text-left text-[#6C7A96]">
+            <tr>
+              <th class="px-4 py-4 font-medium">
+                <span class="inline-flex items-center gap-1">
+                  Fecha y hora
+                  <svg class="h-4 w-4 text-[#C5CEDF]" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#arrow-up-down"></use>
+                  </svg>
+                </span>
+              </th>
+              <th class="px-4 py-4 font-medium">
+                <span class="inline-flex items-center gap-1">
+                  Evento
+                  <svg class="h-4 w-4 text-[#C5CEDF]" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#arrow-up-down"></use>
+                  </svg>
+                </span>
+              </th>
+              <th class="px-4 py-4 font-medium">
+                <span class="inline-flex items-center gap-1">
+                  Usuario
+                  <svg class="h-4 w-4 text-[#C5CEDF]" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#arrow-up-down"></use>
+                  </svg>
+                </span>
+              </th>
+              <th class="px-4 py-4 font-medium">
+                <span class="inline-flex items-center gap-1">
+                  Entidad afectada
+                  <svg class="h-4 w-4 text-[#C5CEDF]" aria-hidden="true">
+                    <use href="assets/icons/sprite.svg#arrow-up-down"></use>
+                  </svg>
+                </span>
+              </th>
+              <th class="px-4 py-4 font-medium text-center">Opciones</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngIf="loading">
+              <td colspan="5" class="px-4 py-10 text-center text-[#6C7A96]">
+                Cargando auditoría...
+              </td>
+            </tr>
+
+            <tr *ngIf="!loading && errorMessage">
+              <td colspan="5" class="px-4 py-10 text-center text-[#D94B67]">
+                {{ errorMessage }}
+              </td>
+            </tr>
+
+            <tr *ngIf="!loading && !errorMessage && !hasRows">
+              <td colspan="5" class="px-4 py-10 text-center text-[#6C7A96]">
+                No hay registros de auditoría para esos filtros.
+              </td>
+            </tr>
+
+            <tr *ngFor="let row of rows; trackBy: trackRow" class="border-b border-[#EEF2F8]">
+              <td class="px-4 py-4 text-[#1A2440] whitespace-nowrap">{{ row.dateTime }}</td>
+              <td class="px-4 py-4">
+                <span class="inline-flex rounded-full px-4 py-1.5 text-sm font-medium" [ngClass]="row.eventBadgeClass">
+                  {{ row.eventLabel }}
+                </span>
+              </td>
+              <td class="px-4 py-4 text-[#1A2440] max-w-[190px] truncate">{{ row.userLabel }}</td>
+              <td class="px-4 py-4 text-[#1A2440] max-w-[280px] truncate">{{ row.entityLabel }}</td>
+              <td class="px-4 py-4">
+                <div class="flex justify-center">
+                  <button type="button" class="audit-option-button" (click)="openDetails(row)">
+                    <svg class="h-4 w-4" aria-hidden="true">
+                      <use href="assets/icons/sprite.svg#code"></use>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-center gap-2 px-4 pt-5">
+        <button type="button" class="audit-page-button" [disabled]="currentPage === 1" (click)="goToFirstPage()">
+          <span class="tracking-[-0.2em]">‹‹</span>
+        </button>
+        <button type="button" class="audit-page-button" [disabled]="currentPage === 1" (click)="goToPreviousPage()">
+          ‹
+        </button>
+
+        <ng-container *ngFor="let page of visiblePages; trackBy: trackPage">
+          <span *ngIf="page === '...'" class="px-2 text-[#1A2440]">...</span>
+          <button
+            *ngIf="page !== '...'"
+            type="button"
+            class="audit-page-button"
+            [class.audit-page-button-active]="page === currentPage"
+            (click)="goToPage(page)"
+          >
+            {{ page }}
+          </button>
+        </ng-container>
+
+        <button type="button" class="audit-page-button" [disabled]="currentPage >= totalPages" (click)="goToNextPage()">
+          ›
+        </button>
+        <button type="button" class="audit-page-button" [disabled]="currentPage >= totalPages" (click)="goToLastPage()">
+          <span class="tracking-[-0.2em]">››</span>
+        </button>
+      </div>
+    </section>
+  </div>
+</div>
+
+<div *ngIf="showDetailsModal && selectedRow" class="fixed inset-0 z-[10000] flex items-center justify-center bg-black/55 px-4">
+  <div class="w-full max-w-[760px] rounded-[28px] bg-white px-8 pb-7 pt-6 shadow-2xl">
+    <div class="relative">
+      <button
+        type="button"
+        class="absolute right-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full text-[#1A2440] transition hover:bg-[#F4F7FD]"
+        (click)="closeDetails()"
+      >
+        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <h2 class="pt-2 text-center text-[22px] font-medium text-[#373737]">Detalle del evento (JSON)</h2>
+    </div>
+
+    <div class="mt-6 rounded-[2px] bg-[#DFE8FB] px-4 py-3">
+      <pre class="audit-detail-json">{{ selectedDetailsJson }}</pre>
+    </div>
+
+    <div class="mt-4 flex justify-center">
+      <button type="button" class="audit-modal-close-button" (click)="closeDetails()">
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>

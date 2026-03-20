@@ -4,16 +4,16 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef } from '@angular/core';
 import { BaseChartDirective } from 'ng2-charts';
 import { AuthService, AuthUser } from '../../../service/auth.service';
-import { forkJoin, of, Subscription } from 'rxjs';
+import { firstValueFrom, forkJoin, of, Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 import {
   AuditLog,
   CompanyCouponStats,
   CompanyTopRedeemedCoupon,
   CouponService,
-  GetAuditLogsVariables,
   MonthlyRedemptionPerformance,
 } from '../../../service/coupon.service';
+import { UserProfileService } from '../../../service/user-profile.service';
 
 import type { ChartConfiguration, ChartOptions, TooltipItem } from 'chart.js';
 
@@ -56,7 +56,6 @@ export class HomeComponent implements OnInit, OnDestroy {
   private statsSub?: Subscription;
   private performanceSub?: Subscription;
   private topCouponsSub?: Subscription;
-  private transactionsSub?: Subscription;
   private monthlyPerformanceRows: MonthlyRedemptionPerformance[] = [];
 
   private readonly numberFormatter = new Intl.NumberFormat('es-SV');
@@ -162,6 +161,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   constructor(
     private auth: AuthService,
     private couponService: CouponService,
+    private userProfileService: UserProfileService,
     private router: Router,
     private cdr: ChangeDetectorRef
   ) {}
@@ -192,7 +192,6 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.statsSub?.unsubscribe();
     this.performanceSub?.unsubscribe();
     this.topCouponsSub?.unsubscribe();
-    this.transactionsSub?.unsubscribe();
   }
 
   private getCurrentMonthLabel(): string {
@@ -317,64 +316,254 @@ export class HomeComponent implements OnInit, OnDestroy {
     }));
   }
 
-  private loadRecentTransactions(): void {
+  private async loadRecentTransactions(): Promise<void> {
     const token = this.auth.token;
     if (!token) {
+      this.transactions = [];
       return;
     }
 
-    const variables: GetAuditLogsVariables = {
-      limit: 10,
-      offset: 0,
-      where: {
-        _and: [
-          { entity: { _eq: 'COUPON' } }
-        ]
+    try {
+      const companyCouponIds = await this.getCompanyCouponIds(token);
+      if (!companyCouponIds.length) {
+        this.transactions = [];
+        this.cdr.detectChanges();
+        return;
       }
+
+      const acquiredRows = (
+        await firstValueFrom(
+          this.couponService.getCouponsAcquired(token, {
+            limit: 500,
+            offset: 0,
+            where: { coupon_id: { _in: companyCouponIds } }
+          })
+        )
+      ).rows ?? [];
+      const acquiredIds = this.getCouponReferenceIdsFromAcquiredRows(acquiredRows);
+
+      const primaryAudit = await firstValueFrom(
+        this.couponService.getAuditLogsDynamic(token, {
+          limit: 120,
+          offset: 0,
+          where: this.buildCompanyRecentAuditWhere(companyCouponIds, acquiredIds),
+        })
+      );
+
+      const companyCouponIdSet = new Set(companyCouponIds);
+      const acquiredIdSet = new Set(acquiredIds);
+
+      let rows = this.filterAuditRowsByCompany(primaryAudit.rows ?? [], companyCouponIdSet, acquiredIdSet);
+      if (rows.length < 10) {
+        const broadAudit = await firstValueFrom(
+          this.couponService.getAuditLogsDynamic(token, {
+            limit: 400,
+            offset: 0,
+            where: this.buildCouponAuditEntityWhere(),
+          })
+        );
+        const broadRows = this.filterAuditRowsByCompany(broadAudit.rows ?? [], companyCouponIdSet, acquiredIdSet);
+        rows = this.mergeAuditRowsById(rows, broadRows);
+      }
+
+      const recentRows = rows
+        .sort((a, b) => this.toTimestamp(b.createdAt) - this.toTimestamp(a.createdAt))
+        .slice(0, 10);
+
+      await this.resolveCouponNamesForTransactions(token, recentRows);
+      this.cdr.detectChanges();
+    } catch (error) {
+      console.error('[HomeComponent] Error cargando transacciones recientes:', error);
+      this.transactions = [];
+      this.cdr.detectChanges();
+    }
+  }
+
+  private async getCompanyCouponIds(token: string): Promise<number[]> {
+    const currentUserDbId = await this.resolveCurrentUserDbId(token);
+    const baseVariables = {
+      limit: 1000,
+      offset: 0,
+      where: this.buildCompanyCouponsWhere(currentUserDbId, true)
     };
 
-    this.transactionsSub = this.couponService.getAuditLogsDynamic(token, variables).subscribe({
-      next: (result) => {
-        const rows = result.rows ?? [];
-        const acquiredIds = this.getCouponReferenceIds(rows);
-        const couponIdsFromDetails = this.getCouponIdsFromAuditDetails(rows);
+    const firstResult = await firstValueFrom(this.couponService.getCoupons(token, baseVariables));
+    let rows = firstResult.rows ?? [];
 
-        if (!acquiredIds.length && !couponIdsFromDetails.length) {
-          this.setTransactionsFromAuditRows(rows);
-          this.cdr.detectChanges();
-          return;
-        }
+    if (!rows.length && currentUserDbId != null) {
+      const fallbackResult = await firstValueFrom(
+        this.couponService.getCoupons(token, {
+          ...baseVariables,
+          where: this.buildCompanyCouponsWhere(currentUserDbId, false)
+        })
+      );
+      rows = this.filterCouponsByCurrentCompany(fallbackResult.rows ?? []);
+    }
 
+    if (currentUserDbId == null) {
+      rows = this.filterCouponsByCurrentCompany(rows);
+    }
+
+    const ids = rows
+      .map((coupon) => this.toNumberOrNull(coupon.id))
+      .filter((id): id is number => id !== null);
+
+    return Array.from(new Set(ids));
+  }
+
+  private async resolveCurrentUserDbId(token: string): Promise<number | string | null> {
+    const email = this.auth.user?.email ?? this.auth.getKeycloakUser()?.email ?? null;
+
+    try {
+      const byEmail = await firstValueFrom(this.userProfileService.getCurrentUserProfile(token, email));
+      if (byEmail?.id != null) {
+        return byEmail.id;
+      }
+    } catch (error) {
+      console.warn('[HomeComponent] No se pudo resolver el perfil por email:', error);
+    }
+
+    try {
+      const fallback = await firstValueFrom(this.userProfileService.getCurrentUserProfile(token, null));
+      return fallback?.id ?? null;
+    } catch (error) {
+      console.warn('[HomeComponent] No se pudo resolver el perfil del usuario actual:', error);
+      return null;
+    }
+  }
+
+  private buildCompanyCouponsWhere(
+    currentUserDbId: number | string | null,
+    includeUserIdFilter = true
+  ): Record<string, unknown> {
+    if (!includeUserIdFilter || currentUserDbId == null) {
+      return {};
+    }
+
+    return {
+      user_id: { _eq: currentUserDbId }
+    };
+  }
+
+  private filterCouponsByCurrentCompany<
+    T extends {
+      user?: { company_commercial_name: string | null } | null;
+      user_public?: { company_commercial_name: string | null } | null;
+    }
+  >(rows: T[]): T[] {
+    const currentCompanyName = this.normalizeText(
+      this.auth.user?.companyName ?? this.auth.getCurrentUser()?.companyName ?? this.companyName
+    );
+    if (!currentCompanyName) {
+      return [];
+    }
+
+    return rows.filter((coupon) => {
+      const couponCompanyName = this.normalizeText(
+        coupon.user?.company_commercial_name ?? coupon.user_public?.company_commercial_name
+      );
+      return couponCompanyName === currentCompanyName;
+    });
+  }
+
+  private buildCompanyRecentAuditWhere(companyCouponIds: number[], acquiredIds: number[]): Record<string, unknown> {
+    const referenceClauses: Record<string, unknown>[] = [
+      { reference_id: { _in: companyCouponIds } }
+    ];
+
+    if (acquiredIds.length > 0) {
+      referenceClauses.push({ reference_id: { _in: acquiredIds } });
+    }
+
+    return {
+      _and: [
+        this.buildCouponAuditEntityWhere(),
+        { _or: referenceClauses }
+      ]
+    };
+  }
+
+  private buildCouponAuditEntityWhere(): Record<string, unknown> {
+    return {
+      _or: [
+        { entity: { _eq: 'COUPON' } },
+        { entity: { _eq: 'COUPON_ACQUIRED' } }
+      ]
+    };
+  }
+
+  private getCouponReferenceIdsFromAcquiredRows(
+    rows: Array<{ id: number | string }>
+  ): number[] {
+    const ids = rows
+      .map((row) => this.toNumberOrNull(row.id))
+      .filter((id): id is number => id !== null);
+
+    return Array.from(new Set(ids));
+  }
+
+  private filterAuditRowsByCompany(
+    rows: AuditLog[],
+    companyCouponIds: Set<number>,
+    acquiredIds: Set<number>
+  ): AuditLog[] {
+    return rows.filter((row) => {
+      const referenceId = this.toNumberOrNull(row.referenceId);
+      if (referenceId != null && (companyCouponIds.has(referenceId) || acquiredIds.has(referenceId))) {
+        return true;
+      }
+
+      const detailCouponId = this.getCouponIdFromAuditDetails(this.parseAuditDetails(row.details));
+      return detailCouponId != null && companyCouponIds.has(detailCouponId);
+    });
+  }
+
+  private mergeAuditRowsById(primary: AuditLog[], fallback: AuditLog[]): AuditLog[] {
+    const merged = new Map<string, AuditLog>();
+
+    for (const row of [...primary, ...fallback]) {
+      const key = String(row.id);
+      if (!merged.has(key)) {
+        merged.set(key, row);
+      }
+    }
+
+    return Array.from(merged.values());
+  }
+
+  private async resolveCouponNamesForTransactions(token: string, rows: AuditLog[]): Promise<void> {
+    const acquiredIds = this.getCouponReferenceIds(rows);
+    const couponIdsFromDetails = this.getCouponIdsFromAuditDetails(rows);
+
+    if (!acquiredIds.length && !couponIdsFromDetails.length) {
+      this.setTransactionsFromAuditRows(rows);
+      return;
+    }
+
+    try {
+      const { coupons, acquired } = await firstValueFrom(
         forkJoin({
           coupons: couponIdsFromDetails.length
             ? this.couponService.getCouponsByIds(token, couponIdsFromDetails)
             : of([]),
           acquired: acquiredIds.length
             ? this.couponService.getCouponsAcquired(token, {
-                limit: 200,
+                limit: 300,
                 offset: 0,
                 where: { id: { _in: acquiredIds } }
               })
             : of({ rows: [], total: 0 })
-        }).subscribe({
-          next: ({ coupons, acquired }) => {
-            const couponNamesById = this.buildCouponNamesById(coupons);
-            const couponNamesByAcquiredId = this.buildCouponNamesByAcquiredId(acquired.rows ?? []);
+        })
+      );
 
-            this.setTransactionsFromAuditRows(rows, couponNamesById, couponNamesByAcquiredId);
-            this.cdr.detectChanges();
-          },
-          error: (error) => {
-            console.error('[HomeComponent] Error resolviendo nombres de cupones en auditoría:', error);
-            this.setTransactionsFromAuditRows(rows);
-            this.cdr.detectChanges();
-          }
-        });
-      },
-      error: (error) => {
-        console.error('[HomeComponent] Error cargando transacciones recientes:', error);
-      }
-    });
+      const couponNamesById = this.buildCouponNamesById(coupons);
+      const couponNamesByAcquiredId = this.buildCouponNamesByAcquiredId(acquired.rows ?? []);
+
+      this.setTransactionsFromAuditRows(rows, couponNamesById, couponNamesByAcquiredId);
+    } catch (error) {
+      console.error('[HomeComponent] Error resolviendo nombres de cupones en auditoría:', error);
+      this.setTransactionsFromAuditRows(rows);
+    }
   }
 
   private setTransactionsFromAuditRows(
@@ -399,21 +588,40 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   private getCouponIdsFromAuditDetails(rows: AuditLog[]): number[] {
-    const ids = rows
-      .map((row) => this.getCouponIdFromAuditDetails(this.parseAuditDetails(row.details)))
-      .filter((id): id is number => id !== null);
+    const ids = rows.flatMap((row) => this.extractCouponIdsFromAuditDetails(this.parseAuditDetails(row.details)));
 
     return Array.from(new Set(ids));
   }
 
   private getCouponIdFromAuditDetails(details: Record<string, unknown> | null): number | null {
-    const couponIdRaw = details?.['coupon_id'];
-    const couponId = Number(couponIdRaw);
-    if (!Number.isFinite(couponId) || couponId <= 0) {
-      return null;
+    return this.extractCouponIdsFromAuditDetails(details)[0] ?? null;
+  }
+
+  private extractCouponIdsFromAuditDetails(details: Record<string, unknown> | null): number[] {
+    if (!details) {
+      return [];
     }
 
-    return couponId;
+    const candidateValues: unknown[] = [
+      details['coupon_id'],
+      details['couponId'],
+      details['coupon_id_fk'],
+      details['couponIdFk'],
+      details['coupon_id_before'],
+      details['coupon_id_after'],
+    ];
+
+    const couponNode = details['coupon'];
+    if (couponNode && typeof couponNode === 'object' && !Array.isArray(couponNode)) {
+      const couponRecord = couponNode as Record<string, unknown>;
+      candidateValues.push(couponRecord['id'], couponRecord['coupon_id'], couponRecord['couponId']);
+    }
+
+    const ids = candidateValues
+      .map((value) => this.toNumberOrNull(value))
+      .filter((id): id is number => id !== null);
+
+    return Array.from(new Set(ids));
   }
 
   private buildCouponNamesById(coupons: Array<{ id: number; title: string }>): Map<string, string> {
@@ -675,5 +883,39 @@ export class HomeComponent implements OnInit, OnDestroy {
     }
 
     return null;
+  }
+
+  private toNumberOrNull(value: unknown): number | null {
+    if (typeof value === 'number' && Number.isFinite(value)) {
+      return Math.trunc(value);
+    }
+
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed.length) {
+        return null;
+      }
+
+      const parsed = Number(trimmed);
+      if (Number.isFinite(parsed)) {
+        return Math.trunc(parsed);
+      }
+    }
+
+    return null;
+  }
+
+  private toTimestamp(value: string): number {
+    const date = new Date(value);
+    const time = date.getTime();
+    return Number.isFinite(time) ? time : 0;
+  }
+
+  private normalizeText(value: string | null | undefined): string {
+    return String(value ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim();
   }
 }
