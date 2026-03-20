@@ -272,33 +272,155 @@
   }
 
   @if (variant === 'companies') {
-  <div class="w-full flex flex-col gap-2">
-
-    <!-- Label -->
+  <div class="w-full flex flex-col gap-3 px-3 md:px-0">
     <label class="text-sm text-[#0E225C]">Buscar</label>
 
-    <!-- Fila de controles -->
-    <div class="flex items-center gap-3">
+    <div class="flex flex-col gap-3 md:flex-row md:items-center">
+      <input
+        type="text"
+        placeholder="Buscar por nombre o NIT"
+        [(ngModel)]="companiesSearchTerm"
+        (keyup.enter)="submitCompaniesFilters()"
+        class="flex-1 bg-white rounded-xl px-4 py-3 text-[#0E225C] focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40" />
 
-      <!-- Input -->
-      <input type="text" placeholder="Buscar cupón" class="flex-1 bg-white rounded-xl px-4 py-3 text-[#0E225C]
-             focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40" />
+      <div class="flex items-center gap-3">
+        <button
+          type="button"
+          (click)="submitCompaniesFilters()"
+          class="h-11 min-w-[116px] px-5 rounded-full flex items-center justify-center gap-2 bg-[#538CFF] text-white transition-all duration-300 hover:bg-[#3F7BFF] hover:shadow-md active:scale-95">
+          <svg class="w-5 h-5" aria-hidden="true">
+            <use href="assets/icons/sprite.svg#search"></use>
+          </svg>
+          Buscar
+        </button>
 
-      <!-- Botón Buscar circular -->
-      <button class="w-11 h-11 shrink-0 flex items-center justify-center bg-[#538CFF] text-white
-						 rounded-full transition-all duration-300
-						 hover:bg-[#3F7BFF] hover:shadow-md active:scale-95">
-        <img src="assets/icons/search.png" class="w-5 h-5" />
-      </button>
-
-      <!-- Botón Filtro -->
-      <button class="w-11 h-11 shrink-0 flex items-center justify-center
-             rounded-full border border-[#0E225C]
-             transition hover:bg-black/5 active:scale-95">
-        <img src="assets/icons/filter.svg" class="w-5 h-5" />
-      </button>
-
+        <button
+          type="button"
+          (click)="toggleCompaniesFilters()"
+          class="w-11 h-11 shrink-0 flex items-center justify-center rounded-full border transition active:scale-95"
+          [class.border-[#0E225C]]="!companiesFiltersOpen"
+          [class.text-[#1A2440]]="!companiesFiltersOpen"
+          [class.hover:bg-black/5]="!companiesFiltersOpen"
+          [class.border-[#538CFF]]="companiesFiltersOpen"
+          [class.bg-[#538CFF]]="companiesFiltersOpen"
+          [class.text-white]="companiesFiltersOpen">
+          <svg class="w-5 h-5" aria-hidden="true">
+            <use href="assets/icons/sprite.svg#filter"></use>
+          </svg>
+        </button>
+      </div>
     </div>
+
+    @if (companiesFiltersOpen) {
+    <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+      <div class="relative" tabindex="0" (blur)="companiesStatusOpen = false">
+        <label class="text-sm text-[#0E225C] mb-1 block">Estado</label>
+        <button
+          type="button"
+          class="w-full h-11 rounded-xl bg-white px-4 text-left text-[#0E225C] flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+          (click)="companiesStatusOpen = !companiesStatusOpen; companiesCategoryOpen = false">
+          <span [class.text-[#A0A7BC]]="companiesStatusFilter === 'all'">
+            {{ getCompanyStatusFilterLabel() }}
+          </span>
+          <svg class="w-4 h-4 text-[#538CFF] transition-transform" [class.rotate-180]="companiesStatusOpen" aria-hidden="true">
+            <use href="assets/icons/sprite.svg#arrow-down1"></use>
+          </svg>
+        </button>
+
+        @if (companiesStatusOpen) {
+        <div class="absolute left-0 right-0 mt-2 rounded-2xl bg-white shadow-lg ring-1 ring-[#D8E2F5] overflow-hidden z-20">
+          <button
+            type="button"
+            class="w-full text-left px-4 py-2 text-[#0E225C] transition-colors"
+            [class.bg-[#538CFF]]="companiesStatusFilter === 'all'"
+            [class.text-white]="companiesStatusFilter === 'all'"
+            [class.hover:bg-[#F4F7FD]]="companiesStatusFilter !== 'all'"
+            (mousedown)="selectCompanyStatusFilter('all')">
+            Todos
+          </button>
+          <button
+            type="button"
+            class="w-full text-left px-4 py-2 text-[#0E225C] transition-colors"
+            [class.bg-[#538CFF]]="companiesStatusFilter === 'Pendiente'"
+            [class.text-white]="companiesStatusFilter === 'Pendiente'"
+            [class.hover:bg-[#F4F7FD]]="companiesStatusFilter !== 'Pendiente'"
+            (mousedown)="selectCompanyStatusFilter('Pendiente')">
+            Pendiente
+          </button>
+          <button
+            type="button"
+            class="w-full text-left px-4 py-2 text-[#0E225C] transition-colors"
+            [class.bg-[#538CFF]]="companiesStatusFilter === 'Activa'"
+            [class.text-white]="companiesStatusFilter === 'Activa'"
+            [class.hover:bg-[#F4F7FD]]="companiesStatusFilter !== 'Activa'"
+            (mousedown)="selectCompanyStatusFilter('Activa')">
+            Activa
+          </button>
+          <button
+            type="button"
+            class="w-full text-left px-4 py-2 text-[#0E225C] transition-colors"
+            [class.bg-[#538CFF]]="companiesStatusFilter === 'No activa'"
+            [class.text-white]="companiesStatusFilter === 'No activa'"
+            [class.hover:bg-[#F4F7FD]]="companiesStatusFilter !== 'No activa'"
+            (mousedown)="selectCompanyStatusFilter('No activa')">
+            No activa
+          </button>
+        </div>
+        }
+      </div>
+
+      <div class="relative" tabindex="0" (blur)="companiesCategoryOpen = false">
+        <label class="text-sm text-[#0E225C] mb-1 block">Categoría</label>
+        <button
+          type="button"
+          class="w-full h-11 rounded-xl bg-white px-4 text-left text-[#0E225C] flex items-center justify-between focus:outline-none focus:ring-2 focus:ring-[#538CFF]/40"
+          (click)="companiesCategoryOpen = !companiesCategoryOpen; companiesStatusOpen = false">
+          <span [class.text-[#A0A7BC]]="companiesCategoryFilter === 'all'">
+            {{ getCompanyCategoryFilterLabel() }}
+          </span>
+          <svg class="w-4 h-4 text-[#538CFF] transition-transform" [class.rotate-180]="companiesCategoryOpen" aria-hidden="true">
+            <use href="assets/icons/sprite.svg#arrow-down1"></use>
+          </svg>
+        </button>
+
+        @if (companiesCategoryOpen) {
+        <div class="absolute left-0 right-0 mt-2 rounded-2xl bg-white shadow-lg ring-1 ring-[#D8E2F5] overflow-hidden z-20 max-h-56 overflow-y-auto">
+          <button
+            type="button"
+            class="w-full text-left px-4 py-2 text-[#0E225C] transition-colors"
+            [class.bg-[#538CFF]]="companiesCategoryFilter === 'all'"
+            [class.text-white]="companiesCategoryFilter === 'all'"
+            [class.hover:bg-[#F4F7FD]]="companiesCategoryFilter !== 'all'"
+            (mousedown)="selectCompanyCategoryFilter('all')">
+            Todas
+          </button>
+          @for (category of companyCategoryFilterOptions; track category) {
+          <button
+            type="button"
+            class="w-full text-left px-4 py-2 text-[#0E225C] transition-colors"
+            [class.bg-[#538CFF]]="companiesCategoryFilter === category"
+            [class.text-white]="companiesCategoryFilter === category"
+            [class.hover:bg-[#F4F7FD]]="companiesCategoryFilter !== category"
+            (mousedown)="selectCompanyCategoryFilter(category)">
+            {{ category }}
+          </button>
+          }
+        </div>
+        }
+      </div>
+    </div>
+
+    @if (companiesSearchTerm.trim().length || companiesStatusFilter !== 'all' || companiesCategoryFilter !== 'all') {
+    <div class="flex justify-end">
+      <button
+        type="button"
+        (click)="clearCompaniesFilters()"
+        class="text-sm text-[#0E225C] underline underline-offset-4 hover:text-[#3F7BFF] transition-colors">
+        Limpiar filtros
+      </button>
+    </div>
+    }
+    }
   </div>
   }
 
