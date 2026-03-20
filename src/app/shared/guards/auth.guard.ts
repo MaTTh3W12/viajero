@@ -31,9 +31,40 @@ export const empresaGuard: CanActivateFn = (_route, state) => {
   }
 
   if (auth.isEmpresa()) {
-    return true;
+    return auth.companyProfileNeedsCompletion().then((needsProfileCompletion) => {
+      if (needsProfileCompletion) {
+        router.navigate(['/register'], { queryParams: { type: 'company' } });
+        return false;
+      }
+
+      return true;
+    });
   }
 
   router.navigate(['/']); // o página no autorizada
+  return false;
+};
+
+export const usuarioGuard: CanActivateFn = (_route, state) => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+
+  if (!auth.isLoggedIn()) {
+    auth.keycloakLogin(state.url);
+    return false;
+  }
+
+  if (auth.isUsuario()) {
+    return auth.userProfileNeedsCompletion().then((needsProfileCompletion) => {
+      if (needsProfileCompletion) {
+        router.navigate(['/register'], { queryParams: { type: 'user' } });
+        return false;
+      }
+
+      return true;
+    });
+  }
+
+  router.navigate(['/']);
   return false;
 };

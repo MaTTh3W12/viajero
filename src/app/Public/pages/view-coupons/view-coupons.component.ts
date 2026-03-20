@@ -279,15 +279,20 @@ export class ViewCouponsComponent implements OnInit {
     return value.toFixed(2).replace(/\.?0+$/, '');
   }
 
-  onAcquireCoupon(): void {
+  async onAcquireCoupon(): Promise<void> {
     if (!this.coupon || !this.hasAvailableStock(this.coupon)) return;
 
     const currentUser = this.auth.getCurrentUser();
-    const kcRole = (this.auth.getKeycloakRole() ?? '').toUpperCase();
-    const isUsuario = currentUser?.role === 'usuario' || kcRole === this.USER_ROLE_LABEL;
+    const isUsuario = this.isUsuarioRole(currentUser);
 
     if (!isUsuario) {
       this.showLoginRequiredModal = true;
+      return;
+    }
+
+    const needsProfileCompletion = await this.auth.userProfileNeedsCompletion();
+    if (needsProfileCompletion) {
+      this.router.navigateByUrl('/register?type=user');
       return;
     }
 
@@ -312,7 +317,7 @@ export class ViewCouponsComponent implements OnInit {
     this.acquireError = '';
   }
 
-  confirmAcquireCoupon(): void {
+  async confirmAcquireCoupon(): Promise<void> {
     if (!this.coupon || !this.hasAvailableStock(this.coupon)) return;
 
     const currentUser = this.auth.getCurrentUser();
@@ -321,6 +326,13 @@ export class ViewCouponsComponent implements OnInit {
     if (!this.canAcquire(currentUser, token)) {
       this.showAcquireModal = false;
       this.showLoginRequiredModal = true;
+      return;
+    }
+
+    const needsProfileCompletion = await this.auth.userProfileNeedsCompletion();
+    if (needsProfileCompletion) {
+      this.showAcquireModal = false;
+      this.router.navigateByUrl('/register?type=user');
       return;
     }
 
@@ -363,16 +375,13 @@ export class ViewCouponsComponent implements OnInit {
   }
 
   private canAcquire(user: AuthUser | null, token: string | null): token is string {
-    const kcRole = (this.auth.getKeycloakRole() ?? '').toUpperCase();
-    const isUsuario = user?.role === 'usuario' || kcRole === this.USER_ROLE_LABEL;
-    return isUsuario && !!token;
+    return this.isUsuarioRole(user) && !!token;
   }
 
   private checkIfCouponAlreadyAcquired(couponId: number): void {
     const currentUser = this.auth.getCurrentUser();
     const token = this.auth.token;
-    const kcRole = (this.auth.getKeycloakRole() ?? '').toUpperCase();
-    const isUsuario = currentUser?.role === 'usuario' || kcRole === this.USER_ROLE_LABEL;
+    const isUsuario = this.isUsuarioRole(currentUser);
 
     if (!isUsuario || !token) {
       this.isCouponAlreadyAcquired = false;
@@ -392,6 +401,12 @@ export class ViewCouponsComponent implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  private isUsuarioRole(user: AuthUser | null): boolean {
+    const role = String(user?.role ?? '').toLowerCase();
+    const kcRole = (this.auth.getKeycloakRole() ?? '').toUpperCase();
+    return role === 'usuario' || role === 'user' || kcRole === this.USER_ROLE_LABEL;
   }
 
 }

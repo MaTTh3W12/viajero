@@ -15,6 +15,8 @@ export interface AuthUser {
   role?: UserRole;
   companyName?: string;
   avatarUrl?: string;
+  profileCompleted?: boolean;
+  companyProfileCompleted?: boolean;
 }
 
 interface KeycloakToken {
@@ -109,7 +111,7 @@ export class AuthService {
 
       if (storedToken) {
         this.scheduleAutoLogoutFromToken(storedToken);
-        void this.loadCompanyNameFromHasura(storedToken);
+        void this.loadCurrentProfileFromHasura(storedToken);
       }
     }
   }
@@ -144,7 +146,8 @@ export class AuthService {
   }
 
   isUsuario(): boolean {
-    return this._user.value?.role === 'usuario';
+    const role = String(this._user.value?.role ?? '').toLowerCase();
+    return role === 'usuario' || role === 'user';
   }
 
   isKeycloakLoggedIn(): boolean {
@@ -371,7 +374,7 @@ export class AuthService {
 
     this.saveKeycloakToken(tokenData);
     this.saveKeycloakIdentity(tokenData.access_token);
-    void this.loadCompanyNameFromHasura(tokenData.access_token);
+    void this.loadCurrentProfileFromHasura(tokenData.access_token);
 
     const upsert = options.upsert ?? true;
     if (upsert) {
@@ -417,6 +420,19 @@ export class AuthService {
       };
 
       await firstValueFrom(this.profile.upsertUser(token, variables).pipe(timeout(20000)));
+
+      const current = this._user.value;
+      if (current) {
+        const nextUser: AuthUser = {
+          ...current,
+          firstName: variables.first_name ?? current.firstName,
+          lastName: variables.last_name ?? current.lastName,
+          profileCompleted: true,
+        };
+        this._user.next(nextUser);
+        this.saveToStorage(nextUser);
+      }
+
       return true;
     } catch (error) {
       console.error('Error completing Keycloak profile in Hasura', error);
@@ -496,12 +512,14 @@ export class AuthService {
           ...current,
           companyName: formData.company_commercial_name ?? current.companyName,
           avatarUrl: nextAvatar ?? undefined,
+          profileCompleted: true,
+          companyProfileCompleted: true,
         };
         this._user.next(nextUser);
         this.saveToStorage(nextUser);
       }
 
-      await this.loadCompanyNameFromHasura(token);
+      await this.loadCurrentProfileFromHasura(token);
 
       return true;
     } catch (error) {
@@ -596,6 +614,8 @@ export class AuthService {
       firstName: payload.given_name,
       lastName: payload.family_name,
       role: normalizedRole,
+      profileCompleted: false,
+      companyProfileCompleted: false,
     };
 
     this.ngZone.run(() => this._user.next(appUser));
@@ -725,22 +745,98 @@ export class AuthService {
   }
 
 
-  private async loadCompanyNameFromHasura(accessToken: string): Promise<void> {
+  async companyProfileNeedsCompletion(accessToken?: string): Promise<boolean> {
+    const token = accessToken ?? this.getKeycloakToken()?.access_token ?? this._token.value;
+    const currentUser = this._user.value;
+    const role = String(currentUser?.role ?? '').toLowerCase();
+
+    if (!token || !currentUser || (role !== 'empresa' && role !== 'company')) {
+      return false;
+    }
+
+    try {
+      const profile = await this.getCurrentProfileFromHasura(token);
+      await this.applyProfileToCurrentUser(profile, token);
+      return !profile || profile.company_profile_completed !== true;
+    } catch (error) {
+      console.error('Error validating company profile completion', error);
+      return false;
+    }
+  }
+
+  async userProfileNeedsCompletion(accessToken?: string): Promise<boolean> {
+    const token = accessToken ?? this.getKeycloakToken()?.access_token ?? this._token.value;
+    const currentUser = this._user.value;
+    const role = String(currentUser?.role ?? '').toLowerCase();
+
+    if (!token || !currentUser || (role !== 'usuario' && role !== 'user')) {
+      return false;
+    }
+
+    try {
+      const profile = await this.getCurrentProfileFromHasura(token);
+      await this.applyProfileToCurrentUser(profile, token);
+      return !this.isUserProfileComplete(profile);
+    } catch (error) {
+      console.error('Error validating user profile completion', error);
+      return false;
+    }
+  }
+
+  private async loadCurrentProfileFromHasura(accessToken: string): Promise<void> {
+    const currentUser = this._user.value;
+    if (!currentUser) return;
+
+    try {
+      const profile = await this.getCurrentProfileFromHasura(accessToken);
+      await this.applyProfileToCurrentUser(profile, accessToken);
+    } catch (error) {
+      console.error('Error loading current profile from Hasura', error);
+    }
+  }
+
+  private async getCurrentProfileFromHasura(accessToken: string): Promise<UserCompanyProfile | null> {
     const payload = this.decodeJwt(accessToken);
     const email = payload?.email ?? this._user.value?.email ?? this.getKeycloakUser()?.email ?? null;
 
-    const currentUser = this._user.value;
-    if (!currentUser || currentUser.role !== 'empresa') return;
+    if (email) {
+      return await firstValueFrom(
+        this.profile.getCurrentUserProfile(accessToken, email).pipe(timeout(15000))
+      );
+    }
 
-    try {
-      let profile = await firstValueFrom(this.profile.getCurrentUserProfile(accessToken, email).pipe(timeout(15000)));
-      if (!profile) {
-        profile = await firstValueFrom(this.profile.getCurrentUserProfile(accessToken, null).pipe(timeout(15000)));
-      }
-      const logoDataUrl = await this.loadCompanyLogoDataUrl(accessToken, profile?.id ?? null);
+    return await firstValueFrom(
+      this.profile.getCurrentUserProfile(accessToken, null).pipe(timeout(15000))
+    );
+  }
+
+  private isUserProfileComplete(profile: UserCompanyProfile | null): boolean {
+    if (!profile) return false;
+
+    return Boolean(
+      profile.first_name?.trim() &&
+      profile.last_name?.trim() &&
+      profile.document_id?.trim() &&
+      profile.document_type_id?.trim() &&
+      profile.phone?.trim() &&
+      profile.country?.trim()
+    );
+  }
+
+  private async applyProfileToCurrentUser(profile: UserCompanyProfile | null, accessToken?: string): Promise<void> {
+    const currentUser = this._user.value;
+    if (!currentUser) return;
+
+    if (currentUser.role === 'empresa') {
+      const logoDataUrl = accessToken
+        ? await this.loadCompanyLogoDataUrl(accessToken, profile?.id ?? null)
+        : null;
       this.applyCompanyNameToCurrentUser(profile, logoDataUrl);
-    } catch (error) {
-      console.error('Error loading company name from Hasura', error);
+      return;
+    }
+
+    if (currentUser.role === 'usuario') {
+      this.applyUserProfileToCurrentUser(profile);
     }
   }
 
@@ -782,6 +878,23 @@ export class AuthService {
       ...currentUser,
       companyName,
       avatarUrl: this.normalizeAvatarValue(avatarDataUrl) ?? this.normalizeAvatarValue(profile?.company_logo_url) ?? undefined,
+      profileCompleted: profile ? this.isUserProfileComplete(profile) : false,
+      companyProfileCompleted: profile?.company_profile_completed === true,
+    };
+
+    this.ngZone.run(() => this._user.next(nextUser));
+    this.saveToStorage(nextUser);
+  }
+
+  private applyUserProfileToCurrentUser(profile: UserCompanyProfile | null): void {
+    const currentUser = this._user.value;
+    if (!currentUser) return;
+
+    const nextUser: AuthUser = {
+      ...currentUser,
+      firstName: profile?.first_name?.trim() || currentUser.firstName,
+      lastName: profile?.last_name?.trim() || currentUser.lastName,
+      profileCompleted: this.isUserProfileComplete(profile),
     };
 
     this.ngZone.run(() => this._user.next(nextUser));
