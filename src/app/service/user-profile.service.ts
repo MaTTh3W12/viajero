@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, catchError, map } from 'rxjs';
+import { Observable, catchError, map, throwError } from 'rxjs';
 
 declare global {
   interface Window {
@@ -49,6 +49,54 @@ interface GetCountriesPagedData {
       count: number;
     } | null;
   };
+}
+
+interface CompanyCountryReference {
+  code: string;
+  phone_code: string | null;
+  name: string | null;
+}
+
+interface CompanyStatusValue {
+  value: string | null;
+}
+
+interface CompanyListRow {
+  id: number | string;
+  active: boolean | null;
+  created_at: string | null;
+  updated_at: string | null;
+  company_commercial_name: string | null;
+  company_nit: string | null;
+  company_description: string | null;
+  company_address: string | null;
+  company_profile_completed: boolean | null;
+  company_email: string | null;
+  company_phone: string | null;
+  company_logo_url: string | null;
+  company_category?: number | string | null;
+  city: string | null;
+  country: string | null;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+  countryByCountry: CompanyCountryReference | null;
+  company_statuses: CompanyStatusValue[] | null;
+}
+
+interface GetCompaniesData {
+  viajerosv_users: CompanyListRow[];
+  viajerosv_users_aggregate: {
+    aggregate: {
+      count: number;
+    } | null;
+  } | null;
+}
+
+interface CompanyAccessMutationData {
+  update_viajerosv_users: {
+    affected_rows: number;
+  } | null;
 }
 
 export interface UserCompanyProfile {
@@ -113,6 +161,41 @@ export interface GetCountriesPagedVariables {
 
 export interface CountriesPagedResult {
   rows: CountryOption[];
+  total: number;
+}
+
+export interface GetCompaniesPagedVariables {
+  limit: number;
+  offset: number;
+  where: Record<string, unknown>;
+  order_by?: Array<Record<string, 'asc' | 'desc'>>;
+}
+
+export interface CompanyListItem {
+  id: number | string;
+  active: boolean | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+  companyCommercialName: string | null;
+  companyNit: string | null;
+  companyDescription: string | null;
+  companyAddress: string | null;
+  companyProfileCompleted: boolean | null;
+  companyEmail: string | null;
+  companyPhone: string | null;
+  companyLogoUrl: string | null;
+  companyCategoryId: number | null;
+  city: string | null;
+  country: string | null;
+  firstName: string | null;
+  lastName: string | null;
+  email: string | null;
+  countryRef: CompanyCountryReference | null;
+  statusValue: string | null;
+}
+
+export interface CompaniesPagedResult {
+  rows: CompanyListItem[];
   total: number;
 }
 
@@ -570,6 +653,154 @@ export class UserProfileService {
     );
   }
 
+  getCompaniesPaged(
+    token: string,
+    variables: GetCompaniesPagedVariables
+  ): Observable<CompaniesPagedResult> {
+    const queryWithCategory = `
+      query GetCompanies(
+        $limit: Int!,
+        $offset: Int!,
+        $where: viajerosv_users_bool_exp!,
+        $order_by: [viajerosv_users_order_by!]
+      ) {
+        viajerosv_users(
+          limit: $limit,
+          offset: $offset,
+          where: $where,
+          order_by: $order_by
+        ) {
+          id
+          active
+          created_at
+          updated_at
+          company_commercial_name
+          company_nit
+          company_description
+          company_address
+          company_profile_completed
+          company_email
+          company_phone
+          company_logo_url
+          company_category
+          city
+          country
+          first_name
+          last_name
+          email
+          countryByCountry {
+            code
+            phone_code
+            name
+          }
+          company_statuses {
+            value
+          }
+        }
+        viajerosv_users_aggregate(where: $where) {
+          aggregate {
+            count
+          }
+        }
+      }
+    `;
+
+    const queryFallback = `
+      query GetCompanies(
+        $limit: Int!,
+        $offset: Int!,
+        $where: viajerosv_users_bool_exp!,
+        $order_by: [viajerosv_users_order_by!]
+      ) {
+        viajerosv_users(
+          limit: $limit,
+          offset: $offset,
+          where: $where,
+          order_by: $order_by
+        ) {
+          id
+          active
+          created_at
+          updated_at
+          company_commercial_name
+          company_nit
+          company_description
+          company_address
+          company_profile_completed
+          company_email
+          company_phone
+          company_logo_url
+          city
+          country
+          first_name
+          last_name
+          email
+          countryByCountry {
+            code
+            phone_code
+            name
+          }
+          company_statuses {
+            value
+          }
+        }
+        viajerosv_users_aggregate(where: $where) {
+          aggregate {
+            count
+          }
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCompaniesData, GetCompaniesPagedVariables>(
+      token,
+      queryWithCategory,
+      variables
+    ).pipe(
+      catchError(() =>
+        this.executeOperation<GetCompaniesData, GetCompaniesPagedVariables>(
+          token,
+          queryFallback,
+          variables
+        )
+      ),
+      map((data) => ({
+        rows: (data.viajerosv_users ?? [])
+          .map((row) => this.mapCompanyListRow(row))
+          .filter((row): row is CompanyListItem => row !== null),
+        total: data.viajerosv_users_aggregate?.aggregate?.count ?? 0,
+      }))
+    );
+  }
+
+  approveCompany(token: string, id: number | string): Observable<void> {
+    return this.updateCompanyAccessState(token, id, {
+      active: true,
+      company_profile_completed: true,
+    });
+  }
+
+  rejectCompany(token: string, id: number | string, _reason?: string): Observable<void> {
+    return this.updateCompanyAccessState(token, id, {
+      active: false,
+      company_profile_completed: false,
+    });
+  }
+
+  deactivateCompany(token: string, id: number | string, _reason?: string): Observable<void> {
+    return this.updateCompanyAccessState(token, id, {
+      active: false,
+      company_profile_completed: false,
+    });
+  }
+
+  reactivateCompany(token: string, id: number | string): Observable<void> {
+    return this.updateCompanyAccessState(token, id, {
+      active: true,
+      company_profile_completed: true,
+    });
+  }
+
   getCurrentUserProfile(token: string, email?: string | null): Observable<UserCompanyProfile | null> {
     if (email) {
       const queryByEmail = `
@@ -890,5 +1121,139 @@ export class UserProfileService {
       ),
       map((data) => data.viajerosv_users[0] ?? null)
     );
+  }
+
+  private updateCompanyAccessState(
+    token: string,
+    id: number | string,
+    state: { active: boolean; company_profile_completed: boolean }
+  ): Observable<void> {
+    const queryByUuid = `
+      mutation UpdateCompanyAccessByUuid(
+        $id: uuid!,
+        $active: Boolean!,
+        $company_profile_completed: Boolean!
+      ) {
+        update_viajerosv_users(
+          where: { id: { _eq: $id } }
+          _set: {
+            active: $active,
+            company_profile_completed: $company_profile_completed
+          }
+        ) {
+          affected_rows
+        }
+      }
+    `;
+
+    const queryByBigInt = `
+      mutation UpdateCompanyAccessByBigint(
+        $id: bigint!,
+        $active: Boolean!,
+        $company_profile_completed: Boolean!
+      ) {
+        update_viajerosv_users(
+          where: { id: { _eq: $id } }
+          _set: {
+            active: $active,
+            company_profile_completed: $company_profile_completed
+          }
+        ) {
+          affected_rows
+        }
+      }
+    `;
+
+    const queryByString = `
+      mutation UpdateCompanyAccessByString(
+        $id: String!,
+        $active: Boolean!,
+        $company_profile_completed: Boolean!
+      ) {
+        update_viajerosv_users(
+          where: { id: { _eq: $id } }
+          _set: {
+            active: $active,
+            company_profile_completed: $company_profile_completed
+          }
+        ) {
+          affected_rows
+        }
+      }
+    `;
+
+    const idAsString = String(id ?? '').trim();
+    if (!idAsString) {
+      return throwError(() => new Error('No se recibió un identificador de empresa válido.'));
+    }
+
+    const idAsNumber = Number(id);
+    const canUseNumericFallback = Number.isFinite(idAsNumber);
+
+    const baseVariables = {
+      active: state.active,
+      company_profile_completed: state.company_profile_completed,
+    };
+
+    return this.executeOperation<CompanyAccessMutationData, {
+      id: string;
+      active: boolean;
+      company_profile_completed: boolean;
+    }>(token, queryByUuid, { id: idAsString, ...baseVariables }).pipe(
+      catchError(() => {
+        if (!canUseNumericFallback) {
+          return throwError(() =>
+            new Error('No se pudo resolver un id numérico para actualizar estado de empresa.')
+          );
+        }
+
+        return this.executeOperation<CompanyAccessMutationData, {
+          id: number;
+          active: boolean;
+          company_profile_completed: boolean;
+        }>(token, queryByBigInt, { id: idAsNumber, ...baseVariables });
+      }),
+      catchError(() =>
+        this.executeOperation<CompanyAccessMutationData, {
+          id: string;
+          active: boolean;
+          company_profile_completed: boolean;
+        }>(token, queryByString, { id: idAsString, ...baseVariables })
+      ),
+      map(() => void 0)
+    );
+  }
+
+  private mapCompanyListRow(row: CompanyListRow | null | undefined): CompanyListItem | null {
+    if (!row) return null;
+
+    return {
+      id: row.id,
+      active: row.active ?? null,
+      createdAt: row.created_at ?? null,
+      updatedAt: row.updated_at ?? null,
+      companyCommercialName: row.company_commercial_name ?? null,
+      companyNit: row.company_nit ?? null,
+      companyDescription: row.company_description ?? null,
+      companyAddress: row.company_address ?? null,
+      companyProfileCompleted: row.company_profile_completed ?? null,
+      companyEmail: row.company_email ?? null,
+      companyPhone: row.company_phone ?? null,
+      companyLogoUrl: row.company_logo_url ?? null,
+      companyCategoryId: this.toFiniteNumber(row.company_category),
+      city: row.city ?? null,
+      country: row.country ?? null,
+      firstName: row.first_name ?? null,
+      lastName: row.last_name ?? null,
+      email: row.email ?? null,
+      countryRef: row.countryByCountry ?? null,
+      statusValue: row.company_statuses?.[0]?.value ?? null,
+    };
+  }
+
+  private toFiniteNumber(value: number | string | null | undefined): number | null {
+    if (value == null) return null;
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : null;
   }
 }

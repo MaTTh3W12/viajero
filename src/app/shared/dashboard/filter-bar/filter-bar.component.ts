@@ -18,6 +18,14 @@ export interface HistorialCanjesFilters {
   responsible: string;
 }
 
+export type CompanyStatusFilter = 'all' | 'Pendiente' | 'Activa' | 'No activa';
+
+export interface CompaniesFilters {
+  search: string;
+  status: CompanyStatusFilter;
+  category: string;
+}
+
 type StatisticsTransactionType = 'Canje' | 'Adquisición';
 type StatisticsTransactionSortField = 'fecha' | 'cliente' | 'tipo';
 
@@ -74,6 +82,7 @@ const FILTER_BG_MAP: Record<UserRole, Record<FilterVariant, string>> = {
 export class FilterBarComponent {
   @Input({ required: true }) variant!: FilterVariant;
   @Input({ required: true }) role!: UserRole;
+  @Input() companiesCategoryOptions: string[] = [];
   @Output() createCoupon = new EventEmitter<{
     titulo: string;
     cantidad: number | null;
@@ -112,6 +121,7 @@ export class FilterBarComponent {
     onSuccess: () => void;
     onError: (message?: string) => void;
   }>();
+  @Output() companiesFilterChange = new EventEmitter<CompaniesFilters>();
   @Output() couponSearch = new EventEmitter<string>();
   @Output() couponStatusFilterChange = new EventEmitter<'all' | 'Borrador' | 'Publicado'>();
   @Output() historialCanjesFilterChange = new EventEmitter<HistorialCanjesFilters>();
@@ -146,6 +156,12 @@ export class FilterBarComponent {
   couponStatusFilter: 'all' | 'Borrador' | 'Publicado' = 'all';
   couponStatusOpen = false;
   couponSearchTerm = '';
+  companiesFiltersOpen = false;
+  companiesStatusOpen = false;
+  companiesCategoryOpen = false;
+  companiesSearchTerm = '';
+  companiesStatusFilter: CompanyStatusFilter = 'all';
+  companiesCategoryFilter = 'all';
   historialCanjesSearch = '';
   historialCanjesStartDate = '';
   historialCanjesEndDate = '';
@@ -393,6 +409,72 @@ export class FilterBarComponent {
 
   submitCouponSearch(): void {
     this.couponSearch.emit(this.couponSearchTerm.trim());
+  }
+
+  submitCompaniesFilters(): void {
+    const categoryOptions = this.companyCategoryFilterOptions;
+    if (
+      this.companiesCategoryFilter !== 'all' &&
+      !categoryOptions.includes(this.companiesCategoryFilter)
+    ) {
+      this.companiesCategoryFilter = 'all';
+    }
+
+    this.companiesFilterChange.emit({
+      search: this.companiesSearchTerm.trim(),
+      status: this.companiesStatusFilter,
+      category: this.companiesCategoryFilter,
+    });
+  }
+
+  toggleCompaniesFilters(): void {
+    this.companiesFiltersOpen = !this.companiesFiltersOpen;
+
+    if (!this.companiesFiltersOpen) {
+      this.companiesStatusOpen = false;
+      this.companiesCategoryOpen = false;
+    }
+  }
+
+  selectCompanyStatusFilter(status: CompanyStatusFilter): void {
+    this.companiesStatusFilter = status;
+    this.companiesStatusOpen = false;
+    this.submitCompaniesFilters();
+  }
+
+  selectCompanyCategoryFilter(category: string): void {
+    this.companiesCategoryFilter = category;
+    this.companiesCategoryOpen = false;
+    this.submitCompaniesFilters();
+  }
+
+  clearCompaniesFilters(): void {
+    this.companiesSearchTerm = '';
+    this.companiesStatusFilter = 'all';
+    this.companiesCategoryFilter = 'all';
+    this.companiesStatusOpen = false;
+    this.companiesCategoryOpen = false;
+    this.submitCompaniesFilters();
+  }
+
+  getCompanyStatusFilterLabel(): string {
+    if (this.companiesStatusFilter === 'all') return 'Seleccionar estado';
+    return this.companiesStatusFilter;
+  }
+
+  getCompanyCategoryFilterLabel(): string {
+    if (this.companiesCategoryFilter === 'all') return 'Seleccionar categoría';
+    return this.companiesCategoryFilter;
+  }
+
+  get companyCategoryFilterOptions(): string[] {
+    const normalized = (this.companiesCategoryOptions ?? [])
+      .map((category) => category?.trim())
+      .filter((category): category is string => !!category);
+
+    return Array.from(new Set(normalized)).sort((a, b) =>
+      a.localeCompare(b, 'es', { sensitivity: 'base' })
+    );
   }
 
   getCouponStatusFilterLabel(): string {

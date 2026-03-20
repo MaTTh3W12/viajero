@@ -123,6 +123,7 @@ export class CouponsMockService {
         empresa: 'Consultores empresa S.A. de C. V.',
         documentoLegal: '8624-654321-789-0',
         coreo: 'consultores.empresa@sadecv.com.sv',
+        categoria: 'Servicios financieros',
         estado: 'Pendiente',
       },
       {
@@ -130,6 +131,7 @@ export class CouponsMockService {
         empresa: 'Fábrica de ejemplos',
         documentoLegal: '7893-654321-789-0',
         coreo: 'fabrica.de.ejemplos@hotmail.com.sv',
+        categoria: 'Gastronomía',
         estado: 'Activa',
       },
       {
@@ -137,6 +139,7 @@ export class CouponsMockService {
         empresa: 'Sociedad de empresas',
         documentoLegal: '1234-654321-789-0',
         coreo: 'sociedad.de.empresas@sadecv.com.sv',
+        categoria: 'Turismo',
         estado: 'No activa',
       },
       {
@@ -144,6 +147,7 @@ export class CouponsMockService {
         empresa: 'Fábrica de ejemplos',
         documentoLegal: '7893-654321-789-0',
         coreo: 'fabrica.de.ejemplos@hotmail.com.sv',
+        categoria: 'Decoración',
         estado: 'Pendiente',
       },
       {
@@ -151,6 +155,7 @@ export class CouponsMockService {
         empresa: 'Fábrica de ejemplos',
         documentoLegal: '7893-654321-789-0',
         coreo: 'fabrica.de.ejemplos@hotmail.com.sv',
+        categoria: 'Gastronomía',
         estado: 'Activa',
       },
     ]);

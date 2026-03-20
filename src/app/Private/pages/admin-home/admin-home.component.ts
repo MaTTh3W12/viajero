@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnDestroy, OnInit } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { BaseChartDirective } from 'ng2-charts';
 import { forkJoin, of, Subscription } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -96,6 +97,7 @@ interface CompanyRedeemLegendItem {
 }
 
 interface AuditPreviewRow {
+  id: number | string;
   date: string;
   event: string;
   user: string;
@@ -110,7 +112,7 @@ interface QuickActionRow {
 @Component({
   selector: 'app-admin-home',
   standalone: true,
-  imports: [CommonModule, TopbarComponent, BaseChartDirective],
+  imports: [CommonModule, TopbarComponent, BaseChartDirective, RouterLink],
   templateUrl: './admin-home.component.html',
   styleUrl: './admin-home.component.css',
 })
@@ -118,6 +120,7 @@ export class AdminHomeComponent implements OnInit, OnDestroy {
   private readonly numberFormatter = new Intl.NumberFormat('es-SV');
   private readonly donutPalette = ['#1E2848', '#A5A5A5', '#C8CCFF', '#5D8DFB', '#B8DFFF'];
   private dashboardSub?: Subscription;
+  readonly auditListRoute = ['/admin/dashboard/audit-list'];
 
   stats = this.buildStatsCards();
   auditRows: AuditPreviewRow[] = [];
@@ -240,8 +243,8 @@ export class AdminHomeComponent implements OnInit, OnDestroy {
     return item.label;
   }
 
-  trackByAuditRow(_index: number, item: AuditPreviewRow): string {
-    return `${item.date}-${item.event}-${item.user}`;
+  trackByAuditRow(_index: number, item: AuditPreviewRow): number | string {
+    return item.id;
   }
 
   trackByQuickAction(_index: number, item: QuickActionRow): string {
@@ -425,7 +428,8 @@ export class AdminHomeComponent implements OnInit, OnDestroy {
   }
 
   private applyAuditRows(rows: AuditLog[]): void {
-    this.auditRows = rows.slice(0, 5).map((row) => ({
+    this.auditRows = rows.slice(0, 5).map((row, index) => ({
+      id: row.id ?? `audit-row-${index}`,
       date: this.formatAuditDate(row.createdAt),
       event: this.formatAuditEvent(row.actionType),
       user: this.formatAuditUser(row),
@@ -474,16 +478,30 @@ export class AdminHomeComponent implements OnInit, OnDestroy {
 
     const labels: Record<string, string> = {
       USER_REGISTERED: 'Registro',
-      COMPANY_REGISTERED: 'Registro',
+      COMPANY_REGISTERED: 'Registro empresa',
       COUPON_ACQUIRED: 'Adquisición',
       COUPON_REDEEMED: 'Canje',
       COUPON_UPDATED: 'Actualización',
       COUPON_CREATED: 'Creación',
-      COUPON_DELETED: 'Baja',
+      COUPON_DELETED: 'Desactivación',
       COMPANY_APPROVED: 'Aprobación',
+      COMPANY_STATUS_CHANGED: 'Cambio de estado',
+      MESSAGE_CREATED: 'Mensaje',
+      MESSAGE_SENT: 'Mensaje',
+      CATEGORY_CREATED: 'Creación de categoría',
+      CATEGORY_UPDATED: 'Actualización de categoría',
+      CATEGORY_DELETED: 'Baja de categoría',
     };
 
-    return labels[normalized] ?? (normalized || 'Evento');
+    if (labels[normalized]) {
+      return labels[normalized];
+    }
+
+    if (!normalized) {
+      return 'Evento';
+    }
+
+    return this.humanizeActionType(normalized);
   }
 
   private formatAuditUser(row: AuditLog): string {
@@ -491,21 +509,46 @@ export class AdminHomeComponent implements OnInit, OnDestroy {
     const last = row.userPublic?.lastName?.trim() ?? '';
     const fullName = [first, last].filter(Boolean).join(' ').trim();
 
-    return fullName || row.userPublic?.email?.trim() || 'Usuario no disponible';
+    return fullName || row.userPublic?.email?.trim() || row.userId || 'Sistema';
   }
 
   private formatAuditEntity(row: AuditLog): string {
-    const entity = String(row.entity ?? '').trim();
+    const entity = this.formatEntity(row.entity);
     const details = String(row.details ?? '').trim();
 
-    if (!entity && !details) {
-      return 'Entidad no disponible';
-    }
-
     if (!details) {
-      return entity || 'Entidad no disponible';
+      return entity;
     }
 
-    return `${entity}: ${details}`.slice(0, 42) + ((`${entity}: ${details}`).length > 42 ? '...' : '');
+    if (details.startsWith('{') || details.startsWith('[')) {
+      return entity;
+    }
+
+    return details.length > 52 ? `${details.slice(0, 52)}...` : details;
+  }
+
+  private formatEntity(value: string): string {
+    const normalized = String(value ?? '').trim().toUpperCase();
+
+    const labels: Record<string, string> = {
+      COUPON: 'Cupón',
+      COUPON_ACQUIRED: 'Cupón adquirido',
+      COMPANY: 'Empresa',
+      USER: 'Usuario',
+      USER_PROFILE: 'Perfil de usuario',
+      CATEGORY: 'Categoría',
+      MESSAGE: 'Mensaje',
+    };
+
+    return labels[normalized] ?? (normalized ? this.humanizeActionType(normalized) : 'Entidad no disponible');
+  }
+
+  private humanizeActionType(value: string): string {
+    return value
+      .toLowerCase()
+      .split('_')
+      .filter(Boolean)
+      .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
+      .join(' ');
   }
 }
