@@ -448,8 +448,8 @@ export class AuthService {
     company_phone: string | null;
     company_mobile?: string | null;
     company_logo_url: string | null;
+    company_legal_name?: string | null;
     company_description: string | null;
-    description?: string | null;
     company_address: string | null;
     company_category?: number | null;
     company_website?: string | null;
@@ -484,8 +484,8 @@ export class AuthService {
         company_phone: formData.company_phone,
         company_mobile: formData.company_mobile ?? null,
         company_logo_url: formData.company_logo_url,
+        company_legal_name: formData.company_legal_name ?? null,
         company_description: formData.company_description,
-        description: formData.description ?? null,
         company_address: formData.company_address,
         company_category: formData.company_category ?? null,
         company_website: formData.company_website ?? null,
