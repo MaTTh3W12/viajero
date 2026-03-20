@@ -41,6 +41,12 @@ export const ADMIN_ROUTES: Routes = [
             .then(m => m.MessagesComponent)
       },
       {
+        path: 'contacto',
+        loadComponent: () =>
+          import('./pages/contact-center/contact-center.component')
+            .then(m => m.ContactCenterComponent)
+      },
+      {
         path: 'companies',
         loadComponent: () =>
           import('./pages/companies/companies.component')
