@@ -2,6 +2,255 @@
 </app-topbar>
 <app-filter-bar
   variant="companies"
-  [role]="role">
+  [role]="role"
+  [companiesCategoryOptions]="companyCategories"
+  (companiesFilterChange)="onCompaniesFilterChange($event)">
 </app-filter-bar>
+
+@if (companiesLoadError) {
+<div class="px-3 md:px-6 py-2 text-sm text-[#D64545] bg-[#FFE9E9] border border-[#FFD4D4]">
+  {{ companiesLoadError }}
+</div>
+}
+
+@if (loadingCompanies) {
+<div class="px-3 md:px-6 py-3 text-sm text-[#0E225C] bg-white border-b border-[#E6ECF7]">
+  Cargando empresas...
+</div>
+}
+
 <app-data-table [config]="tableConfig" [data]="companies"></app-data-table>
+
+@if (!loadingCompanies && companies.length === 0) {
+<div class="px-3 md:px-6 py-4 text-sm text-[#0E225C] bg-white border-t border-[#E6ECF7]">
+  No se encontraron empresas con los filtros seleccionados.
+</div>
+}
+
+@if (approvalModalOpen && approvalTarget) {
+<div class="fixed inset-0 z-[10000] bg-black/55 backdrop-blur-[2px] flex items-center justify-center p-4">
+  <div
+    class="relative w-full max-w-2xl rounded-3xl bg-white shadow-2xl border border-[#E6ECF7] overflow-hidden"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Gestionar solicitud de empresa">
+    <div class="relative px-6 pt-6 pb-4">
+      <h2 class="text-center text-[36px] md:text-[40px] leading-none font-medium text-[#1A2440]">
+        Gestionar solicitud
+      </h2>
+      <button
+        type="button"
+        class="absolute right-5 top-5 w-9 h-9 rounded-full border border-[#D8E2F5] text-[#1A2440] hover:bg-black/5 disabled:opacity-40"
+        [disabled]="approvalModalPhase === 'processing'"
+        (click)="closeApprovalModal()"
+        aria-label="Cerrar modal">
+        <svg class="w-5 h-5 mx-auto" aria-hidden="true">
+          <use href="assets/icons/sprite.svg#close-circle"></use>
+        </svg>
+      </button>
+    </div>
+
+    <div class="px-6 pb-6">
+      @if (approvalModalMode === 'approve' || approvalModalMode === 'reject') {
+      <div class="rounded-2xl bg-[#F4F7FD] p-4 md:p-5 grid grid-cols-1 md:grid-cols-2 gap-4 text-[#1A2440]">
+        <div>
+          <p class="text-xs uppercase tracking-wide text-[#7A8499] flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-[#7A8499]" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#category-shop"></use>
+            </svg>
+            Empresa
+          </p>
+          <p class="text-base font-medium break-words">{{ approvalTarget.empresa }}</p>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-wide text-[#7A8499] flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-[#7A8499]" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#document"></use>
+            </svg>
+            NIT
+          </p>
+          <p class="text-base font-medium break-words">{{ approvalTarget.documentoLegal || '-' }}</p>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-wide text-[#7A8499] flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-[#7A8499]" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#category"></use>
+            </svg>
+            Categoría
+          </p>
+          <p class="text-base font-medium break-words">{{ approvalTarget.categoria || '-' }}</p>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-wide text-[#7A8499] flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-[#7A8499]" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#card-device"></use>
+            </svg>
+            Ubicación
+          </p>
+          <p class="text-base font-medium break-words">{{ approvalLocationLabel }}</p>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-wide text-[#7A8499] flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-[#7A8499]" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#sms-tracking"></use>
+            </svg>
+            Contacto
+          </p>
+          <p class="text-base font-medium break-words">{{ approvalTarget.telefono || approvalTarget.coreo || '-' }}</p>
+        </div>
+        <div>
+          <p class="text-xs uppercase tracking-wide text-[#7A8499] flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-[#7A8499]" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#search"></use>
+            </svg>
+            Web
+          </p>
+          <p class="text-base font-medium break-words">{{ approvalWebLabel }}</p>
+        </div>
+      </div>
+      }
+
+      @if (approvalModalMode === 'deactivate') {
+      <p class="mt-2 text-[18px] leading-[30px] text-[#1A2440]">
+        Se suspenderá el acceso a <strong>{{ approvalTarget.empresa }}</strong> y se pausarán todos sus cupones activos.
+      </p>
+      }
+
+      @if (approvalModalMode === 'reactivate') {
+      <p class="mt-2 text-[30px] leading-[40px] text-[#1A2440]">
+        ¿Deseas restaurar el acceso a <strong>{{ approvalTarget.empresa }}</strong>?
+      </p>
+      }
+
+      @if (approvalReasonRequired) {
+      <div class="mt-4">
+        <label class="block text-sm text-[#1A2440] mb-2">{{ approvalReasonLabel }}</label>
+        <textarea
+          class="w-full h-32 md:h-36 rounded-2xl bg-[#EFF3FA] border border-transparent px-4 py-3 text-[16px] leading-[24px] text-[#1A2440] placeholder:text-[#7A8499] focus:outline-none focus:ring-2 focus:ring-[#538CFF]"
+          [value]="approvalReason"
+          (input)="approvalReason = $any($event.target).value"
+          placeholder="No cumple requisitos"></textarea>
+      </div>
+      }
+
+      @if (approvalModalError) {
+      <div class="mt-4 px-4 py-3 rounded-xl bg-[#FFF4F4] border border-[#FFD2D2] text-sm text-[#B22D2D]">
+        {{ approvalModalError }}
+      </div>
+      }
+
+      <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
+        @if (approvalModalMode === 'approve') {
+        <button
+          type="button"
+          class="h-11 min-w-[130px] px-6 rounded-full bg-[#538CFF] text-white transition hover:bg-[#3F7BFF] disabled:opacity-60"
+          [disabled]="!canConfirmCompanyAction"
+          (click)="approveSelectedCompany()">
+          Aprobar
+        </button>
+        <button
+          type="button"
+          class="h-11 min-w-[130px] px-6 rounded-full border border-[#EF1845] text-[#EF1845] transition hover:bg-[#FFF3F5] disabled:opacity-60"
+          [disabled]="approvalModalPhase !== 'form'"
+          (click)="rejectFromApprovalModal()">
+          Rechazar
+        </button>
+        } @else {
+        <button
+          type="button"
+          [class]="approvalConfirmButtonClass"
+          [disabled]="!canConfirmCompanyAction"
+          (click)="confirmCurrentCompanyAction()">
+          {{ approvalConfirmLabel }}
+        </button>
+        }
+
+        <button
+          type="button"
+          class="h-11 min-w-[130px] px-6 rounded-full border border-[#1A2440] text-[#1A2440] transition hover:bg-[#F4F7FD] disabled:opacity-60"
+          [disabled]="approvalModalPhase === 'processing'"
+          (click)="closeApprovalModal()">
+          Cancelar
+        </button>
+      </div>
+    </div>
+
+    @if (approvalModalPhase !== 'form') {
+    <div class="absolute inset-0 z-10 rounded-3xl bg-white backdrop-blur-[3px] flex items-center justify-center p-6">
+      <div class="text-center max-w-lg">
+        @if (approvalModalPhase === 'processing') {
+        <svg class="w-11 h-11 mx-auto text-[#1A2440] animate-spin" aria-hidden="true">
+          <use href="assets/icons/sprite.svg#loading"></use>
+        </svg>
+        <h3 class="mt-3 text-[20px] font-semibold text-[#1A2440]">Procesando solicitud...</h3>
+        <p class="mt-3 text-[16px] text-[#1A2440]">Por favor no cierres esta ventana.</p>
+        }
+
+        @if (approvalModalPhase === 'result') {
+        <svg class="w-11 h-11 mx-auto" [ngClass]="approvalResultIconClass" aria-hidden="true">
+          <use [attr.href]="'assets/icons/sprite.svg#' + approvalResultIconId"></use>
+        </svg>
+        <h3 class="mt-3 text-[20px] font-semibold text-[#1A2440]">{{ approvalResultTitle }}</h3>
+        <p class="mt-3 text-[16px] text-[#1A2440]">{{ approvalResultMessage }}</p>
+
+        <div class="mt-7">
+          <button
+            type="button"
+            class="h-11 min-w-[130px] px-6 rounded-full bg-[#538CFF] text-white transition hover:bg-[#3F7BFF]"
+            (click)="acceptCompanyActionResult()">
+            Aceptar
+          </button>
+        </div>
+        }
+      </div>
+    </div>
+    }
+  </div>
+</div>
+}
+
+@if (totalPages > 1) {
+<div class="flex flex-wrap justify-center items-center gap-2 px-3 py-6">
+  <button
+    type="button"
+    class="w-10 h-10 rounded-full border border-[#D8E2F5] text-[#0E225C] disabled:opacity-50"
+    (click)="goToFirstPage()"
+    [disabled]="currentPage === 1">
+    «
+  </button>
+
+  <button
+    type="button"
+    class="w-10 h-10 rounded-full border border-[#D8E2F5] text-[#0E225C] disabled:opacity-50"
+    (click)="goToPreviousPage()"
+    [disabled]="currentPage === 1">
+    ‹
+  </button>
+
+  @for (page of visiblePages; track page) {
+  <button
+    type="button"
+    class="min-w-10 h-10 px-3 rounded-full border transition-colors"
+    [ngClass]="currentPage === page ? 'bg-[#538CFF] text-white border-[#538CFF]' : 'border-[#D8E2F5] text-[#0E225C] hover:bg-[#F4F7FD]'"
+    (click)="goToPage(page)">
+    {{ page }}
+  </button>
+  }
+
+  <button
+    type="button"
+    class="w-10 h-10 rounded-full border border-[#D8E2F5] text-[#0E225C] disabled:opacity-50"
+    (click)="goToNextPage()"
+    [disabled]="currentPage === totalPages">
+    ›
+  </button>
+
+  <button
+    type="button"
+    class="w-10 h-10 rounded-full border border-[#D8E2F5] text-[#0E225C] disabled:opacity-50"
+    (click)="goToLastPage()"
+    [disabled]="currentPage === totalPages">
+    »
+  </button>
+</div>
+}
