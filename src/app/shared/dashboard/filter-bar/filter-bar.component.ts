@@ -563,7 +563,13 @@ export class FilterBarComponent {
 
     this.categoryService.getCategories(token).subscribe({
       next: (categories) => {
-        this.categories = categories.filter((category) => category.active);
+        this.categories = categories
+          .filter((category) => category.active)
+          .map((category) => ({
+            ...category,
+            id: Number(category.id),
+          }))
+          .filter((category) => Number.isFinite(category.id));
         this.categoriesLoaded = true;
         this.categoriesLoading = false;
       },
@@ -621,7 +627,7 @@ export class FilterBarComponent {
       descripcion: this.couponForm.descripcion,
       fechaInicio: this.toDisplayDate(this.couponForm.fechaInicio),
       fechaFin: this.toDisplayDate(this.couponForm.fechaFin),
-      categoriaId: categoria.id,
+      categoriaId: Number(categoria.id),
       categoriaNombre: categoria.name,
       terminos: this.couponForm.terminos,
       estado: this.couponForm.estado,
@@ -918,7 +924,10 @@ export class FilterBarComponent {
     this.ensureCategoriesLoaded();
     const categoriaId =
       coupon.categoriaId ??
-      this.categories.find((category) => category.name === coupon.categoria)?.id ??
+      ((): number | null => {
+        const category = this.categories.find((item) => item.name === coupon.categoria);
+        return category ? Number(category.id) : null;
+      })() ??
       null;
 
     this.editForm = {
@@ -930,7 +939,7 @@ export class FilterBarComponent {
       descripcion: coupon.descripcion,
       fechaInicio: this.toISODate(coupon.fechaInicio),
       fechaFin: this.toISODate(coupon.fechaFin),
-      categoria: categoriaId,
+      categoria: categoriaId != null ? Number(categoriaId) : null,
       terminos: coupon.terminos ?? '',
       estado: coupon.estado,
       image: coupon.image ?? null,
@@ -981,7 +990,7 @@ export class FilterBarComponent {
       id: this.editForm.id!,
       titulo: this.editForm.titulo,
       descripcion: this.editForm.descripcion,
-      categoriaId: categoria.id,
+      categoriaId: Number(categoria.id),
       categoriaNombre: categoria.name,
       fechaInicio: this.toDisplayDate(this.editForm.fechaInicio),
       fechaFin: this.toDisplayDate(this.editForm.fechaFin),

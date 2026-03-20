@@ -869,7 +869,11 @@ export class CouponsListComponent {
     if (this.categoryNameById.size > 0) return;
 
     const categories = await firstValueFrom(this.categoryService.getCategories(token));
-    this.categoryNameById = new Map(categories.map((category) => [category.id, category.name]));
+    this.categoryNameById = new Map(
+      categories
+        .map((category) => [Number(category.id), category.name] as const)
+        .filter(([id]) => Number.isFinite(id))
+    );
   }
 
   private async resolveCurrentUserDbId(token: string): Promise<void> {
