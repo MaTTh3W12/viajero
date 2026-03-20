@@ -45,6 +45,28 @@ export class LoginComponent implements OnInit {
         return;
       }
 
+      const currentUser = this.auth.getCurrentUser();
+      const appRole = String(currentUser?.role ?? '').toLowerCase();
+      const isEmpresaRole = appRole === 'empresa' || appRole === 'company';
+      const isUserRole = appRole === 'usuario' || appRole === 'user';
+      const isAdminRole = appRole === 'admin';
+
+      if (isEmpresaRole) {
+        const needsProfileCompletion = await this.auth.companyProfileNeedsCompletion();
+        if (needsProfileCompletion) {
+          this.router.navigateByUrl('/register?type=company');
+          return;
+        }
+      }
+
+      if (isUserRole) {
+        const needsProfileCompletion = await this.auth.userProfileNeedsCompletion();
+        if (needsProfileCompletion) {
+          this.router.navigateByUrl('/register?type=user');
+          return;
+        }
+      }
+
       const returnUrl = this.auth.consumeKeycloakReturnUrl();
       const shouldUseReturnUrl =
         !!returnUrl &&
@@ -56,11 +78,6 @@ export class LoginComponent implements OnInit {
         return;
       }
 
-      const currentUser = this.auth.getCurrentUser();
-      const appRole = String(currentUser?.role ?? '').toLowerCase();
-      const isEmpresaRole = appRole === 'empresa' || appRole === 'company';
-      const isAdminRole = appRole === 'admin';
-
       console.info(
         '[LOGIN] Redirigiendo post-login →',
         'usuario:', currentUser?.username,
@@ -70,6 +87,10 @@ export class LoginComponent implements OnInit {
 
       if (isEmpresaRole) {
         this.router.navigateByUrl('/companies/dashboard');
+        return;
+      }
+      if (isUserRole) {
+        this.router.navigateByUrl('/');
         return;
       }
       if (isAdminRole) {
