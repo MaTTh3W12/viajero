@@ -32,6 +32,7 @@
       <ng-container *ngIf="isAdmin">
         <!-- Dashboard -->
         <a routerLink="/admin/dashboard" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+          (click)="closeSidebarOnMobile()"
           [routerLinkActiveOptions]="{exact: true}" #rlaDashboard="routerLinkActive"
           class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3 lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
           <svg class="w-5 h-5" fill="none" [style.color]="rlaDashboard.isActive ? 'white' : '#538CFF'">
@@ -42,6 +43,7 @@
 
         <!-- Usuario -->
         <a routerLink="users-list" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+          (click)="closeSidebarOnMobile()"
           #rlaUsers="routerLinkActive"
           class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
               lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
@@ -53,6 +55,7 @@
 
         <!-- Auditoría -->
         <a routerLink="audit-list" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+          (click)="closeSidebarOnMobile()"
           #rlaAudit="routerLinkActive"
           class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
               lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
@@ -64,6 +67,7 @@
 
         <!-- Categorías -->
         <a routerLink="category-list" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+          (click)="closeSidebarOnMobile()"
           #rlaCategory="routerLinkActive"
           class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-2 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200
                   lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300 lg:mb-3">
@@ -75,6 +79,7 @@
 
         <!-- Mensajes -->
         <a routerLink="messages" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+          (click)="closeSidebarOnMobile()"
           #rlaMessages="routerLinkActive" class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
                lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
           <img src="assets/icons/messages.png" alt="Usuarios Icon" class="w-5 h-5" [class.filter]="rlaMessages.isActive"
@@ -84,6 +89,7 @@
 
         <!-- Todos los cupones -->
         <a routerLink="coupons-list" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+          (click)="closeSidebarOnMobile()"
           #rlaCoupons="routerLinkActive" class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
                lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
           <img src="assets/icons/ticket-cupones.png" alt="Usuarios Icon" class="w-5 h-5"
@@ -94,6 +100,7 @@
 
         <!-- Todas las empresas -->
         <a routerLink="companies" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+          (click)="closeSidebarOnMobile()"
           #rlaCompanies="routerLinkActive" class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
                lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
           <img src="assets/icons/buildings.svg" alt="Usuarios Icon" class="w-5 h-5" [class.filter]="rlaCompanies.isActive"
@@ -106,6 +113,7 @@
       <ng-container *ngIf="isEmpresa">
         <!-- Dashboard -->
         <a routerLink="/companies/dashboard" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+          (click)="closeSidebarOnMobile()"
           [routerLinkActiveOptions]="{exact: true}" #rlaDashCompany="routerLinkActive"
           class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3 lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
           <svg class="w-5 h-5" fill="none" [style.color]="rlaDashCompany.isActive ? 'white' : '#538CFF'">
@@ -116,6 +124,7 @@
 
         <!-- Gestión de cupones -->
         <a routerLink="gestion-cupones" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+          (click)="closeSidebarOnMobile()"
           #rlaGestion="routerLinkActive"
           class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
               lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
@@ -127,6 +136,7 @@
 
         <!-- Canje de cupones -->
         <a routerLink="canje-cupones" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+          (click)="closeSidebarOnMobile()"
           #rlaCanje="routerLinkActive"
           class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
               lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
@@ -138,6 +148,7 @@
 
         <!-- Historial de canjes -->
         <a routerLink="historial-canje" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+          (click)="closeSidebarOnMobile()"
           #rlaHistorial="routerLinkActive"
           class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
               lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
@@ -149,6 +160,7 @@
 
         <!-- Centro de contacto -->
         <a routerLink="contacto" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+          (click)="closeSidebarOnMobile()"
           #rlaContacto="routerLinkActive"
           class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
               lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">

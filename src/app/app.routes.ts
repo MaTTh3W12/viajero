@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { usuarioGuard } from './shared/guards/auth.guard';
 
 export const routes: Routes = [
 
@@ -32,6 +33,7 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./Public/pages/my-coupons/my-coupons.component')
         .then(m => m.MyCouponsComponent),
+    canActivate: [usuarioGuard],
   },
   {
     path: 'contact',

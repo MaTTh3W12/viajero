@@ -272,6 +272,7 @@ export interface Coupon {
   category_id: number;
   auto_published: boolean;
   published: boolean;
+  active?: boolean;
   title: string;
   end_date: string;
   start_date: string;
@@ -287,6 +288,17 @@ export interface Coupon {
     company_commercial_name: string | null;
     company_address: string | null;
     company_map_url: string | null;
+  } | null;
+  user_public?: {
+    id: string | number;
+    company_commercial_name: string | null;
+    company_address: string | null;
+    company_map_url: string | null;
+    company_facebook?: string | null;
+    company_instagram?: string | null;
+    company_youtube?: string | null;
+    company_twitter?: string | null;
+    company_website?: string | null;
   } | null;
 }
 
@@ -505,20 +517,15 @@ const GET_COUPONS_QUERY = `
   query GetCoupons(
     $limit: Int!,
     $offset: Int!,
-    $where: viajerosv_coupons_bool_exp!,
-    $order_by: [viajerosv_coupons_order_by!]
+    $where: viajerosv_coupons_bool_exp!
   ) {
     viajerosv_coupons(
       limit: $limit,
       offset: $offset,
-      order_by: $order_by,
+      order_by: {created_at: desc},
       where: $where
     ) {
-      category_id
       id
-      user_id
-      auto_published
-      published
       title
       description
       price
@@ -527,6 +534,22 @@ const GET_COUPONS_QUERY = `
       stock_total
       start_date
       end_date
+      published
+      auto_published
+      active
+      category_id
+      user_id
+      user_public {
+        id
+        company_commercial_name
+        company_address
+        company_map_url
+        company_facebook
+        company_instagram
+        company_youtube
+        company_twitter
+        company_website
+      }
       terms
       created_at
       updated_at
@@ -1155,7 +1178,13 @@ export class CouponService {
       map((data) => {
         const row = data.viajerosv_company_coupon_stats?.[0];
         if (!row) {
-          return null;
+          return {
+            companyId: 0,
+            totalAcquired: 0,
+            totalRedeemed: 0,
+            totalExpired: 0,
+            totalUpcomingExpiration: 0,
+          };
         }
 
         return {

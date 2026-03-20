@@ -61,13 +61,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   private readonly numberFormatter = new Intl.NumberFormat('es-SV');
 
-  // 🔹 DATA QUEMADA - MÉTRICAS
-  stats = [
-    { label: 'Cupones adquiridos', value: '20,753', color: 'bg-green-100 text-green-700' },
-    { label: 'Total canjeados', value: '1,506', color: 'bg-blue-100 text-blue-700' },
-    { label: 'Cupones vencidos', value: '168', color: 'bg-red-100 text-red-700' },
-    { label: 'Próximos a vencer', value: '8,539', color: 'bg-yellow-100 text-yellow-700' }
-  ];
+  stats = this.buildStatsCards();
 
   // 🔹 DATA QUEMADA - TOP CUPONES
   topCoupons = [
@@ -209,6 +203,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   private loadCompanyCouponStats(): void {
     const token = this.auth.token;
     if (!token) {
+      this.stats = this.buildStatsCards();
       return;
     }
 
@@ -219,34 +214,54 @@ export class HomeComponent implements OnInit, OnDestroy {
       },
       error: (error) => {
         console.error('[HomeComponent] Error cargando estadísticas de cupones:', error);
+        this.stats = this.buildStatsCards();
+        this.cdr.detectChanges();
       }
     });
   }
 
   private applyCompanyStats(stats: CompanyCouponStats | null): void {
-    if (!stats) {
-      return;
-    }
+    const normalizedStats = stats ?? {
+      companyId: 0,
+      totalAcquired: 0,
+      totalRedeemed: 0,
+      totalExpired: 0,
+      totalUpcomingExpiration: 0,
+    };
 
-    this.stats = [
+    this.stats = this.buildStatsCards(
+      normalizedStats.totalAcquired,
+      normalizedStats.totalRedeemed,
+      normalizedStats.totalExpired,
+      normalizedStats.totalUpcomingExpiration
+    );
+  }
+
+  private buildStatsCards(
+    totalAcquired = 0,
+    totalRedeemed = 0,
+    totalExpired = 0,
+    totalUpcomingExpiration = 0
+  ): Array<{ label: string; value: string; color: string }> {
+    return [
       {
         label: 'Cupones adquiridos',
-        value: this.formatStatValue(stats.totalAcquired),
+        value: this.formatStatValue(totalAcquired),
         color: 'bg-green-100 text-green-700'
       },
       {
         label: 'Total canjeados',
-        value: this.formatStatValue(stats.totalRedeemed),
+        value: this.formatStatValue(totalRedeemed),
         color: 'bg-blue-100 text-blue-700'
       },
       {
         label: 'Cupones vencidos',
-        value: this.formatStatValue(stats.totalExpired),
+        value: this.formatStatValue(totalExpired),
         color: 'bg-red-100 text-red-700'
       },
       {
         label: 'Próximos a vencer',
-        value: this.formatStatValue(stats.totalUpcomingExpiration),
+        value: this.formatStatValue(totalUpcomingExpiration),
         color: 'bg-yellow-100 text-yellow-700'
       }
     ];

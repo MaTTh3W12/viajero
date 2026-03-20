@@ -86,6 +86,13 @@ export interface UserCompanyLogo {
   company_logo_mime_type: string | null;
 }
 
+export interface UserCompanyLogo {
+  id: string;
+  company_logo_base64: string | null;
+  company_logo_size: number | null;
+  company_logo_mime_type: string | null;
+}
+
 export interface DocumentTypeOption {
   id: string;
   description: string;
@@ -186,11 +193,12 @@ export class UserProfileService {
 
   upsertUser(token: string, data: UpsertUserVariables): Observable<void> {
     const mutation = `
-      mutation UpsertUser(
+      mutation UpsertUserFromJwt(
         $first_name: String,
         $last_name: String,
         $document_id: String,
         $document_type_id: String,
+        $phone: String,
         $country: bpchar,
         $city: String
       ) {
@@ -200,8 +208,10 @@ export class UserProfileService {
             last_name: $last_name,
             document_id: $document_id,
             document_type_id: $document_type_id,
+            phone: $phone,
             country: $country,
             city: $city,
+            active: true
           },
           on_conflict: {
             constraint: users_pkey,
@@ -210,6 +220,7 @@ export class UserProfileService {
               last_name,
               document_id,
               document_type_id,
+              phone,
               country,
               city,
               updated_at
@@ -217,6 +228,26 @@ export class UserProfileService {
           }
         ) {
           affected_rows
+          returning {
+            id
+            role
+            email
+            first_name
+            last_name
+            document_id
+            document_type_id
+            phone
+            city
+            active
+            created_at
+            updated_at
+            country
+            countryByCountry {
+              code
+              phone_code
+              name
+            }
+          }
         }
       }
     `;

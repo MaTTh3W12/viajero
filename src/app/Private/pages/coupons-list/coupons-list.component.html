@@ -1,9 +1,33 @@
 <app-topbar location="Gestión de cupones">
 </app-topbar>
-<app-filter-bar variant="coupons" [role]="role" (createCoupon)="onCreateCoupon($event)" (updateCoupon)="onUpdateCoupon($event)" (deleteCoupon)="onDeleteCoupon($event)" (couponStatusFilterChange)="onCouponStatusFilterChange($event)">
+<app-filter-bar variant="coupons" [role]="role" (createCoupon)="onCreateCoupon($event)" (updateCoupon)="onUpdateCoupon($event)" (deleteCoupon)="onDeleteCoupon($event)" (couponSearch)="onCouponSearch($event)" (couponStatusFilterChange)="onCouponStatusFilterChange($event)">
 </app-filter-bar>
 
 <h2 class="lg:hidden text-xl font-semibold text-[#0E225C] px-3 pt-4 pb-2">Gestión de cupones</h2>
 
 <app-data-table [config]="tableConfig" [data]="coupons">
 </app-data-table>
+
+@if (totalPages > 1) {
+  <div class="flex flex-wrap justify-center items-center gap-2 px-3 py-6">
+    <button type="button" class="w-10 h-10 rounded-full border border-[#D8E2F5] text-[#0E225C] disabled:opacity-50"
+      (click)="goToFirstPage()" [disabled]="currentPage === 1">«</button>
+    <button type="button" class="w-10 h-10 rounded-full border border-[#D8E2F5] text-[#0E225C] disabled:opacity-50"
+      (click)="goToPreviousPage()" [disabled]="currentPage === 1">‹</button>
+
+    @for (page of visiblePages; track page) {
+      <button
+        type="button"
+        class="min-w-10 h-10 px-3 rounded-full border transition-colors"
+        [ngClass]="currentPage === page ? 'bg-[#538CFF] text-white border-[#538CFF]' : 'border-[#D8E2F5] text-[#0E225C] hover:bg-[#F4F7FD]'"
+        (click)="goToPage(page)">
+        {{ page }}
+      </button>
+    }
+
+    <button type="button" class="w-10 h-10 rounded-full border border-[#D8E2F5] text-[#0E225C] disabled:opacity-50"
+      (click)="goToNextPage()" [disabled]="currentPage === totalPages">›</button>
+    <button type="button" class="w-10 h-10 rounded-full border border-[#D8E2F5] text-[#0E225C] disabled:opacity-50"
+      (click)="goToLastPage()" [disabled]="currentPage === totalPages">»</button>
+  </div>
+}

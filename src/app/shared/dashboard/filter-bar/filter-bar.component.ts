@@ -102,6 +102,7 @@ export class FilterBarComponent {
     onSuccess: () => void;
     onError: (message?: string) => void;
   }>();
+  @Output() couponSearch = new EventEmitter<string>();
   @Output() couponStatusFilterChange = new EventEmitter<'all' | 'Borrador' | 'Publicado'>();
   @Output() historialCanjesFilterChange = new EventEmitter<HistorialCanjesFilters>();
 
@@ -134,6 +135,7 @@ export class FilterBarComponent {
   statisticsMetricTypeOpen = false;
   couponStatusFilter: 'all' | 'Borrador' | 'Publicado' = 'all';
   couponStatusOpen = false;
+  couponSearchTerm = '';
   historialCanjesSearch = '';
   historialCanjesStartDate = '';
   historialCanjesEndDate = '';
@@ -350,6 +352,10 @@ export class FilterBarComponent {
 
   onCouponStatusFilterChange(): void {
     this.couponStatusFilterChange.emit(this.couponStatusFilter);
+  }
+
+  submitCouponSearch(): void {
+    this.couponSearch.emit(this.couponSearchTerm.trim());
   }
 
   getCouponStatusFilterLabel(): string {
