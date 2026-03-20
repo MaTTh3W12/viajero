@@ -1,0 +1,11 @@
+.admin-dashboard-shell {
+  box-shadow: inset 0 0 0 1px rgba(210, 221, 242, 0.55);
+}
+
+.admin-performance-chart {
+  position: relative;
+}
+
+.admin-donut-chart-wrapper {
+  position: relative;
+}

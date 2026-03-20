@@ -3,7 +3,6 @@ import { Observable, of } from 'rxjs';
 import { Coupon } from './coupon.interface';
 import { Message } from './message.interface';
 import { Company } from './companies.interface';
-import { User } from './user.interface';
 import { Category } from './category.interface';
 
 @Injectable({
@@ -152,39 +151,6 @@ export class CouponsMockService {
         empresa: 'Fábrica de ejemplos',
         documentoLegal: '7893-654321-789-0',
         coreo: 'fabrica.de.ejemplos@hotmail.com.sv',
-        estado: 'Activa',
-      },
-    ]);
-  }
-
-  getUsers(): Observable<User[]> {
-    return of<User[]>([
-      {
-        id: 1,
-        nombre: 'Consultores empresa S.A. de C. V.',
-        tipoCuenta: 'Usuario',
-        email: 'consultores.empresa@sadecv.com.sv',
-        estado: 'No activa',
-      },
-      {
-        id: 2,
-        nombre: 'Fábrica de ejemplos',
-        tipoCuenta: 'Empresa',
-        email: 'fabrica.de.ejemplos@hotmail.com.sv',
-        estado: 'Activa',
-      },
-      {
-        id: 3,
-        nombre: 'Sociedad de empresas',
-        tipoCuenta: 'Usuario',
-        email: 'sociedad.de.empresas@sadecv.com.sv',
-        estado: 'No activa',
-      },
-      {
-        id: 4,
-        nombre: 'Fábrica de ejemplos',
-        tipoCuenta: 'Empresa',
-        email: 'fabrica.de.ejemplos@hotmail.com.sv',
         estado: 'Activa',
       },
     ]);

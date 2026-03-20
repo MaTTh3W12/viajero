@@ -178,6 +178,46 @@ interface GetCompanyTopRedeemedCouponsData {
   viajerosv_company_top_redeemed_coupons: CompanyTopRedeemedCouponRow[];
 }
 
+interface AdminDashboardStatsRow {
+  total_companies: number | null;
+  active_users: number | null;
+  active_coupons: number | null;
+  total_redemptions: number | null;
+}
+
+interface GetAdminDashboardStatsData {
+  viajerosv_admin_dashboard_stats: AdminDashboardStatsRow[];
+}
+
+interface CouponPerformanceTopRow {
+  title: string | null;
+  redemption_count: number | null;
+}
+
+interface GetCouponPerformanceTopData {
+  viajerosv_coupon_performance_top_5: CouponPerformanceTopRow[];
+}
+
+interface CompanyRedemptionShareRow {
+  company_name: string | null;
+  total_redemptions: number | null;
+  percentage: number | null;
+}
+
+interface GetCompanyRedemptionShareData {
+  viajerosv_company_redemptions_30_days: CompanyRedemptionShareRow[];
+}
+
+interface ImmediateManagementCountsRow {
+  pending_validations_count: number | null;
+  pending_messages_count: number | null;
+  expiring_coupons_count: number | null;
+}
+
+interface GetImmediateManagementCountsData {
+  viajerosv_immediate_management_counts: ImmediateManagementCountsRow[];
+}
+
 interface AuditLogRow {
   id: number | string;
   reference_id: number | string | null;
@@ -442,6 +482,30 @@ export interface GetAuditLogsVariables {
 export interface AuditLogListResult {
   rows: AuditLog[];
   total: number;
+}
+
+export interface AdminDashboardStats {
+  totalCompanies: number;
+  activeUsers: number;
+  activeCoupons: number;
+  totalRedemptions: number;
+}
+
+export interface AdminCouponPerformance {
+  title: string;
+  redemptionCount: number;
+}
+
+export interface CompanyRedemptionShare {
+  companyName: string;
+  totalRedemptions: number;
+  percentage: number;
+}
+
+export interface ImmediateManagementCounts {
+  pendingValidationsCount: number;
+  pendingMessagesCount: number;
+  expiringCouponsCount: number;
 }
 
 export interface GetCouponsVariables {
@@ -769,7 +833,6 @@ export class CouponService {
       limit: variables.limit ?? 40,
       offset: variables.offset ?? 0,
       where: variables.where ?? {},
-      order_by: variables.order_by ?? [{ created_at: 'desc' }],
     };
 
     return this.executeOperation<GetCouponsData, GetCouponsVariables>(token, GET_COUPONS_QUERY, requestVariables).pipe(
@@ -785,7 +848,6 @@ export class CouponService {
       limit: variables.limit ?? 40,
       offset: variables.offset ?? 0,
       where: variables.where ?? this.defaultPublicCouponsWhere,
-      order_by: variables.order_by ?? [{ created_at: 'desc' }],
     };
 
     return this.executePublicOperation<GetCouponsData, GetCouponsVariables>(GET_COUPONS_QUERY, requestVariables).pipe(
@@ -1244,6 +1306,98 @@ export class CouponService {
           redemptionCount: row.redemption_count ?? 0,
         }))
       )
+    );
+  }
+
+  getAdminDashboardStats(token: string): Observable<AdminDashboardStats> {
+    const query = `
+      query GetAdminDashboard {
+        viajerosv_admin_dashboard_stats {
+          total_companies
+          active_users
+          active_coupons
+          total_redemptions
+        }
+      }
+    `;
+
+    return this.executeOperation<GetAdminDashboardStatsData, Record<string, never>>(token, query, {}).pipe(
+      map((data) => {
+        const row = data.viajerosv_admin_dashboard_stats?.[0];
+
+        return {
+          totalCompanies: row?.total_companies ?? 0,
+          activeUsers: row?.active_users ?? 0,
+          activeCoupons: row?.active_coupons ?? 0,
+          totalRedemptions: row?.total_redemptions ?? 0,
+        };
+      })
+    );
+  }
+
+  getCouponPerformanceTop5(token: string): Observable<AdminCouponPerformance[]> {
+    const query = `
+      query GetCouponPerformanceChart {
+        viajerosv_coupon_performance_top_5 {
+          title
+          redemption_count
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCouponPerformanceTopData, Record<string, never>>(token, query, {}).pipe(
+      map((data) =>
+        (data.viajerosv_coupon_performance_top_5 ?? []).map((row) => ({
+          title: row.title?.trim() || 'Cupón sin nombre',
+          redemptionCount: row.redemption_count ?? 0,
+        }))
+      )
+    );
+  }
+
+  getCompanyRedemptionShare(token: string): Observable<CompanyRedemptionShare[]> {
+    const query = `
+      query GetCompanyRedemptionShare {
+        viajerosv_company_redemptions_30_days {
+          company_name
+          total_redemptions
+          percentage
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCompanyRedemptionShareData, Record<string, never>>(token, query, {}).pipe(
+      map((data) =>
+        (data.viajerosv_company_redemptions_30_days ?? []).map((row) => ({
+          companyName: row.company_name?.trim() || 'Empresa sin nombre',
+          totalRedemptions: row.total_redemptions ?? 0,
+          percentage: row.percentage ?? 0,
+        }))
+      )
+    );
+  }
+
+  getImmediateManagementCounts(token: string): Observable<ImmediateManagementCounts> {
+    const query = `
+      query GetManagementBadges {
+        viajerosv_immediate_management_counts {
+          pending_validations_count
+          pending_messages_count
+          expiring_coupons_count
+        }
+      }
+    `;
+
+    return this.executeOperation<GetImmediateManagementCountsData, Record<string, never>>(token, query, {}).pipe(
+      map((data) => {
+        const row = data.viajerosv_immediate_management_counts?.[0];
+
+        return {
+          pendingValidationsCount: row?.pending_validations_count ?? 0,
+          pendingMessagesCount: row?.pending_messages_count ?? 0,
+          expiringCouponsCount: row?.expiring_coupons_count ?? 0,
+        };
+      })
     );
   }
 
