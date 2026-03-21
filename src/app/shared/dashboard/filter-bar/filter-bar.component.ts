@@ -26,6 +26,16 @@ export interface CompaniesFilters {
   category: string;
 }
 
+export type AdminCouponStatusFilter = 'all' | 'Borrador' | 'Publicado' | 'Agotado' | 'Vencido';
+
+export interface AdminCouponFilters {
+  company: string;
+  title: string;
+  vigencia: string;
+  category: string;
+  status: AdminCouponStatusFilter;
+}
+
 type StatisticsTransactionType = 'Canje' | 'Adquisición';
 type StatisticsTransactionSortField = 'fecha' | 'cliente' | 'tipo';
 
@@ -41,7 +51,7 @@ const FILTER_BG_MAP: Record<UserRole, Record<FilterVariant, string>> = {
     users: 'bg-[#D4FFF1]', // Todos los usuarios
     audit: 'bg-[#FFE3C1]', // Auditoría
     category: 'bg-[#FFE2DB]', // Categorías
-    coupons: 'bg-[#C8E7FF]', // Todos los cupones
+    coupons: 'bg-[#D4FFF1]', // Todos los cupones
     messages: 'bg-[#D4FFF1]', // Mensajes
     companies: 'bg-[#D4D6FF]', // Empresas
     statistics: 'bg-[#E6EFFF]',
@@ -83,6 +93,7 @@ export class FilterBarComponent {
   @Input({ required: true }) variant!: FilterVariant;
   @Input({ required: true }) role!: UserRole;
   @Input() companiesCategoryOptions: string[] = [];
+  @Input() couponCategoryOptions: string[] = [];
   @Output() createCoupon = new EventEmitter<{
     titulo: string;
     cantidad: number | null;
@@ -124,6 +135,7 @@ export class FilterBarComponent {
   @Output() companiesFilterChange = new EventEmitter<CompaniesFilters>();
   @Output() couponSearch = new EventEmitter<string>();
   @Output() couponStatusFilterChange = new EventEmitter<'all' | 'Borrador' | 'Publicado'>();
+  @Output() adminCouponFilterChange = new EventEmitter<AdminCouponFilters>();
   @Output() historialCanjesFilterChange = new EventEmitter<HistorialCanjesFilters>();
 
   // eventos específicos para canje de cupones
@@ -156,6 +168,13 @@ export class FilterBarComponent {
   couponStatusFilter: 'all' | 'Borrador' | 'Publicado' = 'all';
   couponStatusOpen = false;
   couponSearchTerm = '';
+  adminCouponCompanyTerm = '';
+  adminCouponTitleTerm = '';
+  adminCouponDate = '';
+  adminCouponCategory = 'all';
+  adminCouponStatus: AdminCouponStatusFilter = 'all';
+  adminCouponCategoryOpen = false;
+  adminCouponStatusOpen = false;
   companiesFiltersOpen = false;
   companiesStatusOpen = false;
   companiesCategoryOpen = false;
@@ -234,7 +253,11 @@ export class FilterBarComponent {
     id: number | null;
     titulo: string;
     descripcion: string;
+    empresa: string;
+    empresaNit: string;
     categoria: string;
+    oferta: string;
+    vigencia: string;
     fechaInicio: string;
     fechaFin: string;
     cantidad: number | null;
@@ -246,7 +269,11 @@ export class FilterBarComponent {
       id: null,
       titulo: '',
       descripcion: '',
+      empresa: '',
+      empresaNit: '',
       categoria: '',
+      oferta: '',
+      vigencia: '',
       fechaInicio: '',
       fechaFin: '',
       cantidad: null,
@@ -302,6 +329,10 @@ export class FilterBarComponent {
   statisticsTarget: {
     id: number | null;
     titulo: string;
+    empresa: string;
+    empresaNit: string;
+    categoria: string;
+    estado: string;
     fechaInicio: string;
     fechaFin: string;
     publicados: number;
@@ -311,6 +342,10 @@ export class FilterBarComponent {
   } = {
       id: null,
       titulo: '',
+      empresa: '',
+      empresaNit: '',
+      categoria: '',
+      estado: '',
       fechaInicio: '',
       fechaFin: '',
       publicados: 0,
@@ -408,6 +443,10 @@ export class FilterBarComponent {
   }
 
   submitCouponSearch(): void {
+    if (this.role === 'admin') {
+      this.submitAdminCouponFilters();
+      return;
+    }
     this.couponSearch.emit(this.couponSearchTerm.trim());
   }
 
@@ -481,6 +520,69 @@ export class FilterBarComponent {
     if (this.couponStatusFilter === 'Borrador') return 'Borradores';
     if (this.couponStatusFilter === 'Publicado') return 'Publicados';
     return 'Todos';
+  }
+
+  get adminCouponCategoryFilterOptions(): string[] {
+    const normalized = (this.couponCategoryOptions ?? [])
+      .map((category) => category?.trim())
+      .filter((category): category is string => !!category);
+
+    return Array.from(new Set(normalized)).sort((a, b) =>
+      a.localeCompare(b, 'es', { sensitivity: 'base' })
+    );
+  }
+
+  getAdminCouponStatusLabel(): string {
+    if (this.adminCouponStatus === 'all') return 'Seleccionar';
+    return this.adminCouponStatus;
+  }
+
+  getAdminCouponCategoryLabel(): string {
+    if (this.adminCouponCategory === 'all') return 'Seleccionar';
+    return this.adminCouponCategory;
+  }
+
+  get hasAdminCouponFiltersActive(): boolean {
+    return (
+      this.adminCouponCompanyTerm.trim().length > 0 ||
+      this.adminCouponTitleTerm.trim().length > 0 ||
+      this.adminCouponDate.trim().length > 0 ||
+      this.adminCouponCategory !== 'all' ||
+      this.adminCouponStatus !== 'all'
+    );
+  }
+
+  selectAdminCouponStatus(filter: AdminCouponStatusFilter): void {
+    this.adminCouponStatus = filter;
+    this.adminCouponStatusOpen = false;
+    this.submitAdminCouponFilters();
+  }
+
+  selectAdminCouponCategory(category: string): void {
+    this.adminCouponCategory = category;
+    this.adminCouponCategoryOpen = false;
+    this.submitAdminCouponFilters();
+  }
+
+  clearAdminCouponFilters(): void {
+    this.adminCouponCompanyTerm = '';
+    this.adminCouponTitleTerm = '';
+    this.adminCouponDate = '';
+    this.adminCouponCategory = 'all';
+    this.adminCouponStatus = 'all';
+    this.adminCouponCategoryOpen = false;
+    this.adminCouponStatusOpen = false;
+    this.submitAdminCouponFilters();
+  }
+
+  submitAdminCouponFilters(): void {
+    this.adminCouponFilterChange.emit({
+      company: this.adminCouponCompanyTerm.trim(),
+      title: this.adminCouponTitleTerm.trim(),
+      vigencia: this.adminCouponDate,
+      category: this.adminCouponCategory,
+      status: this.adminCouponStatus,
+    });
   }
 
   selectCouponStatusFilter(filter: 'all' | 'Borrador' | 'Publicado'): void {
@@ -1235,7 +1337,11 @@ export class FilterBarComponent {
     id: number;
     titulo: string;
     descripcion: string;
+    empresa?: string;
+    empresaNit?: string;
     categoria: string;
+    oferta?: string;
+    vigencia?: string;
     fechaInicio: string;
     fechaFin: string;
     disponibles: number;
@@ -1250,7 +1356,11 @@ export class FilterBarComponent {
       id: coupon.id,
       titulo: coupon.titulo,
       descripcion: coupon.descripcion,
+      empresa: coupon.empresa ?? '',
+      empresaNit: coupon.empresaNit ?? '',
       categoria: coupon.categoria,
+      oferta: coupon.oferta ?? '-',
+      vigencia: coupon.vigencia ?? `${this.toDisplayDate(coupon.fechaInicio)} - ${this.toDisplayDate(coupon.fechaFin)}`,
       fechaInicio: this.toDisplayDate(coupon.fechaInicio),
       fechaFin: this.toDisplayDate(coupon.fechaFin),
       cantidad: coupon.disponibles,
@@ -1260,19 +1370,29 @@ export class FilterBarComponent {
       imageMime: coupon.imageMime ?? '',
     };
     this.viewCouponOpen = true;
+    this.setBodyModalLock(true);
   }
 
   closeViewCoupon(): void {
     this.viewCouponOpen = false;
     this.viewCouponImageLoading = false;
     this.clearViewCouponImageLoadingTimeout();
+    this.viewTarget.empresa = '';
+    this.viewTarget.empresaNit = '';
+    this.viewTarget.oferta = '';
+    this.viewTarget.vigencia = '';
     this.viewTarget.image = null;
     this.viewTarget.imageMime = '';
+    this.setBodyModalLock(false);
   }
 
   openCouponStatistics(coupon: {
     id: number;
     titulo: string;
+    empresa?: string;
+    empresaNit?: string;
+    categoria?: string;
+    estado?: string;
     fechaInicio: string;
     fechaFin: string;
     publicados: number;
@@ -1292,6 +1412,10 @@ export class FilterBarComponent {
     this.statisticsTarget = {
       id: coupon.id,
       titulo: coupon.titulo,
+      empresa: coupon.empresa ?? '',
+      empresaNit: coupon.empresaNit ?? '',
+      categoria: coupon.categoria ?? '',
+      estado: coupon.estado ?? '',
       fechaInicio: this.toDisplayDate(coupon.fechaInicio),
       fechaFin: this.toDisplayDate(coupon.fechaFin),
       publicados: Math.max(0, Math.trunc(coupon.publicados ?? 0)),
@@ -1523,6 +1647,25 @@ export class FilterBarComponent {
     this.deleteCouponImageLoading = false;
     this.clearDeleteCouponImageLoadingTimeout();
     this.cdr.detectChanges();
+  }
+
+  getCouponStateBadgeClass(status: string | null | undefined): string {
+    const normalized = String(status ?? '').trim().toLowerCase();
+    if (normalized === 'borrador') return 'bg-[#FFE8A8] text-[#7A6200]';
+    if (normalized === 'publicado') return 'bg-[#C8E8D2] text-[#1E6D3D]';
+    if (normalized === 'agotado') return 'bg-[#F6D2D8] text-[#9B2230]';
+    if (normalized === 'vencido') return 'bg-[#B8D5F3] text-[#0C56A5]';
+    return 'bg-[#D8E4F6] text-[#2A3A65]';
+  }
+
+  getCouponTermsList(terms: string): string[] {
+    const normalized = String(terms ?? '').replace(/\r/g, '').trim();
+    if (!normalized.length) return [];
+
+    return normalized
+      .split(/\n|•|;/g)
+      .map((item) => item.trim())
+      .filter((item) => item.length > 0);
   }
 
   // Utilidades de fecha
