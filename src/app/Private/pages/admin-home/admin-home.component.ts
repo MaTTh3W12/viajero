@@ -335,13 +335,13 @@ export class AdminHomeComponent implements OnInit, OnDestroy {
       {
         label: 'Empresas registradas',
         value: this.numberFormatter.format(totalCompanies),
-        iconId: 'dashboard-building',
+        iconId: 'stats-total-custom',
         colorClass: 'bg-[#DDF7EA]',
       },
       {
         label: 'Usuarios activos',
         value: this.numberFormatter.format(activeUsers),
-        iconId: 'dashboard-user',
+        iconId: 'user',
         colorClass: 'bg-[#DCEEFF]',
       },
       {
@@ -353,7 +353,7 @@ export class AdminHomeComponent implements OnInit, OnDestroy {
       {
         label: 'Total de canjes realizados',
         value: this.numberFormatter.format(totalRedemptions),
-        iconId: 'ticket-money',
+        iconId: 'custom-icon',
         colorClass: 'bg-[#FFF0C8]',
       },
     ];

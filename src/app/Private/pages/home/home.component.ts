@@ -413,23 +413,26 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   private async resolveCurrentUserDbId(token: string): Promise<number | string | null> {
     const email = this.auth.user?.email ?? this.auth.getKeycloakUser()?.email ?? null;
+    const companyName =
+      this.auth.user?.companyName ??
+      this.auth.getCurrentUser()?.companyName ??
+      this.companyName ??
+      null;
+    const role = String(this.auth.user?.role ?? this.auth.getCurrentUser()?.role ?? '').toLowerCase();
 
     try {
-      const byEmail = await firstValueFrom(this.userProfileService.getCurrentUserProfile(token, email));
-      if (byEmail?.id != null) {
-        return byEmail.id;
+      const profile = role === 'empresa' || role === 'company'
+        ? await firstValueFrom(this.userProfileService.getCurrentCompanyProfile(token, email, companyName))
+        : await firstValueFrom(this.userProfileService.getCurrentUserProfile(token, email));
+
+      if (profile?.id != null) {
+        return profile.id;
       }
     } catch (error) {
       console.warn('[HomeComponent] No se pudo resolver el perfil por email:', error);
     }
 
-    try {
-      const fallback = await firstValueFrom(this.userProfileService.getCurrentUserProfile(token, null));
-      return fallback?.id ?? null;
-    } catch (error) {
-      console.warn('[HomeComponent] No se pudo resolver el perfil del usuario actual:', error);
-      return null;
-    }
+    return null;
   }
 
   private buildCompanyCouponsWhere(

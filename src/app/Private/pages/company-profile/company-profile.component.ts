@@ -303,8 +303,8 @@ export class CompanyProfileComponent implements OnInit {
         company_phone: this.backendProfile?.company_phone ?? null,
         company_mobile: form.mobile || null,
         company_logo_url: nextCompanyLogoUrl,
-        company_description: form.socialReason || null,
-        description: form.description || null,
+        company_legal_name: form.socialReason || null,
+        company_description: form.description || null,
         company_address: form.address || null,
         company_category: this.parseCategoryId(form.category),
         company_website: form.website || null,
@@ -331,6 +331,8 @@ export class CompanyProfileComponent implements OnInit {
         this.showSaveErrorOverlay = true;
         return;
       }
+
+      this.cacheSocialReason(form.socialReason ?? '');
 
       this.saving = false;
       this.clearSaveWatchdog();
@@ -475,10 +477,14 @@ export class CompanyProfileComponent implements OnInit {
       this.auth.getCurrentUser()?.email ||
       this.auth.getKeycloakUser()?.email ||
       null;
+    const companyName =
+      this.auth.getCurrentUser()?.companyName ??
+      this.profileForm.value.commercialName ??
+      null;
 
     try {
       const profile = await firstValueFrom(
-        this.userProfileService.getCurrentUserProfile(token, email).pipe(timeout(15000))
+        this.userProfileService.getCurrentCompanyProfile(token, email, companyName).pipe(timeout(15000))
       );
       if (!profile) {
         this.backendProfile = null;
@@ -489,8 +495,20 @@ export class CompanyProfileComponent implements OnInit {
         return;
       }
 
-      this.backendProfile = profile;
-      this.applyProfileToForm(profile);
+      const fallbackSocialReason =
+        this.backendProfile?.company_legal_name ??
+        this.readCachedSocialReason() ??
+        null;
+
+      const mergedProfile: UserCompanyProfile = {
+        ...profile,
+        company_legal_name: profile.company_legal_name ?? fallbackSocialReason,
+      };
+
+      this.cacheSocialReason(mergedProfile.company_legal_name ?? '');
+
+      this.backendProfile = mergedProfile;
+      this.applyProfileToForm(mergedProfile);
       if (!this.selectedLogoBase64 && !this.logoRemoved) {
         await this.requestLogoPreviewLoad(profile.id);
       }
@@ -504,14 +522,19 @@ export class CompanyProfileComponent implements OnInit {
   }
 
   private applyProfileToForm(profile: UserCompanyProfile): void {
+    const fallbackSocialReason =
+      this.backendProfile?.company_legal_name ??
+      this.readCachedSocialReason() ??
+      '';
+
     this.profileForm.patchValue({
       commercialName: profile.company_commercial_name ?? this.profileForm.value.commercialName ?? '',
       nit: profile.company_nit ?? '',
       businessEmail: profile.company_email ?? profile.email ?? this.profileForm.value.businessEmail ?? '',
-      socialReason: profile.company_description ?? '',
+      socialReason: profile.company_legal_name ?? fallbackSocialReason,
       mobile: profile.company_mobile ?? profile.phone ?? '',
       category: profile.company_category != null ? String(profile.company_category) : '',
-      description: profile.description ?? '',
+      description: profile.company_description ?? '',
       address: profile.company_address ?? '',
       website: profile.company_website ?? '',
       mapsUrl: profile.company_map_url ?? '',
@@ -704,6 +727,51 @@ export class CompanyProfileComponent implements OnInit {
       x: String(value.x ?? '').trim(),
       youtube: String(value.youtube ?? '').trim(),
     };
+  }
+
+  private getSocialReasonCacheKey(): string {
+    const email =
+      this.profileForm.value.businessEmail ||
+      this.auth.getCurrentUser()?.email ||
+      this.auth.getKeycloakUser()?.email ||
+      'current-user';
+
+    return `company_legal_name_cache:${String(email).trim().toLowerCase()}`;
+  }
+
+  private readCachedSocialReason(): string {
+    const key = this.getSocialReasonCacheKey();
+
+    try {
+      const localValue = localStorage.getItem(key);
+      if (localValue != null) return localValue;
+    } catch {
+      // Ignorar errores de almacenamiento local.
+    }
+
+    try {
+      return sessionStorage.getItem(key) ?? '';
+    } catch {
+      return '';
+    }
+  }
+
+  private cacheSocialReason(value: string): void {
+    const normalized = String(value ?? '').trim();
+
+    try {
+      const key = this.getSocialReasonCacheKey();
+      if (!normalized) {
+        localStorage.removeItem(key);
+        sessionStorage.removeItem(key);
+        return;
+      }
+
+      localStorage.setItem(key, normalized);
+      sessionStorage.setItem(key, normalized);
+    } catch {
+      // Ignorar errores de almacenamiento en navegadores restringidos.
+    }
   }
 
   private decodeJwtClaims(token: string | null): { email?: string; preferred_username?: string } | null {

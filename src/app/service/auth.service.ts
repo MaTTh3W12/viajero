@@ -448,8 +448,8 @@ export class AuthService {
     company_phone: string | null;
     company_mobile?: string | null;
     company_logo_url: string | null;
+    company_legal_name?: string | null;
     company_description: string | null;
-    description?: string | null;
     company_address: string | null;
     company_category?: number | null;
     company_website?: string | null;
@@ -484,8 +484,8 @@ export class AuthService {
         company_phone: formData.company_phone,
         company_mobile: formData.company_mobile ?? null,
         company_logo_url: formData.company_logo_url,
+        company_legal_name: formData.company_legal_name ?? null,
         company_description: formData.company_description,
-        description: formData.description ?? null,
         company_address: formData.company_address,
         company_category: formData.company_category ?? null,
         company_website: formData.company_website ?? null,
@@ -750,15 +750,18 @@ export class AuthService {
   private async loadCompanyNameFromHasura(accessToken: string): Promise<void> {
     const payload = this.decodeJwt(accessToken);
     const email = payload?.email ?? this._user.value?.email ?? this.getKeycloakUser()?.email ?? null;
+    const companyName =
+      this._user.value?.companyName ??
+      this.getCurrentUser()?.companyName ??
+      null;
 
     const currentUser = this._user.value;
     if (!currentUser || currentUser.role !== 'empresa') return;
 
     try {
-      let profile = await firstValueFrom(this.profile.getCurrentUserProfile(accessToken, email).pipe(timeout(15000)));
-      if (!profile) {
-        profile = await firstValueFrom(this.profile.getCurrentUserProfile(accessToken, null).pipe(timeout(15000)));
-      }
+      const profile = await firstValueFrom(
+        this.profile.getCurrentCompanyProfile(accessToken, email, companyName).pipe(timeout(15000))
+      );
       const logoDataUrl = await this.loadCompanyLogoDataUrl(accessToken, profile?.id ?? null);
       this.applyCompanyNameToCurrentUser(profile, logoDataUrl);
     } catch (error) {
@@ -819,6 +822,18 @@ export class AuthService {
   private async getCurrentProfileFromHasura(accessToken: string): Promise<UserCompanyProfile | null> {
     const payload = this.decodeJwt(accessToken);
     const email = payload?.email ?? this._user.value?.email ?? this.getKeycloakUser()?.email ?? null;
+    const currentUser = this._user.value;
+    const role = String(currentUser?.role ?? '').toLowerCase();
+    const companyName =
+      currentUser?.companyName ??
+      this.getCurrentUser()?.companyName ??
+      null;
+
+    if (role === 'empresa' || role === 'company') {
+      return await firstValueFrom(
+        this.profile.getCurrentCompanyProfile(accessToken, email, companyName).pipe(timeout(15000))
+      );
+    }
 
     if (email) {
       return await firstValueFrom(
@@ -826,9 +841,7 @@ export class AuthService {
       );
     }
 
-    return await firstValueFrom(
-      this.profile.getCurrentUserProfile(accessToken, null).pipe(timeout(15000))
-    );
+    return null;
   }
 
   private isUserProfileComplete(profile: UserCompanyProfile | null): boolean {
