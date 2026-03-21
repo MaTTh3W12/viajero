@@ -880,9 +880,16 @@ export class CouponsListComponent {
     if (this.currentUserDbId != null) return;
 
     const email = this.auth.user?.email ?? this.auth.getKeycloakUser()?.email ?? null;
+    const companyName =
+      this.auth.user?.companyName ??
+      this.auth.getCurrentUser()?.companyName ??
+      null;
+    const role = String(this.auth.user?.role ?? this.auth.getCurrentUser()?.role ?? '').toLowerCase();
 
     try {
-      const profile = await firstValueFrom(this.userProfileService.getCurrentUserProfile(token, email));
+      const profile = role === 'empresa' || role === 'company'
+        ? await firstValueFrom(this.userProfileService.getCurrentCompanyProfile(token, email, companyName))
+        : await firstValueFrom(this.userProfileService.getCurrentUserProfile(token, email));
       this.currentUserDbId = profile?.id ?? null;
     } catch (error) {
       console.error('[COUPONS] resolveCurrentUserDbId failed', error);

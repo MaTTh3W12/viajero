@@ -477,10 +477,14 @@ export class CompanyProfileComponent implements OnInit {
       this.auth.getCurrentUser()?.email ||
       this.auth.getKeycloakUser()?.email ||
       null;
+    const companyName =
+      this.auth.getCurrentUser()?.companyName ??
+      this.profileForm.value.commercialName ??
+      null;
 
     try {
       const profile = await firstValueFrom(
-        this.userProfileService.getCurrentUserProfile(token, email).pipe(timeout(15000))
+        this.userProfileService.getCurrentCompanyProfile(token, email, companyName).pipe(timeout(15000))
       );
       if (!profile) {
         this.backendProfile = null;
