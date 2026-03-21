@@ -61,16 +61,18 @@
             <!-- TITLE WITH SUBTITLE -->
             @else if (col.type === 'title-with-subtitle') {
             <div class="flex items-center gap-3 min-w-[230px]">
-              <div class="w-11 h-11 rounded-md overflow-hidden bg-[#EEF3FF] border border-[#DFE8FF] flex items-center justify-center shrink-0">
-                @if (getCellImage(col, row)) {
-                  <img [src]="getCellImage(col, row)" [alt]="getCellValue(col, row)" class="w-full h-full object-cover" />
-                }
-                @else {
-                  <svg class="w-5 h-5 text-[#538CFF]" aria-hidden="true">
-                    <use href="assets/icons/sprite.svg#coupon-manage"></use>
-                  </svg>
-                }
-              </div>
+              @if (col.showImage !== false) {
+                <div class="w-11 h-11 rounded-md overflow-hidden bg-[#EEF3FF] border border-[#DFE8FF] flex items-center justify-center shrink-0">
+                  @if (getCellImage(col, row)) {
+                    <img [src]="getCellImage(col, row)" [alt]="getCellValue(col, row)" class="w-full h-full object-cover" />
+                  }
+                  @else {
+                    <svg class="w-5 h-5 text-[#538CFF]" aria-hidden="true">
+                      <use href="assets/icons/sprite.svg#coupon-manage"></use>
+                    </svg>
+                  }
+                </div>
+              }
 
               <div class="min-w-0 w-[20ch] max-w-[20ch]">
                 <p class="text-sm font-semibold text-[#1A1A1A] leading-5 truncate">
@@ -101,11 +103,16 @@
             <div class="flex items-center justify-start gap-2">
               @for (action of config.actions; track trackAction($index, action)) {
               @if (isActionVisible(action, row)) {
-                <button (click)="action.action(row)" class="w-8 h-8 flex items-center justify-center rounded-full
+                <button
+                  type="button"
+                  [disabled]="isActionDisabled(action, row)"
+                  (click)="action.action(row)"
+                  class="w-8 h-8 flex items-center justify-center rounded-full
                     transition-all duration-200 ease-out
                     hover:scale-110 hover:shadow-md
                     active:scale-95
-                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500" [ngClass]="getActionClass(action, row)">
+                    focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-55 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none disabled:active:scale-100"
+                    [ngClass]="getActionClass(action, row)">
                   @if (getActionIconId(action, row)) {
                     <svg class="w-4 h-4" aria-hidden="true">
                       <use [attr.href]="'assets/icons/sprite.svg#' + getActionIconId(action, row)"></use>

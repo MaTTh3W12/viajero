@@ -52,6 +52,37 @@ interface InsertMessagesData {
   };
 }
 
+interface MarkMessageAsReceivedByAdminData {
+  viajerosv_mark_message_as_read_by_admin: {
+    id: number;
+    subject: string | null;
+    status: string | null;
+  } | null;
+}
+
+interface InsertMessageResponseData {
+  insert_viajerosv_message_responses_one: ContactCenterMessageResponseRow | null;
+}
+
+export interface ContactCenterMessageResponseRow {
+  id: number;
+  response: string | null;
+  created_at: string;
+  user_public?: ContactCenterUserPublicRow | null;
+  message?: {
+    id: number;
+    status: string | null;
+  } | null;
+}
+
+export interface ContactCenterUserPublicRow {
+  id?: string | number;
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
+  company_commercial_name?: string | null;
+}
+
 export interface ContactCenterMessageRow {
   id: number;
   user_id: string;
@@ -67,6 +98,8 @@ export interface ContactCenterMessageRow {
   } | null;
   status?: string | null;
   created_at: string;
+  user_public?: ContactCenterUserPublicRow | null;
+  message_responses?: ContactCenterMessageResponseRow[] | null;
 }
 
 export interface ContactCenterMessageTypeRow {
@@ -89,6 +122,11 @@ export interface InsertMessageVariables {
   message: string;
   subject: string;
   message_type: string;
+}
+
+export interface InsertMessageResponseVariables {
+  messageId: number;
+  responseText: string;
 }
 
 const DEFAULT_HASURA_ENDPOINT = 'https://api.grupoavanza.work/v1/graphql';
@@ -118,6 +156,28 @@ const GET_MESSAGES_QUERY = `
       }
       message_status {
         value
+      }
+      user_public {
+        id
+        first_name
+        last_name
+        email
+        company_commercial_name
+      }
+      message_responses(order_by: { created_at: asc }) {
+        id
+        response
+        created_at
+        user_public {
+          first_name
+          last_name
+          email
+          company_commercial_name
+        }
+        message {
+          id
+          status
+        }
       }
     }
 
@@ -184,6 +244,43 @@ const GET_UNREAD_MESSAGES_COUNT_QUERY = `
   }
 `;
 
+const MARK_MESSAGE_AS_RECEIVED_BY_ADMIN_MUTATION = `
+  mutation MarkMessageAsReceivedByAdmin($messageId: bigint!) {
+    viajerosv_mark_message_as_read_by_admin(
+      args: { p_message_id: $messageId }
+    ) {
+      id
+      subject
+      status
+    }
+  }
+`;
+
+const INSERT_MESSAGE_RESPONSE_MUTATION = `
+  mutation InsertMessageResponse($messageId: bigint!, $responseText: String!) {
+    insert_viajerosv_message_responses_one(
+      object: {
+        message_id: $messageId,
+        response: $responseText
+      }
+    ) {
+      id
+      response
+      created_at
+      user_public {
+        first_name
+        last_name
+        email
+        company_commercial_name
+      }
+      message {
+        id
+        status
+      }
+    }
+  }
+`;
+
 @Injectable({
   providedIn: 'root',
 })
@@ -200,7 +297,7 @@ export class ContactCenterService {
   private executeOperation<TData, TVariables extends object>(
     token: string,
     query: string,
-    variables: TVariables
+    variables: TVariables,
   ): Observable<TData> {
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
@@ -220,41 +317,72 @@ export class ContactCenterService {
           }
 
           return response.data;
-        })
+        }),
       );
   }
 
   getMessages(token: string, variables: GetMessagesVariables): Observable<ContactCenterListResult> {
-    return this.executeOperation<GetMessagesData, GetMessagesVariables>(token, GET_MESSAGES_QUERY, variables).pipe(
+    return this.executeOperation<GetMessagesData, GetMessagesVariables>(
+      token,
+      GET_MESSAGES_QUERY,
+      variables,
+    ).pipe(
       map((data) => ({
         rows: data.viajerosv_messages,
         total: data.viajerosv_messages_aggregate.aggregate.count,
-      }))
+      })),
     );
   }
 
   getUnreadMessagesCount(
     token: string,
-    where: Record<string, unknown> = { status: { _eq: 'SENT' } }
+    where: Record<string, unknown> = { status: { _eq: 'SENT' } },
   ): Observable<number> {
     return this.executeOperation<GetUnreadMessagesCountData, GetUnreadMessagesCountVariables>(
       token,
       GET_UNREAD_MESSAGES_COUNT_QUERY,
-      { where }
-    ).pipe(
-      map((data) => data.viajerosv_messages_aggregate.aggregate.count ?? 0)
-    );
+      { where },
+    ).pipe(map((data) => data.viajerosv_messages_aggregate.aggregate.count ?? 0));
   }
 
   getMessageTypes(token: string): Observable<ContactCenterMessageTypeRow[]> {
-    return this.executeOperation<GetMessageTypesData, Record<string, never>>(token, GET_MESSAGE_TYPES_QUERY, {}).pipe(
-      map((data) => data.viajerosv_message_types ?? [])
-    );
+    return this.executeOperation<GetMessageTypesData, Record<string, never>>(
+      token,
+      GET_MESSAGE_TYPES_QUERY,
+      {},
+    ).pipe(map((data) => data.viajerosv_message_types ?? []));
   }
 
-  insertMessage(token: string, variables: InsertMessageVariables): Observable<ContactCenterMessageRow | null> {
-    return this.executeOperation<InsertMessagesData, InsertMessageVariables>(token, INSERT_MESSAGES_MUTATION, variables).pipe(
-      map((data) => data.insert_viajerosv_messages.returning[0] ?? null)
-    );
+  insertMessage(
+    token: string,
+    variables: InsertMessageVariables,
+  ): Observable<ContactCenterMessageRow | null> {
+    return this.executeOperation<InsertMessagesData, InsertMessageVariables>(
+      token,
+      INSERT_MESSAGES_MUTATION,
+      variables,
+    ).pipe(map((data) => data.insert_viajerosv_messages.returning[0] ?? null));
+  }
+
+  markMessageAsReceivedByAdmin(
+    token: string,
+    messageId: number,
+  ): Observable<{ id: number; subject: string | null; status: string | null } | null> {
+    return this.executeOperation<MarkMessageAsReceivedByAdminData, { messageId: number }>(
+      token,
+      MARK_MESSAGE_AS_RECEIVED_BY_ADMIN_MUTATION,
+      { messageId },
+    ).pipe(map((data) => data.viajerosv_mark_message_as_read_by_admin ?? null));
+  }
+
+  insertMessageResponse(
+    token: string,
+    variables: InsertMessageResponseVariables,
+  ): Observable<ContactCenterMessageResponseRow | null> {
+    return this.executeOperation<InsertMessageResponseData, InsertMessageResponseVariables>(
+      token,
+      INSERT_MESSAGE_RESPONSE_MUTATION,
+      variables,
+    ).pipe(map((data) => data.insert_viajerosv_message_responses_one ?? null));
   }
 }

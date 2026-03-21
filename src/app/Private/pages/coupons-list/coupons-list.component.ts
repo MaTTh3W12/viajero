@@ -7,9 +7,20 @@ import { DataTableComponent } from '../../../shared/dashboard/data-table/data-ta
 import { DataTableConfig } from '../../../service/data-table.model';
 import { CouponsMockService } from '../../../service/coupons-mock.service';
 import { Coupon } from '../../../service/coupon.interface';
-import { FilterBarComponent } from '../../../shared/dashboard/filter-bar/filter-bar.component';
+import {
+  AdminCouponFilters,
+  AdminCouponStatusFilter,
+  FilterBarComponent,
+} from '../../../shared/dashboard/filter-bar/filter-bar.component';
 import { AuthService, UserRole } from '../../../service/auth.service';
-import { AuditLog, CouponService, InsertCouponVariables, UpdateCouponVariables } from '../../../service/coupon.service';
+import {
+  AuditLog,
+  Coupon as ApiCoupon,
+  CouponAcquired,
+  CouponService,
+  InsertCouponVariables,
+  UpdateCouponVariables,
+} from '../../../service/coupon.service';
 import { UserProfileService } from '../../../service/user-profile.service';
 import { CategoryService } from '../../../service/category.service';
 
@@ -25,6 +36,13 @@ export class CouponsListComponent {
   coupons: Coupon[] = [];
   couponSearchTerm = '';
   couponStatusFilter: 'all' | 'Borrador' | 'Publicado' = 'all';
+  adminFilters: AdminCouponFilters = {
+    company: '',
+    title: '',
+    vigencia: '',
+    category: 'all',
+    status: 'all',
+  };
   currentPage = 1;
   readonly pageSize = 10;
   totalCoupons = 0;
@@ -33,50 +51,7 @@ export class CouponsListComponent {
   private currentUserDbId: string | number | null = null;
   private categoryNameById = new Map<number, string>();
 
-  tableConfig: DataTableConfig<Coupon> = {
-    columns: [
-      {
-        key: 'titulo',
-        label: 'Título del cupón',
-        type: 'title-with-subtitle',
-        render: (value) => this.truncateText(value, 20),
-        subLabel: (_, row) => this.truncateText(row.categoria, 20),
-        imageForRow: (row) => row.imagePreview ?? null,
-      },
-      { key: 'oferta', label: 'Oferta' },
-      { key: 'vigencia', label: 'Vigencia' },
-      {
-        key: 'disponibles',
-        label: 'Disponibles',
-        render: (_, row) => `${row.disponibles ?? 0} / ${row.disponiblesTotal ?? row.disponibles ?? 0}`,
-      },
-      { key: 'estado', label: 'Estado', type: 'badge' },
-    ],
-    actions: [
-      {
-        iconId: 'eye',
-        bgClass: 'bg-[#D7E8FF] text-[#1E63D5]',
-        action: (row) => this.openView(row),
-      },
-      {
-        iconId: 'edit',
-        bgClass: 'bg-[#E6EEFF] text-[#538CFF]',
-        show: (row) => row.estado === 'Publicado' || row.estado === 'Borrador',
-        action: (row) => this.openEdit(row),
-      },
-      {
-        iconId: 'trash',
-        bgClass: 'bg-[#F8D7DA] text-[#C82333]',
-        show: (row) => row.estado === 'Borrador' && this.getAcquiredCouponsCount(row) === 0,
-        action: (row) => this.openDelete(row),
-      },
-      {
-        iconId: 'statistics',
-        bgClass: 'bg-[#E4DEFF] text-[#5B47C4]',
-        action: (row) => this.openStats(row),
-      },
-    ],
-  };
+  tableConfig: DataTableConfig<Coupon> = this.buildCompanyTableConfig();
 
   constructor(
     private service: CouponsMockService,
@@ -88,8 +63,12 @@ export class CouponsListComponent {
   ) {}
 
   async ngOnInit(): Promise<void> {
-    if (this.role === 'empresa' && this.auth.isKeycloakLoggedIn()) {
-      await this.loadCompanyCouponsFromApi();
+    this.tableConfig = this.role === 'admin'
+      ? this.buildAdminTableConfig()
+      : this.buildCompanyTableConfig();
+
+    if (this.shouldUseApiCoupons()) {
+      await this.loadCouponsFromApiByRole();
       return;
     }
 
@@ -100,12 +79,31 @@ export class CouponsListComponent {
     return this.auth.getRole() ?? 'usuario';
   }
 
+  get topbarLocation(): string {
+    return this.role === 'admin' ? 'Todos los cupones' : 'Gestión de cupones';
+  }
+
+  get couponCategoryOptions(): string[] {
+    const fromMap = Array.from(this.categoryNameById.values());
+    if (fromMap.length > 0) {
+      return fromMap;
+    }
+
+    const fromRows = this.allCoupons
+      .map((coupon) => coupon.categoria?.trim())
+      .filter((categoria): categoria is string => !!categoria);
+
+    return Array.from(new Set(fromRows)).sort((a, b) =>
+      a.localeCompare(b, 'es', { sensitivity: 'base' })
+    );
+  }
+
   onCouponStatusFilterChange(filter: 'all' | 'Borrador' | 'Publicado'): void {
     this.couponStatusFilter = filter;
 
-    if (this.role === 'empresa' && this.auth.isKeycloakLoggedIn()) {
+    if (this.role === 'empresa' && this.shouldUseApiCoupons()) {
       this.currentPage = 1;
-      void this.loadCompanyCouponsFromApi();
+      void this.loadCouponsFromApiByRole();
       return;
     }
 
@@ -115,9 +113,27 @@ export class CouponsListComponent {
   onCouponSearch(term: string): void {
     this.couponSearchTerm = term.trim();
 
-    if (this.role === 'empresa' && this.auth.isKeycloakLoggedIn()) {
+    if (this.role === 'empresa' && this.shouldUseApiCoupons()) {
       this.currentPage = 1;
-      void this.loadCompanyCouponsFromApi();
+      void this.loadCouponsFromApiByRole();
+      return;
+    }
+
+    this.refreshVisibleCoupons();
+  }
+
+  onAdminCouponFilterChange(filters: AdminCouponFilters): void {
+    this.adminFilters = {
+      company: filters.company.trim(),
+      title: filters.title.trim(),
+      vigencia: filters.vigencia,
+      category: filters.category,
+      status: filters.status,
+    };
+    this.currentPage = 1;
+
+    if (this.role === 'admin' && this.shouldUseApiCoupons()) {
+      void this.loadCouponsFromApiByRole();
       return;
     }
 
@@ -152,8 +168,8 @@ export class CouponsListComponent {
 
     this.currentPage = page;
 
-    if (this.role === 'empresa' && this.auth.isKeycloakLoggedIn()) {
-      void this.loadCompanyCouponsFromApi();
+    if (this.shouldUseApiCoupons()) {
+      void this.loadCouponsFromApiByRole();
       return;
     }
 
@@ -174,6 +190,121 @@ export class CouponsListComponent {
 
   goToLastPage(): void {
     this.goToPage(this.totalPages);
+  }
+
+  private buildCompanyTableConfig(): DataTableConfig<Coupon> {
+    return {
+      columns: [
+        {
+          key: 'titulo',
+          label: 'Título del cupón',
+          type: 'title-with-subtitle',
+          render: (value) => this.truncateText(value, 20),
+          subLabel: (_, row) => this.truncateText(row.categoria, 20),
+          imageForRow: (row) => row.imagePreview ?? null,
+        },
+        { key: 'oferta', label: 'Oferta' },
+        { key: 'vigencia', label: 'Vigencia' },
+        {
+          key: 'disponibles',
+          label: 'Disponibles',
+          render: (_, row) => `${row.disponibles ?? 0} / ${row.disponiblesTotal ?? row.disponibles ?? 0}`,
+        },
+        { key: 'estado', label: 'Estado', type: 'badge' },
+      ],
+      actions: [
+        {
+          iconId: 'eye',
+          bgClass: 'bg-[#D7E8FF] text-[#1E63D5]',
+          action: (row) => this.openView(row),
+        },
+        {
+          iconId: 'edit',
+          bgClass: 'bg-[#E6EEFF] text-[#538CFF]',
+          show: (row) => row.estado === 'Publicado' || row.estado === 'Borrador',
+          action: (row) => this.openEdit(row),
+        },
+        {
+          iconId: 'trash',
+          bgClass: 'bg-[#F8D7DA] text-[#C82333]',
+          show: (row) => row.estado === 'Borrador' && this.getAcquiredCouponsCount(row) === 0,
+          action: (row) => this.openDelete(row),
+        },
+        {
+          iconId: 'statistics',
+          bgClass: 'bg-[#E4DEFF] text-[#5B47C4]',
+          action: (row) => this.openStats(row),
+        },
+      ],
+    };
+  }
+
+  private buildAdminTableConfig(): DataTableConfig<Coupon> {
+    return {
+      columns: [
+        {
+          key: 'empresaNombre',
+          label: 'Empresa',
+          type: 'title-with-subtitle',
+          showImage: false,
+          render: (value) => this.truncateText(value, 24),
+          subLabel: (_, row) => row.empresaNit ? `NIT: ${row.empresaNit}` : null,
+        },
+        {
+          key: 'titulo',
+          label: 'Cupón',
+          type: 'title-with-subtitle',
+          showImage: false,
+          render: (value) => this.truncateText(value, 24),
+          subLabel: (_, row) => this.truncateText(row.categoria, 22),
+        },
+        { key: 'oferta', label: 'Valor' },
+        {
+          key: 'disponibles',
+          label: 'Stock',
+          render: (_, row) => `${row.disponibles ?? 0}/${row.disponiblesTotal ?? row.disponibles ?? 0}`,
+        },
+        { key: 'vigencia', label: 'Vigencia' },
+        { key: 'estado', label: 'Estado', type: 'badge' },
+      ],
+      actions: [
+        {
+          iconId: 'eye',
+          bgClass: 'bg-[#D7E8FF] text-[#1E63D5]',
+          action: (row) => this.openView(row),
+        },
+        {
+          iconId: 'statistics-admin',
+          bgClass: 'bg-[#D7E8FF] text-[#1E63D5]',
+          bgClassForRow: (row) => this.isAdminStatsEnabled(row)
+            ? 'bg-[#D7E8FF] text-[#1E63D5]'
+            : 'bg-[#E3E7EF] text-[#A6AFBF]',
+          disabled: (row) => !this.isAdminStatsEnabled(row),
+          action: (row) => {
+            if (!this.isAdminStatsEnabled(row)) return;
+            void this.openStats(row);
+          },
+        },
+      ],
+    };
+  }
+
+  private shouldUseApiCoupons(): boolean {
+    if (!this.auth.isKeycloakLoggedIn()) return false;
+    return this.role === 'empresa' || this.role === 'admin';
+  }
+
+  private async loadCouponsFromApiByRole(): Promise<void> {
+    if (this.role === 'admin') {
+      await this.loadAdminCouponsFromApi();
+      return;
+    }
+
+    await this.loadCompanyCouponsFromApi();
+  }
+
+  private isAdminStatsEnabled(row: Coupon): boolean {
+    return row.estado === 'Publicado' || row.estado === 'Agotado';
   }
 
   async onCreateCoupon(payload: {
@@ -519,6 +650,10 @@ export class CouponsListComponent {
     this.filterBar.openViewCoupon({
       ...row,
       descripcion: row.rawDescripcion ?? row.descripcion,
+      empresa: row.empresaNombre ?? '',
+      empresaNit: row.empresaNit ?? '',
+      oferta: row.oferta ?? '-',
+      vigencia: row.vigencia ?? `${row.fechaInicio} - ${row.fechaFin}`,
       terminos: row.terminos ?? '',
       image: row.imagePreview ?? null,
       imageMime: this.normalizeMimeType(row.imageMimeType),
@@ -527,7 +662,7 @@ export class CouponsListComponent {
     let imagePreview = row.imagePreview ?? null;
     let imageMimeType = this.normalizeMimeType(row.imageMimeType);
 
-    if (this.role === 'empresa' && this.auth.isKeycloakLoggedIn()) {
+    if (this.shouldUseApiCoupons()) {
       const token = await this.getAuthTokenForApi();
       if (token) {
         this.filterBar.setViewCouponImageLoading(true);
@@ -571,6 +706,10 @@ export class CouponsListComponent {
     this.filterBar.openCouponStatistics({
       id: row.id,
       titulo: row.titulo,
+      empresa: row.empresaNombre ?? this.auth.user?.companyName ?? '',
+      empresaNit: row.empresaNit ?? '',
+      categoria: row.categoria,
+      estado: row.estado,
       fechaInicio: row.fechaInicio,
       fechaFin: row.fechaFin,
       publicados,
@@ -661,7 +800,15 @@ export class CouponsListComponent {
             limit: 300,
             offset: 0,
             where: {},
-          })
+          }).pipe(
+            catchError((error) => {
+              console.warn('[COUPONS] getAuditLogsDynamic falló en búsqueda amplia', {
+                id: row.id,
+                error,
+              });
+              return of({ rows: [], total: 0 });
+            })
+          )
         );
         auditRows = (broadAudit.rows ?? [])
           .filter((log) => this.auditLogBelongsToCoupon(log, targetCouponId, acquiredIds, acquiredUniqueCodes))
@@ -673,25 +820,39 @@ export class CouponsListComponent {
         rows: auditRows.length,
       });
 
+      const fallbackAcquiredCount = acquiredRows.length;
+      const fallbackRedeemedCount = acquiredRows.filter((item) => item.redeemed).length;
+      const historyRows = monthlyHistory.length > 0
+        ? monthlyHistory
+        : this.buildHistoryFromAcquiredRows(acquiredRows);
+      const transactionsRows = auditRows.length > 0
+        ? auditRows
+          .slice(0, 10)
+          .map((log) => ({
+            createdAt: log.createdAt,
+            userEmail: log.userPublic?.email ?? null,
+            userFirstName: log.userPublic?.firstName ?? null,
+            userLastName: log.userPublic?.lastName ?? null,
+            actionType: log.actionType,
+          }))
+        : this.buildTransactionsFromAcquiredRows(acquiredRows);
+
+      if (!stats && acquiredRows.length === 0 && historyRows.length === 0 && transactionsRows.length === 0) {
+        console.warn('[COUPONS] openStats: sin datos de estadísticas para cupón', {
+          couponId: row.id,
+          note: 'Revisar permisos/retorno de viajerosv_coupon_statistics, viajerosv_coupon_redemption_monthly_stats, viajerosv_coupons_acquired y viajerosv_audit_logs.',
+        });
+      }
+
       this.filterBar.updateCouponStatistics({
         publicados: stats?.stockTotal ?? publicados,
         disponibles: stats?.stockAvailable ?? row.disponibles ?? 0,
-        adquiridos: stats?.totalAcquired ?? adquiridos,
-        canjeados: stats?.totalRedeemed ?? 0,
+        adquiridos: stats?.totalAcquired ?? fallbackAcquiredCount ?? adquiridos,
+        canjeados: stats?.totalRedeemed ?? fallbackRedeemedCount ?? 0,
       });
 
-      this.filterBar.updateCouponStatisticsHistory(monthlyHistory);
-      this.filterBar.updateCouponStatisticsTransactions(
-        auditRows
-          .slice(0, 10)
-          .map((log) => ({
-          createdAt: log.createdAt,
-          userEmail: log.userPublic?.email ?? null,
-          userFirstName: log.userPublic?.firstName ?? null,
-          userLastName: log.userPublic?.lastName ?? null,
-          actionType: log.actionType,
-        }))
-      );
+      this.filterBar.updateCouponStatisticsHistory(historyRows);
+      this.filterBar.updateCouponStatisticsTransactions(transactionsRows);
     } catch (error) {
       console.warn('[COUPONS] No se pudieron cargar estadísticas del cupón', { id: row.id, error });
     } finally {
@@ -699,9 +860,104 @@ export class CouponsListComponent {
     }
   }
 
+  private buildHistoryFromAcquiredRows(
+    rows: CouponAcquired[]
+  ): Array<{ monthName: string; redemptionYear?: number; totalRedemptions: number }> {
+    const grouped = new Map<string, { month: number; year: number; total: number }>();
+
+    for (const row of rows) {
+      if (!row.redeemed || !row.redeemed_at) continue;
+      const date = new Date(row.redeemed_at);
+      if (Number.isNaN(date.getTime())) continue;
+
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const key = `${year}-${String(month).padStart(2, '0')}`;
+      const current = grouped.get(key) ?? { month, year, total: 0 };
+      current.total += 1;
+      grouped.set(key, current);
+    }
+
+    return Array.from(grouped.values())
+      .sort((a, b) => (a.year - b.year) || (a.month - b.month))
+      .map((entry) => ({
+        monthName: this.getShortMonthLabel(entry.month),
+        redemptionYear: entry.year,
+        totalRedemptions: entry.total,
+      }));
+  }
+
+  private buildTransactionsFromAcquiredRows(
+    rows: CouponAcquired[]
+  ): Array<{
+    createdAt: string;
+    userEmail?: string | null;
+    userFirstName?: string | null;
+    userLastName?: string | null;
+    actionType?: string | null;
+  }> {
+    const events: Array<{
+      createdAt: string;
+      userEmail?: string | null;
+      userFirstName?: string | null;
+      userLastName?: string | null;
+      actionType?: string | null;
+    }> = [];
+
+    for (const row of rows) {
+      const userPublic = row.user_public ?? null;
+
+      if (row.acquired_at) {
+        events.push({
+          createdAt: row.acquired_at,
+          userEmail: userPublic?.email ?? null,
+          userFirstName: userPublic?.first_name ?? null,
+          userLastName: userPublic?.last_name ?? null,
+          actionType: 'ACQUIRE',
+        });
+      }
+
+      if (row.redeemed && row.redeemed_at) {
+        events.push({
+          createdAt: row.redeemed_at,
+          userEmail: userPublic?.email ?? null,
+          userFirstName: userPublic?.first_name ?? null,
+          userLastName: userPublic?.last_name ?? null,
+          actionType: 'REDEEM',
+        });
+      }
+    }
+
+    return events
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 10);
+  }
+
+  private getShortMonthLabel(month: number): string {
+    const labels = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+    return labels[Math.max(1, Math.min(12, month)) - 1] ?? 'ENE';
+  }
+
   private loadCouponsFromMock(): void {
     this.service.getCoupons().subscribe((data) => {
-      this.setCoupons(data.map((coupon) => this.decorateCouponForTable(coupon)));
+      const rows = data.map((coupon) => {
+        const decorated = this.decorateCouponForTable(coupon);
+        if (this.role !== 'admin') return decorated;
+
+        const estado = this.resolveAdminStatus({
+          published: coupon.estado === 'Publicado',
+          endDate: decorated.fechaFin,
+          available: decorated.disponibles ?? 0,
+        });
+
+        return {
+          ...decorated,
+          empresaNombre: coupon.descripcion || 'Empresa',
+          empresaNit: '',
+          estado,
+        };
+      });
+      this.setCoupons(rows);
     });
   }
 
@@ -754,18 +1010,84 @@ export class CouponsListComponent {
       }));
     }
 
-    const rows = response.rows.map((row) => ({
+    await this.applyApiCouponsResponse(token, response.rows, response.total, 'empresa');
+  }
+
+  private async loadAdminCouponsFromApi(): Promise<void> {
+    const token = await this.getAuthTokenForApi();
+
+    if (!token) {
+      console.warn('[COUPONS] loadAdminCouponsFromApi aborted: token missing');
+      this.setCoupons([]);
+      return;
+    }
+
+    await this.ensureCategoryMap(token);
+
+    const response = await firstValueFrom(this.couponService.getCoupons(token, {
+      limit: this.pageSize,
+      offset: (this.currentPage - 1) * this.pageSize,
+      where: this.buildAdminCouponsWhere(),
+      order_by: [{ created_at: 'desc' }],
+    }));
+
+    await this.applyApiCouponsResponse(token, response.rows, response.total, 'admin');
+  }
+
+  private async applyApiCouponsResponse(
+    token: string,
+    rowsFromApi: ApiCoupon[],
+    total: number,
+    mode: 'empresa' | 'admin'
+  ): Promise<void> {
+    const rows = rowsFromApi.map((row) => this.mapApiCouponToRow(row, mode));
+
+    this.allCoupons = rows;
+    this.coupons = rows;
+    this.totalCoupons = total;
+    this.cdr.detectChanges();
+
+    try {
+      await this.loadImagesForCoupons(token);
+    } catch (imgErr) {
+      console.warn('[COUPONS] some images failed to load', imgErr);
+    }
+  }
+
+  private mapApiCouponToRow(row: ApiCoupon, mode: 'empresa' | 'admin'): Coupon {
+    const empresaNombre = row.user_public?.company_commercial_name?.trim()
+      || row.user?.company_commercial_name?.trim()
+      || 'Empresa no disponible';
+    const empresaNit = row.user_public?.company_nit?.trim()
+      || row.user?.company_nit?.trim()
+      || '';
+    const disponibles = row.stock_available ?? row.stock_total ?? 0;
+    const disponiblesTotal = row.stock_total ?? row.stock_available ?? 0;
+    const fechaInicio = this.toDisplayDate(row.start_date);
+    const fechaFin = this.toDisplayDate(row.end_date);
+
+    const estado = mode === 'admin'
+      ? this.resolveAdminStatus({
+        published: row.published,
+        endDate: row.end_date,
+        available: disponibles,
+      })
+      : (row.published ? 'Publicado' : 'Borrador');
+
+    return {
       id: row.id,
       titulo: row.title,
-      descripcion: this.auth.user?.companyName || this.auth.user?.username || row.description || '',
+      descripcion: row.description ?? '',
+      empresaNombre,
+      empresaNit,
       categoria: this.categoryNameById.get(row.category_id) ?? String(row.category_id),
-      fechaInicio: this.toDisplayDate(row.start_date),
-      fechaFin: this.toDisplayDate(row.end_date),
-      disponibles: row.stock_available ?? row.stock_total ?? 0,
-      disponiblesTotal: row.stock_total ?? row.stock_available ?? 0,
+      fechaInicio,
+      fechaFin,
+      disponibles,
+      disponiblesTotal,
       oferta: this.resolveOfferLabel(row.price, row.price_discount),
-      vigencia: `${this.toDisplayDate(row.start_date)} - ${this.toDisplayDate(row.end_date)}`,
-      estado: row.published ? 'Publicado' : 'Borrador',
+      vigencia: `${fechaInicio} - ${fechaFin}`,
+      estado,
       categoriaId: row.category_id,
       terminos: row.terms ?? '',
       rawDescripcion: row.description ?? '',
@@ -773,19 +1095,7 @@ export class CouponsListComponent {
       descuento: this.toFiniteNumber(row.price_discount),
       imagePreview: null,
       imageMimeType: '',
-    }));
-
-    this.allCoupons = rows;
-    this.coupons = rows;
-    this.totalCoupons = response.total;
-    this.cdr.detectChanges();
-
-    // load images for each coupon so the table can show previews immediately
-    try {
-      await this.loadImagesForCoupons(token);
-    } catch (imgErr) {
-      console.warn('[COUPONS] some images failed to load', imgErr);
-    }
+    };
   }
 
 
@@ -821,13 +1131,18 @@ export class CouponsListComponent {
     this.refreshVisibleCoupons();
   }
 
-  private setCoupons(rows: Coupon[]): void {
+  private setCoupons(rows: Coupon[], total?: number): void {
     this.allCoupons = rows;
+    if (typeof total === 'number') {
+      this.totalCoupons = Math.max(0, Math.trunc(total));
+    } else if (this.shouldUseApiCoupons()) {
+      this.totalCoupons = rows.length;
+    }
     this.refreshVisibleCoupons();
   }
 
   private refreshVisibleCoupons(): void {
-    if (this.role === 'empresa' && this.auth.isKeycloakLoggedIn()) {
+    if (this.shouldUseApiCoupons()) {
       this.coupons = [...this.allCoupons];
       this.cdr.detectChanges();
       return;
@@ -845,6 +1160,10 @@ export class CouponsListComponent {
   }
 
   private applyFilters(rows: Coupon[]): Coupon[] {
+    if (this.role === 'admin') {
+      return this.applyAdminLocalFilters(rows);
+    }
+
     const search = this.normalizeSearchTerm(this.couponSearchTerm);
 
     return rows.filter((coupon) => {
@@ -857,6 +1176,32 @@ export class CouponsListComponent {
         this.normalizeSearchTerm(coupon.rawDescripcion ?? coupon.descripcion).includes(search);
 
       return matchesStatus && matchesSearch;
+    });
+  }
+
+  private applyAdminLocalFilters(rows: Coupon[]): Coupon[] {
+    const company = this.normalizeSearchTerm(this.adminFilters.company);
+    const title = this.normalizeSearchTerm(this.adminFilters.title);
+    const dateFilter = this.toIsoDate(this.adminFilters.vigencia);
+
+    return rows.filter((coupon) => {
+      const matchesCompany =
+        !company || this.normalizeSearchTerm(coupon.empresaNombre).includes(company);
+
+      const matchesTitle =
+        !title || this.normalizeSearchTerm(coupon.titulo).includes(title);
+
+      const matchesCategory =
+        this.adminFilters.category === 'all' || coupon.categoria === this.adminFilters.category;
+
+      const matchesStatus =
+        this.adminFilters.status === 'all' || coupon.estado === this.adminFilters.status;
+
+      const couponStart = this.toIsoDate(coupon.fechaInicio);
+      const couponEnd = this.toIsoDate(coupon.fechaFin);
+      const matchesDate = !dateFilter || (couponStart <= dateFilter && couponEnd >= dateFilter);
+
+      return matchesCompany && matchesTitle && matchesCategory && matchesStatus && matchesDate;
     });
   }
 
@@ -1032,6 +1377,130 @@ export class CouponsListComponent {
     }
 
     return { _and: andConditions };
+  }
+
+  private buildAdminCouponsWhere(): Record<string, unknown> {
+    const andConditions: Record<string, unknown>[] = [
+      {
+        _or: [
+          { active: { _eq: true } },
+          { active: { _is_null: true } },
+        ],
+      },
+    ];
+
+    const companyTerm = this.adminFilters.company.trim();
+    if (companyTerm.length > 0) {
+      const likeTerm = `%${companyTerm}%`;
+      andConditions.push({
+        _or: [
+          { user_public: { company_commercial_name: { _ilike: likeTerm } } },
+          { user: { company_commercial_name: { _ilike: likeTerm } } },
+        ],
+      });
+    }
+
+    const titleTerm = this.adminFilters.title.trim();
+    if (titleTerm.length > 0) {
+      andConditions.push({
+        title: { _ilike: `%${titleTerm}%` },
+      });
+    }
+
+    const vigenciaFilter = this.toIsoDate(this.adminFilters.vigencia);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(vigenciaFilter)) {
+      andConditions.push({ start_date: { _lte: vigenciaFilter } });
+      andConditions.push({ end_date: { _gte: vigenciaFilter } });
+    }
+
+    if (this.adminFilters.category !== 'all') {
+      const categoryId = this.findCategoryIdByName(this.adminFilters.category);
+      if (categoryId != null) {
+        andConditions.push({ category_id: { _eq: categoryId } });
+      }
+    }
+
+    this.applyAdminStatusFilter(andConditions, this.adminFilters.status);
+
+    return { _and: andConditions };
+  }
+
+  private applyAdminStatusFilter(
+    conditions: Record<string, unknown>[],
+    status: AdminCouponStatusFilter
+  ): void {
+    const today = this.todayIso;
+
+    if (status === 'Borrador') {
+      conditions.push({ published: { _eq: false } });
+      return;
+    }
+
+    if (status === 'Publicado') {
+      conditions.push({ published: { _eq: true } });
+      conditions.push({ end_date: { _gte: today } });
+      conditions.push({
+        _or: [
+          { stock_available: { _gt: 0 } },
+          { stock_total: { _gt: 0 } },
+        ],
+      });
+      return;
+    }
+
+    if (status === 'Agotado') {
+      conditions.push({ published: { _eq: true } });
+      conditions.push({ end_date: { _gte: today } });
+      conditions.push({
+        _or: [
+          { stock_available: { _lte: 0 } },
+          { stock_total: { _lte: 0 } },
+        ],
+      });
+      return;
+    }
+
+    if (status === 'Vencido') {
+      conditions.push({ published: { _eq: true } });
+      conditions.push({ end_date: { _lt: today } });
+    }
+  }
+
+  private resolveAdminStatus(params: {
+    published: boolean;
+    endDate: string;
+    available: number;
+  }): 'Borrador' | 'Publicado' | 'Agotado' | 'Vencido' {
+    if (!params.published) return 'Borrador';
+
+    const endIso = this.toIsoDate(params.endDate);
+    if (/^\d{4}-\d{2}-\d{2}$/.test(endIso) && endIso < this.todayIso) {
+      return 'Vencido';
+    }
+
+    if ((params.available ?? 0) <= 0) {
+      return 'Agotado';
+    }
+
+    return 'Publicado';
+  }
+
+  private findCategoryIdByName(name: string): number | null {
+    const normalizedTarget = this.normalizeSearchTerm(name);
+    for (const [id, categoryName] of this.categoryNameById.entries()) {
+      if (this.normalizeSearchTerm(categoryName) === normalizedTarget) {
+        return id;
+      }
+    }
+    return null;
+  }
+
+  private get todayIso(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   private auditLogBelongsToCoupon(

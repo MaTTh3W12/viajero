@@ -3,6 +3,7 @@ export interface TableColumn<T, V = T[keyof T]> {
   label: string;
   type?: 'text' | 'badge' | 'box' | 'title-with-subtitle';
   boxStyle?: 'blue' | 'gray' | 'expiration';
+  showImage?: boolean;
   imageForRow?: (row: T) => string | null;
   imageLoadingForRow?: (row: T) => boolean;
 
@@ -17,6 +18,7 @@ export interface TableAction<T> {
   iconIdForRow?: (row: T) => string | null;
   bgClass: string;
   bgClassForRow?: (row: T) => string;
+  disabled?: (row: T) => boolean;
   show?: (row: T) => boolean;
   action: (row: T) => void;
 }

@@ -288,6 +288,7 @@ interface HomeFeaturedCouponRow {
   updated_at: string;
   user: {
     company_commercial_name: string | null;
+    company_nit?: string | null;
     company_address: string | null;
     company_map_url: string | null;
   } | null;
@@ -351,12 +352,14 @@ export interface Coupon {
   updated_at: string;
   user?: {
     company_commercial_name: string | null;
+    company_nit?: string | null;
     company_address: string | null;
     company_map_url: string | null;
   } | null;
   user_public?: {
     id: string | number;
     company_commercial_name: string | null;
+    company_nit?: string | null;
     company_address: string | null;
     company_map_url: string | null;
     company_facebook?: string | null;
@@ -414,6 +417,12 @@ export interface CouponAcquired {
   unique_code: string;
   acquired_at: string;
   redeemed_at: string | null;
+  user_public?: {
+    id: string | number;
+    first_name: string | null;
+    last_name: string | null;
+    email: string | null;
+  } | null;
   coupon?: {
     title: string | null;
     description: string | null;
@@ -876,6 +885,7 @@ export class CouponService {
       limit: variables.limit ?? 40,
       offset: variables.offset ?? 0,
       where: variables.where ?? {},
+      order_by: variables.order_by ?? [{ created_at: 'desc' }],
     };
 
     return this.executeOperation<GetCouponsData, GetCouponsVariables>(token, GET_COUPONS_QUERY, requestVariables).pipe(
@@ -891,6 +901,7 @@ export class CouponService {
       limit: variables.limit ?? 40,
       offset: variables.offset ?? 0,
       where: variables.where ?? this.defaultPublicCouponsWhere,
+      order_by: variables.order_by ?? [{ created_at: 'desc' }],
     };
 
     return this.executePublicOperation<GetCouponsData, GetCouponsVariables>(GET_COUPONS_QUERY, requestVariables).pipe(

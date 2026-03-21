@@ -119,7 +119,7 @@ export class CanjeCuponesComponent implements OnInit {
 
       if (!acquired || !acquired.coupon_with_image_base64) {
         this.selectedCoupon = null;
-        this.couponLookupError = 'No se encontró un cupón con ese código.';
+        this.couponLookupError = this.buildCouponNotFoundMessage();
         this.cdr.detectChanges();
         return;
       }
@@ -142,6 +142,10 @@ export class CanjeCuponesComponent implements OnInit {
       this.couponLookupError = 'Ocurrió un error al consultar el cupón.';
       this.cdr.detectChanges();
     }
+  }
+
+  private buildCouponNotFoundMessage(): string {
+    return 'No se encontró un cupón con ese código para esta empresa. Este cupón podría pertenecer a otra empresa.';
   }
 
   private toDisplayDate(dateStr: string): string {

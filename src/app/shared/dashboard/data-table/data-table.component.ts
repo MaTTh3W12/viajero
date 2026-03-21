@@ -30,6 +30,10 @@ export class DataTableComponent<T extends { id: number }> {
         return 'bg-[#D4EDDA] text-[#155724]';
       case 'Borrador':
         return 'bg-[#FFF3CD] text-[#856404]';
+      case 'Agotado':
+        return 'bg-[#F8D7DA] text-[#C82333]';
+      case 'Vencido':
+        return 'bg-[#B8D5F3] text-[#0C56A5]';
       case 'Pendiente':
         return 'bg-[#FFF3CD] text-[#856404]';
       case 'Activa':
@@ -51,6 +55,10 @@ export class DataTableComponent<T extends { id: number }> {
 
   getActionClass(action: any, row: any): string {
     return action.bgClassForRow?.(row) ?? action.bgClass;
+  }
+
+  isActionDisabled(action: any, row: any): boolean {
+    return action.disabled ? action.disabled(row) : false;
   }
 
   isActionVisible(action: any, row: any): boolean {

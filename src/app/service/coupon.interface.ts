@@ -2,6 +2,8 @@ export interface Coupon {
   id: number;
   titulo: string;
   descripcion: string;
+  empresaNombre?: string;
+  empresaNit?: string;
   categoria: string;
   fechaInicio: string;
   fechaFin: string;

@@ -1,28 +1,37 @@
 <!-- Overlay Backdrop -->
-<div *ngIf="isSidebarOpen" (click)="toggleSidebar()" class="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"></div>
+<div
+  *ngIf="isSidebarOpen"
+  (click)="toggleSidebar()"
+  class="fixed inset-0 z-40 bg-black bg-opacity-50 lg:hidden"
+></div>
 
 <!-- Sidebar Container -->
 <aside
   class="fixed inset-y-0 left-0 z-50 h-screen overflow-hidden bg-gray-50 transition-transform duration-300 transform lg:static w-64 md:w-72 shadow-none"
-  [class.translate-x-0]="isSidebarOpen" [class.-translate-x-full]="!isSidebarOpen"
-  [ngClass]="{ 'lg:w-0 lg:border-0': !isSidebarOpen }">
-
+  [class.translate-x-0]="isSidebarOpen"
+  [class.-translate-x-full]="!isSidebarOpen"
+  [ngClass]="{ 'lg:w-0 lg:border-0': !isSidebarOpen }"
+>
   <!-- Content Wrapper -->
   <div class="flex flex-col justify-between h-full py-3 lg:py-6 px-4">
     <!-- Top Section: Logo + Nav Items -->
     <div class="flex-1">
       <!-- Logo -->
       <div class="hidden lg:flex items-center justify-start gap-2 px-3 mb-6">
-        <a *ngIf="isEmpresa; else internalDashboardLogo"
+        <a
+          *ngIf="isEmpresa; else internalDashboardLogo"
           href="/?freshSession=1&resetSso=1"
           target="_blank"
           rel="noopener noreferrer"
-          class="flex items-center gap-3 transition-transform duration-300 transform cursor-pointer hover:scale-105">
+          class="flex items-center gap-3 transition-transform duration-300 transform cursor-pointer hover:scale-105"
+        >
           <img src="assets/img/logo.png" alt="ViajeroSV" class="h-[3rem]" />
         </a>
         <ng-template #internalDashboardLogo>
-          <a routerLink=""
-            class="flex items-center gap-3 transition-transform duration-300 transform cursor-pointer hover:scale-105">
+          <a
+            routerLink=""
+            class="flex items-center gap-3 transition-transform duration-300 transform cursor-pointer hover:scale-105"
+          >
             <img src="assets/img/logo.png" alt="ViajeroSV" class="h-[3rem]" />
           </a>
         </ng-template>
@@ -31,68 +40,116 @@
       <!-- Menú ADMIN -->
       <ng-container *ngIf="isAdmin">
         <!-- Dashboard -->
-        <a routerLink="/admin/dashboard" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+        <a
+          routerLink="/admin/dashboard"
+          routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
           (click)="closeSidebarOnMobile()"
-          [routerLinkActiveOptions]="{exact: true}" #rlaDashboard="routerLinkActive"
-          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3 lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
-          <svg class="w-5 h-5" fill="none" [style.color]="rlaDashboard.isActive ? 'white' : '#538CFF'">
+          [routerLinkActiveOptions]="{ exact: true }"
+          #rlaDashboard="routerLinkActive"
+          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3 lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            [style.color]="rlaDashboard.isActive ? 'white' : '#538CFF'"
+          >
             <use href="assets/icons/sprite.svg#apps"></use>
           </svg>
           <span class="text-sm font-medium">Dashboard</span>
         </a>
 
         <!-- Auditoría -->
-        <a routerLink="audit-list" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+        <a
+          routerLink="audit-list"
+          routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
           (click)="closeSidebarOnMobile()"
           #rlaAudit="routerLinkActive"
-          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
-              lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
-          <img src="assets/icons/auditoria.png" alt="Auditoría Icon" class="w-5 h-5"
-            [class.filter]="rlaAudit.isActive" [class.invert]="rlaAudit.isActive"
-            [class.brightness-0]="rlaAudit.isActive" />
+          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3 lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300"
+        >
+          <img
+            src="assets/icons/auditoria.png"
+            alt="Auditoría Icon"
+            class="w-5 h-5"
+            [class.filter]="rlaAudit.isActive"
+            [class.invert]="rlaAudit.isActive"
+            [class.brightness-0]="rlaAudit.isActive"
+          />
           <span class="text-sm font-medium">Auditoría</span>
         </a>
 
         <!-- Categorías -->
-        <a routerLink="category-list" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+        <a
+          routerLink="category-list"
+          routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
           (click)="closeSidebarOnMobile()"
           #rlaCategory="routerLinkActive"
-          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-2 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200
-                  lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300 lg:mb-3">
-          <img src="assets/icons/category.png" alt="Categoría Icon" class="w-5 h-5"
-            [class.filter]="rlaCategory.isActive" [class.invert]="rlaCategory.isActive"
-            [class.brightness-0]="rlaCategory.isActive" />
+          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-2 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300 lg:mb-3"
+        >
+          <img
+            src="assets/icons/category.png"
+            alt="Categoría Icon"
+            class="w-5 h-5"
+            [class.filter]="rlaCategory.isActive"
+            [class.invert]="rlaCategory.isActive"
+            [class.brightness-0]="rlaCategory.isActive"
+          />
           <span class="text-sm font-medium">Categoría</span>
         </a>
 
-        <!-- Mensajes -->
-        <a routerLink="messages" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+        <!-- Centro de contacto -->
+        <a
+          routerLink="contacto"
+          routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
           (click)="closeSidebarOnMobile()"
-          #rlaMessages="routerLinkActive" class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
-               lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
-          <img src="assets/icons/messages.png" alt="Usuarios Icon" class="w-5 h-5" [class.filter]="rlaMessages.isActive"
-            [class.invert]="rlaMessages.isActive" [class.brightness-0]="rlaMessages.isActive" />
-          <span class="text-sm font-medium">Mensajes</span>
+          #rlaMessages="routerLinkActive"
+          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3 lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300"
+        >
+          <img
+            src="assets/icons/messages.png"
+            alt="Contacto Icon"
+            class="w-5 h-5"
+            [class.filter]="rlaMessages.isActive"
+            [class.invert]="rlaMessages.isActive"
+            [class.brightness-0]="rlaMessages.isActive"
+          />
+          <span class="text-sm font-medium">Centro de contacto</span>
         </a>
 
         <!-- Todos los cupones -->
-        <a routerLink="coupons-list" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+        <a
+          routerLink="coupons-list"
+          routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
           (click)="closeSidebarOnMobile()"
-          #rlaCoupons="routerLinkActive" class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
-               lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
-          <img src="assets/icons/ticket-cupones.png" alt="Usuarios Icon" class="w-5 h-5"
-            [class.filter]="rlaCoupons.isActive" [class.invert]="rlaCoupons.isActive"
-            [class.brightness-0]="rlaCoupons.isActive" />
+          #rlaCoupons="routerLinkActive"
+          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3 lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300"
+        >
+          <img
+            src="assets/icons/ticket-cupones.png"
+            alt="Usuarios Icon"
+            class="w-5 h-5"
+            [class.filter]="rlaCoupons.isActive"
+            [class.invert]="rlaCoupons.isActive"
+            [class.brightness-0]="rlaCoupons.isActive"
+          />
           <span class="text-sm font-medium">Todos los cupones</span>
         </a>
 
         <!-- Todas las empresas -->
-        <a routerLink="companies" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+        <a
+          routerLink="companies"
+          routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
           (click)="closeSidebarOnMobile()"
-          #rlaCompanies="routerLinkActive" class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
-               lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
-          <img src="assets/icons/buildings.svg" alt="Usuarios Icon" class="w-5 h-5" [class.filter]="rlaCompanies.isActive"
-            [class.invert]="rlaCompanies.isActive" [class.brightness-0]="rlaCompanies.isActive" />
+          #rlaCompanies="routerLinkActive"
+          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3 lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300"
+        >
+          <img
+            src="assets/icons/buildings.svg"
+            alt="Usuarios Icon"
+            class="w-5 h-5"
+            [class.filter]="rlaCompanies.isActive"
+            [class.invert]="rlaCompanies.isActive"
+            [class.brightness-0]="rlaCompanies.isActive"
+          />
           <span class="text-sm font-medium">Todas las empresas</span>
         </a>
       </ng-container>
@@ -100,61 +157,97 @@
       <!-- Menú EMPRESA -->
       <ng-container *ngIf="isEmpresa">
         <!-- Dashboard -->
-        <a routerLink="/companies/dashboard" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+        <a
+          routerLink="/companies/dashboard"
+          routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
           (click)="closeSidebarOnMobile()"
-          [routerLinkActiveOptions]="{exact: true}" #rlaDashCompany="routerLinkActive"
-          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3 lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
-          <svg class="w-5 h-5" fill="none" [style.color]="rlaDashCompany.isActive ? 'white' : '#538CFF'">
+          [routerLinkActiveOptions]="{ exact: true }"
+          #rlaDashCompany="routerLinkActive"
+          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3 lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300"
+        >
+          <svg
+            class="w-5 h-5"
+            fill="none"
+            [style.color]="rlaDashCompany.isActive ? 'white' : '#538CFF'"
+          >
             <use href="assets/icons/sprite.svg#apps"></use>
           </svg>
           <span class="text-sm font-medium">Dashboard</span>
         </a>
 
         <!-- Gestión de cupones -->
-        <a routerLink="gestion-cupones" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+        <a
+          routerLink="gestion-cupones"
+          routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
           (click)="closeSidebarOnMobile()"
           #rlaGestion="routerLinkActive"
-          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
-              lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
-          <img src="assets/icons/ticket-cupones.png" alt="Gestión Icon" class="w-5 h-5"
-            [class.filter]="rlaGestion.isActive" [class.invert]="rlaGestion.isActive"
-            [class.brightness-0]="rlaGestion.isActive" />
+          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3 lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300"
+        >
+          <img
+            src="assets/icons/ticket-cupones.png"
+            alt="Gestión Icon"
+            class="w-5 h-5"
+            [class.filter]="rlaGestion.isActive"
+            [class.invert]="rlaGestion.isActive"
+            [class.brightness-0]="rlaGestion.isActive"
+          />
           <span class="text-sm font-medium">Gestión de cupones</span>
         </a>
 
         <!-- Canje de cupones -->
-        <a routerLink="canje-cupones" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+        <a
+          routerLink="canje-cupones"
+          routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
           (click)="closeSidebarOnMobile()"
           #rlaCanje="routerLinkActive"
-          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
-              lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
-          <img src="assets/icons/ticket-expired.png" alt="Canje Icon" class="w-5 h-5"
-            [class.filter]="rlaCanje.isActive" [class.invert]="rlaCanje.isActive"
-            [class.brightness-0]="rlaCanje.isActive" />
+          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3 lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300"
+        >
+          <img
+            src="assets/icons/ticket-expired.png"
+            alt="Canje Icon"
+            class="w-5 h-5"
+            [class.filter]="rlaCanje.isActive"
+            [class.invert]="rlaCanje.isActive"
+            [class.brightness-0]="rlaCanje.isActive"
+          />
           <span class="text-sm font-medium">Canje de cupones</span>
         </a>
 
         <!-- Historial de canjes -->
-        <a routerLink="historial-canje" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+        <a
+          routerLink="historial-canje"
+          routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
           (click)="closeSidebarOnMobile()"
           #rlaHistorial="routerLinkActive"
-          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
-              lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
-          <img src="assets/icons/auditoria.png" alt="Historial Icon" class="w-5 h-5"
-            [class.filter]="rlaHistorial.isActive" [class.invert]="rlaHistorial.isActive"
-            [class.brightness-0]="rlaHistorial.isActive" />
+          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3 lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300"
+        >
+          <img
+            src="assets/icons/auditoria.png"
+            alt="Historial Icon"
+            class="w-5 h-5"
+            [class.filter]="rlaHistorial.isActive"
+            [class.invert]="rlaHistorial.isActive"
+            [class.brightness-0]="rlaHistorial.isActive"
+          />
           <span class="text-sm font-medium">Historial de canjes</span>
         </a>
 
         <!-- Centro de contacto -->
-        <a routerLink="contacto" routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
+        <a
+          routerLink="contacto"
+          routerLinkActive="!bg-[#538CFF] !text-white lg:!border-transparent lg:!shadow-md"
           (click)="closeSidebarOnMobile()"
           #rlaContacto="routerLinkActive"
-          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3
-              lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300">
-          <img src="assets/icons/messages.png" alt="Contacto Icon" class="w-5 h-5"
-            [class.filter]="rlaContacto.isActive" [class.invert]="rlaContacto.isActive"
-            [class.brightness-0]="rlaContacto.isActive" />
+          class="flex items-center justify-start gap-3 w-full px-3 py-5 mb-1 text-[#0E225C] rounded-xl cursor-pointer transition-all duration-200 hover:bg-gray-200 lg:px-4 lg:py-5 lg:mb-3 lg:bg-white lg:border lg:border-gray-200 lg:shadow-sm lg:hover:shadow lg:hover:border-gray-300"
+        >
+          <img
+            src="assets/icons/messages.png"
+            alt="Contacto Icon"
+            class="w-5 h-5"
+            [class.filter]="rlaContacto.isActive"
+            [class.invert]="rlaContacto.isActive"
+            [class.brightness-0]="rlaContacto.isActive"
+          />
           <span class="text-sm font-medium">Centro de contacto</span>
         </a>
       </ng-container>

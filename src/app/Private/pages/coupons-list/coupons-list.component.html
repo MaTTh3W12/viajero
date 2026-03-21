@@ -1,9 +1,18 @@
-<app-topbar location="Gestión de cupones">
+<app-topbar [location]="topbarLocation">
 </app-topbar>
-<app-filter-bar variant="coupons" [role]="role" (createCoupon)="onCreateCoupon($event)" (updateCoupon)="onUpdateCoupon($event)" (deleteCoupon)="onDeleteCoupon($event)" (couponSearch)="onCouponSearch($event)" (couponStatusFilterChange)="onCouponStatusFilterChange($event)">
+<app-filter-bar
+  variant="coupons"
+  [role]="role"
+  [couponCategoryOptions]="couponCategoryOptions"
+  (createCoupon)="onCreateCoupon($event)"
+  (updateCoupon)="onUpdateCoupon($event)"
+  (deleteCoupon)="onDeleteCoupon($event)"
+  (couponSearch)="onCouponSearch($event)"
+  (couponStatusFilterChange)="onCouponStatusFilterChange($event)"
+  (adminCouponFilterChange)="onAdminCouponFilterChange($event)">
 </app-filter-bar>
 
-<h2 class="lg:hidden text-xl font-semibold text-[#0E225C] px-3 pt-4 pb-2">Gestión de cupones</h2>
+<h2 class="lg:hidden text-xl font-semibold text-[#0E225C] px-3 pt-4 pb-2">{{ topbarLocation }}</h2>
 
 <app-data-table [config]="tableConfig" [data]="coupons">
 </app-data-table>
