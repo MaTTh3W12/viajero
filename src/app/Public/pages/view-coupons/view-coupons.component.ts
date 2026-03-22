@@ -31,6 +31,7 @@ export class ViewCouponsComponent implements OnInit {
   loading = true;
   error = '';
   coupon: Coupon | null = null;
+  couponImageSrc: string | null = null;
   showLoginRequiredModal = false;
   showAcquireModal = false;
   acquireState: 'confirm' | 'loading' | 'success' = 'confirm';
@@ -92,6 +93,18 @@ export class ViewCouponsComponent implements OnInit {
 
   getCategoryBgColor(categoryId: number): string {
     return this.categoryBgColors[categoryId] ?? '#E5E7EB';
+  }
+
+  hasCouponImage(): boolean {
+    return !!this.couponImageSrc;
+  }
+
+  getCouponImageSrc(): string {
+    return this.couponImageSrc ?? '';
+  }
+
+  onCouponImageError(): void {
+    this.couponImageSrc = null;
   }
 
   getPriceBadgeLabel(coupon: Coupon): string {
@@ -207,6 +220,7 @@ export class ViewCouponsComponent implements OnInit {
     this.error = '';
     this.isCouponAlreadyAcquired = false;
     this.companySocialLinks = null;
+    this.couponImageSrc = null;
 
     this.couponService.getPublicCouponById(id).pipe(
       take(1),
@@ -217,6 +231,7 @@ export class ViewCouponsComponent implements OnInit {
         if (!this.coupon) {
           this.error = 'No se encontró el cupón.';
         } else {
+          this.loadCouponImage(Number(this.coupon.id));
           this.checkIfCouponAlreadyAcquired(Number(this.coupon.id));
           this.loadCompanySocialLinks(Number(this.coupon.id));
         }
@@ -226,6 +241,35 @@ export class ViewCouponsComponent implements OnInit {
       error: () => {
         this.error = 'No se pudo cargar el cupón en este momento.';
         this.loading = false;
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  private loadCouponImage(couponId: number): void {
+    if (!Number.isFinite(couponId) || couponId <= 0) {
+      this.couponImageSrc = null;
+      return;
+    }
+
+    this.couponService.getPublicCouponImagesByIds([couponId]).pipe(
+      take(1),
+      timeout(15000)
+    ).subscribe({
+      next: (images) => {
+        const imageData = images.find((image) => Number(image.id) === couponId);
+        if (!imageData?.image_base64) {
+          this.couponImageSrc = null;
+          this.cdr.detectChanges();
+          return;
+        }
+
+        const mime = this.normalizeMimeType(imageData.image_mime_type);
+        this.couponImageSrc = this.toDataUrl(imageData.image_base64, mime || 'image/jpeg');
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.couponImageSrc = null;
         this.cdr.detectChanges();
       }
     });
@@ -277,6 +321,17 @@ export class ViewCouponsComponent implements OnInit {
   private formatNumber(value: number): string {
     if (Number.isInteger(value)) return value.toString();
     return value.toFixed(2).replace(/\.?0+$/, '');
+  }
+
+  private toDataUrl(base64: string, mimeType: string): string {
+    if (!base64) return '';
+    if (base64.startsWith('data:')) return base64;
+    return `data:${mimeType};base64,${base64}`;
+  }
+
+  private normalizeMimeType(mimeType: string | null | undefined): string {
+    if (!mimeType) return '';
+    return String(mimeType).replace(/^"+|"+$/g, '').trim().toLowerCase();
   }
 
   async onAcquireCoupon(): Promise<void> {

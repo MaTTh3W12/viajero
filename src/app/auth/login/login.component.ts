@@ -123,8 +123,8 @@ export class LoginComponent implements OnInit {
 
   closeInactiveCompanyModal(): void {
     this.showInactiveCompanyModal = false;
-    this.redirectingToKeycloak = true;
-    this.auth.keycloakLogin();
+    this.redirectingToKeycloak = false;
+    this.router.navigateByUrl('/');
   }
 
   private showInactiveCompanyState(source: 'query_param_guard' | 'post_login_validation'): void {
