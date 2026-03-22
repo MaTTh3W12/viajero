@@ -1,4 +1,4 @@
-<div *ngIf="redirectingToKeycloak" class="min-h-screen bg-white flex items-center justify-center p-6">
+<div *ngIf="!showInactiveCompanyModal" class="min-h-screen bg-white flex items-center justify-center p-6">
   <div class="text-center">
     <svg class="animate-spin h-10 w-10 text-[#1A2440] mb-4 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
       <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"></path>
@@ -7,198 +7,21 @@
   </div>
 </div>
 
-<ng-container *ngIf="!redirectingToKeycloak">
-<!-- Outer white container -->
-<div class="min-h-screen bg-white flex items-center justify-center p-0 md:p-6 lg:p-8 font-sans">
+<div *ngIf="showInactiveCompanyModal" class="fixed inset-0 z-[12000] flex items-center justify-center bg-white px-4">
+  <div class="w-full max-w-[520px] rounded-[28px] bg-white p-7 shadow-2xl">
+    <h3 class="text-center text-2xl font-semibold text-[#1A2440]">Cuenta de empresa inactiva</h3>
+    <p class="mt-4 text-center text-[15px] leading-relaxed text-[#44506A]">
+      Tu cuenta de empresa aún no está activa. Contacte a un administrador para activar su cuenta.
+    </p>
 
-  <!-- Inner rounded container with background image -->
-  <div class="relative w-full max-w-[2000px] min-h-screen md:min-h-[860px] rounded-none md:rounded-[3rem] overflow-hidden bg-cover bg-center flex flex-col items-center justify-center shadow-none md:shadow-2xl" style="background-image: url('assets/img/fondo_login.jpg');">
-
-    <!-- Blue Overlay -->
-    <div class="absolute inset-0 bg-[#2563EB] bg-opacity-80"></div>
-
-    <!-- Main Content Container -->
-    <div class="relative z-10 w-full flex flex-col items-center justify-center px-4 pt-8 pb-4 md:flex-grow">
-
-      <!-- Login Card -->
-      <div class="bg-white rounded-[2.5rem] p-8 md:p-10 w-full max-w-[500px] shadow-2xl flex flex-col items-center md:my-0 relative">
-
-        <!-- Content Wrapper -->
-        <div class="w-full flex flex-col items-center transition-opacity duration-300" [class.opacity-40]="loggingIn || loginSuccess || loginError" [class.pointer-events-none]="loggingIn || loginSuccess || loginError">
-          <!-- Logo -->
-          <div class="mb-6">
-            <a routerLink="/" class="inline-block" aria-label="Ir a inicio">
-              <img src="assets/img/logo.png" alt="ViajeroSV" class="h-18 md:h-16 w-auto cursor-pointer" />
-            </a>
-          </div>
-
-          <!-- Headings -->
-          <div class="text-center mb-6 md:mb-8">
-            <h1 class="text-[#538CFF] text-4xl md:text-6xl font-medium mb-1">Bienvenido</h1>
-            <h2 class="text-[#111E60] text-2xl md:text-4xl font-medium">Iniciar sesión</h2>
-          </div>
-
-          <!-- Keycloak (Usuario final) -->
-          <div class="w-full mb-6">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <button
-                type="button"
-                (click)="loginKeycloak()"
-                class="w-full bg-[#0E225C] hover:bg-[#0B1B4B] text-white rounded-full py-3 font-semibold text-sm transition-all active:scale-95">
-                Login usuario final
-              </button>
-              <button
-                type="button"
-                (click)="registerKeycloakUser()"
-                class="w-full bg-[#4F8CFF] hover:bg-[#3A78F0] text-white rounded-full py-3 font-semibold text-sm transition-all active:scale-95">
-                Registrarse usuario final
-              </button>
-            </div>
-          </div>
-
-          <!-- Form -->
-          <form (ngSubmit)="onSubmit()" class="w-full space-y-5">
-
-            <!-- Username / Email Field -->
-            <div class="space-y-2">
-              <label class="block text-sm font-medium text-gray-700 ml-1">Correo electrónico</label>
-              <input
-                type="email"
-                [(ngModel)]="username"
-                (input)="onInputChange()"
-                name="username"
-                required
-                placeholder="Ingresar correo electrónico"
-                class="w-full bg-[#f0f4f8] rounded-xl px-5 py-4 text-sm focus:outline-none focus:ring-2 transition-colors"
-                [ngClass]="{
-                  'border border-rose-500 text-rose-900 placeholder-rose-400 focus:ring-rose-500 bg-rose-50': showValidation,
-                  'border-none text-gray-700 placeholder-gray-400 focus:ring-blue-400': !showValidation
-                }"
-              />
-              <!-- Validation Alert -->
-              <div *ngIf="showValidation" class="flex items-center text-rose-600 text-sm font-medium ml-1">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 mr-1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                </svg>
-                Correo no válido.
-              </div>
-            </div>
-
-            <!-- Password Field -->
-            <div class="space-y-2">
-              <label class="block text-sm font-medium text-gray-700 ml-1">Contraseña</label>
-              <input
-                type="password"
-                [(ngModel)]="password"
-                (input)="onInputChange()"
-                name="password"
-                required
-                placeholder="**********"
-                class="w-full bg-[#f0f4f8] rounded-xl px-5 py-4 text-sm focus:outline-none focus:ring-2 transition-colors"
-                [ngClass]="{
-                  'border border-rose-500 text-rose-900 placeholder-rose-400 focus:ring-rose-500 bg-rose-50': showValidation,
-                  'border-none text-gray-700 placeholder-gray-400 focus:ring-blue-400': !showValidation
-                }"
-              />
-              <!-- Validation Alert -->
-              <div *ngIf="showValidation" class="flex items-center text-rose-600 text-sm font-medium ml-1">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-4 h-4 mr-1.5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-                </svg>
-                Contraseña incorrecta.
-              </div>
-            </div>
-
-            <!-- Error Message -->
-            <div *ngIf="errorMessage" class="text-sm text-rose-600 bg-rose-50 border border-rose-100 rounded-lg px-3 py-2">
-              {{ errorMessage }}
-            </div>
-
-            <!-- Submit Button -->
-            <div class="pt-4">
-              <button
-                type="submit"
-                [disabled]="loggingIn"
-                class="w-full bg-[#5B95FF] hover:bg-blue-600 text-white rounded-full py-3.5 font-semibold text-lg shadow-lg shadow-blue-500/30 transition-all transform active:scale-95"
-              >
-                Iniciar sesión
-              </button>
-            </div>
-
-          </form>
-
-          <!-- Forgot Password Link -->
-          <div class="mt-6 text-center">
-            <p class="text-xs text-gray-600">
-              ¿Olvidaste tu contraseña? <a href="#" class="text-[#5B95FF] hover:underline">Recuperar contraseña</a>
-            </p>
-          </div>
-        </div>
-
-        <!-- Loading Overlay -->
-        <div *ngIf="loggingIn" class="absolute inset-0 flex flex-col items-center justify-center z-10">
-          <svg class="animate-spin h-10 w-10 text-black mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"></path>
-          </svg>
-          <div class="text-center">
-            <h3 class="text-2xl font-normal text-[#1A2440] mb-2">Validando credenciales...</h3>
-            <p class="text-base font-normal text-[#1A2440]">Por favor no cierres esta ventana.</p>
-          </div>
-        </div>
-        <!-- Success Overlay -->
-        <div *ngIf="loginSuccess" class="absolute inset-0 flex flex-col items-center justify-center z-10 px-8">
-          <!-- Green Check Circle Icon -->
-          <div class="mb-2 text-[#155724]">
-             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M8 12l2.5 2.5 5.5 -5.5" />
-            </svg>
-          </div>
-
-          <h3 class="text-2xl font-semibold text-[#1A2440] mb-6 text-center">Sesión iniciada correctamente.</h3>
-
-          <button
-            (click)="onContinue()"
-            class="w-full bg-[#5B95FF] hover:bg-blue-600 text-white rounded-full py-3.5 font-semibold text-lg shadow-lg shadow-blue-500/30 transition-all transform active:scale-95"
-          >
-           Continuar
-          </button>
-        </div>
-
-        <!-- Error Overlay -->
-        <div *ngIf="loginError" class="absolute inset-0 flex flex-col items-center justify-center z-10 px-8">
-          <!-- Red X Circle Icon -->
-          <div class="mb-2 text-rose-600">
-             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="w-14 h-14">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M15 9l-6 6" />
-              <path d="M9 9l6 6" />
-            </svg>
-          </div>
-
-          <h3 class="text-2xl font-semibold text-[#1A2440] mb-6 text-center">Credenciales incorrectas</h3>
-
-          <button
-            (click)="closeError()"
-            class="w-full bg-[#5B95FF] hover:bg-blue-600 text-white rounded-full py-3.5 font-semibold text-lg shadow-lg shadow-blue-500/30 transition-all transform active:scale-95"
-          >
-           Intentar de nuevo
-          </button>
-        </div>
-      </div>
+    <div class="mt-7 flex justify-center">
+      <button
+        type="button"
+        (click)="closeInactiveCompanyModal()"
+        class="rounded-full bg-[#5B95FF] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#3F7BFF] active:scale-95"
+      >
+        Entendido
+      </button>
     </div>
-
-    <!-- Footer -->
-    <div class="relative z-10 w-full text-center pb-8 md:pb-12 mt-6 md:mt-0">
-      <div class="flex flex-col items-center justify-center gap-2">
-         <!-- Government Logo -->
-         <img src="assets/icons/Gobierno_de_EL_SALVADOR.png" alt="Gobierno de El Salvador" class="h-14 md:h-16 object-contain mb-1" />
-         <!-- Ministry Text -->
-         <p class="text-white text-sm font-medium">Ministerio de relaciones exteriores</p>
-      </div>
-    </div>
-
   </div>
 </div>
-
-</ng-container>
