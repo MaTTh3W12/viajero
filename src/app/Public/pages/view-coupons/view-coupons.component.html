@@ -11,7 +11,11 @@
       <div class="md:hidden max-w-[360px] mx-auto">
         <div class="bg-white rounded-[24px] shadow-sm border border-[#E6ECF8] overflow-hidden">
           <div class="relative h-[230px]">
-            <img src="assets/img/card1.png" [alt]="coupon.title" class="w-full h-full object-cover" />
+            @if (hasCouponImage()) {
+              <img [src]="getCouponImageSrc()" [alt]="coupon.title" (error)="onCouponImageError()" class="w-full h-full object-cover" />
+            } @else {
+              <div class="w-full h-full bg-[#EAF0FF]"></div>
+            }
             <div class="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-6 bg-white rounded-b-full"></div>
           </div>
 
@@ -180,7 +184,11 @@
         <aside>
           <div class="bg-white rounded-[28px] shadow-sm border border-[#E6ECF8] overflow-hidden">
             <div class="relative h-[220px]">
-              <img src="assets/img/card1.png" [alt]="coupon.title" class="w-full h-full object-cover" />
+              @if (hasCouponImage()) {
+                <img [src]="getCouponImageSrc()" [alt]="coupon.title" (error)="onCouponImageError()" class="w-full h-full object-cover" />
+              } @else {
+                <div class="w-full h-full bg-[#EAF0FF]"></div>
+              }
               <div class="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-6 bg-white rounded-b-full"></div>
             </div>
 
