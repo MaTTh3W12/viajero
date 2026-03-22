@@ -44,6 +44,10 @@ interface HandleKeycloakRedirectOptions {
   cleanUrl?: string;
 }
 
+interface LogoutOptions {
+  preserveIdTokenHint?: boolean;
+}
+
 
 interface HasuraJwtClaims {
   'x-hasura-role'?: string;
@@ -71,6 +75,7 @@ const KC_CLIENT_KEY = 'kc_client';
 const KC_RETURN_URL_KEY = 'viajero_kc_return_url';
 const KC_ACTIVE_SESSION_KEY = 'viajero_kc_active';
 const KC_ID_TOKEN_HINT_KEY = 'viajero_kc_id_token_hint';
+const KC_FORCE_LOGOUT_ON_NEXT_LOGIN_KEY = 'viajero_kc_force_logout_on_next_login';
 
 const KC_CLIENTS = {
   login: 'viajero-frontend',
@@ -210,7 +215,7 @@ export class AuthService {
     return safeUser;
   }
 
-  logout(): void {
+  logout(options: LogoutOptions = {}): void {
     this.clearTokenExpiryTimer();
     this._token.next(null);
     this._user.next(null);
@@ -219,7 +224,9 @@ export class AuthService {
 
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(KC_ACTIVE_SESSION_KEY);
-    localStorage.removeItem(KC_ID_TOKEN_HINT_KEY);
+    if (!options.preserveIdTokenHint) {
+      localStorage.removeItem(KC_ID_TOKEN_HINT_KEY);
+    }
     sessionStorage.removeItem(STORAGE_KEY);
     sessionStorage.removeItem(KC_TOKEN_KEY);
     sessionStorage.removeItem(KC_ROLE_KEY);
@@ -299,16 +306,25 @@ export class AuthService {
       // Si hay una sesión SSO activa de otro usuario/rol (ej: empresa),
       // cerrarla primero para evitar que Keycloak reutilice esa sesión.
       const hadActiveSession = localStorage.getItem(KC_ACTIVE_SESSION_KEY);
-      if (hadActiveSession) {
+      const forceLogoutOnNextLogin = localStorage.getItem(KC_FORCE_LOGOUT_ON_NEXT_LOGIN_KEY) === '1';
+      if (forceLogoutOnNextLogin) {
+        localStorage.removeItem(KC_FORCE_LOGOUT_ON_NEXT_LOGIN_KEY);
+      }
+
+      if (hadActiveSession || forceLogoutOnNextLogin) {
         const idTokenHint = localStorage.getItem(KC_ID_TOKEN_HINT_KEY) ?? undefined;
         localStorage.removeItem(KC_ACTIVE_SESSION_KEY);
-        console.info('[AUTH] Sesión SSO previa detectada. Cerrando antes de nuevo login...');
         this.kc.logoutAndRedirectTo('/login', idTokenHint);
         return;
       }
     }
 
     this.kc.login();
+  }
+
+  markSsoResetOnNextLogin(): void {
+    if (!this.isBrowser()) return;
+    localStorage.setItem(KC_FORCE_LOGOUT_ON_NEXT_LOGIN_KEY, '1');
   }
 
   keycloakRegisterUser(): void {
@@ -320,7 +336,8 @@ export class AuthService {
   }
 
   keycloakLogout(): void {
-    const idTokenHint = this.getKeycloakToken()?.id_token;
+    const idTokenHint = this.getKeycloakToken()?.id_token
+      ?? (this.isBrowser() ? (localStorage.getItem(KC_ID_TOKEN_HINT_KEY) ?? undefined) : undefined);
     const clientId = this.isBrowser() ? (sessionStorage.getItem(KC_CLIENT_KEY) ?? undefined) : undefined;
     this.logout();
     if (this.isBrowser()) {
@@ -404,7 +421,6 @@ export class AuthService {
     const user = this.getKeycloakUser();
 
     if (!token) {
-      console.warn('[AUTH] completeKeycloakUserProfile aborted: missing token');
       return false;
     }
 
@@ -472,7 +488,6 @@ export class AuthService {
     const user = this.getKeycloakUser();
 
     if (!token) {
-      console.warn('[AUTH] completeKeycloakCompanyProfile aborted: missing token');
       return false;
     }
 
@@ -525,7 +540,7 @@ export class AuthService {
 
       return true;
     } catch (error) {
-      console.error('[AUTH] Error completing company profile in Hasura', error);
+      console.error('Error completing company profile in Hasura', error);
       return false;
     }
   }
@@ -581,14 +596,6 @@ export class AuthService {
     sessionStorage.setItem(KC_ROLE_KEY, chosenRoleRaw);
 
     const normalizedRole = this.normalizeRole(chosenRoleRaw);
-
-    console.info(
-      '[AUTH] Rol resuelto →',
-      'JWT roles:', allTokenRoles,
-      '| Hasura role:', hasuraRole ?? '(vacío)',
-      '| Rol elegido:', chosenRoleRaw,
-      '| Normalizado:', normalizedRole
-    );
 
     const fullName = [payload.given_name, payload.family_name]
       .filter((value): value is string => !!value)
@@ -792,41 +799,16 @@ export class AuthService {
     const token = accessToken ?? this.getKeycloakToken()?.access_token ?? this._token.value;
     const currentUser = this._user.value;
     const role = String(currentUser?.role ?? '').toLowerCase();
-    const tokenPreview = token ? `${token.slice(0, 12)}...` : '(sin token)';
-
-    console.info(
-      '[AUTH][COMPANY_ACTIVE] Inicio validación',
-      '| role:', role || '(vacío)',
-      '| email:', currentUser?.email ?? '(sin email)',
-      '| token:', tokenPreview
-    );
 
     // Permitir flujo legacy/local sin bloqueo cuando no hay token de Keycloak.
     if (!token || !currentUser || (role !== 'empresa' && role !== 'company')) {
-      console.warn(
-        '[AUTH][COMPANY_ACTIVE] Se omite validación estricta',
-        '| token?', Boolean(token),
-        '| currentUser?', Boolean(currentUser),
-        '| role válido empresa?', role === 'empresa' || role === 'company'
-      );
       return true;
     }
 
     try {
       const profile = await this.getCurrentProfileFromHasura(token);
       await this.applyProfileToCurrentUser(profile, token);
-      const isActive = this.isCompanyProfileActive(profile);
-
-      console.info(
-        '[AUTH][COMPANY_ACTIVE] Resultado perfil',
-        '| profile.id:', profile?.id ?? '(null)',
-        '| active:', profile?.active ?? '(null)',
-        '| company_profile_completed:', profile?.company_profile_completed ?? '(null)',
-        '| company_status_value:', profile?.company_status_value ?? '(null)',
-        '| isActive:', isActive
-      );
-
-      return isActive;
+      return this.isCompanyProfileActive(profile);
     } catch (error) {
       console.error('Error validating company active status', error);
       return true;
@@ -1045,7 +1027,6 @@ export class AuthService {
     const exp = Number(payload?.exp);
 
     if (!Number.isFinite(exp)) {
-      console.warn('[AUTH] access token sin claim exp; no se programa auto-logout');
       return;
     }
 

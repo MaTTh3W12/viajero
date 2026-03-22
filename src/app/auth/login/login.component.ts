@@ -51,34 +51,16 @@ export class LoginComponent implements OnInit {
       const isUserRole = appRole === 'usuario' || appRole === 'user';
       const isAdminRole = appRole === 'admin';
 
-      console.info(
-        '[LOGIN][POST_REDIRECT]',
-        '| username:', currentUser?.username ?? '(sin username)',
-        '| email:', currentUser?.email ?? '(sin email)',
-        '| role:', appRole || '(vacío)',
-        '| isEmpresaRole:', isEmpresaRole
-      );
-
       if (isEmpresaRole) {
         const needsProfileCompletion = await this.auth.companyProfileNeedsCompletion();
-        console.info('[LOGIN][COMPANY] companyProfileNeedsCompletion =>', needsProfileCompletion);
         if (needsProfileCompletion) {
           this.router.navigateByUrl('/register?type=company');
           return;
         }
 
         const isCompanyActive = await this.auth.companyAccountIsActive();
-        console.info('[LOGIN][COMPANY] companyAccountIsActive =>', isCompanyActive);
         if (!isCompanyActive) {
           this.showInactiveCompanyState('post_login_validation');
-          return;
-        }
-      }
-
-      if (isUserRole) {
-        const needsProfileCompletion = await this.auth.userProfileNeedsCompletion();
-        if (needsProfileCompletion) {
-          this.router.navigateByUrl('/register?type=user');
           return;
         }
       }
@@ -93,13 +75,6 @@ export class LoginComponent implements OnInit {
         this.router.navigateByUrl(returnUrl);
         return;
       }
-
-      console.info(
-        '[LOGIN] Redirigiendo post-login →',
-        'usuario:', currentUser?.username,
-        '| email:', currentUser?.email,
-        '| rol:', appRole
-      );
 
       if (isEmpresaRole) {
         this.router.navigateByUrl('/companies/dashboard');
@@ -122,6 +97,9 @@ export class LoginComponent implements OnInit {
   }
 
   closeInactiveCompanyModal(): void {
+    // Seguridad adicional: al confirmar, limpiar cualquier residuo de sesión local.
+    this.auth.logout({ preserveIdTokenHint: true });
+    this.auth.markSsoResetOnNextLogin();
     this.showInactiveCompanyModal = false;
     this.redirectingToKeycloak = false;
     this.router.navigateByUrl('/');
@@ -129,13 +107,12 @@ export class LoginComponent implements OnInit {
 
   private showInactiveCompanyState(source: 'query_param_guard' | 'post_login_validation'): void {
     this.ngZone.run(() => {
-      // Cuenta de empresa inactiva: no dejamos sesión local iniciada en la app.
-      this.auth.logout();
+      // Cuenta de empresa inactiva: limpiar sesión local sin perder id_token_hint para logout SSO silencioso.
+      this.auth.logout({ preserveIdTokenHint: true });
+      this.auth.markSsoResetOnNextLogin();
       this.redirectingToKeycloak = false;
       this.loggingIn = false;
       this.showInactiveCompanyModal = true;
-      console.info('[LOGIN][COMPANY] Sesión local limpiada por cuenta inactiva');
-      console.info('[LOGIN][COMPANY] Modal inactiva mostrado desde:', source);
       this.cdr.detectChanges();
     });
   }

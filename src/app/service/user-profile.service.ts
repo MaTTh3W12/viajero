@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, catchError, map, of, switchMap, tap, throwError } from 'rxjs';
+import { Observable, catchError, map, of, switchMap, throwError } from 'rxjs';
 
 declare global {
   interface Window {
@@ -259,10 +259,6 @@ const DEFAULT_HASURA_ENDPOINT = 'https://api.grupoavanza.work/v1/graphql';
   providedIn: 'root',
 })
 export class UserProfileService {
-  private supportsCompanyLegalNameField: boolean | null = null;
-  private supportsLegacyDescriptionField: boolean | null = null;
-  private supportsCompanyPhoneField: boolean | null = null;
-
   constructor(private http: HttpClient) {}
 
   private get endpoint(): string {
@@ -972,18 +968,6 @@ export class UserProfileService {
       where: primaryWhere,
       order_by: [{ created_at: 'desc' }]
     }).pipe(
-      tap((result) => {
-        const row = result.rows[0];
-        console.info(
-          '[PROFILE][COMPANY] primaryWhere result',
-          '| rows:', result.rows.length,
-          '| first.id:', row?.id ?? '(null)',
-          '| first.active:', row?.active ?? '(null)',
-          '| first.status:', row?.statusValue ?? '(null)',
-          '| email filter:', normalizedEmail || '(vacío)',
-          '| companyName filter:', normalizedCompanyName || '(vacío)'
-        );
-      }),
       switchMap((result) => {
         const primaryProfile = this.mapCompanyListItemToProfile(result.rows[0] ?? null);
         if (primaryProfile) {
@@ -996,18 +980,6 @@ export class UserProfileService {
           where: fallbackWhere,
           order_by: [{ created_at: 'desc' }]
         }).pipe(
-          tap((fallbackResult) => {
-            const row = fallbackResult.rows[0];
-            console.info(
-              '[PROFILE][COMPANY] fallbackWhere result',
-              '| rows:', fallbackResult.rows.length,
-              '| first.id:', row?.id ?? '(null)',
-              '| first.active:', row?.active ?? '(null)',
-              '| first.status:', row?.statusValue ?? '(null)',
-              '| email filter:', normalizedEmail || '(vacío)',
-              '| companyName filter:', normalizedCompanyName || '(vacío)'
-            );
-          }),
           map((fallbackResult) => this.mapCompanyListItemToProfile(fallbackResult.rows[0] ?? null))
         );
       })
@@ -1043,334 +1015,51 @@ export class UserProfileService {
   }
 
   getCurrentUserProfile(token: string, email?: string | null): Observable<UserCompanyProfile | null> {
-    type QueryOptions = {
-      phoneAlias: boolean;
-      legalNameSource: 'company_legal_name' | 'description' | 'none';
-      descriptionSource: 'company_description' | 'description';
-    };
-    type QueryPlan = {
-      query: string;
-      options: QueryOptions;
-    };
-
-    const buildProfileFields = (options: QueryOptions): string => `
+    const userFields = `
       id
-      company_commercial_name
-      company_nit
-      company_email
-      ${options.phoneAlias ? 'company_phone: phone' : 'company_phone'}
-      company_mobile
-      company_logo_url
-      ${
-        options.legalNameSource === 'company_legal_name'
-          ? 'company_legal_name'
-          : options.legalNameSource === 'description'
-            ? 'company_legal_name: description'
-            : ''
-      }
-      ${options.descriptionSource === 'description' ? 'company_description: description' : 'company_description'}
-      company_address
-      company_category
-      company_website
-      company_map_url
-      company_facebook
-      company_instagram
-      company_twitter
-      company_youtube
-      company_profile_completed
-      country
-      city
       first_name
       last_name
       document_id
       document_type_id
       phone
+      country
+      city
       email
     `;
 
-    const buildQueryByEmail = (queryName: string, options: QueryOptions): string => `
-      query ${queryName}($email: String!) {
-        viajerosv_users(where: { email: { _eq: $email } }, limit: 1) {
-          ${buildProfileFields(options)}
-        }
-      }
-    `;
-
-    const buildCurrentQuery = (queryName: string, options: QueryOptions): string => `
-      query ${queryName} {
-        viajerosv_users(limit: 1) {
-          ${buildProfileFields(options)}
-        }
-      }
-    `;
-
-    const keepSupportedQueries = (plans: QueryPlan[]): string[] => {
-      return plans.map((plan) => plan.query);
-    };
-
     if (email) {
-      const plans: QueryPlan[] = [
-        {
-          query: buildQueryByEmail('GetUserByEmail', {
-            phoneAlias: false,
-            legalNameSource: 'company_legal_name',
-            descriptionSource: 'company_description',
-          }),
-          options: {
-            phoneAlias: false,
-            legalNameSource: 'company_legal_name',
-            descriptionSource: 'company_description',
-          },
-        },
-        {
-          query: buildQueryByEmail('GetUserByEmailPhoneAlias', {
-            phoneAlias: true,
-            legalNameSource: 'company_legal_name',
-            descriptionSource: 'company_description',
-          }),
-          options: {
-            phoneAlias: true,
-            legalNameSource: 'company_legal_name',
-            descriptionSource: 'company_description',
-          },
-        },
-        {
-          query: buildQueryByEmail('GetUserByEmailLegacyNoLegal', {
-            phoneAlias: false,
-            legalNameSource: 'none',
-            descriptionSource: 'company_description',
-          }),
-          options: {
-            phoneAlias: false,
-            legalNameSource: 'none',
-            descriptionSource: 'company_description',
-          },
-        },
-        {
-          query: buildQueryByEmail('GetUserByEmailPhoneAliasLegacyNoLegal', {
-            phoneAlias: true,
-            legalNameSource: 'none',
-            descriptionSource: 'company_description',
-          }),
-          options: {
-            phoneAlias: true,
-            legalNameSource: 'none',
-            descriptionSource: 'company_description',
-          },
-        },
-        {
-          query: buildQueryByEmail('GetUserByEmailLegacyLegal', {
-            phoneAlias: false,
-            legalNameSource: 'description',
-            descriptionSource: 'company_description',
-          }),
-          options: {
-            phoneAlias: false,
-            legalNameSource: 'description',
-            descriptionSource: 'company_description',
-          },
-        },
-        {
-          query: buildQueryByEmail('GetUserByEmailPhoneAliasLegacyLegal', {
-            phoneAlias: true,
-            legalNameSource: 'description',
-            descriptionSource: 'company_description',
-          }),
-          options: {
-            phoneAlias: true,
-            legalNameSource: 'description',
-            descriptionSource: 'company_description',
-          },
-        },
-        {
-          query: buildQueryByEmail('GetUserByEmailLegacyDescriptionOnly', {
-            phoneAlias: false,
-            legalNameSource: 'description',
-            descriptionSource: 'description',
-          }),
-          options: {
-            phoneAlias: false,
-            legalNameSource: 'description',
-            descriptionSource: 'description',
-          },
-        },
-        {
-          query: buildQueryByEmail('GetUserByEmailPhoneAliasLegacyDescriptionOnly', {
-            phoneAlias: true,
-            legalNameSource: 'description',
-            descriptionSource: 'description',
-          }),
-          options: {
-            phoneAlias: true,
-            legalNameSource: 'description',
-            descriptionSource: 'description',
-          },
-        },
-      ];
+      const queryByEmail = `
+        query GetUserByEmail($email: String!) {
+          viajerosv_users(where: { email: { _eq: $email } }, limit: 1) {
+            ${userFields}
+          }
+        }
+      `;
 
-      const queries = keepSupportedQueries(plans);
-
-      return this.executeProfileQueryWithFallback<GetUserByEmailVariables>(token, queries, { email }).pipe(
+      return this.executeOperation<GetCurrentUserProfileData, GetUserByEmailVariables>(
+        token,
+        queryByEmail,
+        { email }
+      ).pipe(
         map((data) => data.viajerosv_users[0] ?? null)
       );
     }
 
-    const plans: QueryPlan[] = [
-      {
-        query: buildCurrentQuery('GetCurrentUserProfile', {
-          phoneAlias: false,
-          legalNameSource: 'company_legal_name',
-          descriptionSource: 'company_description',
-        }),
-        options: {
-          phoneAlias: false,
-          legalNameSource: 'company_legal_name',
-          descriptionSource: 'company_description',
-        },
-      },
-      {
-        query: buildCurrentQuery('GetCurrentUserProfilePhoneAlias', {
-          phoneAlias: true,
-          legalNameSource: 'company_legal_name',
-          descriptionSource: 'company_description',
-        }),
-        options: {
-          phoneAlias: true,
-          legalNameSource: 'company_legal_name',
-          descriptionSource: 'company_description',
-        },
-      },
-      {
-        query: buildCurrentQuery('GetCurrentUserProfileLegacyNoLegal', {
-          phoneAlias: false,
-          legalNameSource: 'none',
-          descriptionSource: 'company_description',
-        }),
-        options: {
-          phoneAlias: false,
-          legalNameSource: 'none',
-          descriptionSource: 'company_description',
-        },
-      },
-      {
-        query: buildCurrentQuery('GetCurrentUserProfilePhoneAliasLegacyNoLegal', {
-          phoneAlias: true,
-          legalNameSource: 'none',
-          descriptionSource: 'company_description',
-        }),
-        options: {
-          phoneAlias: true,
-          legalNameSource: 'none',
-          descriptionSource: 'company_description',
-        },
-      },
-      {
-        query: buildCurrentQuery('GetCurrentUserProfileLegacyLegal', {
-          phoneAlias: false,
-          legalNameSource: 'description',
-          descriptionSource: 'company_description',
-        }),
-        options: {
-          phoneAlias: false,
-          legalNameSource: 'description',
-          descriptionSource: 'company_description',
-        },
-      },
-      {
-        query: buildCurrentQuery('GetCurrentUserProfilePhoneAliasLegacyLegal', {
-          phoneAlias: true,
-          legalNameSource: 'description',
-          descriptionSource: 'company_description',
-        }),
-        options: {
-          phoneAlias: true,
-          legalNameSource: 'description',
-          descriptionSource: 'company_description',
-        },
-      },
-      {
-        query: buildCurrentQuery('GetCurrentUserProfileLegacyDescriptionOnly', {
-          phoneAlias: false,
-          legalNameSource: 'description',
-          descriptionSource: 'description',
-        }),
-        options: {
-          phoneAlias: false,
-          legalNameSource: 'description',
-          descriptionSource: 'description',
-        },
-      },
-      {
-        query: buildCurrentQuery('GetCurrentUserProfilePhoneAliasLegacyDescriptionOnly', {
-          phoneAlias: true,
-          legalNameSource: 'description',
-          descriptionSource: 'description',
-        }),
-        options: {
-          phoneAlias: true,
-          legalNameSource: 'description',
-          descriptionSource: 'description',
-        },
-      },
-    ];
+    const queryCurrentUser = `
+      query GetCurrentUserProfile {
+        viajerosv_users(limit: 1) {
+          ${userFields}
+        }
+      }
+    `;
 
-    const queries = keepSupportedQueries(plans);
-
-    return this.executeProfileQueryWithFallback<Record<string, never>>(token, queries, {}).pipe(
+    return this.executeOperation<GetCurrentUserProfileData, Record<string, never>>(
+      token,
+      queryCurrentUser,
+      {}
+    ).pipe(
       map((data) => data.viajerosv_users[0] ?? null)
     );
-  }
-
-  private executeProfileQueryWithFallback<TVariables extends object>(
-    token: string,
-    queries: string[],
-    variables: TVariables
-  ): Observable<GetCurrentUserProfileData> {
-    if (!queries.length) {
-      return throwError(() => new Error('No se definieron queries para obtener el perfil de usuario.'));
-    }
-
-    let request$ = this.executeOperation<GetCurrentUserProfileData, TVariables>(
-      token,
-      queries[0],
-      variables
-    ).pipe(
-      catchError((error) => {
-        this.markUnsupportedProfileFields(error);
-        return throwError(() => error);
-      })
-    );
-
-    for (const query of queries.slice(1)) {
-      request$ = request$.pipe(
-        catchError(() =>
-          this.executeOperation<GetCurrentUserProfileData, TVariables>(token, query, variables).pipe(
-            catchError((error) => {
-              this.markUnsupportedProfileFields(error);
-              return throwError(() => error);
-            })
-          )
-        )
-      );
-    }
-
-    return request$;
-  }
-
-  private markUnsupportedProfileFields(error: unknown): void {
-    const message = error instanceof Error ? error.message : String(error ?? '');
-
-    if (message.includes("field 'company_legal_name' not found")) {
-      this.supportsCompanyLegalNameField = false;
-    }
-
-    if (message.includes("field 'description' not found")) {
-      this.supportsLegacyDescriptionField = false;
-    }
-
-    if (message.includes("field 'company_phone' not found")) {
-      this.supportsCompanyPhoneField = false;
-    }
   }
 
   private updateCompanyAccessState(
