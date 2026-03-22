@@ -210,6 +210,11 @@ export class TopbarComponent implements OnInit, OnDestroy {
     return normalizedRole === 'empresa' || normalizedRole === 'company';
   }
 
+  get showProfileOption(): boolean {
+    const normalizedRole = String(this.role ?? '').toLowerCase();
+    return normalizedRole !== 'admin';
+  }
+
   private loadUnreadMessagesCount(): void {
     if (this.isLoadingUnreadCount) {
       return;
