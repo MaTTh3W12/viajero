@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, catchError, map, throwError } from 'rxjs';
+import { Observable, catchError, map, of, switchMap, tap, throwError } from 'rxjs';
 
 declare global {
   interface Window {
@@ -108,6 +108,8 @@ interface CompanyAccessMutationData {
 
 export interface UserCompanyProfile {
   id: number | string;
+  active?: boolean | null;
+  company_status_value?: string | null;
   company_commercial_name: string | null;
   company_nit?: string | null;
   company_email?: string | null;
@@ -955,20 +957,60 @@ export class UserProfileService {
       });
     }
 
-    const where = {
+    const companyRoleCandidates = ['COMPANY', 'company', 'Company', 'EMPRESA', 'empresa'];
+    const primaryWhere = {
       _and: [
-        { role: { _eq: 'COMPANY' } },
+        { role: { _in: companyRoleCandidates } },
         { _or: orConditions }
       ]
     };
+    const fallbackWhere = { _or: orConditions };
 
     return this.getCompaniesPaged(token, {
       limit: 1,
       offset: 0,
-      where,
+      where: primaryWhere,
       order_by: [{ created_at: 'desc' }]
     }).pipe(
-      map((result) => this.mapCompanyListItemToProfile(result.rows[0] ?? null))
+      tap((result) => {
+        const row = result.rows[0];
+        console.info(
+          '[PROFILE][COMPANY] primaryWhere result',
+          '| rows:', result.rows.length,
+          '| first.id:', row?.id ?? '(null)',
+          '| first.active:', row?.active ?? '(null)',
+          '| first.status:', row?.statusValue ?? '(null)',
+          '| email filter:', normalizedEmail || '(vacío)',
+          '| companyName filter:', normalizedCompanyName || '(vacío)'
+        );
+      }),
+      switchMap((result) => {
+        const primaryProfile = this.mapCompanyListItemToProfile(result.rows[0] ?? null);
+        if (primaryProfile) {
+          return of(primaryProfile);
+        }
+
+        return this.getCompaniesPaged(token, {
+          limit: 1,
+          offset: 0,
+          where: fallbackWhere,
+          order_by: [{ created_at: 'desc' }]
+        }).pipe(
+          tap((fallbackResult) => {
+            const row = fallbackResult.rows[0];
+            console.info(
+              '[PROFILE][COMPANY] fallbackWhere result',
+              '| rows:', fallbackResult.rows.length,
+              '| first.id:', row?.id ?? '(null)',
+              '| first.active:', row?.active ?? '(null)',
+              '| first.status:', row?.statusValue ?? '(null)',
+              '| email filter:', normalizedEmail || '(vacío)',
+              '| companyName filter:', normalizedCompanyName || '(vacío)'
+            );
+          }),
+          map((fallbackResult) => this.mapCompanyListItemToProfile(fallbackResult.rows[0] ?? null))
+        );
+      })
     );
   }
 
@@ -1471,6 +1513,8 @@ export class UserProfileService {
 
     return {
       id: row.id,
+      active: row.active ?? null,
+      company_status_value: row.statusValue ?? null,
       company_commercial_name: row.companyCommercialName ?? null,
       company_nit: row.companyNit ?? null,
       company_email: row.companyEmail ?? null,

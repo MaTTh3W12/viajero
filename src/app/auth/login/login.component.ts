@@ -1,35 +1,35 @@
 import { Component, ChangeDetectorRef, NgZone, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { Router, RouterModule } from '@angular/router';
-import { AuthService, AuthUser } from '../../service/auth.service';
+import { ActivatedRoute, Router } from '@angular/router';
+import { AuthService } from '../../service/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule],
+  imports: [CommonModule],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.css']
 })
 export class LoginComponent implements OnInit {
   redirectingToKeycloak = true;
-  username = '';
-  password = '';
-  errorMessage = '';
   loggingIn = false;
-  loginSuccess = false;
-  loginError = false;
-  showValidation = false;
-  private currentUser: AuthUser | undefined;
+  showInactiveCompanyModal = false;
 
   constructor(
     private auth: AuthService,
     private router: Router,
+    private route: ActivatedRoute,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone
   ) { }
 
   async ngOnInit(): Promise<void> {
+    const companyInactiveFromGuard = this.route.snapshot.queryParamMap.get('companyInactive') === '1';
+    if (companyInactiveFromGuard) {
+      this.showInactiveCompanyState('query_param_guard');
+      return;
+    }
+
     this.loggingIn = true;
     const handled = await this.auth.handleKeycloakRedirect({ upsert: false });
     this.loggingIn = false;
@@ -51,10 +51,26 @@ export class LoginComponent implements OnInit {
       const isUserRole = appRole === 'usuario' || appRole === 'user';
       const isAdminRole = appRole === 'admin';
 
+      console.info(
+        '[LOGIN][POST_REDIRECT]',
+        '| username:', currentUser?.username ?? '(sin username)',
+        '| email:', currentUser?.email ?? '(sin email)',
+        '| role:', appRole || '(vacío)',
+        '| isEmpresaRole:', isEmpresaRole
+      );
+
       if (isEmpresaRole) {
         const needsProfileCompletion = await this.auth.companyProfileNeedsCompletion();
+        console.info('[LOGIN][COMPANY] companyProfileNeedsCompletion =>', needsProfileCompletion);
         if (needsProfileCompletion) {
           this.router.navigateByUrl('/register?type=company');
+          return;
+        }
+
+        const isCompanyActive = await this.auth.companyAccountIsActive();
+        console.info('[LOGIN][COMPANY] companyAccountIsActive =>', isCompanyActive);
+        if (!isCompanyActive) {
+          this.showInactiveCompanyState('post_login_validation');
           return;
         }
       }
@@ -105,62 +121,22 @@ export class LoginComponent implements OnInit {
     this.auth.keycloakLogin();
   }
 
-  onSubmit() {
-    this.errorMessage = '';
-    this.loggingIn = true;
-    this.loginSuccess = false;
-    this.loginError = false;
-    this.showValidation = false;
-
-    setTimeout(() => {
-      const user = this.auth.login(this.username.trim(), this.password.trim());
-
-      this.loggingIn = false;
-
-      if (!user) {
-        this.loginError = true;
-        this.cdr.detectChanges();
-        return;
-      }
-
-      this.currentUser = user;
-      this.loginSuccess = true;
-      this.cdr.detectChanges();
-    }, 1500);
-  }
-
-  closeError() {
-    this.loginError = false;
-    this.showValidation = true;
-  }
-
-  onInputChange() {
-    if (this.showValidation) {
-      this.showValidation = false;
-    }
-  }
-
-  onContinue() {
-    if (!this.currentUser) return;
-
-    if (this.currentUser.role === 'admin') {
-      this.router.navigateByUrl('/admin/dashboard');
-    } else if (this.currentUser.role === 'empresa') {
-      this.router.navigateByUrl('/companies/dashboard');
-    } else {
-      this.router.navigateByUrl('/');
-    }
-  }
-
-  loginKeycloak(): void {
+  closeInactiveCompanyModal(): void {
+    this.showInactiveCompanyModal = false;
+    this.redirectingToKeycloak = true;
     this.auth.keycloakLogin();
   }
 
-  registerKeycloakUser(): void {
-    this.auth.keycloakRegisterUser();
-  }
-
-  registerKeycloakCompany(): void {
-    this.auth.keycloakRegisterCompany();
+  private showInactiveCompanyState(source: 'query_param_guard' | 'post_login_validation'): void {
+    this.ngZone.run(() => {
+      // Cuenta de empresa inactiva: no dejamos sesión local iniciada en la app.
+      this.auth.logout();
+      this.redirectingToKeycloak = false;
+      this.loggingIn = false;
+      this.showInactiveCompanyModal = true;
+      console.info('[LOGIN][COMPANY] Sesión local limpiada por cuenta inactiva');
+      console.info('[LOGIN][COMPANY] Modal inactiva mostrado desde:', source);
+      this.cdr.detectChanges();
+    });
   }
 }

@@ -788,6 +788,51 @@ export class AuthService {
     }
   }
 
+  async companyAccountIsActive(accessToken?: string): Promise<boolean> {
+    const token = accessToken ?? this.getKeycloakToken()?.access_token ?? this._token.value;
+    const currentUser = this._user.value;
+    const role = String(currentUser?.role ?? '').toLowerCase();
+    const tokenPreview = token ? `${token.slice(0, 12)}...` : '(sin token)';
+
+    console.info(
+      '[AUTH][COMPANY_ACTIVE] Inicio validación',
+      '| role:', role || '(vacío)',
+      '| email:', currentUser?.email ?? '(sin email)',
+      '| token:', tokenPreview
+    );
+
+    // Permitir flujo legacy/local sin bloqueo cuando no hay token de Keycloak.
+    if (!token || !currentUser || (role !== 'empresa' && role !== 'company')) {
+      console.warn(
+        '[AUTH][COMPANY_ACTIVE] Se omite validación estricta',
+        '| token?', Boolean(token),
+        '| currentUser?', Boolean(currentUser),
+        '| role válido empresa?', role === 'empresa' || role === 'company'
+      );
+      return true;
+    }
+
+    try {
+      const profile = await this.getCurrentProfileFromHasura(token);
+      await this.applyProfileToCurrentUser(profile, token);
+      const isActive = this.isCompanyProfileActive(profile);
+
+      console.info(
+        '[AUTH][COMPANY_ACTIVE] Resultado perfil',
+        '| profile.id:', profile?.id ?? '(null)',
+        '| active:', profile?.active ?? '(null)',
+        '| company_profile_completed:', profile?.company_profile_completed ?? '(null)',
+        '| company_status_value:', profile?.company_status_value ?? '(null)',
+        '| isActive:', isActive
+      );
+
+      return isActive;
+    } catch (error) {
+      console.error('Error validating company active status', error);
+      return true;
+    }
+  }
+
   async userProfileNeedsCompletion(accessToken?: string): Promise<boolean> {
     const token = accessToken ?? this.getKeycloakToken()?.access_token ?? this._token.value;
     const currentUser = this._user.value;
@@ -855,6 +900,49 @@ export class AuthService {
       profile.phone?.trim() &&
       profile.country?.trim()
     );
+  }
+
+  private isCompanyProfileActive(profile: UserCompanyProfile | null): boolean {
+    if (!profile) return false;
+
+    if (profile.active === true) return true;
+    if (profile.active === false) return false;
+
+    const normalizedStatus = this.normalizeStatusValue(profile.company_status_value);
+    if (!normalizedStatus) {
+      return profile.company_profile_completed === true;
+    }
+
+    if (
+      normalizedStatus.includes('activ') ||
+      normalizedStatus.includes('aprobad') ||
+      normalizedStatus === 'approved' ||
+      normalizedStatus === 'active'
+    ) {
+      return true;
+    }
+
+    if (
+      normalizedStatus.includes('inactiv') ||
+      normalizedStatus.includes('rechaz') ||
+      normalizedStatus.includes('suspend') ||
+      normalizedStatus.includes('bloque') ||
+      normalizedStatus.includes('pend') ||
+      normalizedStatus.includes('review') ||
+      normalizedStatus.includes('waiting')
+    ) {
+      return false;
+    }
+
+    return profile.company_profile_completed === true;
+  }
+
+  private normalizeStatusValue(value: string | null | undefined): string {
+    return String(value ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
   }
 
   private async applyProfileToCurrentUser(profile: UserCompanyProfile | null, accessToken?: string): Promise<void> {

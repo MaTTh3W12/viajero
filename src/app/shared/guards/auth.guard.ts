@@ -31,9 +31,17 @@ export const empresaGuard: CanActivateFn = (_route, state) => {
   }
 
   if (auth.isEmpresa()) {
-    return auth.companyProfileNeedsCompletion().then((needsProfileCompletion) => {
+    return auth.companyProfileNeedsCompletion().then(async (needsProfileCompletion) => {
+      console.info('[GUARD][EMPRESA] companyProfileNeedsCompletion =>', needsProfileCompletion);
       if (needsProfileCompletion) {
         router.navigate(['/register'], { queryParams: { type: 'company' } });
+        return false;
+      }
+
+      const isCompanyActive = await auth.companyAccountIsActive();
+      console.info('[GUARD][EMPRESA] companyAccountIsActive =>', isCompanyActive);
+      if (!isCompanyActive) {
+        router.navigate(['/login'], { queryParams: { companyInactive: '1' } });
         return false;
       }
 
