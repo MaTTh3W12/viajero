@@ -43,6 +43,7 @@ type CompanyModalResult = 'success' | 'error';
 })
 export class CompaniesComponent implements OnDestroy {
   private readonly destroyRef = inject(DestroyRef);
+  private readonly companyNameMaxLength = 25;
   allCompanies: Company[] = [];
   companies: Company[] = [];
   loadingCompanies = false;
@@ -79,7 +80,12 @@ export class CompaniesComponent implements OnDestroy {
 
   tableConfig: DataTableConfig<Company> = {
     columns: [
-      { key: 'empresa', label: 'Empresa' },
+      {
+        key: 'empresa',
+        label: 'Empresa',
+        render: (value) => this.truncateCompanyName(value),
+        tooltip: (value) => this.getCompanyNameTooltip(value),
+      },
       { key: 'categoria', label: 'Categoría' },
       { key: 'coreo', label: 'Contacto' },
       { key: 'estado', label: 'Estado', type: 'badge' },
@@ -250,6 +256,19 @@ export class CompaniesComponent implements OnDestroy {
 
   goToLastPage(): void {
     this.goToPage(this.totalPages);
+  }
+
+  truncateCompanyName(value: unknown): string {
+    const normalized = String(value ?? '').trim();
+    if (!normalized) return '-';
+    if (normalized.length <= this.companyNameMaxLength) return normalized;
+    return `${normalized.slice(0, this.companyNameMaxLength).trimEnd()}...`;
+  }
+
+  getCompanyNameTooltip(value: unknown): string | null {
+    const normalized = String(value ?? '').trim();
+    if (!normalized || normalized.length <= this.companyNameMaxLength) return null;
+    return normalized;
   }
 
   private loadCompaniesForCurrentMode(): void {

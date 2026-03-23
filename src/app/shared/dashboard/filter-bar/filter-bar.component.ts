@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, Renderer2, Inject, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, EventEmitter, Input, Output, Renderer2, Inject, ChangeDetectorRef, NgZone, OnChanges, SimpleChanges } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -89,11 +89,12 @@ const FILTER_BG_MAP: Record<UserRole, Record<FilterVariant, string>> = {
   templateUrl: './filter-bar.component.html',
   styleUrl: './filter-bar.component.css',
 })
-export class FilterBarComponent {
+export class FilterBarComponent implements OnChanges {
   @Input({ required: true }) variant!: FilterVariant;
   @Input({ required: true }) role!: UserRole;
   @Input() companiesCategoryOptions: string[] = [];
   @Input() couponCategoryOptions: string[] = [];
+  @Input() clearCouponCodeVersion = 0;
   @Output() createCoupon = new EventEmitter<{
     titulo: string;
     cantidad: number | null;
@@ -357,6 +358,12 @@ export class FilterBarComponent {
 
   get statisticsTotalLabel(): string {
     return `${this.statisticsTarget.canjeados}/${this.statisticsTarget.publicados}`;
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['clearCouponCodeVersion'] && !changes['clearCouponCodeVersion'].firstChange) {
+      this.clearCouponCodeState();
+    }
   }
 
   get statisticsHistoryBars(): Array<{ monthLabel: string; redemptions: number; height: number; active: boolean }> {
@@ -725,6 +732,16 @@ export class FilterBarComponent {
   closeRedeemSuccess(): void {
     this.redeemSuccess = false;
     this.closeQrModal();
+  }
+
+  private clearCouponCodeState(): void {
+    this.couponCode = '';
+    this.scannedCouponCode = '';
+    this.scannerError = null;
+    this.showConfirmRedeemModal = false;
+    this.redeemingCoupon = false;
+    this.redeemSuccess = false;
+    this.showQrModal = false;
   }
 
   private buildCouponNotFoundMessage(): string {

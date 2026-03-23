@@ -5,6 +5,7 @@
 <app-filter-bar
   variant="canje-cupones"
   [role]="role"
+  [clearCouponCodeVersion]="filterBarResetVersion"
   (scanQr)="openQrModal()"
   (validateCode)="handleValidateCode($event)">
 </app-filter-bar>
@@ -165,7 +166,7 @@
   <!-- Footer botones -->
   @if (selectedCoupon) {
   <div class="flex justify-center gap-4 mt-8">
-    <button (click)="cancelRedeemFlow()"
+    <button (click)="clearSelection()"
       class="w-full rounded-full border border-[#0E225C] px-6 py-3 text-[#0E225C] transition hover:bg-[#e9edfb] md:w-auto">
       Cancelar
     </button>

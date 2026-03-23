@@ -34,6 +34,7 @@ interface CouponRedeemViewModel {
 export class CanjeCuponesComponent implements OnInit {
   coupons: Coupon[] = [];
   selectedCoupon: CouponRedeemViewModel | null = null;
+  filterBarResetVersion = 0;
   couponLookupError = '';
   redeemError = '';
   showCouponModal = false;
@@ -68,6 +69,7 @@ export class CanjeCuponesComponent implements OnInit {
     this.selectedCoupon = null;
     this.couponLookupError = '';
     this.redeemError = '';
+    this.filterBarResetVersion++;
     this.cancelRedeemFlow();
   }
   ngOnInit(): void {
