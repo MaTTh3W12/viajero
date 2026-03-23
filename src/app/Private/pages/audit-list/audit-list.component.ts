@@ -31,22 +31,29 @@ interface AuditTableRow {
 export class AuditListComponent implements OnInit, OnDestroy {
   readonly pageSize = 10;
 
-  readonly actionTypeOptions: SelectOption[] = [
+  actionTypeOptions: SelectOption[] = [
     { label: 'Todos', value: '' },
     { label: 'Registro', value: 'USER_REGISTERED' },
     { label: 'Registro empresa', value: 'COMPANY_REGISTERED' },
     { label: 'Aprobación', value: 'COMPANY_APPROVED' },
+    { label: 'Cambio de estado empresa', value: 'COMPANY_STATUS_CHANGED' },
     { label: 'Cupón adquirido', value: 'COUPON_ACQUIRED' },
     { label: 'Cupón canjeado', value: 'COUPON_REDEEMED' },
     { label: 'Cupón creado', value: 'COUPON_CREATED' },
     { label: 'Cupón actualizado', value: 'COUPON_UPDATED' },
-    { label: 'Desactivación', value: 'COUPON_DELETED' },
+    { label: 'Desactivación de cupón', value: 'COUPON_DELETED' },
+    { label: 'Mensaje', value: 'MESSAGE_CREATED' },
+    { label: 'Mensaje enviado', value: 'MESSAGE_SENT' },
+    { label: 'Creación de categoría', value: 'CATEGORY_CREATED' },
+    { label: 'Actualización de categoría', value: 'CATEGORY_UPDATED' },
+    { label: 'Baja de categoría', value: 'CATEGORY_DELETED' },
   ];
 
-  readonly entityOptions: SelectOption[] = [
+  entityOptions: SelectOption[] = [
     { label: 'Todas', value: '' },
     { label: 'Cupón', value: 'COUPON' },
     { label: 'Empresa', value: 'COMPANY' },
+    { label: 'Usuario', value: 'USER' },
     { label: 'Perfil de usuario', value: 'USER_PROFILE' },
     { label: 'Categoría', value: 'CATEGORY' },
     { label: 'Mensaje', value: 'MESSAGE' },
@@ -183,10 +190,16 @@ export class AuditListComponent implements OnInit, OnDestroy {
     this.selectedRow = null;
   }
 
+  openDatePicker(input: HTMLInputElement): void {
+    if (typeof input.showPicker === 'function') {
+      input.showPicker();
+    }
+    input.focus();
+  }
+
   private loadAuditLogs(): void {
     const token = this.auth.token;
     if (!token) {
-      this.rows = [];
       this.totalRows = 0;
       this.errorMessage = 'No se encontró una sesión activa.';
       return;
@@ -196,13 +209,20 @@ export class AuditListComponent implements OnInit, OnDestroy {
     this.errorMessage = '';
     this.auditSub?.unsubscribe();
 
+    const filters = this.buildWhere();
+    console.log('Filters applied:', filters);
+
     this.auditSub = this.couponService.getAuditLogsDynamic(token, {
       limit: this.pageSize,
       offset: (this.currentPage - 1) * this.pageSize,
-      where: this.buildWhere(),
+      where: filters,
     }).subscribe({
       next: (result) => {
-        this.rows = (result.rows ?? []).map((row) => this.mapRow(row));
+        console.log('Audit logs response:', result);
+          const rows = result.rows ?? [];
+          this.extendActionAndEntityOptions(rows);
+
+          this.rows = rows.map((row) => this.mapRow(row));
         this.totalRows = result.total ?? 0;
         this.loading = false;
         this.cdr.detectChanges();
@@ -268,6 +288,35 @@ export class AuditListComponent implements OnInit, OnDestroy {
     };
   }
 
+  private extendActionAndEntityOptions(rows: AuditLog[]): void {
+    if (!rows || rows.length === 0) {
+      return;
+    }
+
+    const existingActionValues = new Set(this.actionTypeOptions.map((o) => o.value));
+    const existingEntityValues = new Set(this.entityOptions.map((o) => o.value));
+
+    for (const row of rows) {
+      const actionCode = String(row.actionType ?? '').trim();
+      if (actionCode && !existingActionValues.has(actionCode)) {
+        this.actionTypeOptions.push({
+          label: this.formatActionType(actionCode),
+          value: actionCode,
+        });
+        existingActionValues.add(actionCode);
+      }
+
+      const entityCode = String(row.entity ?? '').trim();
+      if (entityCode && !existingEntityValues.has(entityCode)) {
+        this.entityOptions.push({
+          label: this.formatEntity(entityCode),
+          value: entityCode,
+        });
+        existingEntityValues.add(entityCode);
+      }
+    }
+  }
+
   private buildUserLabel(row: AuditLog): string {
     const first = row.userPublic?.firstName?.trim() ?? '';
     const last = row.userPublic?.lastName?.trim() ?? '';
@@ -315,18 +364,33 @@ export class AuditListComponent implements OnInit, OnDestroy {
 
   private formatActionType(value: string): string {
     const normalized = String(value ?? '').trim().toUpperCase();
+
     const labels: Record<string, string> = {
       USER_REGISTERED: 'Registro',
       COMPANY_REGISTERED: 'Registro empresa',
-      COMPANY_APPROVED: 'Aprobación',
       COUPON_ACQUIRED: 'Adquisición',
       COUPON_REDEEMED: 'Canje',
-      COUPON_CREATED: 'Creación',
       COUPON_UPDATED: 'Actualización',
+      COUPON_CREATED: 'Creación',
       COUPON_DELETED: 'Desactivación',
+      COMPANY_APPROVED: 'Aprobación',
+      COMPANY_STATUS_CHANGED: 'Cambio de estado',
+      MESSAGE_CREATED: 'Mensaje',
+      MESSAGE_SENT: 'Mensaje',
+      CATEGORY_CREATED: 'Creación de categoría',
+      CATEGORY_UPDATED: 'Actualización de categoría',
+      CATEGORY_DELETED: 'Baja de categoría',
     };
 
-    return labels[normalized] ?? (normalized || 'Evento');
+    if (labels[normalized]) {
+      return labels[normalized];
+    }
+
+    if (!normalized) {
+      return 'Evento';
+    }
+
+    return this.humanizeActionType(normalized);
   }
 
   private getEventBadgeClass(value: string): string {
@@ -348,16 +412,28 @@ export class AuditListComponent implements OnInit, OnDestroy {
   }
 
   private formatEntity(value: string): string {
-    const normalized = value.toUpperCase();
+    const normalized = String(value ?? '').trim().toUpperCase();
+
     const labels: Record<string, string> = {
       COUPON: 'Cupón',
+      COUPON_ACQUIRED: 'Cupón adquirido',
       COMPANY: 'Empresa',
+      USER: 'Usuario',
       USER_PROFILE: 'Perfil de usuario',
       CATEGORY: 'Categoría',
       MESSAGE: 'Mensaje',
     };
 
-    return labels[normalized] ?? (value || 'No disponible');
+    return labels[normalized] ?? (normalized ? this.humanizeActionType(normalized) : 'Entidad no disponible');
+  }
+
+  private humanizeActionType(value: string): string {
+    return value
+      .toLowerCase()
+      .split('_')
+      .filter(Boolean)
+      .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
+      .join(' ');
   }
 
 }

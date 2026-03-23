@@ -360,6 +360,20 @@ export class FilterBarComponent implements OnChanges {
     return `${this.statisticsTarget.canjeados}/${this.statisticsTarget.publicados}`;
   }
 
+  get statisticsCompanyDisplayName(): string {
+    const name = (this.statisticsTarget?.empresa ?? '').trim();
+    if (!name) {
+      return 'Sin empresa';
+    }
+
+    const maxLength = 20;
+    if (name.length <= maxLength) {
+      return name;
+    }
+
+    return name.slice(0, maxLength) + '...';
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['clearCouponCodeVersion'] && !changes['clearCouponCodeVersion'].firstChange) {
       this.clearCouponCodeState();

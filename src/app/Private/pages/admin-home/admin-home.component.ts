@@ -383,15 +383,11 @@ export class AdminHomeComponent implements OnInit, OnDestroy {
   }
 
   private applyCouponPerformance(rows: AdminCouponPerformance[]): void {
-    const normalizedRows = rows.length > 0
-      ? rows
-      : [{ title: 'Sin datos', redemptionCount: 0 }];
-
     this.performanceChartData = {
-      labels: normalizedRows.map((row) => row.title),
+      labels: rows.map((row) => this.truncateText(row.title, 20)),
       datasets: [
         {
-          data: normalizedRows.map((row) => row.redemptionCount),
+          data: rows.map((row) => row.redemptionCount),
           backgroundColor: '#5B8DFF',
           borderRadius: 999,
           borderSkipped: false,
@@ -399,32 +395,28 @@ export class AdminHomeComponent implements OnInit, OnDestroy {
         },
       ],
     };
+    this.cdr.markForCheck();
   }
 
   private applyCompanyShare(rows: CompanyRedemptionShare[]): void {
-    const normalizedRows = rows
-      .filter((row) => row.percentage > 0 || row.totalRedemptions > 0)
-      .slice(0, this.donutPalette.length)
-      .map((row, index) => ({
-        name: row.companyName,
-        percentage: Number(row.percentage.toFixed(1)),
-        totalRedemptions: row.totalRedemptions,
-        color: this.donutPalette[index],
-      }));
-
-    this.companyRedeemLegend = normalizedRows;
-
+    this.companyRedeemLegend = rows.map((row, index) => ({
+      name: this.truncateText(row.companyName, 20),
+      percentage: row.percentage,
+      totalRedemptions: row.totalRedemptions,
+      color: this.donutPalette[index % this.donutPalette.length],
+    }));
     this.donutChartData = {
-      labels: normalizedRows.map((row) => row.name),
+      labels: rows.map((row) => this.truncateText(row.companyName, 20)),
       datasets: [
         {
-          data: normalizedRows.length > 0 ? normalizedRows.map((row) => row.percentage) : [100],
-          backgroundColor: normalizedRows.length > 0 ? normalizedRows.map((row) => row.color) : ['#E8EEF8'],
+          data: rows.map((row) => row.percentage),
+          backgroundColor: this.donutPalette,
           borderWidth: 0,
           hoverOffset: 4,
         },
       ],
     };
+    this.cdr.markForCheck();
   }
 
   private applyAuditRows(rows: AuditLog[]): void {
@@ -550,5 +542,9 @@ export class AdminHomeComponent implements OnInit, OnDestroy {
       .filter(Boolean)
       .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
       .join(' ');
+  }
+
+  private truncateText(text: string, maxLength: number): string {
+    return text.length > maxLength ? text.slice(0, maxLength) + '...' : text;
   }
 }
