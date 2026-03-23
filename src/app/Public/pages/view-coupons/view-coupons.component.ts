@@ -70,7 +70,7 @@ export class ViewCouponsComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.route.paramMap.pipe(take(1)).subscribe((params) => {
+	this.route.paramMap.subscribe((params) => {
       const id = Number(params.get('id'));
       if (!Number.isFinite(id) || id <= 0) {
         this.loading = false;
