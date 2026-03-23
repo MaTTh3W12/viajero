@@ -105,11 +105,11 @@ export class FeaturedDealsComponent implements OnInit, OnDestroy {
   }
 
   getCouponAddress(coupon: Coupon): string {
-    return coupon.user?.company_address?.trim() || 'Dirección no disponible';
+    return coupon.user_public?.company_address?.trim() || coupon.user?.company_address?.trim() || 'Dirección no disponible';
   }
 
   getCouponCommercialName(coupon: Coupon): string {
-    return coupon.user?.company_commercial_name?.trim() || this.defaultCommercialName;
+    return coupon.user_public?.company_commercial_name?.trim() || coupon.user?.company_commercial_name?.trim() || this.defaultCommercialName;
   }
 
   getBadgeLabel(coupon: Coupon): string {

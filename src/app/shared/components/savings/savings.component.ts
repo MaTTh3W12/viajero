@@ -166,12 +166,12 @@ export class SavingsComponent implements OnInit, OnChanges {
   }
 
   getCouponAddress(coupon: Coupon): string {
-    const address = coupon.user?.company_address?.trim();
+    const address = coupon.user_public?.company_address?.trim() || coupon.user?.company_address?.trim();
     return address || this.fixedAddress;
   }
 
   getCouponCommercialName(coupon: Coupon): string {
-    const commercialName = coupon.user?.company_commercial_name?.trim();
+    const commercialName = coupon.user_public?.company_commercial_name?.trim() || coupon.user?.company_commercial_name?.trim();
     return commercialName || this.defaultCommercialName;
   }
 

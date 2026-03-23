@@ -237,8 +237,6 @@ export class HistorialCanjesComponent implements OnInit, OnDestroy {
       this.historial = rows.map((row) => this.mapToRow(row, {}));
       this.loading = false;
       this.cdr.detectChanges();
-
-      void this.enrichRowsWithUserNames(rows, token, requestId);
       return;
     } catch (error) {
       if (requestId !== this.currentRequestId) return;
@@ -255,39 +253,22 @@ export class HistorialCanjesComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async enrichRowsWithUserNames(rows: CouponAcquired[], token: string, requestId: number): Promise<void> {
-    const userIds = rows
-      .flatMap((row) => [String(row.user_id ?? ''), row.validated_by != null ? String(row.validated_by) : ''])
-      .filter((id) => !!id);
-
-    if (!userIds.length) {
-      return;
-    }
-
-    try {
-      const users = await firstValueFrom(this.couponService.getUsersBasicByIds(token, userIds).pipe(timeout(10000)));
-      if (requestId !== this.currentRequestId) return;
-
-      const usersById = users.reduce<Record<string, UserBasic>>((acc, user) => {
-        acc[String(user.id)] = user;
-        return acc;
-      }, {});
-
-      this.historial = rows.map((row) => this.mapToRow(row, usersById));
-      this.cdr.detectChanges();
-    } catch {
-      return;
-    }
-  }
-
   private mapToRow(row: CouponAcquired, usersById: Record<string, UserBasic>): HistorialCanjeRow {
     const dateSource = row.redeemed_at || row.acquired_at;
-    const user = usersById[String(row.user_id)] ?? null;
+    const user = row.user_public
+      ? {
+          id: String(row.user_public.id ?? row.user_id ?? ''),
+          first_name: row.user_public.first_name ?? null,
+          last_name: row.user_public.last_name ?? null,
+          email: row.user_public.email ?? null,
+          company_commercial_name: null,
+        }
+      : usersById[String(row.user_id)] ?? null;
     const validatedBy = row.validated_by != null ? usersById[String(row.validated_by)] ?? null : null;
 
     const usuario = this.buildUserLabel(user, String(row.user_id));
-    const responsableFromRelation = this.buildFullName(row.userByValidatedBy?.first_name, row.userByValidatedBy?.last_name)
-      || (row.userByValidatedBy?.email ?? '');
+    const responsableFromRelation = this.buildFullName(row.userPublicByValidatedBy?.first_name, row.userPublicByValidatedBy?.last_name)
+      || (row.userPublicByValidatedBy?.email ?? '');
     const responsable =
       responsableFromRelation ||
       (validatedBy ? this.buildUserLabel(validatedBy, String(row.validated_by ?? '')) : '') ||
@@ -325,7 +306,7 @@ export class HistorialCanjesComponent implements OnInit, OnDestroy {
 
     if (responsible) {
       andFilters.push({
-        userByValidatedBy: {
+        userPublicByValidatedBy: {
           _or: [
             { first_name: { _ilike: responsiblePattern } },
             { last_name: { _ilike: responsiblePattern } },

@@ -391,6 +391,7 @@ export class CouponsListComponent {
     categoriaNombre: string;
     fechaInicio: string;
     fechaFin: string;
+    cantidad: number;
     disponibles: number;
     precio?: number | null;
     descuento?: number | null;
@@ -460,6 +461,7 @@ export class CouponsListComponent {
         start_date: this.toIsoDate(payload.fechaInicio),
         end_date: this.toIsoDate(payload.fechaFin),
         stock_available: payload.disponibles,
+        stock_total: payload.cantidad,
         description: payload.descripcion || null,
         terms: payload.terminos || null,
         price: payload.precio ?? null,

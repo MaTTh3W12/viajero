@@ -118,6 +118,7 @@ export class FilterBarComponent {
     categoriaNombre: string;
     fechaInicio: string;
     fechaFin: string;
+    cantidad: number;
     disponibles: number;
     precio?: number | null;
     descuento?: number | null;
@@ -1178,6 +1179,7 @@ export class FilterBarComponent {
       categoriaNombre: categoria.name,
       fechaInicio: this.toDisplayDate(this.editForm.fechaInicio),
       fechaFin: this.toDisplayDate(this.editForm.fechaFin),
+      cantidad: this.editForm.cantidad ?? 0,
       disponibles: this.editForm.cantidad ?? 0,
       precio: this.editForm.precio,
       descuento: this.editForm.descuento,

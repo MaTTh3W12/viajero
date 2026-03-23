@@ -135,7 +135,7 @@ export class ViewCouponsComponent implements OnInit {
   }
 
   getCouponMapUrl(coupon: Coupon): string | null {
-    const rawMapUrl = coupon.user?.company_map_url?.trim() ?? '';
+    const rawMapUrl = coupon.user_public?.company_map_url?.trim() ?? coupon.user?.company_map_url?.trim() ?? '';
     if (!rawMapUrl) return null;
 
     if (/^https?:\/\//i.test(rawMapUrl)) {
@@ -150,7 +150,7 @@ export class ViewCouponsComponent implements OnInit {
   }
 
   getCouponAddress(coupon: Coupon): string {
-    const rawAddress = coupon.user?.company_address?.trim() ?? '';
+    const rawAddress = coupon.user_public?.company_address?.trim() ?? coupon.user?.company_address?.trim() ?? '';
     return rawAddress || 'Ubicación no disponible';
   }
 

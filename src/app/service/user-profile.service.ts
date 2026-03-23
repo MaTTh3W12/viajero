@@ -34,10 +34,6 @@ interface GetUserCompanyLogoData {
   viajerosv_users_with_logo_base64: UserCompanyLogo[];
 }
 
-interface GetUserByEmailVariables {
-  email: string;
-}
-
 interface GetDocumentTypesData {
   viajerosv_document_types: DocumentTypeOption[];
 }
@@ -165,6 +161,7 @@ export interface CountryOption {
 export interface GetCountriesPagedVariables {
   limit: number;
   offset: number;
+  where?: Record<string, unknown>;
   searchTerm?: string;
 }
 
@@ -700,23 +697,6 @@ export class UserProfileService {
     );
   }
 
-  getCurrentUserCompanyLogo(token: string): Observable<UserCompanyLogo | null> {
-    const query = `
-      query GetCurrentUserCompanyLogo {
-        viajerosv_users_with_logo_base64(limit: 1) {
-          id
-          company_logo_base64
-          company_logo_size
-          company_logo_mime_type
-        }
-      }
-    `;
-
-    return this.executeOperation<GetUserCompanyLogoData, Record<string, never>>(token, query, {}).pipe(
-      map((data) => data.viajerosv_users_with_logo_base64[0] ?? null)
-    );
-  }
-
   getDocumentTypes(token: string): Observable<DocumentTypeOption[]> {
     const query = `
       query GetDocumentTypes {
@@ -739,26 +719,22 @@ export class UserProfileService {
     variables: GetCountriesPagedVariables
   ): Observable<CountriesPagedResult> {
     const query = `
-      query GetCountriesPaged($limit: Int!, $offset: Int!, $searchTerm: String = "%%") {
+      query GetCountriesPaged(
+        $limit: Int!,
+        $offset: Int!,
+        $where: viajerosv_countries_bool_exp!
+      ) {
         viajerosv_countries(
           limit: $limit,
           offset: $offset,
           order_by: { name: asc },
-          where: {
-            active: { _eq: true },
-            name: { _ilike: $searchTerm }
-          }
+          where: $where
         ) {
           code
           name
           phone_code
         }
-        viajerosv_countries_aggregate(
-          where: {
-            active: { _eq: true },
-            name: { _ilike: $searchTerm }
-          }
-        ) {
+        viajerosv_countries_aggregate(where: $where) {
           aggregate {
             count
           }
@@ -766,12 +742,19 @@ export class UserProfileService {
       }
     `;
 
-    const payload: GetCountriesPagedVariables = {
-      ...variables,
-      searchTerm: variables.searchTerm ?? '%%',
+    const trimmedSearch = variables.searchTerm?.trim();
+    const payload = {
+      limit: variables.limit,
+      offset: variables.offset,
+      where: variables.where ?? {
+        _and: [
+          { active: { _eq: true } },
+          { name: { _ilike: trimmedSearch ? `%${trimmedSearch}%` : '%%' } },
+        ],
+      },
     };
 
-    return this.executeOperation<GetCountriesPagedData, GetCountriesPagedVariables>(
+    return this.executeOperation<GetCountriesPagedData, typeof payload>(
       token,
       query,
       payload
@@ -1015,6 +998,8 @@ export class UserProfileService {
   }
 
   getCurrentUserProfile(token: string, email?: string | null): Observable<UserCompanyProfile | null> {
+    void email;
+
     const userFields = `
       id
       first_name
@@ -1027,27 +1012,9 @@ export class UserProfileService {
       email
     `;
 
-    if (email) {
-      const queryByEmail = `
-        query GetUserByEmail($email: String!) {
-          viajerosv_users(where: { email: { _eq: $email } }, limit: 1) {
-            ${userFields}
-          }
-        }
-      `;
-
-      return this.executeOperation<GetCurrentUserProfileData, GetUserByEmailVariables>(
-        token,
-        queryByEmail,
-        { email }
-      ).pipe(
-        map((data) => data.viajerosv_users[0] ?? null)
-      );
-    }
-
     const queryCurrentUser = `
-      query GetCurrentUserProfile {
-        viajerosv_users(limit: 1) {
+      query GetUsers {
+        viajerosv_users(where: { role: { _eq: "USER" } }, limit: 1) {
           ${userFields}
         }
       }

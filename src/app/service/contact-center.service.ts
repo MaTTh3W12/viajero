@@ -37,10 +37,6 @@ interface GetUnreadMessagesCountData {
   };
 }
 
-interface GetUnreadMessagesCountVariables {
-  where: Record<string, unknown>;
-}
-
 interface GetMessageTypesData {
   viajerosv_message_types: ContactCenterMessageTypeRow[];
 }
@@ -132,7 +128,7 @@ export interface InsertMessageResponseVariables {
 const DEFAULT_HASURA_ENDPOINT = 'https://api.grupoavanza.work/v1/graphql';
 
 const GET_MESSAGES_QUERY = `
-  query GetMessages(
+  query GetMessagesDynamic(
     $limit: Int = 10,
     $offset: Int = 0,
     $where: viajerosv_messages_bool_exp!
@@ -233,10 +229,10 @@ const INSERT_MESSAGES_MUTATION = `
 `;
 
 const GET_UNREAD_MESSAGES_COUNT_QUERY = `
-  query GetUnreadMessagesCount(
-    $where: viajerosv_messages_bool_exp!
-  ) {
-    viajerosv_messages_aggregate(where: $where) {
+  query GetUnreadMessagesCount {
+    viajerosv_messages_aggregate(
+      where: { status: { _eq: "SENT" } }
+    ) {
       aggregate {
         count
       }
@@ -338,11 +334,22 @@ export class ContactCenterService {
     token: string,
     where: Record<string, unknown> = { status: { _eq: 'SENT' } },
   ): Observable<number> {
-    return this.executeOperation<GetUnreadMessagesCountData, GetUnreadMessagesCountVariables>(
-      token,
-      GET_UNREAD_MESSAGES_COUNT_QUERY,
-      { where },
-    ).pipe(map((data) => data.viajerosv_messages_aggregate.aggregate.count ?? 0));
+    const statusFilter = where?.['status'] as Record<string, unknown> | undefined;
+    const isDefaultUnreadFilter = String(statusFilter?.['_eq'] ?? '').trim().toUpperCase() === 'SENT';
+
+    if (isDefaultUnreadFilter) {
+      return this.executeOperation<GetUnreadMessagesCountData, Record<string, never>>(
+        token,
+        GET_UNREAD_MESSAGES_COUNT_QUERY,
+        {},
+      ).pipe(map((data) => data.viajerosv_messages_aggregate.aggregate.count ?? 0));
+    }
+
+    return this.getMessages(token, {
+      limit: 1,
+      offset: 0,
+      where,
+    }).pipe(map((data) => data.total ?? 0));
   }
 
   getMessageTypes(token: string): Observable<ContactCenterMessageTypeRow[]> {

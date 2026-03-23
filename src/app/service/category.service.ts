@@ -20,10 +20,6 @@ interface GraphQLResponse<TData> {
   errors?: GraphQLError[];
 }
 
-interface GetCategoriesData {
-  viajerosv_categories: Category[];
-}
-
 interface GetCategoriesPagedData {
   viajerosv_categories: Category[];
   viajerosv_categories_aggregate: {
@@ -115,25 +111,11 @@ export class CategoryService {
   }
 
   getCategories(token: string): Observable<Category[]> {
-    const query = `
-      query GetCategories {
-        viajerosv_categories {
-          id
-          active
-          name
-          description
-          icon
-        }
-      }
-    `;
-
-    return this.executeOperation<GetCategoriesData, Record<string, never>>(token, query, {}).pipe(
-      map((data) =>
-        (data.viajerosv_categories ?? [])
-          .map((row) => this.mapCategory(row))
-          .filter((row): row is Category => row !== null)
-      )
-    );
+    return this.getCategoriesPaged(token, {
+      limit: 500,
+      offset: 0,
+      where: {},
+    }).pipe(map((data) => data.rows));
   }
 
   getCategoriesPaged(

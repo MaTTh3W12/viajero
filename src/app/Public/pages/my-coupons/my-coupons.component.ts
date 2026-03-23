@@ -140,9 +140,9 @@ export class MyCouponsComponent implements OnInit {
     }
 
     if (this.selectedStatus === 'activo') {
-      rows = rows.filter((item) => !item.acquired.redeemed && new Date(item.coupon.end_date) >= now);
+      rows = rows.filter((item) => !item.acquired.redeemed && this.getCouponEndDateTime(item) >= now.getTime());
     } else if (this.selectedStatus === 'vencido') {
-      rows = rows.filter((item) => !item.acquired.redeemed && new Date(item.coupon.end_date) < now);
+      rows = rows.filter((item) => !item.acquired.redeemed && this.getCouponEndDateTime(item) < now.getTime());
     } else if (this.selectedStatus === 'canjeado') {
       rows = rows.filter((item) => item.acquired.redeemed);
     }
@@ -155,7 +155,7 @@ export class MyCouponsComponent implements OnInit {
         rows = rows.filter((item) => {
           const sourceDate = this.selectedStatus === 'canjeado'
             ? (item.acquired.redeemed_at || item.acquired.acquired_at)
-            : item.coupon.end_date;
+            : this.getCouponEndDate(item);
 
           const itemTime = this.toRangeDateTime(sourceDate, 'start');
           if (itemTime == null) return false;
@@ -467,9 +467,9 @@ export class MyCouponsComponent implements OnInit {
 
     if (currentUserId && ownerId && currentUserId !== ownerId) return false;
     if (item.acquired.redeemed) return false;
-    const endDate = new Date(item.coupon.end_date);
-    if (Number.isNaN(endDate.getTime())) return false;
-    return endDate >= new Date();
+    const endDateTime = this.getCouponEndDateTime(item);
+    if (!Number.isFinite(endDateTime)) return false;
+    return endDateTime >= Date.now();
   }
 
   private async loadCoupons(): Promise<void> {
@@ -538,7 +538,8 @@ export class MyCouponsComponent implements OnInit {
 
       this.coupons = acquiredRows
         .map((acquired) => {
-          const coupon = couponById.get(Number(acquired.coupon_id));
+          const coupon = couponById.get(Number(acquired.coupon_id))
+            ?? this.createCouponFallbackFromAcquired(acquired);
           if (!coupon) return null;
           return { coupon, acquired } as MyCouponItem;
         })
@@ -704,6 +705,43 @@ export class MyCouponsComponent implements OnInit {
     }
 
     return new Date(year, month - 1, day, 0, 0, 0, 0).getTime();
+  }
+
+  private getCouponEndDate(item: MyCouponItem): string {
+    return item.coupon.end_date || item.acquired.coupon?.end_date || '';
+  }
+
+  private getCouponEndDateTime(item: MyCouponItem): number {
+    const endDate = this.getCouponEndDate(item);
+    const parsed = new Date(endDate);
+    if (Number.isNaN(parsed.getTime())) {
+      return Number.POSITIVE_INFINITY;
+    }
+
+    return parsed.getTime();
+  }
+
+  private createCouponFallbackFromAcquired(acquired: CouponAcquired): Coupon | null {
+    if (!acquired.coupon) return null;
+
+    return {
+      id: Number(acquired.coupon_id),
+      user_id: acquired.user_id,
+      category_id: 0,
+      auto_published: false,
+      published: true,
+      title: acquired.coupon.title?.trim() || acquired.unique_code,
+      end_date: acquired.coupon.end_date ?? '',
+      start_date: '',
+      stock_available: null,
+      stock_total: null,
+      price: null,
+      price_discount: acquired.coupon.price_discount != null ? String(acquired.coupon.price_discount) : null,
+      description: acquired.coupon.description ?? null,
+      terms: null,
+      created_at: acquired.acquired_at,
+      updated_at: acquired.acquired_at,
+    };
   }
 
   private async loadImagesForCoupons(token: string, rows: Coupon[]): Promise<void> {
