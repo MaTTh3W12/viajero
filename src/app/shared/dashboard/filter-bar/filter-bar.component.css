@@ -44,3 +44,21 @@
   height: 100% !important;
   object-fit: cover !important;
 }
+
+.statistics-history-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #9cbef2 transparent;
+}
+
+.statistics-history-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.statistics-history-scroll::-webkit-scrollbar-thumb {
+  background: #9cbef2;
+  border-radius: 9999px;
+}
+
+.statistics-history-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}

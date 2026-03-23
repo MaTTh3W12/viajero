@@ -123,6 +123,7 @@ export class FilterBarComponent implements OnChanges {
     disponibles: number;
     precio?: number | null;
     descuento?: number | null;
+    autoPublicado?: boolean;
     estado: string;
     terminos: string;
     image?: string | null;
@@ -241,6 +242,7 @@ export class FilterBarComponent implements OnChanges {
     fechaFin: '',
     categoria: null as number | null,
     terminos: '',
+    autoPublicado: false,
     estado: '',
     image: null as string | null,
     imageName: '',
@@ -379,6 +381,23 @@ export class FilterBarComponent implements OnChanges {
         active: index === activeIndex,
       };
     });
+  }
+
+  get statisticsHistoryUsesCompactLayout(): boolean {
+    return this.statisticsMonthlyHistory.length >= 8;
+  }
+
+  get statisticsHistoryUsesCompactLabels(): boolean {
+    return this.statisticsMonthlyHistory.length >= 10;
+  }
+
+  get statisticsHistoryBarMinWidthPx(): number {
+    return this.statisticsHistoryUsesCompactLayout ? 34 : 42;
+  }
+
+  get statisticsHistoryChartMinWidthPx(): number {
+    const count = Math.max(this.statisticsMonthlyHistory.length, 1);
+    return count * (this.statisticsHistoryUsesCompactLayout ? 44 : 54);
   }
 
   selectAuditType(option: string): void {
@@ -1115,6 +1134,7 @@ export class FilterBarComponent implements OnChanges {
     disponibles: number;
     precio?: number | null;
     descuento?: number | null;
+    autoPublicado?: boolean;
     estado: string;
     terminos?: string;
     image?: string | null;
@@ -1143,6 +1163,7 @@ export class FilterBarComponent implements OnChanges {
       fechaFin: this.toISODate(coupon.fechaFin),
       categoria: categoriaId != null ? Number(categoriaId) : null,
       terminos: coupon.terminos ?? '',
+      autoPublicado: coupon.autoPublicado ?? false,
       estado: coupon.estado,
       image: coupon.image ?? null,
       imageName: coupon.imageName ?? this.getDefaultImageName(coupon.imageMime),
@@ -1200,6 +1221,7 @@ export class FilterBarComponent implements OnChanges {
       disponibles: this.editForm.cantidad ?? 0,
       precio: this.editForm.precio,
       descuento: this.editForm.descuento,
+      autoPublicado: this.editForm.autoPublicado,
       estado: this.editForm.estado,
       terminos: this.editForm.terminos,
       image: this.editForm.image,
@@ -1419,7 +1441,9 @@ export class FilterBarComponent implements OnChanges {
     adquiridos: number;
     canjeados: number;
   }): void {
-    this.statisticsMonthlyHistory = this.buildRecentMonthsWindow(4).map((item) => ({
+    const couponMonthsWindow = this.buildCouponMonthsWindow(coupon.fechaInicio, coupon.fechaFin);
+
+    this.statisticsMonthlyHistory = couponMonthsWindow.map((item) => ({
       monthLabel: item.monthLabel,
       redemptions: 0,
     }));
@@ -1469,7 +1493,10 @@ export class FilterBarComponent implements OnChanges {
   }
 
   updateCouponStatisticsHistory(rows: Array<{ monthName: string; redemptionYear?: number; totalRedemptions: number }>): void {
-    const recentMonths = this.buildRecentMonthsWindow(4);
+    const couponMonthsWindow = this.buildCouponMonthsWindow(
+      this.statisticsTarget.fechaInicio,
+      this.statisticsTarget.fechaFin
+    );
     const redemptionsByMonth = new Map<string, number>();
 
     for (const row of rows ?? []) {
@@ -1485,7 +1512,7 @@ export class FilterBarComponent implements OnChanges {
       redemptionsByMonth.set(key, next);
     }
 
-    this.statisticsMonthlyHistory = recentMonths.map((item) => ({
+    this.statisticsMonthlyHistory = couponMonthsWindow.map((item) => ({
       monthLabel: item.monthLabel,
       redemptions: redemptionsByMonth.get(this.buildMonthKey(item.year, item.month)) ?? 0,
     }));
@@ -1826,6 +1853,44 @@ export class FilterBarComponent implements OnChanges {
     }
 
     return result;
+  }
+
+  private buildCouponMonthsWindow(
+    startDate: string,
+    endDate: string
+  ): Array<{ year: number; month: number; monthLabel: string }> {
+    const normalizedStart = this.toISODate(startDate);
+    const normalizedEnd = this.toISODate(endDate);
+    const start = normalizedStart ? new Date(`${normalizedStart}T00:00:00`) : null;
+    const end = normalizedEnd ? new Date(`${normalizedEnd}T00:00:00`) : null;
+
+    if (
+      !start ||
+      !end ||
+      Number.isNaN(start.getTime()) ||
+      Number.isNaN(end.getTime()) ||
+      start.getTime() > end.getTime()
+    ) {
+      return this.buildRecentMonthsWindow(4);
+    }
+
+    const monthLabels = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+    const cursor = new Date(start.getFullYear(), start.getMonth(), 1);
+    const endCursor = new Date(end.getFullYear(), end.getMonth(), 1);
+    const result: Array<{ year: number; month: number; monthLabel: string }> = [];
+
+    while (cursor.getTime() <= endCursor.getTime()) {
+      const month = cursor.getMonth() + 1;
+      result.push({
+        year: cursor.getFullYear(),
+        month,
+        monthLabel: monthLabels[month - 1] ?? '---',
+      });
+
+      cursor.setMonth(cursor.getMonth() + 1);
+    }
+
+    return result.length > 0 ? result : this.buildRecentMonthsWindow(4);
   }
 
   private buildMonthKey(year: number, month: number): string {

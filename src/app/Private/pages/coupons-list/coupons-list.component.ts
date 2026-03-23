@@ -395,6 +395,7 @@ export class CouponsListComponent {
     disponibles: number;
     precio?: number | null;
     descuento?: number | null;
+    autoPublicado?: boolean;
     estado: string;
     terminos: string;
     image?: string | null;
@@ -466,6 +467,7 @@ export class CouponsListComponent {
         terms: payload.terminos || null,
         price: payload.precio ?? null,
         price_discount: payload.descuento ?? null,
+        auto_published: payload.autoPublicado ?? false,
         published: payload.estado === 'Publicado',
         ...(payload.image ? { image: payload.image } : {}),
       };
@@ -499,6 +501,7 @@ export class CouponsListComponent {
       descripcion: row.rawDescripcion ?? row.descripcion,
       precio: row.precio ?? null,
       descuento: row.descuento ?? null,
+      autoPublicado: row.autoPublicado ?? false,
       image: row.imagePreview ?? null,
       imageMime: this.normalizeMimeType(row.imageMimeType),
       imageName: this.normalizeMimeType(row.imageMimeType).startsWith('application/pdf') ? 'Archivo actual.pdf' : 'Imagen actual',
@@ -1091,6 +1094,7 @@ export class CouponsListComponent {
       vigencia: `${fechaInicio} - ${fechaFin}`,
       estado,
       categoriaId: row.category_id,
+      autoPublicado: row.auto_published ?? false,
       terminos: row.terms ?? '',
       rawDescripcion: row.description ?? '',
       precio: this.toFiniteNumber(row.price),

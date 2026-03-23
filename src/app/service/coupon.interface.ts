@@ -13,6 +13,7 @@ export interface Coupon {
   vigencia?: string;
   estado: string;
   categoriaId?: number;
+  autoPublicado?: boolean;
   terminos?: string;
   rawDescripcion?: string;
   precio?: number | null;

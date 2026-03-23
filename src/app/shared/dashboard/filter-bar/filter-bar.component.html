@@ -1265,15 +1265,45 @@
 
             <div class="rounded-[28px] bg-[#EEF2FB] p-4 md:p-5 w-full max-w-[350px] mx-auto">
               <div class="text-center text-[#1A2A64] text-[20px] md:text-[22px] leading-none mb-3">Historial de canjes</div>
-              <div class="grid grid-cols-4 gap-2 md:gap-3 items-end h-[145px] md:h-[155px]">
-                @for (item of statisticsHistoryBars; track item.monthLabel) {
-                  <div class="flex flex-col items-center justify-end h-full">
-                    <div class="w-10 md:w-11 rounded-t-2xl" [ngClass]="item.active ? 'bg-[#9CBEF2]' : 'bg-[#C6D8F8]'"
-                      [style.height.%]="item.height"></div>
-                    <div class="mt-2 text-[16px] md:text-[18px] leading-none text-[#538CFF] font-semibold">{{ item.redemptions }}</div>
-                    <div class="text-[#1A2A64] text-[13px] md:text-[14px] leading-none font-semibold tracking-wide mt-1">{{ item.monthLabel }}</div>
-                  </div>
-                }
+              <div class="statistics-history-scroll overflow-x-auto overflow-y-hidden pb-2 -mx-1 px-1">
+                <div
+                  class="grid gap-2 md:gap-3 items-end h-[145px] md:h-[155px]"
+                  [style.grid-template-columns]="'repeat(' + (statisticsHistoryBars.length || 1) + ', minmax(' + statisticsHistoryBarMinWidthPx + 'px, 1fr))'"
+                  [style.min-width.px]="statisticsHistoryChartMinWidthPx"
+                >
+                  @for (item of statisticsHistoryBars; track $index) {
+                    <div class="flex flex-col items-center justify-end h-full min-w-0">
+                      <div
+                        class="w-full rounded-t-2xl"
+                        [class.max-w-[46px]]="!statisticsHistoryUsesCompactLayout"
+                        [class.md:max-w-[50px]]="!statisticsHistoryUsesCompactLayout"
+                        [class.max-w-[38px]]="statisticsHistoryUsesCompactLayout"
+                        [class.md:max-w-[42px]]="statisticsHistoryUsesCompactLayout"
+                        [ngClass]="item.active ? 'bg-[#9CBEF2]' : 'bg-[#C6D8F8]'"
+                        [style.height.%]="item.height"
+                      ></div>
+                      <div
+                        class="mt-2 leading-none text-[#538CFF] font-semibold"
+                        [class.text-[16px]]="!statisticsHistoryUsesCompactLayout"
+                        [class.md:text-[18px]]="!statisticsHistoryUsesCompactLayout"
+                        [class.text-[14px]]="statisticsHistoryUsesCompactLayout"
+                        [class.md:text-[16px]]="statisticsHistoryUsesCompactLayout"
+                      >
+                        {{ item.redemptions }}
+                      </div>
+                      <div
+                        class="text-[#1A2A64] leading-none font-semibold mt-1 text-center whitespace-nowrap"
+                        [class.text-[13px]]="!statisticsHistoryUsesCompactLabels"
+                        [class.md:text-[14px]]="!statisticsHistoryUsesCompactLabels"
+                        [class.tracking-wide]="!statisticsHistoryUsesCompactLabels"
+                        [class.text-[11px]]="statisticsHistoryUsesCompactLabels"
+                        [class.md:text-[12px]]="statisticsHistoryUsesCompactLabels"
+                      >
+                        {{ item.monthLabel }}
+                      </div>
+                    </div>
+                  }
+                </div>
               </div>
             </div>
           </div>
