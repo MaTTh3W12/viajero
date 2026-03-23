@@ -37,6 +37,18 @@ interface GetCouponsData {
   };
 }
 
+interface GetCouponsByIdsData {
+  viajerosv_coupons: Coupon[];
+}
+
+interface GetCouponsWithStatusByIdsData {
+  viajerosv_coupons_with_status: CouponHighlightRow[];
+}
+
+interface GetUsersBasicByIdsData {
+  viajerosv_users: UserBasic[];
+}
+
 interface GetHomeFeaturedCouponsAggregateData {
   aggregate: {
     count: number;
@@ -45,6 +57,55 @@ interface GetHomeFeaturedCouponsAggregateData {
 
 interface GetCouponImageData {
   viajerosv_coupons_with_image_base64: CouponImagePreview[];
+}
+
+interface CouponWithImagePublicSnapshotRow {
+  id: number | string;
+  image_base64?: string | null;
+  image_mime_type?: string | null;
+  image_size?: number | null;
+  title?: string | null;
+  description?: string | null;
+  price?: string | number | null;
+  price_discount?: string | number | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  user?: {
+    company_commercial_name?: string | null;
+    company_address?: string | null;
+    company_map_url?: string | null;
+  } | null;
+}
+
+interface GetCouponWithImagePublicSnapshotsData {
+  viajerosv_coupons_with_image_base64: CouponWithImagePublicSnapshotRow[];
+}
+
+interface PublicCouponCompanyRow {
+  id: number;
+  user_public: {
+    id: string | number;
+    company_commercial_name: string | null;
+    company_address: string | null;
+    company_map_url: string | null;
+  } | null;
+}
+
+interface GetPublicCouponCompaniesByIdsData {
+  viajerosv_coupons: PublicCouponCompanyRow[];
+}
+
+interface PublicUserCompanyRow {
+  id: string;
+  first_name: string | null;
+  last_name: string | null;
+  company_commercial_name: string | null;
+  company_address: string | null;
+  company_map_url: string | null;
+}
+
+interface GetUsersPublicByIdsData {
+  viajerosv_users_public: PublicUserCompanyRow[];
 }
 
 interface InsertCouponData {
@@ -84,8 +145,73 @@ interface GetCouponsAcquiredData {
   };
 }
 
+interface CouponAcquiredWithImageRow {
+  id: number | string;
+  unique_code: string;
+  acquired_at: string;
+  redeemed: boolean;
+  redeemed_at: string | null;
+  user_id: number | string;
+  validated_by: number | string | null;
+  user_public?: {
+    id: string | number;
+    first_name: string | null;
+    last_name: string | null;
+    email: string | null;
+  } | null;
+  userPublicByValidatedBy?: {
+    id?: string | number;
+    first_name: string | null;
+    last_name: string | null;
+    company_commercial_name?: string | null;
+    company_address?: string | null;
+    company_map_url?: string | null;
+    company_facebook?: string | null;
+    company_instagram?: string | null;
+    company_youtube?: string | null;
+    company_twitter?: string | null;
+    company_website?: string | null;
+  } | null;
+  coupon?: {
+    id?: number | string | null;
+    user_id?: number | string | null;
+    category_id?: number | null;
+    active?: boolean | null;
+    title?: string | null;
+    description?: string | null;
+    price?: string | number | null;
+    price_discount?: string | number | null;
+    start_date?: string | null;
+    end_date?: string | null;
+    user_public?: {
+      id?: string | number;
+      company_commercial_name?: string | null;
+      company_address?: string | null;
+      company_map_url?: string | null;
+    } | null;
+  } | null;
+  coupon_with_image_base64?: {
+    id?: number | string | null;
+    title?: string | null;
+    description?: string | null;
+    price?: string | number | null;
+    price_discount?: string | number | null;
+    start_date?: string | null;
+    end_date?: string | null;
+    image_base64?: string | null;
+    image_size?: number | null;
+    image_mime_type?: string | null;
+    image?: string | null;
+    user?: {
+      company_commercial_name?: string | null;
+      company_address?: string | null;
+      company_map_url?: string | null;
+    } | null;
+  } | null;
+}
+
 interface GetCouponWithImageByCodeData {
-  viajerosv_coupons_acquired: CouponAcquiredWithImage[];
+  viajerosv_coupons_acquired: CouponAcquiredWithImageRow[];
 }
 
 interface RedeemCouponData {
@@ -266,6 +392,7 @@ interface CouponHighlightRow {
   category_id: number;
   published: boolean;
   auto_published: boolean;
+  active?: boolean | null;
   user_id: number | string;
   terms: string | null;
   created_at?: string | null;
@@ -357,6 +484,8 @@ export interface UserBasic {
   last_name: string | null;
   email: string | null;
   company_commercial_name?: string | null;
+  company_address?: string | null;
+  company_map_url?: string | null;
 }
 
 export interface AcquiredCoupon {
@@ -384,14 +513,36 @@ export interface CouponAcquired {
     email: string | null;
   } | null;
   coupon?: {
+    id?: number | string | null;
     title: string | null;
     description: string | null;
+    price?: string | number | null;
     price_discount: string | number | null;
+    start_date?: string | null;
     end_date: string | null;
+    user_public?: {
+      id: string | number;
+      company_commercial_name: string | null;
+      company_address: string | null;
+      company_map_url: string | null;
+    } | null;
+  } | null;
+  coupon_with_image_base64?: {
+    id?: number | string | null;
+    title?: string | null;
+    description?: string | null;
+    price?: string | number | null;
+    price_discount?: string | number | null;
+    start_date?: string | null;
+    end_date?: string | null;
   } | null;
   userPublicByValidatedBy?: {
+    id?: string | number;
     first_name: string | null;
     last_name: string | null;
+    company_commercial_name?: string | null;
+    company_address?: string | null;
+    company_map_url?: string | null;
     email?: string | null;
   } | null;
 }
@@ -414,6 +565,7 @@ export interface CouponWithImageDetails {
   image_mime_type: string | null;
   image_size: number | null;
   image: string | null;
+  image_base64?: string | null;
 }
 
 export interface CouponAcquiredWithImage {
@@ -442,6 +594,24 @@ export interface CouponAcquiredWithImage {
     company_youtube?: string | null;
     company_twitter?: string | null;
     company_website?: string | null;
+  } | null;
+  coupon?: {
+    id?: number | string | null;
+    user_id?: number | string | null;
+    category_id?: number | null;
+    active?: boolean | null;
+    title?: string | null;
+    description?: string | null;
+    price?: string | number | null;
+    price_discount?: string | number | null;
+    start_date?: string | null;
+    end_date?: string | null;
+    user_public?: {
+      id?: string | number;
+      company_commercial_name?: string | null;
+      company_address?: string | null;
+      company_map_url?: string | null;
+    } | null;
   } | null;
   coupon_with_image_base64: CouponWithImageDetails | null;
 }
@@ -1030,6 +1200,129 @@ export class CouponService {
     ).pipe(map((images) => images.filter((image): image is CouponImagePreview => image !== null)));
   }
 
+  getPublicCouponImageSnapshotsByIds(ids: number[]): Observable<CouponWithImagePublicSnapshotRow[]> {
+    const uniqueIds = Array.from(new Set(ids.filter((id) => Number.isFinite(id))));
+    if (uniqueIds.length === 0) {
+      return of([]);
+    }
+
+    const query = `
+      query GetCouponWithImagePublicSnapshotsByIds($ids: [bigint!]!) {
+        viajerosv_coupons_with_image_base64(where: { id: { _in: $ids } }) {
+          id
+          image_base64
+          image_size
+          image_mime_type
+          user {
+            company_commercial_name
+            company_address
+            company_map_url
+          }
+        }
+      }
+    `;
+
+    return this.executePublicOperation<GetCouponWithImagePublicSnapshotsData, { ids: number[] }>(query, {
+      ids: uniqueIds,
+    }).pipe(map((data) => data.viajerosv_coupons_with_image_base64 ?? []));
+  }
+
+  getPublicCouponsByIds(ids: number[]): Observable<Coupon[]> {
+    const uniqueIds = Array.from(new Set(ids.filter((id) => Number.isFinite(id))));
+    if (uniqueIds.length === 0) {
+      return of([]);
+    }
+
+    const query = `
+      query GetPublicCouponsByIds($ids: [bigint!]!) {
+        viajerosv_coupons(where: { id: { _in: $ids } }) {
+          category_id
+          id
+          user_id
+          active
+          auto_published
+          published
+          title
+          end_date
+          start_date
+          stock_available
+          stock_total
+          price
+          price_discount
+          description
+          terms
+          created_at
+          updated_at
+          user_public {
+            id
+            company_commercial_name
+            company_address
+            company_map_url
+          }
+        }
+      }
+    `;
+
+    return this.executePublicOperation<GetCouponsByIdsData, { ids: number[] }>(query, { ids: uniqueIds }).pipe(
+      map((data) => data.viajerosv_coupons ?? [])
+    );
+  }
+
+  getCouponsWithStatusByIds(token: string, ids: number[]): Observable<Coupon[]> {
+    void token;
+    void ids;
+    return of([]);
+  }
+
+  getPublicCouponCompaniesByIds(ids: number[]): Observable<PublicCouponCompanyRow[]> {
+    const uniqueIds = Array.from(new Set(ids.filter((id) => Number.isFinite(id))));
+    if (uniqueIds.length === 0) {
+      return of([]);
+    }
+
+    const query = `
+      query GetPublicCouponCompaniesByIds($ids: [bigint!]!) {
+        viajerosv_coupons(where: { id: { _in: $ids } }) {
+          id
+          user_public {
+            id
+            company_commercial_name
+            company_address
+            company_map_url
+          }
+        }
+      }
+    `;
+
+    return this.executePublicOperation<GetPublicCouponCompaniesByIdsData, { ids: number[] }>(query, { ids: uniqueIds }).pipe(
+      map((data) => data.viajerosv_coupons ?? [])
+    );
+  }
+
+  getUsersPublicByIds(ids: string[]): Observable<PublicUserCompanyRow[]> {
+    const uniqueIds = Array.from(new Set(ids.map((id) => String(id).trim()).filter((id) => !!id)));
+    if (uniqueIds.length === 0) {
+      return of([]);
+    }
+
+    const query = `
+      query GetUsersPublicByIds($ids: [uuid!]!) {
+        viajerosv_users_public(where: { id: { _in: $ids } }) {
+          id
+          first_name
+          last_name
+          company_commercial_name
+          company_address
+          company_map_url
+        }
+      }
+    `;
+
+    return this.executePublicOperation<GetUsersPublicByIdsData, { ids: string[] }>(query, { ids: uniqueIds }).pipe(
+      map((data) => data.viajerosv_users_public ?? [])
+    );
+  }
+
 
   getCouponOwner(token: string, id: number): Observable<CouponOwner | null> {
     return this.getCoupons(token, {
@@ -1072,7 +1365,69 @@ export class CouponService {
     token: string,
     variables: GetCouponsAcquiredVariables = { limit: 10, offset: 0, where: { redeemed: { _eq: true } } }
   ): Observable<CouponAcquiredListResult> {
-    const query = `
+    const queryWithCompany = `
+      query GetCouponsAcquired(
+        $limit: Int!,
+        $offset: Int!,
+        $where: viajerosv_coupons_acquired_bool_exp!
+      ) {
+        viajerosv_coupons_acquired(
+          limit: $limit,
+          offset: $offset,
+          order_by: { acquired_at: desc },
+          where: $where
+        ) {
+          coupon_id
+          id
+          user_id
+          validated_by
+          redeemed
+          unique_code
+          acquired_at
+          redeemed_at
+          user_public {
+            id
+            first_name
+            last_name
+            email
+          }
+          coupon {
+            id
+            title
+            description
+            price_discount
+            end_date
+            user_public {
+              id
+              company_commercial_name
+              company_address
+              company_map_url
+            }
+          }
+          userPublicByValidatedBy {
+            id
+            first_name
+            last_name
+            company_commercial_name
+            company_address
+            company_map_url
+            company_facebook
+            company_instagram
+            company_youtube
+            company_twitter
+            company_website
+            email
+          }
+        }
+        viajerosv_coupons_acquired_aggregate(where: $where) {
+          aggregate {
+            count
+          }
+        }
+      }
+    `;
+
+    const queryBasic = `
       query GetCouponsAcquired(
         $limit: Int!,
         $offset: Int!,
@@ -1134,26 +1489,109 @@ export class CouponService {
       where: variables.where ?? {},
     };
 
-    return this.executeOperation<GetCouponsAcquiredData, typeof safeVariables>(token, query, safeVariables).pipe(
+    return this.executeOperation<GetCouponsAcquiredData, typeof safeVariables>(token, queryWithCompany, safeVariables).pipe(
       map((data) => ({
         rows: data.viajerosv_coupons_acquired,
         total: data.viajerosv_coupons_acquired_aggregate.aggregate.count,
-      }))
+      })),
+      catchError((error) => {
+        console.warn('[COUPONS] getCouponsAcquired fallback to basic coupon payload', error);
+        return this.executeOperation<GetCouponsAcquiredData, typeof safeVariables>(token, queryBasic, safeVariables).pipe(
+          map((data) => ({
+            rows: data.viajerosv_coupons_acquired,
+            total: data.viajerosv_coupons_acquired_aggregate.aggregate.count,
+          }))
+        );
+      })
     );
   }
 
   getCouponsByIds(token: string, couponIds: number[]): Observable<Coupon[]> {
-    const uniqueIds = Array.from(new Set(couponIds.filter((id) => Number.isFinite(id))));
+    const queryWithCompany = `
+      query GetCouponsByIds($ids: [bigint!]!) {
+        viajerosv_coupons(where: { id: { _in: $ids } }) {
+          category_id
+          id
+          user_id
+          active
+          auto_published
+          published
+          title
+          end_date
+          start_date
+          stock_available
+          stock_total
+          price
+          price_discount
+          description
+          terms
+          created_at
+          updated_at
+          user_public {
+            id
+            company_commercial_name
+            company_address
+            company_map_url
+          }
+        }
+      }
+    `;
+
+    const queryBasic = `
+      query GetCouponsByIdsBasic($ids: [bigint!]!) {
+        viajerosv_coupons(where: { id: { _in: $ids } }) {
+          category_id
+          id
+          user_id
+          active
+          auto_published
+          published
+          title
+          end_date
+          start_date
+          stock_available
+          stock_total
+          price
+          price_discount
+          description
+          terms
+          created_at
+          updated_at
+        }
+      }
+    `;
+
+    return this.executeOperation<GetCouponsByIdsData, { ids: number[] }>(token, queryWithCompany, { ids: couponIds }).pipe(
+      map((data) => data.viajerosv_coupons ?? []),
+      catchError((error) => {
+        console.warn('[COUPONS] getCouponsByIds fallback to basic query', error);
+        return this.executeOperation<GetCouponsByIdsData, { ids: number[] }>(token, queryBasic, { ids: couponIds }).pipe(
+          map((data) => data.viajerosv_coupons ?? [])
+        );
+      })
+    );
+  }
+
+  getUsersBasicByIds(token: string, userIds: string[]): Observable<UserBasic[]> {
+    const uniqueIds = [...new Set(userIds.filter((id) => !!id))];
     if (uniqueIds.length === 0) {
       return of([]);
     }
 
-    return this.getCoupons(token, {
-      limit: uniqueIds.length,
-      offset: 0,
-      where: { id: { _in: uniqueIds } },
-      order_by: [{ id: 'asc' }],
-    }).pipe(map((data) => data.rows ?? []));
+    const query = `
+      query GetUsersBasicByIds($ids: [uuid!]!) {
+        viajerosv_users(where: { id: { _in: $ids } }) {
+          id
+          first_name
+          last_name
+          email
+        }
+      }
+    `;
+
+    return this.executeOperation<GetUsersBasicByIdsData, { ids: string[] }>(token, query, { ids: uniqueIds }).pipe(
+      map((data) => data.viajerosv_users ?? [])
+    );
   }
 
   hasAcquiredCoupon(token: string, couponId: number): Observable<boolean> {
@@ -1466,7 +1904,7 @@ export class CouponService {
   }
 
   getCouponWithImageByCode(token: string, uniqueCode: string): Observable<CouponAcquiredWithImage | null> {
-    const query = `
+    const queryWithImagePreview = `
       query GetCouponWithImageByCode($unique_code: String!) {
         viajerosv_coupons_acquired(where: { unique_code: { _eq: $unique_code } }) {
           id
@@ -1493,17 +1931,85 @@ export class CouponService {
             company_twitter
             company_website
           }
-          coupon_with_image_base64 {
+          coupon {
             id
+            user_id
+            category_id
+            active
             title
             description
             price
             price_discount
             start_date
             end_date
+            user_public {
+              id
+              company_commercial_name
+              company_address
+              company_map_url
+            }
+          }
+          coupon_with_image_base64 {
+            id
+            image_base64
             image_mime_type
             image_size
-            image
+            user {
+              company_commercial_name
+              company_address
+              company_map_url
+            }
+          }
+          user_id
+          validated_by
+        }
+      }
+    `;
+
+    const queryWithoutImage = `
+      query GetCouponWithImageByCode($unique_code: String!) {
+        viajerosv_coupons_acquired(where: { unique_code: { _eq: $unique_code } }) {
+          id
+          unique_code
+          acquired_at
+          redeemed
+          redeemed_at
+          user_public {
+            id
+            first_name
+            last_name
+            email
+          }
+          userPublicByValidatedBy {
+            id
+            first_name
+            last_name
+            company_commercial_name
+            company_address
+            company_map_url
+            company_facebook
+            company_instagram
+            company_youtube
+            company_twitter
+            company_website
+          }
+          coupon {
+            id
+            user_id
+            category_id
+            active
+            title
+            description
+            price
+            price_discount
+            start_date
+            end_date
+            user_public {
+              id
+              company_commercial_name
+              company_address
+              company_map_url
+            }
           }
           user_id
           validated_by
@@ -1513,9 +2019,111 @@ export class CouponService {
 
     return this.executeOperation<GetCouponWithImageByCodeData, { unique_code: string }>(
       token,
-      query,
+      queryWithImagePreview,
       { unique_code: uniqueCode }
-    ).pipe(map((data) => data.viajerosv_coupons_acquired[0] ?? null));
+    ).pipe(
+      map((data) => this.mapCouponAcquiredWithImage(data.viajerosv_coupons_acquired[0] ?? null)),
+      catchError((error) => {
+        console.info('[COUPONS] getCouponWithImageByCode fallback sin campos de detalle', error);
+        return this.executeOperation<GetCouponWithImageByCodeData, { unique_code: string }>(token, queryWithoutImage, {
+          unique_code: uniqueCode,
+        }).pipe(map((data) => this.mapCouponAcquiredWithImage(data.viajerosv_coupons_acquired[0] ?? null)));
+      })
+    );
+  }
+
+  private mapCouponAcquiredWithImage(row: CouponAcquiredWithImageRow | null): CouponAcquiredWithImage | null {
+    if (!row) return null;
+
+    const coupon = row.coupon ?? null;
+    const imageRow = row.coupon_with_image_base64 ?? null;
+
+    const fallbackCouponId = Number(coupon?.id ?? imageRow?.id ?? NaN);
+    const couponId = Number.isFinite(fallbackCouponId) ? fallbackCouponId : null;
+
+    const title = String(coupon?.title ?? imageRow?.title ?? '').trim();
+    const description = coupon?.description ?? imageRow?.description ?? null;
+    const price = coupon?.price != null ? String(coupon.price) : imageRow?.price != null ? String(imageRow.price) : null;
+    const priceDiscount =
+      coupon?.price_discount != null
+        ? String(coupon.price_discount)
+        : imageRow?.price_discount != null
+          ? String(imageRow.price_discount)
+          : null;
+    const startDate = coupon?.start_date ?? imageRow?.start_date ?? '';
+    const endDate = coupon?.end_date ?? imageRow?.end_date ?? '';
+    const imageBase64 = imageRow?.image_base64 ?? imageRow?.image ?? null;
+    const imageMime = imageRow?.image_mime_type ?? null;
+    const imageSize = imageRow?.image_size ?? null;
+    const imageUserPublic = imageRow?.user
+      ? {
+          id: String(row.validated_by ?? row.user_id ?? row.id),
+          company_commercial_name: imageRow.user.company_commercial_name ?? null,
+          company_address: imageRow.user.company_address ?? null,
+          company_map_url: imageRow.user.company_map_url ?? null,
+        }
+      : null;
+
+    const normalizedDetails: CouponWithImageDetails | null = couponId != null
+      ? {
+          id: couponId,
+          title,
+          description,
+          price,
+          price_discount: priceDiscount,
+          start_date: startDate,
+          end_date: endDate,
+          image_mime_type: imageMime,
+          image_size: imageSize,
+          image: imageBase64,
+          image_base64: imageBase64,
+        }
+      : null;
+
+    const normalizedCoupon =
+      coupon != null
+        ? {
+            id: coupon.id ?? null,
+            user_id: coupon.user_id ?? null,
+            category_id: coupon.category_id ?? null,
+            active: coupon.active ?? null,
+            title: coupon.title ?? imageRow?.title ?? null,
+            description: coupon.description ?? imageRow?.description ?? null,
+            price: coupon.price ?? imageRow?.price ?? null,
+            price_discount: coupon.price_discount ?? imageRow?.price_discount ?? null,
+            start_date: coupon.start_date ?? imageRow?.start_date ?? null,
+            end_date: coupon.end_date ?? imageRow?.end_date ?? null,
+            user_public: coupon.user_public ?? imageUserPublic,
+          }
+        : couponId != null
+          ? {
+              id: couponId,
+              user_id: row.user_id ?? null,
+              category_id: null,
+              active: null,
+              title: imageRow?.title ?? null,
+              description: imageRow?.description ?? null,
+              price: imageRow?.price ?? null,
+              price_discount: imageRow?.price_discount ?? null,
+              start_date: imageRow?.start_date ?? null,
+              end_date: imageRow?.end_date ?? null,
+              user_public: imageUserPublic,
+            }
+          : null;
+
+    return {
+      id: row.id,
+      unique_code: row.unique_code,
+      acquired_at: row.acquired_at,
+      redeemed: !!row.redeemed,
+      redeemed_at: row.redeemed_at ?? null,
+      user_id: row.user_id,
+      validated_by: row.validated_by ?? null,
+      user_public: row.user_public ?? null,
+      userPublicByValidatedBy: row.userPublicByValidatedBy ?? null,
+      coupon: normalizedCoupon,
+      coupon_with_image_base64: normalizedDetails,
+    };
   }
 
   redeemCouponByCode(token: string, uniqueCode: string): Observable<CouponAcquired | null> {
@@ -1744,6 +2352,7 @@ export class CouponService {
       category_id: coupon.category_id,
       auto_published: coupon.auto_published ?? false,
       published: coupon.published ?? true,
+      active: coupon.active ?? undefined,
       title: coupon.title,
       end_date: coupon.end_date ?? '',
       start_date: coupon.start_date ?? '',

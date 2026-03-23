@@ -62,6 +62,7 @@ export class MyCouponsComponent implements OnInit {
   transferTarget: MyCouponItem | null = null;
   transferConfirm = false;
   private couponImageById = new Map<number, string>();
+  private latestLoadRequestId = 0;
 
   coupons: MyCouponItem[] = [];
   searchText = '';
@@ -140,11 +141,11 @@ export class MyCouponsComponent implements OnInit {
     }
 
     if (this.selectedStatus === 'activo') {
-      rows = rows.filter((item) => !item.acquired.redeemed && this.getCouponEndDateTime(item) >= now.getTime());
+      rows = rows.filter((item) => !this.isAcquiredRedeemed(item.acquired) && !this.isCouponExpiredForUser(item, now.getTime()));
     } else if (this.selectedStatus === 'vencido') {
-      rows = rows.filter((item) => !item.acquired.redeemed && this.getCouponEndDateTime(item) < now.getTime());
+      rows = rows.filter((item) => !this.isAcquiredRedeemed(item.acquired) && this.isCouponExpiredForUser(item, now.getTime()));
     } else if (this.selectedStatus === 'canjeado') {
-      rows = rows.filter((item) => item.acquired.redeemed);
+      rows = rows.filter((item) => this.isAcquiredRedeemed(item.acquired));
     }
 
     if (this.selectedStatus !== 'activo') {
@@ -236,9 +237,30 @@ export class MyCouponsComponent implements OnInit {
     this.currentPage = 1;
   }
 
+  getCouponCardLink(item: MyCouponItem): string[] | null {
+    if (this.isCouponActive(item)) return null;
+    if (this.isCouponExpiredForUser(item)) return null;
+    return ['/view-coupons', String(item.coupon.id)];
+  }
+
+  isCouponCardClickable(item: MyCouponItem): boolean {
+    return this.isCouponActive(item) || !!this.getCouponCardLink(item);
+  }
+
+  onCouponCardClick(item: MyCouponItem, event: Event): void {
+    if (this.isCouponExpiredForUser(item)) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    if (!this.isCouponActive(item)) return;
+    void this.openQrModal(item, this.getCardImage(item), event);
+  }
+
   async openQrModal(item: MyCouponItem, imageSrc: string, event: Event): Promise<void> {
     event.preventDefault();
     event.stopPropagation();
+    if (!this.isCouponActive(item)) return;
 
     this.qrSelectedItem = item;
     this.qrSelectedImage = imageSrc;
@@ -436,6 +458,31 @@ export class MyCouponsComponent implements OnInit {
     return this.categoryBgColors[categoryId] ?? '#E5E7EB';
   }
 
+  getCouponCommercialName(coupon: Coupon): string {
+    const companyNameFromUser = coupon.user?.company_commercial_name?.trim() ?? '';
+    const companyNameFromUserPublic = coupon.user_public?.company_commercial_name?.trim() ?? '';
+    return companyNameFromUser || companyNameFromUserPublic || 'Empresa no disponible';
+  }
+
+  getCouponAddress(coupon: Coupon): string {
+    const addressFromUser = coupon.user?.company_address?.trim() ?? '';
+    const addressFromUserPublic = coupon.user_public?.company_address?.trim() ?? '';
+    return addressFromUser || addressFromUserPublic || 'Ubicación no disponible';
+  }
+
+  getCouponMapUrl(coupon: Coupon): string | null {
+    const rawMapUrl = (
+      coupon.user?.company_map_url?.trim() ??
+      coupon.user_public?.company_map_url?.trim() ??
+      ''
+    );
+
+    if (!rawMapUrl) return null;
+    if (/^https?:\/\//i.test(rawMapUrl)) return rawMapUrl;
+    if (/^www\./i.test(rawMapUrl)) return `https://${rawMapUrl}`;
+    return null;
+  }
+
   getPriceBadgeLabel(coupon: Coupon): string {
     const discount = this.parseNumeric(coupon.price_discount);
     const price = this.parseNumeric(coupon.price);
@@ -446,13 +493,26 @@ export class MyCouponsComponent implements OnInit {
   }
 
   formatExpirationDate(endDate: string): string {
-    const parsed = endDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    if (!parsed) return 'Vence: Fecha no disponible';
+    const normalized = String(endDate ?? '').trim();
+    if (!normalized) return 'Vence: Fecha no disponible';
 
-    const [, year, month, day] = parsed;
     const monthNames = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-    const monthIndex = Number(month) - 1;
-    const monthName = monthNames[monthIndex] ?? month;
+
+    const datePrefix = normalized.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (datePrefix) {
+      const [, year, month, day] = datePrefix;
+      const monthIndex = Number(month) - 1;
+      const monthName = monthNames[monthIndex] ?? month;
+      return `Vence: ${day} ${monthName} ${year}`;
+    }
+
+    const parsedDate = new Date(normalized);
+    if (Number.isNaN(parsedDate.getTime())) return 'Vence: Fecha no disponible';
+
+    const day = String(parsedDate.getDate()).padStart(2, '0');
+    const monthIndex = parsedDate.getMonth();
+    const year = String(parsedDate.getFullYear());
+    const monthName = monthNames[monthIndex] ?? String(monthIndex + 1).padStart(2, '0');
     return `Vence: ${day} ${monthName} ${year}`;
   }
 
@@ -466,13 +526,30 @@ export class MyCouponsComponent implements OnInit {
     const ownerId = String(item.acquired.user_id ?? '').trim();
 
     if (currentUserId && ownerId && currentUserId !== ownerId) return false;
-    if (item.acquired.redeemed) return false;
-    const endDateTime = this.getCouponEndDateTime(item);
-    if (!Number.isFinite(endDateTime)) return false;
-    return endDateTime >= Date.now();
+    if (this.isAcquiredRedeemed(item.acquired)) return false;
+    return !this.isCouponExpiredForUser(item);
+  }
+
+  private isCouponActive(item: MyCouponItem): boolean {
+    if (this.isAcquiredRedeemed(item.acquired)) return false;
+    return !this.isCouponExpiredForUser(item);
+  }
+
+  private isAcquiredRedeemed(acquired: CouponAcquired): boolean {
+    const rawRedeemed: unknown = (acquired as { redeemed?: unknown }).redeemed;
+    if (typeof rawRedeemed === 'boolean') return rawRedeemed;
+    if (typeof rawRedeemed === 'number') return rawRedeemed === 1;
+    if (typeof rawRedeemed === 'string') {
+      const normalized = rawRedeemed.trim().toLowerCase();
+      if (normalized === 'true' || normalized === '1') return true;
+      if (normalized === 'false' || normalized === '0' || normalized === '') return false;
+    }
+
+    return !!acquired.redeemed_at;
   }
 
   private async loadCoupons(): Promise<void> {
+    const currentRequestId = ++this.latestLoadRequestId;
     this.loading = true;
     this.error = '';
 
@@ -482,6 +559,7 @@ export class MyCouponsComponent implements OnInit {
     const isUserRole = currentUser?.role === 'usuario' || kcRole === 'USER';
 
     if (!token || !isUserRole) {
+      if (currentRequestId !== this.latestLoadRequestId) return;
       this.error = 'Debes iniciar sesión como usuario para ver tus cupones.';
       this.coupons = [];
       this.loading = false;
@@ -500,8 +578,29 @@ export class MyCouponsComponent implements OnInit {
 
       const acquiredRows = acquiredResponse.rows ?? [];
       if (acquiredRows.length === 0) {
+        if (currentRequestId !== this.latestLoadRequestId) return;
         this.coupons = [];
         return;
+      }
+
+      if (this.debugImageLogs) {
+        console.info(
+          '[MY-COUPONS][COMPANY] snapshot desde acquired',
+          acquiredRows.map((row) => ({
+            couponId: Number(row.coupon_id),
+            redeemed: row.redeemed,
+            redeemedAt: row.redeemed_at ?? null,
+            validatedBy: row.validated_by ?? null,
+            couponCompanyName: row.coupon?.user_public?.company_commercial_name ?? null,
+            couponAddress: row.coupon?.user_public?.company_address ?? null,
+            couponTitleFromAcquired: row.coupon?.title ?? null,
+            couponEndDateFromAcquired: row.coupon?.end_date ?? null,
+            couponImageTitleFromAcquired: row.coupon_with_image_base64?.title ?? null,
+            couponImageEndDateFromAcquired: row.coupon_with_image_base64?.end_date ?? null,
+            validatedByCompanyName: row.userPublicByValidatedBy?.company_commercial_name ?? null,
+            validatedByAddress: row.userPublicByValidatedBy?.company_address ?? null,
+          }))
+        );
       }
 
       const couponIds = Array.from(
@@ -523,32 +622,169 @@ export class MyCouponsComponent implements OnInit {
       const couponRows = await firstValueFrom(
         this.couponService.getCouponsByIds(token, couponIds).pipe(take(1), timeout(15000))
       );
+      if (currentRequestId !== this.latestLoadRequestId) return;
+
+      const couponRowsIds = couponRows.map((coupon) => Number(coupon.id));
+      const missingCouponIds = couponIds.filter((id) => !couponRowsIds.includes(id));
 
       if (this.debugImageLogs) {
         console.info('[MY-COUPONS][IMG] cupones base cargados', {
           totalCouponRows: couponRows.length,
-          couponIdsFromCoupons: couponRows.map((coupon) => Number(coupon.id)),
+          couponIdsFromCoupons: couponRowsIds,
+          missingCouponIds,
         });
+        console.info(
+          '[MY-COUPONS][COMPANY] datos comerciales recibidos',
+          couponRows.map((coupon) => ({
+            id: Number(coupon.id),
+            companyName: coupon.user_public?.company_commercial_name ?? coupon.user?.company_commercial_name ?? null,
+            companyAddress: coupon.user_public?.company_address ?? coupon.user?.company_address ?? null,
+            companyMapUrl: coupon.user_public?.company_map_url ?? coupon.user?.company_map_url ?? null,
+          }))
+        );
       }
 
       const couponById = new Map<number, Coupon>();
       couponRows.forEach((coupon) => couponById.set(Number(coupon.id), coupon));
 
-      await this.loadImagesForCoupons(token, couponRows);
+      const stillMissingCouponIds = missingCouponIds.filter((id) => !couponById.has(id));
+
+      if (stillMissingCouponIds.length > 0) {
+        try {
+          const publicFallbackRows = await firstValueFrom(
+            this.couponService.getPublicCouponsByIds(stillMissingCouponIds).pipe(take(1), timeout(10000))
+          );
+          publicFallbackRows.forEach((coupon) => {
+            const id = Number(coupon.id);
+            if (!Number.isFinite(id) || couponById.has(id)) return;
+            couponById.set(id, coupon);
+          });
+
+          if (this.debugImageLogs) {
+            console.info('[MY-COUPONS][COMPANY] cupones fallback desde API pública', {
+              requestedIds: stillMissingCouponIds,
+              resolvedRows: publicFallbackRows.length,
+              resolvedIds: publicFallbackRows.map((coupon) => Number(coupon.id)),
+            });
+          }
+        } catch (error) {
+          if (this.debugImageLogs) {
+            console.warn('[MY-COUPONS][COMPANY] no se pudo cargar fallback de cupones públicos', {
+              missingCouponIds: stillMissingCouponIds,
+              error,
+            });
+          }
+        }
+      }
+
+      await this.enrichMissingCouponsFromUniqueCode(token, acquiredRows, couponById);
+      if (currentRequestId !== this.latestLoadRequestId) return;
+
+      const couponIdsNeedingPublicSnapshotEnrichment = couponIds.filter((id) => {
+        const coupon = couponById.get(id);
+        if (!coupon) return true;
+
+        const title = String(coupon.title ?? '').trim();
+        const endDate = String(coupon.end_date ?? '').trim();
+        const hasCompany = this.hasCompanyData(coupon.user_public ?? null);
+
+        return !title || title.startsWith(`Cupón #${id}`) || !endDate || !hasCompany;
+      });
+
+      await this.enrichMissingCouponsFromPublicImageSnapshots(
+        couponIdsNeedingPublicSnapshotEnrichment,
+        acquiredRows,
+        couponById
+      );
+      if (currentRequestId !== this.latestLoadRequestId) return;
+
+      await this.enrichMissingCouponTitlesFromStats(token, couponIds, couponById);
+      if (currentRequestId !== this.latestLoadRequestId) return;
+
+      const couponsForEnrichment = Array.from(couponById.values());
+
+      await this.enrichCompanyDataFromUsersPublic(acquiredRows, couponsForEnrichment);
+      if (currentRequestId !== this.latestLoadRequestId) return;
+
+      await this.enrichCompanyDataFromCouponOwners(token, couponsForEnrichment);
+      if (currentRequestId !== this.latestLoadRequestId) return;
+
+      await this.loadImagesForCoupons(token, couponsForEnrichment, couponIds);
+      if (currentRequestId !== this.latestLoadRequestId) return;
 
       this.coupons = acquiredRows
         .map((acquired) => {
-          const coupon = couponById.get(Number(acquired.coupon_id))
-            ?? this.createCouponFallbackFromAcquired(acquired);
+          const normalizedAcquired: CouponAcquired = {
+            ...acquired,
+            redeemed: this.isAcquiredRedeemed(acquired),
+          };
+          const couponId = Number(acquired.coupon_id);
+          const couponFromLookup = couponById.get(couponId);
+          const coupon = couponFromLookup
+            ? this.mergeCouponWithAcquiredSnapshot(couponFromLookup, normalizedAcquired)
+            : this.createCouponFallbackFromAcquired(normalizedAcquired);
           if (!coupon) return null;
-          return { coupon, acquired } as MyCouponItem;
+          couponById.set(couponId, coupon);
+          return { coupon, acquired: normalizedAcquired } as MyCouponItem;
         })
         .filter((item): item is MyCouponItem => item !== null);
+      if (currentRequestId !== this.latestLoadRequestId) return;
+
+      if (this.debugImageLogs) {
+        console.info(
+          '[MY-COUPONS][COMPANY] datos finales para UI',
+          this.coupons.map((item) => ({
+            id: Number(item.coupon.id),
+            title: item.coupon.title ?? null,
+            endDate: item.coupon.end_date ?? null,
+            companyName: item.coupon.user_public?.company_commercial_name ?? item.coupon.user?.company_commercial_name ?? null,
+            companyAddress: item.coupon.user_public?.company_address ?? item.coupon.user?.company_address ?? null,
+            companyMapUrl: item.coupon.user_public?.company_map_url ?? item.coupon.user?.company_map_url ?? null,
+            redeemed: item.acquired.redeemed,
+            redeemedAt: item.acquired.redeemed_at ?? null,
+            status: this.isAcquiredRedeemed(item.acquired) ? 'canjeado' : 'activo-vencido',
+          }))
+        );
+        console.info('[MY-COUPONS][FILTER] resumen actual', {
+          selectedStatus: this.selectedStatus,
+          loadedRows: this.coupons.length,
+          redeemedRows: this.coupons.filter((item) => this.isAcquiredRedeemed(item.acquired)).length,
+          notRedeemedRows: this.coupons.filter((item) => !this.isAcquiredRedeemed(item.acquired)).length,
+          visibleRows: this.filteredCoupons.length,
+          currentPage: this.currentPage,
+          totalPages: this.totalPages,
+          searchText: this.searchText,
+          dateFrom: this.canjeadoDateFrom,
+          dateTo: this.canjeadoDateTo,
+        });
+        const nowTime = Date.now();
+        const nonRedeemed = this.coupons.filter((item) => !this.isAcquiredRedeemed(item.acquired));
+        const expiredRows = nonRedeemed.filter((item) => this.isCouponExpiredForUser(item, nowTime));
+        const nonExpiredRows = nonRedeemed.filter((item) => !this.isCouponExpiredForUser(item, nowTime));
+        console.info('[MY-COUPONS][VENCIDO] diagnóstico', {
+          today: new Date(nowTime).toISOString().slice(0, 10),
+          nonRedeemedCount: nonRedeemed.length,
+          expiredCount: expiredRows.length,
+          nonExpiredCount: nonExpiredRows.length,
+          expiredCoupons: expiredRows.map((item) => ({
+            couponId: Number(item.coupon.id),
+            endDate: this.getCouponEndDate(item),
+            active: item.coupon.active ?? null,
+          })),
+          nonExpiredCoupons: nonExpiredRows.map((item) => ({
+            couponId: Number(item.coupon.id),
+            endDate: this.getCouponEndDate(item),
+            active: item.coupon.active ?? null,
+          })),
+        });
+      }
     } catch (error) {
+      if (currentRequestId !== this.latestLoadRequestId) return;
       console.error('[MY-COUPONS] Error loading acquired coupons', error);
       this.error = 'No se pudieron cargar tus cupones en este momento.';
       this.coupons = [];
     } finally {
+      if (currentRequestId !== this.latestLoadRequestId) return;
       this.loading = false;
       this.cdr.detectChanges();
     }
@@ -639,9 +875,10 @@ export class MyCouponsComponent implements OnInit {
     const currentUserId = this.getCurrentUserId();
     const ownerCondition = currentUserId ? { user_id: { _eq: currentUserId } } : null;
 
-    if (this.selectedStatus !== 'canjeado') {
-      if (!ownerCondition) return {};
-      return ownerCondition;
+    if (this.selectedStatus === 'activo' || this.selectedStatus === 'vencido') {
+      const andConditions: Record<string, unknown>[] = [{ redeemed: { _eq: false } }];
+      if (ownerCondition) andConditions.push(ownerCondition);
+      return { _and: andConditions };
     }
 
     const andConditions: Record<string, unknown>[] = [{ redeemed: { _eq: true } }];
@@ -659,11 +896,6 @@ export class MyCouponsComponent implements OnInit {
       });
     }
 
-    const acquiredRange = this.buildDateRange(this.canjeadoDateFrom, this.canjeadoDateTo);
-    if (acquiredRange) {
-      andConditions.push({ acquired_at: acquiredRange });
-    }
-
     const redeemedRange = this.buildDateRange(this.canjeadoDateFrom, this.canjeadoDateTo);
     if (redeemedRange) {
       andConditions.push({ redeemed_at: redeemedRange });
@@ -674,6 +906,13 @@ export class MyCouponsComponent implements OnInit {
 
   private getCurrentUserId(): string {
     return String(this.auth.getCurrentUser()?.sub ?? '').trim();
+  }
+
+  private toUuid(value: unknown): string | null {
+    const normalized = String(value ?? '').trim();
+    if (!normalized) return null;
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(normalized) ? normalized : null;
   }
 
   private buildDateRange(from: string, to: string): Record<string, string> | null {
@@ -721,8 +960,32 @@ export class MyCouponsComponent implements OnInit {
     return parsed.getTime();
   }
 
-  private createCouponFallbackFromAcquired(acquired: CouponAcquired): Coupon | null {
-    if (!acquired.coupon) return null;
+  private isCouponExpiredForUser(item: MyCouponItem, nowTime = Date.now()): boolean {
+    if (item.coupon.active === false) return true;
+    return this.getCouponEndDateTime(item) < nowTime;
+  }
+
+  private createCouponFallbackFromAcquired(acquired: CouponAcquired): Coupon {
+    const companySnapshot = this.getCompanySnapshotFromAcquired(acquired);
+    const couponImageSnapshot = acquired.coupon_with_image_base64 ?? null;
+    const couponTitle =
+      acquired.coupon?.title?.trim() ||
+      couponImageSnapshot?.title?.trim() ||
+      `Cupón #${String(acquired.coupon_id)}`;
+    const couponDescription = acquired.coupon?.description ?? couponImageSnapshot?.description ?? null;
+    const couponPrice = acquired.coupon?.price != null
+      ? String(acquired.coupon.price)
+      : couponImageSnapshot?.price != null
+        ? String(couponImageSnapshot.price)
+        : null;
+    const couponPriceDiscount = acquired.coupon?.price_discount != null
+      ? String(acquired.coupon.price_discount)
+      : couponImageSnapshot?.price_discount != null
+        ? String(couponImageSnapshot.price_discount)
+        : null;
+    const couponStartDate = acquired.coupon?.start_date ?? couponImageSnapshot?.start_date ?? '';
+    const couponEndDate = acquired.coupon?.end_date ?? couponImageSnapshot?.end_date ?? '';
+    const isMissingCouponPayload = !acquired.coupon && !couponImageSnapshot;
 
     return {
       id: Number(acquired.coupon_id),
@@ -730,29 +993,873 @@ export class MyCouponsComponent implements OnInit {
       category_id: 0,
       auto_published: false,
       published: true,
-      title: acquired.coupon.title?.trim() || acquired.unique_code,
-      end_date: acquired.coupon.end_date ?? '',
-      start_date: '',
+      // If backend omits coupon relation (RLS/deleted/inactive), keep row visible as expired placeholder.
+      active: isMissingCouponPayload ? false : undefined,
+      title: couponTitle,
+      end_date: couponEndDate,
+      start_date: couponStartDate,
       stock_available: null,
       stock_total: null,
-      price: null,
-      price_discount: acquired.coupon.price_discount != null ? String(acquired.coupon.price_discount) : null,
-      description: acquired.coupon.description ?? null,
+      price: couponPrice,
+      price_discount: couponPriceDiscount,
+      description: couponDescription,
       terms: null,
       created_at: acquired.acquired_at,
       updated_at: acquired.acquired_at,
+      user_public: companySnapshot,
     };
   }
 
-  private async loadImagesForCoupons(token: string, rows: Coupon[]): Promise<void> {
+  private mergeCouponWithAcquiredSnapshot(coupon: Coupon, acquired: CouponAcquired): Coupon {
+    const userPublicSnapshot = this.getCompanySnapshotFromAcquired(acquired);
+    const couponImageSnapshot = acquired.coupon_with_image_base64 ?? null;
+
+    const mergedTitle = coupon.title?.trim() || couponImageSnapshot?.title?.trim() || '';
+    const mergedDescription = coupon.description ?? couponImageSnapshot?.description ?? null;
+    const mergedPrice =
+      coupon.price ?? (couponImageSnapshot?.price != null ? String(couponImageSnapshot.price) : null);
+    const mergedPriceDiscount =
+      coupon.price_discount ??
+      (couponImageSnapshot?.price_discount != null ? String(couponImageSnapshot.price_discount) : null);
+    const mergedStartDate = coupon.start_date || couponImageSnapshot?.start_date || '';
+    const mergedEndDate = coupon.end_date || couponImageSnapshot?.end_date || '';
+
+    if (!userPublicSnapshot && mergedTitle === coupon.title && mergedDescription === coupon.description
+      && mergedPrice === coupon.price && mergedPriceDiscount === coupon.price_discount
+      && mergedStartDate === coupon.start_date && mergedEndDate === coupon.end_date) {
+      return coupon;
+    }
+
+    const currentUserPublic = coupon.user_public ?? null;
+    const mergedUserPublic = userPublicSnapshot
+      ? {
+          ...(userPublicSnapshot ?? {}),
+          ...(currentUserPublic ?? {}),
+          id: currentUserPublic?.id ?? userPublicSnapshot.id,
+          company_commercial_name:
+            currentUserPublic?.company_commercial_name ?? userPublicSnapshot.company_commercial_name,
+          company_address: currentUserPublic?.company_address ?? userPublicSnapshot.company_address,
+          company_map_url: currentUserPublic?.company_map_url ?? userPublicSnapshot.company_map_url,
+        }
+      : currentUserPublic;
+
+    return {
+      ...coupon,
+      title: mergedTitle || coupon.title,
+      description: mergedDescription,
+      price: mergedPrice,
+      price_discount: mergedPriceDiscount,
+      start_date: mergedStartDate,
+      end_date: mergedEndDate,
+      user_public: mergedUserPublic,
+    };
+  }
+
+  private getCompanySnapshotFromAcquired(couponAcquired: CouponAcquired): Coupon['user_public'] {
+    const couponUserPublic = couponAcquired.coupon?.user_public ?? null;
+    if (couponUserPublic) return couponUserPublic;
+
+    const validatedUser = couponAcquired.userPublicByValidatedBy;
+    if (!validatedUser) return null;
+
+    const hasCompanyData = !!(
+      validatedUser.company_commercial_name ||
+      validatedUser.company_address ||
+      validatedUser.company_map_url
+    );
+    if (!hasCompanyData) return null;
+
+    return {
+      id: validatedUser.id ?? String(couponAcquired.validated_by ?? couponAcquired.id),
+      company_commercial_name: validatedUser.company_commercial_name ?? null,
+      company_address: validatedUser.company_address ?? null,
+      company_map_url: validatedUser.company_map_url ?? null,
+    };
+  }
+
+  private async enrichMissingCouponsFromUniqueCode(
+    token: string,
+    acquiredRows: CouponAcquired[],
+    couponById: Map<number, Coupon>
+  ): Promise<void> {
+    const rowsNeedingEnrichment = acquiredRows.filter((row) => {
+      const couponId = Number(row.coupon_id);
+      if (!Number.isFinite(couponId)) return false;
+
+      const currentCoupon = couponById.get(couponId);
+      if (!currentCoupon) return true;
+
+      const currentTitle = String(currentCoupon.title ?? '').trim();
+      const currentEndDate = String(currentCoupon.end_date ?? '').trim();
+
+      return !currentTitle || currentTitle.startsWith(`Cupón #${couponId}`) || !currentEndDate;
+    });
+    if (rowsNeedingEnrichment.length === 0) return;
+
+    const uniqueCodes = Array.from(
+      new Set(
+        rowsNeedingEnrichment
+          .map((row) => (row.unique_code ?? '').trim())
+          .filter((code) => !!code)
+      )
+    );
+    if (uniqueCodes.length === 0) return;
+
+    const snapshots = await Promise.all(
+      uniqueCodes.map(async (uniqueCode) => {
+        try {
+          return await firstValueFrom(
+            this.couponService.getCouponWithImageByCode(token, uniqueCode).pipe(take(1), timeout(10000))
+          );
+        } catch (error) {
+          if (this.debugImageLogs) {
+            console.warn('[MY-COUPONS][COMPANY] no se pudo enriquecer cupón faltante por unique_code', {
+              uniqueCode,
+              error,
+            });
+          }
+          return null;
+        }
+      })
+    );
+
+    const snapshotByCode = new Map<string, NonNullable<(typeof snapshots)[number]>>();
+    snapshots.forEach((snapshot) => {
+      const key = (snapshot?.unique_code ?? '').trim();
+      if (!snapshot || !key) return;
+      snapshotByCode.set(key, snapshot);
+    });
+
+    let enrichedCoupons = 0;
+    let enrichedCouponsWithTitle = 0;
+    let enrichedCouponsWithEndDate = 0;
+    let updatedExistingCoupons = 0;
+    let updatedExistingCouponsWithTitle = 0;
+    let updatedExistingCouponsWithEndDate = 0;
+
+    rowsNeedingEnrichment.forEach((row) => {
+      const uniqueCode = (row.unique_code ?? '').trim();
+      const snapshot = snapshotByCode.get(uniqueCode);
+      if (!snapshot) return;
+
+      const snapshotCoupon = snapshot.coupon ?? null;
+      const snapshotImageCoupon = snapshot.coupon_with_image_base64 ?? null;
+      const snapshotCouponId = Number(snapshot.coupon?.id ?? snapshot.coupon_with_image_base64?.id ?? row.coupon_id);
+      const couponId = Number.isFinite(snapshotCouponId) ? snapshotCouponId : Number(row.coupon_id);
+      if (!Number.isFinite(couponId)) return;
+
+      if (!row.userPublicByValidatedBy && snapshot.userPublicByValidatedBy) {
+        row.userPublicByValidatedBy = snapshot.userPublicByValidatedBy;
+      }
+
+      const snapshotTitle = String(snapshotCoupon?.title ?? snapshotImageCoupon?.title ?? row.coupon?.title ?? '').trim();
+      const snapshotDescription = snapshotCoupon?.description ?? snapshotImageCoupon?.description ?? row.coupon?.description ?? null;
+      const snapshotPrice = snapshotCoupon?.price ?? snapshotImageCoupon?.price ?? null;
+      const snapshotPriceDiscount = snapshotCoupon?.price_discount ?? snapshotImageCoupon?.price_discount ?? row.coupon?.price_discount ?? null;
+      const snapshotStartDate = snapshotCoupon?.start_date ?? snapshotImageCoupon?.start_date ?? '';
+      const snapshotEndDate = snapshotCoupon?.end_date ?? snapshotImageCoupon?.end_date ?? row.coupon?.end_date ?? '';
+      const snapshotCategoryId = Number(snapshotCoupon?.category_id ?? 0);
+      const snapshotUserPublic = snapshotCoupon?.user_public
+        ? {
+            id: snapshotCoupon.user_public.id ?? String(snapshotCoupon.user_id ?? couponId),
+            company_commercial_name: snapshotCoupon.user_public.company_commercial_name ?? null,
+            company_address: snapshotCoupon.user_public.company_address ?? null,
+            company_map_url: snapshotCoupon.user_public.company_map_url ?? null,
+          }
+        : this.getCompanySnapshotFromAcquired(row);
+      const snapshotUserPublicForCoupon = snapshotUserPublic
+        ? {
+            id: snapshotUserPublic.id ?? String(snapshotCoupon?.user_id ?? row.user_id ?? couponId),
+            company_commercial_name: snapshotUserPublic.company_commercial_name ?? null,
+            company_address: snapshotUserPublic.company_address ?? null,
+            company_map_url: snapshotUserPublic.company_map_url ?? null,
+          }
+        : null;
+
+      if (!row.coupon && (snapshotCoupon || snapshotImageCoupon)) {
+        row.coupon = {
+          id: snapshotCoupon?.id ?? snapshotImageCoupon?.id ?? couponId,
+          title: snapshotTitle || null,
+          description: snapshotDescription,
+          price_discount: snapshotPriceDiscount,
+          end_date: snapshotEndDate || null,
+          user_public: snapshotUserPublicForCoupon,
+        };
+      }
+
+      const existingCoupon = couponById.get(couponId);
+      if (existingCoupon) {
+        const currentTitle = String(existingCoupon.title ?? '').trim();
+        const currentEndDate = String(existingCoupon.end_date ?? '').trim();
+        const shouldReplaceTitle = !!snapshotTitle && (!currentTitle || currentTitle.startsWith(`Cupón #${couponId}`));
+        const shouldReplaceEndDate = !!snapshotEndDate && !currentEndDate;
+        const shouldReplaceStartDate = !!snapshotStartDate && !String(existingCoupon.start_date ?? '').trim();
+        const shouldReplaceDescription = snapshotDescription != null && existingCoupon.description == null;
+        const shouldReplacePrice = snapshotPrice != null && existingCoupon.price == null;
+        const shouldReplacePriceDiscount = snapshotPriceDiscount != null && existingCoupon.price_discount == null;
+        const shouldReplaceCompany = snapshotUserPublicForCoupon != null && !this.hasCompanyData(existingCoupon.user_public ?? null);
+
+        if (
+          shouldReplaceTitle ||
+          shouldReplaceEndDate ||
+          shouldReplaceStartDate ||
+          shouldReplaceDescription ||
+          shouldReplacePrice ||
+          shouldReplacePriceDiscount ||
+          shouldReplaceCompany
+        ) {
+          couponById.set(couponId, {
+            ...existingCoupon,
+            title: shouldReplaceTitle ? snapshotTitle : existingCoupon.title,
+            end_date: shouldReplaceEndDate ? snapshotEndDate : existingCoupon.end_date,
+            start_date: shouldReplaceStartDate ? snapshotStartDate : existingCoupon.start_date,
+            description: shouldReplaceDescription ? snapshotDescription : existingCoupon.description,
+            price: shouldReplacePrice ? String(snapshotPrice) : existingCoupon.price,
+            price_discount: shouldReplacePriceDiscount
+              ? String(snapshotPriceDiscount)
+              : existingCoupon.price_discount,
+            user_public: shouldReplaceCompany ? snapshotUserPublicForCoupon : existingCoupon.user_public,
+          });
+          updatedExistingCoupons += 1;
+          if (shouldReplaceTitle) updatedExistingCouponsWithTitle += 1;
+          if (shouldReplaceEndDate) updatedExistingCouponsWithEndDate += 1;
+        }
+        return;
+      }
+
+      if (!existingCoupon) {
+        const title = snapshotTitle || `Cupón #${couponId}`;
+
+        couponById.set(couponId, {
+          id: couponId,
+          user_id: snapshotCoupon?.user_id ?? row.user_id,
+          category_id: Number.isFinite(snapshotCategoryId) ? snapshotCategoryId : 0,
+          auto_published: false,
+          published: true,
+          active: snapshotCoupon?.active ?? false,
+          title,
+          end_date: snapshotEndDate || '',
+          start_date: snapshotStartDate || '',
+          stock_available: null,
+          stock_total: null,
+          price: snapshotPrice != null ? String(snapshotPrice) : null,
+          price_discount:
+            snapshotPriceDiscount != null
+              ? String(snapshotPriceDiscount)
+              : row.coupon?.price_discount != null
+                ? String(row.coupon.price_discount)
+                : null,
+          description: snapshotDescription,
+          terms: null,
+          created_at: row.acquired_at,
+          updated_at: row.acquired_at,
+          user_public: snapshotUserPublicForCoupon,
+        });
+        enrichedCoupons += 1;
+        if (snapshotTitle) enrichedCouponsWithTitle += 1;
+        if (snapshotEndDate) enrichedCouponsWithEndDate += 1;
+      }
+    });
+
+    if (this.debugImageLogs) {
+      console.info('[MY-COUPONS][COMPANY] enrich faltantes por unique_code', {
+        requestedCodes: uniqueCodes.length,
+        snapshotsResolved: snapshotByCode.size,
+        enrichedCoupons,
+        enrichedCouponsWithTitle,
+        enrichedCouponsWithEndDate,
+        updatedExistingCoupons,
+        updatedExistingCouponsWithTitle,
+        updatedExistingCouponsWithEndDate,
+      });
+    }
+  }
+
+  private async enrichMissingCouponsFromPublicImageSnapshots(
+    targetCouponIds: number[],
+    acquiredRows: CouponAcquired[],
+    couponById: Map<number, Coupon>
+  ): Promise<void> {
+    const uniqueCouponIds = Array.from(new Set(targetCouponIds.filter((id) => Number.isFinite(id))));
+    if (uniqueCouponIds.length === 0) return;
+
+    let snapshots: Array<{
+      id: number | string;
+      title?: string | null;
+      description?: string | null;
+      price?: string | number | null;
+      price_discount?: string | number | null;
+      start_date?: string | null;
+      end_date?: string | null;
+      user?: {
+        company_commercial_name?: string | null;
+        company_address?: string | null;
+        company_map_url?: string | null;
+      } | null;
+    }> = [];
+
+    try {
+      snapshots = await firstValueFrom(
+        this.couponService.getPublicCouponImageSnapshotsByIds(uniqueCouponIds).pipe(take(1), timeout(10000))
+      );
+    } catch (error) {
+      if (this.debugImageLogs) {
+        console.warn('[MY-COUPONS][COMPANY] no se pudo enriquecer desde snapshots públicos de imagen', {
+          targetCouponIds: uniqueCouponIds,
+          error,
+        });
+      }
+      return;
+    }
+
+    let updatedCoupons = 0;
+    let couponsWithCompany = 0;
+    let couponsWithTitle = 0;
+
+    snapshots.forEach((snapshot) => {
+      const couponId = Number(snapshot.id);
+      if (!Number.isFinite(couponId)) return;
+
+      const acquired = acquiredRows.find((row) => Number(row.coupon_id) === couponId);
+      const existing = couponById.get(couponId);
+      const currentTitle = (existing?.title ?? '').trim();
+      const snapshotTitle = String(snapshot.title ?? '').trim();
+      const shouldUseSnapshotTitle = !!snapshotTitle && (!currentTitle || currentTitle.startsWith(`Cupón #${couponId}`));
+
+      const snapshotUser = snapshot.user ?? null;
+      const hasSnapshotCompany = !!(
+        snapshotUser?.company_commercial_name ||
+        snapshotUser?.company_address ||
+        snapshotUser?.company_map_url
+      );
+
+      const snapshotUserPublic = hasSnapshotCompany
+        ? {
+            id: existing?.user_public?.id ?? `public-image-${couponId}`,
+            company_commercial_name: snapshotUser?.company_commercial_name ?? null,
+            company_address: snapshotUser?.company_address ?? null,
+            company_map_url: snapshotUser?.company_map_url ?? null,
+          }
+        : null;
+
+      if (existing) {
+        const hasExistingCompany = this.hasCompanyData(existing.user_public ?? null);
+        const mergedUserPublic = hasExistingCompany
+          ? existing.user_public ?? null
+          : snapshotUserPublic ?? existing.user_public ?? null;
+
+        couponById.set(couponId, {
+          ...existing,
+          title: shouldUseSnapshotTitle ? snapshotTitle : existing.title,
+          description: existing.description ?? snapshot.description ?? null,
+          price:
+            existing.price ?? (snapshot.price != null ? String(snapshot.price) : null),
+          price_discount:
+            existing.price_discount ??
+            (snapshot.price_discount != null ? String(snapshot.price_discount) : null),
+          start_date: existing.start_date || snapshot.start_date || '',
+          end_date: existing.end_date || snapshot.end_date || '',
+          user_public: mergedUserPublic,
+        });
+      } else {
+        couponById.set(couponId, {
+          id: couponId,
+          user_id: acquired?.user_id ?? '',
+          category_id: 0,
+          auto_published: false,
+          published: true,
+          active: false,
+          title: snapshotTitle || acquired?.coupon?.title?.trim() || `Cupón #${couponId}`,
+          end_date: snapshot.end_date ?? acquired?.coupon?.end_date ?? '',
+          start_date: snapshot.start_date ?? '',
+          stock_available: null,
+          stock_total: null,
+          price: snapshot.price != null ? String(snapshot.price) : null,
+          price_discount:
+            snapshot.price_discount != null
+              ? String(snapshot.price_discount)
+              : acquired?.coupon?.price_discount != null
+                ? String(acquired.coupon.price_discount)
+                : null,
+          description: snapshot.description ?? acquired?.coupon?.description ?? null,
+          terms: null,
+          created_at: acquired?.acquired_at ?? '',
+          updated_at: acquired?.acquired_at ?? '',
+          user_public: snapshotUserPublic,
+        });
+      }
+
+      updatedCoupons += 1;
+      if (hasSnapshotCompany) couponsWithCompany += 1;
+      if (shouldUseSnapshotTitle) couponsWithTitle += 1;
+    });
+
+    if (this.debugImageLogs) {
+      console.info('[MY-COUPONS][COMPANY] enrich faltantes desde snapshots públicos de imagen', {
+        requestedIds: uniqueCouponIds,
+        resolvedRows: snapshots.length,
+        updatedCoupons,
+        couponsWithCompany,
+        couponsWithTitle,
+      });
+    }
+  }
+
+  private async enrichMissingCouponTitlesFromStats(
+    token: string,
+    targetCouponIds: number[],
+    couponById: Map<number, Coupon>
+  ): Promise<void> {
+    const uniqueCouponIds = Array.from(
+      new Set(
+        targetCouponIds.filter((couponId) => {
+          if (!Number.isFinite(couponId)) return false;
+          const coupon = couponById.get(couponId);
+          if (!coupon) return true;
+          const title = String(coupon.title ?? '').trim();
+          return !title || title.startsWith(`Cupón #${couponId}`);
+        })
+      )
+    );
+
+    if (uniqueCouponIds.length === 0) return;
+
+    const statsResults = await Promise.all(
+      uniqueCouponIds.map(async (couponId) => {
+        try {
+          const stats = await firstValueFrom(
+            this.couponService.getCouponStatsWithCompany(token, couponId).pipe(take(1), timeout(10000))
+          );
+          return { couponId, stats };
+        } catch (error) {
+          if (this.debugImageLogs) {
+            console.warn('[MY-COUPONS][COMPANY] no se pudo enriquecer título desde coupon_statistics', {
+              couponId,
+              error,
+            });
+          }
+          return { couponId, stats: null };
+        }
+      })
+    );
+
+    let updatedCoupons = 0;
+    let updatedTitles = 0;
+
+    statsResults.forEach(({ couponId, stats }) => {
+      const existing = couponById.get(couponId);
+      if (!existing || !stats) return;
+
+      const statsTitle = String(stats.title ?? '').trim();
+      const currentTitle = String(existing.title ?? '').trim();
+      const shouldReplaceTitle = !!statsTitle && (!currentTitle || currentTitle.startsWith(`Cupón #${couponId}`));
+      if (!shouldReplaceTitle) return;
+
+      couponById.set(couponId, {
+        ...existing,
+        title: statsTitle,
+      });
+      updatedCoupons += 1;
+      updatedTitles += 1;
+    });
+
+    if (this.debugImageLogs) {
+      console.info('[MY-COUPONS][COMPANY] enrich título desde coupon_statistics', {
+        requestedIds: uniqueCouponIds,
+        resolvedRows: statsResults.filter(({ stats }) => stats !== null).length,
+        updatedCoupons,
+        updatedTitles,
+      });
+    }
+  }
+
+  private hasCompanyData(candidate: {
+    company_commercial_name?: string | null;
+    company_address?: string | null;
+    company_map_url?: string | null;
+  } | null | undefined): boolean {
+    return !!(
+      candidate?.company_commercial_name ||
+      candidate?.company_address ||
+      candidate?.company_map_url
+    );
+  }
+
+  private async enrichCompanyDataFromUsersPublic(acquiredRows: CouponAcquired[], couponRows: Coupon[]): Promise<void> {
+    const ownerIds = couponRows
+      .map((coupon) => this.toUuid(coupon.user_id))
+      .filter((id): id is string => !!id);
+
+    const validatedByIds = acquiredRows
+      .map((row) => this.toUuid(row.validated_by))
+      .filter((id): id is string => !!id);
+
+    const userIds = Array.from(new Set([...ownerIds, ...validatedByIds]));
+    if (userIds.length === 0) return;
+
+    let usersPublic: Array<{
+      id: string;
+      first_name: string | null;
+      last_name: string | null;
+      company_commercial_name: string | null;
+      company_address: string | null;
+      company_map_url: string | null;
+    }> = [];
+
+    try {
+      usersPublic = await firstValueFrom(
+        this.couponService.getUsersPublicByIds(userIds).pipe(take(1), timeout(10000))
+      );
+    } catch (error) {
+      if (this.debugImageLogs) {
+        console.warn('[MY-COUPONS][COMPANY] no se pudo enriquecer desde users_public', {
+          userIds,
+          error,
+        });
+      }
+      return;
+    }
+
+    const companyByUserId = new Map<
+      string,
+      {
+        id: string;
+        first_name: string | null;
+        last_name: string | null;
+        company_commercial_name: string | null;
+        company_address: string | null;
+        company_map_url: string | null;
+      }
+    >();
+
+    usersPublic.forEach((row) => {
+      const id = this.toUuid(row.id);
+      if (!id) return;
+      companyByUserId.set(id, row);
+    });
+
+    couponRows.forEach((coupon) => {
+      const hasCompanyAlready = !!(
+        coupon.user_public?.company_commercial_name ||
+        coupon.user_public?.company_address ||
+        coupon.user_public?.company_map_url
+      );
+      if (hasCompanyAlready) return;
+
+      const ownerId = this.toUuid(coupon.user_id);
+      if (!ownerId) return;
+
+      const ownerPublic = companyByUserId.get(ownerId);
+      if (!ownerPublic) return;
+
+      const hasOwnerCompanyData = this.hasCompanyData(ownerPublic);
+      if (!hasOwnerCompanyData) return;
+
+      coupon.user_public = {
+        id: ownerPublic.id,
+        company_commercial_name: ownerPublic.company_commercial_name ?? null,
+        company_address: ownerPublic.company_address ?? null,
+        company_map_url: ownerPublic.company_map_url ?? null,
+      };
+    });
+
+    acquiredRows.forEach((row) => {
+      const hasValidatorData = !!(
+        row.userPublicByValidatedBy?.company_commercial_name ||
+        row.userPublicByValidatedBy?.company_address ||
+        row.userPublicByValidatedBy?.company_map_url
+      );
+      if (hasValidatorData) return;
+
+      const validatorId = this.toUuid(row.validated_by);
+      if (!validatorId) return;
+
+      const validatorPublic = companyByUserId.get(validatorId);
+      if (!validatorPublic) return;
+
+      const hasCompanyData = this.hasCompanyData(validatorPublic);
+      if (!hasCompanyData) return;
+
+      row.userPublicByValidatedBy = {
+        id: validatorPublic.id,
+        first_name: validatorPublic.first_name,
+        last_name: validatorPublic.last_name,
+        company_commercial_name: validatorPublic.company_commercial_name ?? null,
+        company_address: validatorPublic.company_address ?? null,
+        company_map_url: validatorPublic.company_map_url ?? null,
+      };
+    });
+
+    if (this.debugImageLogs) {
+      const usersWithCompany = usersPublic.filter(
+        (row) => !!(row.company_commercial_name || row.company_address || row.company_map_url)
+      );
+      console.info('[MY-COUPONS][COMPANY] enrich desde users_public', {
+        requestedIds: userIds,
+        resolvedIds: usersPublic.length,
+        usersWithCompanyData: usersWithCompany.length,
+        usersWithCompanyIds: usersWithCompany.map((row) => row.id),
+      });
+    }
+  }
+
+  private async enrichCompanyDataFromUniqueCode(
+    token: string,
+    acquiredRows: CouponAcquired[],
+    couponRows: Coupon[]
+  ): Promise<void> {
+    const couponById = new Map<number, Coupon>();
+    couponRows.forEach((coupon) => couponById.set(Number(coupon.id), coupon));
+
+    const uniqueCodes = Array.from(
+      new Set(
+        acquiredRows
+          .filter((row) => {
+            const coupon = couponById.get(Number(row.coupon_id));
+            const hasCouponCompany = this.hasCompanyData(coupon?.user_public ?? null);
+            const hasValidatorCompany = this.hasCompanyData(row.userPublicByValidatedBy ?? null);
+            return !hasCouponCompany && !hasValidatorCompany;
+          })
+          .map((row) => (row.unique_code ?? '').trim())
+          .filter((code) => !!code)
+      )
+    );
+
+    if (uniqueCodes.length === 0) return;
+
+    const snapshots = await Promise.all(
+      uniqueCodes.map(async (uniqueCode) => {
+        try {
+          return await firstValueFrom(
+            this.couponService.getCouponWithImageByCode(token, uniqueCode).pipe(take(1), timeout(10000))
+          );
+        } catch (error) {
+          if (this.debugImageLogs) {
+            console.warn('[MY-COUPONS][COMPANY] no se pudo enriquecer por unique_code', {
+              uniqueCode,
+              error,
+            });
+          }
+          return null;
+        }
+      })
+    );
+
+    let rowsUpdated = 0;
+
+    snapshots.forEach((snapshot) => {
+      if (!snapshot) return;
+
+      const uniqueCode = (snapshot.unique_code ?? '').trim();
+      if (!uniqueCode) return;
+
+      const validatorCompany = snapshot.userPublicByValidatedBy ?? null;
+      if (!this.hasCompanyData(validatorCompany)) return;
+
+      const normalizedValidator = {
+        id: validatorCompany?.id ?? String(snapshot.validated_by ?? snapshot.id),
+        first_name: validatorCompany?.first_name ?? null,
+        last_name: validatorCompany?.last_name ?? null,
+        company_commercial_name: validatorCompany?.company_commercial_name ?? null,
+        company_address: validatorCompany?.company_address ?? null,
+        company_map_url: validatorCompany?.company_map_url ?? null,
+      };
+
+      acquiredRows.forEach((row) => {
+        if ((row.unique_code ?? '').trim() !== uniqueCode) return;
+        if (this.hasCompanyData(row.userPublicByValidatedBy ?? null)) return;
+        row.userPublicByValidatedBy = normalizedValidator;
+        rowsUpdated += 1;
+      });
+
+      const snapshotCouponId = Number(snapshot.coupon_with_image_base64?.id);
+      if (Number.isFinite(snapshotCouponId)) {
+        const coupon = couponById.get(snapshotCouponId);
+        if (coupon && !this.hasCompanyData(coupon.user_public ?? null)) {
+          coupon.user_public = {
+            id: normalizedValidator.id,
+            company_commercial_name: normalizedValidator.company_commercial_name,
+            company_address: normalizedValidator.company_address,
+            company_map_url: normalizedValidator.company_map_url,
+          };
+        }
+      }
+    });
+
+    if (this.debugImageLogs) {
+      console.info('[MY-COUPONS][COMPANY] enrich desde unique_code', {
+        requestedCodes: uniqueCodes.length,
+        resolvedRows: snapshots.filter((snapshot) => snapshot !== null).length,
+        updatedRows: rowsUpdated,
+      });
+    }
+  }
+
+  private async enrichCompanyDataFromCouponOwners(token: string, couponRows: Coupon[]): Promise<void> {
+    const couponsMissingCompany = couponRows.filter((coupon) => {
+      const userPublic = coupon.user_public;
+      return !(
+        userPublic?.company_commercial_name ||
+        userPublic?.company_address ||
+        userPublic?.company_map_url
+      );
+    });
+
+    if (couponsMissingCompany.length === 0) return;
+
+    const missingCouponIds = couponsMissingCompany.map((coupon) => Number(coupon.id));
+
+    try {
+      const publicCompanyRows = await firstValueFrom(
+        this.couponService.getPublicCouponCompaniesByIds(missingCouponIds).pipe(take(1), timeout(10000))
+      );
+      const publicCompanyByCouponId = new Map(
+        publicCompanyRows.map((row) => [Number(row.id), row.user_public] as const)
+      );
+
+      couponsMissingCompany.forEach((coupon) => {
+        const publicCompany = publicCompanyByCouponId.get(Number(coupon.id)) ?? null;
+        if (!publicCompany) return;
+        const hasCompanyData = !!(
+          publicCompany.company_commercial_name ||
+          publicCompany.company_address ||
+          publicCompany.company_map_url
+        );
+        if (!hasCompanyData) return;
+
+        const currentUserPublic = coupon.user_public ?? null;
+        coupon.user_public = {
+          ...(currentUserPublic ?? {}),
+          id: currentUserPublic?.id ?? publicCompany.id,
+          company_commercial_name:
+            currentUserPublic?.company_commercial_name ?? publicCompany.company_commercial_name ?? null,
+          company_address: currentUserPublic?.company_address ?? publicCompany.company_address ?? null,
+          company_map_url: currentUserPublic?.company_map_url ?? publicCompany.company_map_url ?? null,
+        };
+      });
+
+      if (this.debugImageLogs) {
+        console.info('[MY-COUPONS][COMPANY] enrich desde API pública', publicCompanyRows);
+      }
+    } catch (error) {
+      if (this.debugImageLogs) {
+        console.warn('[MY-COUPONS][COMPANY] no se pudo enriquecer desde API pública', {
+          missingCouponIds,
+          error,
+        });
+      }
+    }
+
+    const couponsStillMissingCompany = couponRows.filter((coupon) => {
+      const userPublic = coupon.user_public;
+      return !(
+        userPublic?.company_commercial_name ||
+        userPublic?.company_address ||
+        userPublic?.company_map_url
+      );
+    });
+
+    if (couponsStillMissingCompany.length === 0) return;
+
+    const ownerPairs = await Promise.all(
+      couponsStillMissingCompany.map(async (coupon) => {
+        try {
+          const owner = await firstValueFrom(
+            this.couponService.getCouponOwner(token, Number(coupon.id)).pipe(take(1), timeout(10000))
+          );
+          const ownerId = String(owner?.user_id ?? '').trim();
+          return ownerId ? { couponId: Number(coupon.id), ownerId } : null;
+        } catch (error) {
+          if (this.debugImageLogs) {
+            console.warn('[MY-COUPONS][COMPANY] no se pudo obtener owner para cupón', {
+              couponId: Number(coupon.id),
+              error,
+            });
+          }
+          return null;
+        }
+      })
+    );
+
+    const validOwnerPairs = ownerPairs.filter(
+      (pair): pair is { couponId: number; ownerId: string } => pair !== null
+    );
+    if (validOwnerPairs.length === 0) return;
+
+    const ownerIds = Array.from(new Set(validOwnerPairs.map((pair) => pair.ownerId)));
+    let ownerCouponsRows: Coupon[];
+    try {
+      const ownerCoupons = await firstValueFrom(
+        this.couponService.getCoupons(token, {
+          limit: Math.max(60, ownerIds.length * 20),
+          offset: 0,
+          where: { user_id: { _in: ownerIds } },
+          order_by: [{ created_at: 'desc' }],
+        }).pipe(take(1), timeout(10000))
+      );
+      ownerCouponsRows = ownerCoupons.rows ?? [];
+    } catch (error) {
+      if (this.debugImageLogs) {
+        console.warn('[MY-COUPONS][COMPANY] no se pudo obtener cupones por ownerIds', {
+          ownerIds,
+          error,
+        });
+      }
+      return;
+    }
+
+    const companyByOwnerId = new Map<string, Coupon['user_public']>();
+    ownerCouponsRows.forEach((row) => {
+      const ownerId = String(row.user_id ?? '').trim();
+      if (!ownerId) return;
+
+      const userPublic = row.user_public ?? null;
+      if (!userPublic) return;
+      const hasCompanyData = !!(
+        userPublic.company_commercial_name ||
+        userPublic.company_address ||
+        userPublic.company_map_url
+      );
+      if (!hasCompanyData) return;
+      if (companyByOwnerId.has(ownerId)) return;
+
+      companyByOwnerId.set(ownerId, {
+        id: userPublic.id,
+        company_commercial_name: userPublic.company_commercial_name ?? null,
+        company_address: userPublic.company_address ?? null,
+        company_map_url: userPublic.company_map_url ?? null,
+      });
+    });
+
+    validOwnerPairs.forEach(({ couponId, ownerId }) => {
+      const coupon = couponRows.find((row) => Number(row.id) === couponId);
+      const ownerCompany = companyByOwnerId.get(ownerId);
+      if (!coupon || !ownerCompany) return;
+
+      const currentUserPublic = coupon.user_public ?? null;
+      coupon.user_public = {
+        ...(currentUserPublic ?? {}),
+        id: currentUserPublic?.id ?? ownerCompany.id,
+        company_commercial_name:
+          currentUserPublic?.company_commercial_name ?? ownerCompany.company_commercial_name ?? null,
+        company_address: currentUserPublic?.company_address ?? ownerCompany.company_address ?? null,
+        company_map_url: currentUserPublic?.company_map_url ?? ownerCompany.company_map_url ?? null,
+      };
+    });
+  }
+
+  private async loadImagesForCoupons(token: string, rows: Coupon[], extraCouponIds: number[] = []): Promise<void> {
     this.couponImageById.clear();
-    if (!token || rows.length === 0) return;
+    if (!token || (rows.length === 0 && extraCouponIds.length === 0)) return;
 
     const uniqueCouponIds = Array.from(
       new Set(
-        rows
-          .map((coupon) => Number(coupon.id))
-          .filter((id) => Number.isFinite(id))
+        [
+          ...rows
+            .map((coupon) => Number(coupon.id))
+            .filter((id) => Number.isFinite(id)),
+          ...extraCouponIds.filter((id) => Number.isFinite(id)),
+        ]
       )
     );
 
@@ -789,6 +1896,39 @@ export class MyCouponsComponent implements OnInit {
         const imageUrl = this.toDataUrl(imageData.image_base64, mime || 'image/jpeg');
         this.couponImageById.set(couponId, imageUrl);
       });
+
+      const missingIdsAfterPrivateLoad = uniqueCouponIds.filter((id) => !this.couponImageById.has(id));
+      if (missingIdsAfterPrivateLoad.length > 0) {
+        try {
+          const publicImages = await firstValueFrom(
+            this.couponService.getPublicCouponImagesByIds(missingIdsAfterPrivateLoad).pipe(take(1), timeout(12000))
+          );
+          publicImages.forEach((imageData) => {
+            if (!imageData?.image_base64) return;
+            const couponId = Number(imageData.id);
+            if (!Number.isFinite(couponId)) return;
+
+            const mime = this.normalizeMimeType(imageData.image_mime_type);
+            const imageUrl = this.toDataUrl(imageData.image_base64, mime || 'image/jpeg');
+            this.couponImageById.set(couponId, imageUrl);
+          });
+
+          if (this.debugImageLogs) {
+            console.info('[MY-COUPONS][IMG] fallback imágenes desde API pública', {
+              requestedIds: missingIdsAfterPrivateLoad,
+              resolvedRows: publicImages.length,
+              resolvedIds: publicImages.map((row) => Number(row.id)),
+            });
+          }
+        } catch (error) {
+          if (this.debugImageLogs) {
+            console.warn('[MY-COUPONS][IMG] no se pudo cargar fallback de imágenes públicas', {
+              missingIds: missingIdsAfterPrivateLoad,
+              error,
+            });
+          }
+        }
+      }
 
       if (this.debugImageLogs) {
         const loadedIds = Array.from(this.couponImageById.keys());

@@ -154,6 +154,12 @@ export class ViewCouponsComponent implements OnInit {
     return rawAddress || 'Ubicación no disponible';
   }
 
+  getCouponCommercialName(coupon: Coupon): string {
+    const companyNameFromUser = coupon.user?.company_commercial_name?.trim() ?? '';
+    const companyNameFromUserPublic = coupon.user_public?.company_commercial_name?.trim() ?? '';
+    return companyNameFromUser || companyNameFromUserPublic || 'Empresa no disponible';
+  }
+
   hasAnySocialNetwork(): boolean {
     return !!(
       this.getFacebookUrl() ||
@@ -334,25 +340,21 @@ export class ViewCouponsComponent implements OnInit {
     return String(mimeType).replace(/^"+|"+$/g, '').trim().toLowerCase();
   }
 
-  async onAcquireCoupon(): Promise<void> {
+  onAcquireCoupon(): void {
     if (!this.coupon || !this.hasAvailableStock(this.coupon)) return;
 
     const currentUser = this.auth.getCurrentUser();
-    const isUsuario = this.isUsuarioRole(currentUser);
-
-    if (!isUsuario) {
+    const token = this.auth.token;
+    if (!this.canAcquire(currentUser, token)) {
+      this.showAcquireModal = false;
       this.showLoginRequiredModal = true;
-      return;
-    }
-
-    const needsProfileCompletion = await this.auth.userProfileNeedsCompletion();
-    if (needsProfileCompletion) {
-      this.router.navigateByUrl('/register?type=user');
       return;
     }
 
     this.acquireError = '';
     this.acquireState = 'confirm';
+    this.acquiredCoupon = null;
+    this.showLoginRequiredModal = false;
     this.showAcquireModal = true;
   }
 
@@ -375,25 +377,16 @@ export class ViewCouponsComponent implements OnInit {
   async confirmAcquireCoupon(): Promise<void> {
     if (!this.coupon || !this.hasAvailableStock(this.coupon)) return;
 
-    const currentUser = this.auth.getCurrentUser();
-    const token = this.auth.token;
-
-    if (!this.canAcquire(currentUser, token)) {
-      this.showAcquireModal = false;
-      this.showLoginRequiredModal = true;
-      return;
-    }
-
-    const needsProfileCompletion = await this.auth.userProfileNeedsCompletion();
-    if (needsProfileCompletion) {
-      this.showAcquireModal = false;
-      this.router.navigateByUrl('/register?type=user');
-      return;
-    }
+    const token = await this.resolveAcquireToken();
+    if (!token) return;
 
     this.acquireError = '';
     this.acquireState = 'loading';
+    this.executeAcquireCoupon(token);
+  }
 
+  private executeAcquireCoupon(token: string): void {
+    if (!this.coupon) return;
     this.couponService.acquireCoupon(token, Number(this.coupon.id)).pipe(
       take(1),
       timeout(15000)
@@ -416,6 +409,27 @@ export class ViewCouponsComponent implements OnInit {
         this.cdr.detectChanges();
       }
     });
+  }
+
+  private async resolveAcquireToken(): Promise<string | null> {
+    const currentUser = this.auth.getCurrentUser();
+    const token = this.auth.token;
+
+    if (!this.canAcquire(currentUser, token)) {
+      this.showAcquireModal = false;
+      this.showLoginRequiredModal = true;
+      return null;
+    }
+
+    const needsProfileCompletion = await this.auth.userProfileNeedsCompletion(token);
+    if (needsProfileCompletion) {
+      this.showAcquireModal = false;
+      this.showLoginRequiredModal = false;
+      this.router.navigateByUrl('/register?type=user');
+      return null;
+    }
+
+    return token;
   }
 
   acceptAcquireSuccess(): void {

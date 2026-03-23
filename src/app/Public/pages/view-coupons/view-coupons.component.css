@@ -10,3 +10,7 @@
 	opacity: 1;
 }
 
+.coupon-title {
+	overflow-wrap: anywhere;
+	word-break: break-word;
+}
