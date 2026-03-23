@@ -1185,6 +1185,7 @@
     </div>
 
     <div class="px-6 pb-6 flex-1 overflow-y-auto">
+      @if (role === 'admin') {
       <div class="rounded-2xl bg-[#EEF2FB] p-4 md:p-5 mb-4">
         <div class="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_24px_minmax(0,1fr)] gap-3 text-[#1A2440]">
           <div>
@@ -1214,6 +1215,7 @@
           </div>
         </div>
       </div>
+      }
 
       <div class="rounded-2xl bg-[#F4F7FD] p-4 md:p-5">
         <div class="text-center text-[#1A2440] mt-1 text-[14px] md:text-[18px] font-semibold leading-tight min-h-[1.5rem]">
