@@ -119,8 +119,8 @@ export class FilterBarComponent implements OnChanges {
     categoriaNombre: string;
     fechaInicio: string;
     fechaFin: string;
-    cantidad: number;
-    disponibles: number;
+    cantidad?: number;
+    disponibles?: number;
     precio?: number | null;
     descuento?: number | null;
     autoPublicado?: boolean;
@@ -357,6 +357,8 @@ export class FilterBarComponent implements OnChanges {
       adquiridos: 0,
       canjeados: 0,
     };
+
+  private originalEditCantidad: number | null = null;
 
   get statisticsTotalLabel(): string {
     return `${this.statisticsTarget.canjeados}/${this.statisticsTarget.publicados}`;
@@ -1168,21 +1170,22 @@ export class FilterBarComponent implements OnChanges {
 
     this.editForm = {
       id: coupon.id,
-      titulo: coupon.titulo,
-      cantidad: coupon.disponibles,
+      titulo: coupon.titulo ?? '',
+      cantidad: coupon.disponibles ?? null,
       precio: coupon.precio ?? null,
       descuento: coupon.descuento ?? null,
-      descripcion: coupon.descripcion,
-      fechaInicio: this.toISODate(coupon.fechaInicio),
-      fechaFin: this.toISODate(coupon.fechaFin),
-      categoria: categoriaId != null ? Number(categoriaId) : null,
+      descripcion: coupon.descripcion ?? '',
+      fechaInicio: coupon.fechaInicio ?? '',
+      fechaFin: coupon.fechaFin ?? '',
+      categoria: categoriaId,
       terminos: coupon.terminos ?? '',
       autoPublicado: coupon.autoPublicado ?? false,
-      estado: coupon.estado,
+      estado: coupon.estado ?? '',
       image: coupon.image ?? null,
-      imageName: coupon.imageName ?? this.getDefaultImageName(coupon.imageMime),
+      imageName: coupon.imageName ?? '',
       imageMime: coupon.imageMime ?? '',
     };
+    this.originalEditCantidad = this.editForm.cantidad;
     this.editMinAvailableQuantity = Math.max(0, Math.trunc(coupon.minCantidadDisponible ?? 0));
     this.syncEditPromotionTypeFromForm();
     this.editCouponImageError = '';
@@ -1216,14 +1219,35 @@ export class FilterBarComponent implements OnChanges {
     this.editingCoupon = true;
     this.couponEditSuccess = false;
 
-    // Fail-safe por si el componente padre no devuelve callback por alguna excepción.
     const failSafeTimer = setTimeout(() => {
       if (this.editingCoupon) {
         this.onUpdateCouponError('La actualización tardó demasiado. Intenta nuevamente.');
       }
     }, 15000);
 
-    this.updateCoupon.emit({
+    const cleanBase64 = this.editForm.image
+      ? this.editForm.image.replace(/^data:image\/[a-zA-Z]+;base64,/, '')
+      : null;
+
+    const payload: {
+      id: number;
+      titulo: string;
+      descripcion: string;
+      categoriaId: number;
+      categoriaNombre: string;
+      fechaInicio: string;
+      fechaFin: string;
+      cantidad?: number;
+      disponibles?: number;
+      precio?: number | null;
+      descuento?: number | null;
+      autoPublicado?: boolean;
+      estado: string;
+      terminos: string;
+      image?: string | null;
+      onSuccess: () => void;
+      onError: (message?: string) => void;
+    } = {
       id: this.editForm.id!,
       titulo: this.editForm.titulo,
       descripcion: this.editForm.descripcion,
@@ -1231,14 +1255,12 @@ export class FilterBarComponent implements OnChanges {
       categoriaNombre: categoria.name,
       fechaInicio: this.toDisplayDate(this.editForm.fechaInicio),
       fechaFin: this.toDisplayDate(this.editForm.fechaFin),
-      cantidad: this.editForm.cantidad ?? 0,
-      disponibles: this.editForm.cantidad ?? 0,
       precio: this.editForm.precio,
       descuento: this.editForm.descuento,
       autoPublicado: this.editForm.autoPublicado,
       estado: this.editForm.estado,
       terminos: this.editForm.terminos,
-      image: this.editForm.image,
+      ...(cleanBase64 ? { image: cleanBase64 } : {}),
       onSuccess: () => {
         clearTimeout(failSafeTimer);
         this.onUpdateCouponSuccess();
@@ -1247,7 +1269,15 @@ export class FilterBarComponent implements OnChanges {
         clearTimeout(failSafeTimer);
         this.onUpdateCouponError(message);
       },
-    });
+    };
+
+    if (this.editForm.cantidad !== this.originalEditCantidad && this.editForm.cantidad !== null) {
+      payload.cantidad = this.editForm.cantidad;
+    }
+
+    console.log('payload update coupon:', payload);
+
+    this.updateCoupon.emit(payload);
   }
 
   isEditFormValid(): boolean {
@@ -1340,6 +1370,7 @@ export class FilterBarComponent implements OnChanges {
     this.editCouponImageError = '';
     this.editCouponImageLoading = false;
     this.editMinAvailableQuantity = 0;
+    this.originalEditCantidad = null;
     this.clearEditCouponImageLoadingTimeout();
   }
 

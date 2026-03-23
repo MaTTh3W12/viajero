@@ -60,7 +60,7 @@ export class CouponsListComponent {
     private userProfileService: UserProfileService,
     private categoryService: CategoryService,
     private cdr: ChangeDetectorRef
-  ) {}
+  ) { }
 
   async ngOnInit(): Promise<void> {
     this.tableConfig = this.role === 'admin'
@@ -391,8 +391,8 @@ export class CouponsListComponent {
     categoriaNombre: string;
     fechaInicio: string;
     fechaFin: string;
-    cantidad: number;
-    disponibles: number;
+    cantidad?: number;
+    disponibles?: number;
     precio?: number | null;
     descuento?: number | null;
     autoPublicado?: boolean;
@@ -406,6 +406,7 @@ export class CouponsListComponent {
       if (this.role !== 'empresa' || !this.auth.isKeycloakLoggedIn()) {
         const updatedCoupons = this.allCoupons.map((coupon) => {
           if (coupon.id !== payload.id) return coupon;
+
           return {
             ...coupon,
             titulo: payload.titulo,
@@ -413,14 +414,21 @@ export class CouponsListComponent {
             categoriaId: payload.categoriaId,
             fechaInicio: payload.fechaInicio,
             fechaFin: payload.fechaFin,
-            disponibles: payload.disponibles,
-            disponiblesTotal: coupon.disponiblesTotal ?? payload.disponibles,
+            disponibles:
+              payload.disponibles !== undefined
+                ? payload.disponibles
+                : coupon.disponibles,
+            disponiblesTotal:
+              payload.cantidad !== undefined
+                ? payload.cantidad
+                : (coupon.disponiblesTotal ?? coupon.disponibles),
             vigencia: `${payload.fechaInicio} - ${payload.fechaFin}`,
             estado: payload.estado,
             rawDescripcion: payload.descripcion,
             terminos: payload.terminos,
           };
         });
+
         this.setCoupons(updatedCoupons);
         payload.onSuccess();
         return;
@@ -439,10 +447,11 @@ export class CouponsListComponent {
       }
 
       const currentCoupon = this.allCoupons.find((coupon) => coupon.id === payload.id) ?? null;
-      if (currentCoupon) {
+      if (currentCoupon && payload.disponibles !== undefined) {
         const total = currentCoupon.disponiblesTotal ?? currentCoupon.disponibles ?? 0;
         const available = currentCoupon.disponibles ?? 0;
         const acquired = Math.max(total - available, 0);
+
         if (payload.disponibles < acquired) {
           payload.onError(`La cantidad disponible no puede ser menor a ${acquired} (cupones adquiridos).`);
           return;
@@ -461,21 +470,21 @@ export class CouponsListComponent {
         category_id: payload.categoriaId,
         start_date: this.toIsoDate(payload.fechaInicio),
         end_date: this.toIsoDate(payload.fechaFin),
-        stock_available: payload.disponibles,
-        stock_total: payload.cantidad,
         description: payload.descripcion || null,
         terms: payload.terminos || null,
         price: payload.precio ?? null,
         price_discount: payload.descuento ?? null,
         auto_published: payload.autoPublicado ?? false,
         published: payload.estado === 'Publicado',
+        ...(payload.cantidad !== undefined ? { stock_total: payload.cantidad } : {}),
+        ...(payload.disponibles !== undefined ? { stock_available: payload.disponibles } : {}),
         ...(payload.image ? { image: payload.image } : {}),
       };
 
+      console.log('variables graphql update coupon:', variables);
+
       await firstValueFrom(this.couponService.updateCoupon(token, variables));
 
-      // Primero cerramos estado de carga del modal para evitar que se quede pegado
-      // si algo falla durante la recarga de la tabla.
       payload.onSuccess();
 
       try {
