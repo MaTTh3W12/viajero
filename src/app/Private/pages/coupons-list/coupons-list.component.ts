@@ -515,6 +515,8 @@ export class CouponsListComponent {
       imageMime: this.normalizeMimeType(row.imageMimeType),
       imageName: this.normalizeMimeType(row.imageMimeType).startsWith('application/pdf') ? 'Archivo actual.pdf' : 'Imagen actual',
       minCantidadDisponible: acquired,
+      fechaInicio: this.toIsoDate(row.fechaInicio),
+      fechaFin: this.toIsoDate(row.fechaFin),
     });
 
     if (row.imagePreview) return;
