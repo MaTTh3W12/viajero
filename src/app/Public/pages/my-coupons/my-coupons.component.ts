@@ -43,7 +43,6 @@ interface MyCouponItem {
   styleUrl: './my-coupons.component.css',
 })
 export class MyCouponsComponent implements OnInit {
-  private readonly debugImageLogs = true;
   loading = false;
   error = '';
   qrLoading = false;
@@ -286,8 +285,7 @@ export class MyCouponsComponent implements OnInit {
         margin: 1,
         errorCorrectionLevel: 'M',
       });
-    } catch (error) {
-      console.error('[MY-COUPONS] Error generating QR', error);
+    } catch {
       this.qrError = 'No se pudo generar el QR en este momento.';
     } finally {
       this.qrLoading = false;
@@ -583,25 +581,6 @@ export class MyCouponsComponent implements OnInit {
         return;
       }
 
-      if (this.debugImageLogs) {
-        console.info(
-          '[MY-COUPONS][COMPANY] snapshot desde acquired',
-          acquiredRows.map((row) => ({
-            couponId: Number(row.coupon_id),
-            redeemed: row.redeemed,
-            redeemedAt: row.redeemed_at ?? null,
-            validatedBy: row.validated_by ?? null,
-            couponCompanyName: row.coupon?.user_public?.company_commercial_name ?? null,
-            couponAddress: row.coupon?.user_public?.company_address ?? null,
-            couponTitleFromAcquired: row.coupon?.title ?? null,
-            couponEndDateFromAcquired: row.coupon?.end_date ?? null,
-            couponImageTitleFromAcquired: row.coupon_with_image_base64?.title ?? null,
-            couponImageEndDateFromAcquired: row.coupon_with_image_base64?.end_date ?? null,
-            validatedByCompanyName: row.userPublicByValidatedBy?.company_commercial_name ?? null,
-            validatedByAddress: row.userPublicByValidatedBy?.company_address ?? null,
-          }))
-        );
-      }
 
       const couponIds = Array.from(
         new Set(
@@ -611,13 +590,6 @@ export class MyCouponsComponent implements OnInit {
         )
       );
 
-      if (this.debugImageLogs) {
-        console.info('[MY-COUPONS][IMG] couponIds adquiridos', {
-          totalAcquiredRows: acquiredRows.length,
-          uniqueCouponIds: couponIds.length,
-          couponIds,
-        });
-      }
 
       const couponRows = await firstValueFrom(
         this.couponService.getCouponsByIds(token, couponIds).pipe(take(1), timeout(15000))
@@ -627,22 +599,6 @@ export class MyCouponsComponent implements OnInit {
       const couponRowsIds = couponRows.map((coupon) => Number(coupon.id));
       const missingCouponIds = couponIds.filter((id) => !couponRowsIds.includes(id));
 
-      if (this.debugImageLogs) {
-        console.info('[MY-COUPONS][IMG] cupones base cargados', {
-          totalCouponRows: couponRows.length,
-          couponIdsFromCoupons: couponRowsIds,
-          missingCouponIds,
-        });
-        console.info(
-          '[MY-COUPONS][COMPANY] datos comerciales recibidos',
-          couponRows.map((coupon) => ({
-            id: Number(coupon.id),
-            companyName: coupon.user_public?.company_commercial_name ?? coupon.user?.company_commercial_name ?? null,
-            companyAddress: coupon.user_public?.company_address ?? coupon.user?.company_address ?? null,
-            companyMapUrl: coupon.user_public?.company_map_url ?? coupon.user?.company_map_url ?? null,
-          }))
-        );
-      }
 
       const couponById = new Map<number, Coupon>();
       couponRows.forEach((coupon) => couponById.set(Number(coupon.id), coupon));
@@ -660,20 +616,7 @@ export class MyCouponsComponent implements OnInit {
             couponById.set(id, coupon);
           });
 
-          if (this.debugImageLogs) {
-            console.info('[MY-COUPONS][COMPANY] cupones fallback desde API pública', {
-              requestedIds: stillMissingCouponIds,
-              resolvedRows: publicFallbackRows.length,
-              resolvedIds: publicFallbackRows.map((coupon) => Number(coupon.id)),
-            });
-          }
         } catch (error) {
-          if (this.debugImageLogs) {
-            console.warn('[MY-COUPONS][COMPANY] no se pudo cargar fallback de cupones públicos', {
-              missingCouponIds: stillMissingCouponIds,
-              error,
-            });
-          }
         }
       }
 
@@ -730,57 +673,8 @@ export class MyCouponsComponent implements OnInit {
         .filter((item): item is MyCouponItem => item !== null);
       if (currentRequestId !== this.latestLoadRequestId) return;
 
-      if (this.debugImageLogs) {
-        console.info(
-          '[MY-COUPONS][COMPANY] datos finales para UI',
-          this.coupons.map((item) => ({
-            id: Number(item.coupon.id),
-            title: item.coupon.title ?? null,
-            endDate: item.coupon.end_date ?? null,
-            companyName: item.coupon.user_public?.company_commercial_name ?? item.coupon.user?.company_commercial_name ?? null,
-            companyAddress: item.coupon.user_public?.company_address ?? item.coupon.user?.company_address ?? null,
-            companyMapUrl: item.coupon.user_public?.company_map_url ?? item.coupon.user?.company_map_url ?? null,
-            redeemed: item.acquired.redeemed,
-            redeemedAt: item.acquired.redeemed_at ?? null,
-            status: this.isAcquiredRedeemed(item.acquired) ? 'canjeado' : 'activo-vencido',
-          }))
-        );
-        console.info('[MY-COUPONS][FILTER] resumen actual', {
-          selectedStatus: this.selectedStatus,
-          loadedRows: this.coupons.length,
-          redeemedRows: this.coupons.filter((item) => this.isAcquiredRedeemed(item.acquired)).length,
-          notRedeemedRows: this.coupons.filter((item) => !this.isAcquiredRedeemed(item.acquired)).length,
-          visibleRows: this.filteredCoupons.length,
-          currentPage: this.currentPage,
-          totalPages: this.totalPages,
-          searchText: this.searchText,
-          dateFrom: this.canjeadoDateFrom,
-          dateTo: this.canjeadoDateTo,
-        });
-        const nowTime = Date.now();
-        const nonRedeemed = this.coupons.filter((item) => !this.isAcquiredRedeemed(item.acquired));
-        const expiredRows = nonRedeemed.filter((item) => this.isCouponExpiredForUser(item, nowTime));
-        const nonExpiredRows = nonRedeemed.filter((item) => !this.isCouponExpiredForUser(item, nowTime));
-        console.info('[MY-COUPONS][VENCIDO] diagnóstico', {
-          today: new Date(nowTime).toISOString().slice(0, 10),
-          nonRedeemedCount: nonRedeemed.length,
-          expiredCount: expiredRows.length,
-          nonExpiredCount: nonExpiredRows.length,
-          expiredCoupons: expiredRows.map((item) => ({
-            couponId: Number(item.coupon.id),
-            endDate: this.getCouponEndDate(item),
-            active: item.coupon.active ?? null,
-          })),
-          nonExpiredCoupons: nonExpiredRows.map((item) => ({
-            couponId: Number(item.coupon.id),
-            endDate: this.getCouponEndDate(item),
-            active: item.coupon.active ?? null,
-          })),
-        });
-      }
-    } catch (error) {
+    } catch {
       if (currentRequestId !== this.latestLoadRequestId) return;
-      console.error('[MY-COUPONS] Error loading acquired coupons', error);
       this.error = 'No se pudieron cargar tus cupones en este momento.';
       this.coupons = [];
     } finally {
@@ -1112,12 +1006,6 @@ export class MyCouponsComponent implements OnInit {
             this.couponService.getCouponWithImageByCode(token, uniqueCode).pipe(take(1), timeout(10000))
           );
         } catch (error) {
-          if (this.debugImageLogs) {
-            console.warn('[MY-COUPONS][COMPANY] no se pudo enriquecer cupón faltante por unique_code', {
-              uniqueCode,
-              error,
-            });
-          }
           return null;
         }
       })
@@ -1261,18 +1149,6 @@ export class MyCouponsComponent implements OnInit {
       }
     });
 
-    if (this.debugImageLogs) {
-      console.info('[MY-COUPONS][COMPANY] enrich faltantes por unique_code', {
-        requestedCodes: uniqueCodes.length,
-        snapshotsResolved: snapshotByCode.size,
-        enrichedCoupons,
-        enrichedCouponsWithTitle,
-        enrichedCouponsWithEndDate,
-        updatedExistingCoupons,
-        updatedExistingCouponsWithTitle,
-        updatedExistingCouponsWithEndDate,
-      });
-    }
   }
 
   private async enrichMissingCouponsFromPublicImageSnapshots(
@@ -1303,12 +1179,6 @@ export class MyCouponsComponent implements OnInit {
         this.couponService.getPublicCouponImageSnapshotsByIds(uniqueCouponIds).pipe(take(1), timeout(10000))
       );
     } catch (error) {
-      if (this.debugImageLogs) {
-        console.warn('[MY-COUPONS][COMPANY] no se pudo enriquecer desde snapshots públicos de imagen', {
-          targetCouponIds: uniqueCouponIds,
-          error,
-        });
-      }
       return;
     }
 
@@ -1394,15 +1264,6 @@ export class MyCouponsComponent implements OnInit {
       if (shouldUseSnapshotTitle) couponsWithTitle += 1;
     });
 
-    if (this.debugImageLogs) {
-      console.info('[MY-COUPONS][COMPANY] enrich faltantes desde snapshots públicos de imagen', {
-        requestedIds: uniqueCouponIds,
-        resolvedRows: snapshots.length,
-        updatedCoupons,
-        couponsWithCompany,
-        couponsWithTitle,
-      });
-    }
   }
 
   private async enrichMissingCouponTitlesFromStats(
@@ -1432,12 +1293,6 @@ export class MyCouponsComponent implements OnInit {
           );
           return { couponId, stats };
         } catch (error) {
-          if (this.debugImageLogs) {
-            console.warn('[MY-COUPONS][COMPANY] no se pudo enriquecer título desde coupon_statistics', {
-              couponId,
-              error,
-            });
-          }
           return { couponId, stats: null };
         }
       })
@@ -1463,14 +1318,6 @@ export class MyCouponsComponent implements OnInit {
       updatedTitles += 1;
     });
 
-    if (this.debugImageLogs) {
-      console.info('[MY-COUPONS][COMPANY] enrich título desde coupon_statistics', {
-        requestedIds: uniqueCouponIds,
-        resolvedRows: statsResults.filter(({ stats }) => stats !== null).length,
-        updatedCoupons,
-        updatedTitles,
-      });
-    }
   }
 
   private hasCompanyData(candidate: {
@@ -1511,12 +1358,6 @@ export class MyCouponsComponent implements OnInit {
         this.couponService.getUsersPublicByIds(userIds).pipe(take(1), timeout(10000))
       );
     } catch (error) {
-      if (this.debugImageLogs) {
-        console.warn('[MY-COUPONS][COMPANY] no se pudo enriquecer desde users_public', {
-          userIds,
-          error,
-        });
-      }
       return;
     }
 
@@ -1590,17 +1431,6 @@ export class MyCouponsComponent implements OnInit {
       };
     });
 
-    if (this.debugImageLogs) {
-      const usersWithCompany = usersPublic.filter(
-        (row) => !!(row.company_commercial_name || row.company_address || row.company_map_url)
-      );
-      console.info('[MY-COUPONS][COMPANY] enrich desde users_public', {
-        requestedIds: userIds,
-        resolvedIds: usersPublic.length,
-        usersWithCompanyData: usersWithCompany.length,
-        usersWithCompanyIds: usersWithCompany.map((row) => row.id),
-      });
-    }
   }
 
   private async enrichCompanyDataFromUniqueCode(
@@ -1634,12 +1464,6 @@ export class MyCouponsComponent implements OnInit {
             this.couponService.getCouponWithImageByCode(token, uniqueCode).pipe(take(1), timeout(10000))
           );
         } catch (error) {
-          if (this.debugImageLogs) {
-            console.warn('[MY-COUPONS][COMPANY] no se pudo enriquecer por unique_code', {
-              uniqueCode,
-              error,
-            });
-          }
           return null;
         }
       })
@@ -1686,13 +1510,6 @@ export class MyCouponsComponent implements OnInit {
       }
     });
 
-    if (this.debugImageLogs) {
-      console.info('[MY-COUPONS][COMPANY] enrich desde unique_code', {
-        requestedCodes: uniqueCodes.length,
-        resolvedRows: snapshots.filter((snapshot) => snapshot !== null).length,
-        updatedRows: rowsUpdated,
-      });
-    }
   }
 
   private async enrichCompanyDataFromCouponOwners(token: string, couponRows: Coupon[]): Promise<void> {
@@ -1738,16 +1555,7 @@ export class MyCouponsComponent implements OnInit {
         };
       });
 
-      if (this.debugImageLogs) {
-        console.info('[MY-COUPONS][COMPANY] enrich desde API pública', publicCompanyRows);
-      }
     } catch (error) {
-      if (this.debugImageLogs) {
-        console.warn('[MY-COUPONS][COMPANY] no se pudo enriquecer desde API pública', {
-          missingCouponIds,
-          error,
-        });
-      }
     }
 
     const couponsStillMissingCompany = couponRows.filter((coupon) => {
@@ -1770,12 +1578,6 @@ export class MyCouponsComponent implements OnInit {
           const ownerId = String(owner?.user_id ?? '').trim();
           return ownerId ? { couponId: Number(coupon.id), ownerId } : null;
         } catch (error) {
-          if (this.debugImageLogs) {
-            console.warn('[MY-COUPONS][COMPANY] no se pudo obtener owner para cupón', {
-              couponId: Number(coupon.id),
-              error,
-            });
-          }
           return null;
         }
       })
@@ -1799,12 +1601,6 @@ export class MyCouponsComponent implements OnInit {
       );
       ownerCouponsRows = ownerCoupons.rows ?? [];
     } catch (error) {
-      if (this.debugImageLogs) {
-        console.warn('[MY-COUPONS][COMPANY] no se pudo obtener cupones por ownerIds', {
-          ownerIds,
-          error,
-        });
-      }
       return;
     }
 
@@ -1863,29 +1659,12 @@ export class MyCouponsComponent implements OnInit {
       )
     );
 
-    if (this.debugImageLogs) {
-      console.info('[MY-COUPONS][IMG] solicitando imágenes por IDs', {
-        totalRequested: uniqueCouponIds.length,
-        requestedIds: uniqueCouponIds,
-      });
-    }
 
     try {
       const images = await firstValueFrom(
         this.couponService.getCouponImagesByIds(token, uniqueCouponIds).pipe(take(1), timeout(15000))
       );
 
-      if (this.debugImageLogs) {
-        console.info('[MY-COUPONS][IMG] respuesta backend imágenes', {
-          totalRows: images.length,
-          rows: images.map((image) => ({
-            id: Number(image.id),
-            hasBase64: !!image.image_base64,
-            mime: image.image_mime_type,
-            size: image.image_size,
-          })),
-        });
-      }
 
       images.forEach((imageData) => {
         if (!imageData?.image_base64) return;
@@ -1913,38 +1692,11 @@ export class MyCouponsComponent implements OnInit {
             this.couponImageById.set(couponId, imageUrl);
           });
 
-          if (this.debugImageLogs) {
-            console.info('[MY-COUPONS][IMG] fallback imágenes desde API pública', {
-              requestedIds: missingIdsAfterPrivateLoad,
-              resolvedRows: publicImages.length,
-              resolvedIds: publicImages.map((row) => Number(row.id)),
-            });
-          }
         } catch (error) {
-          if (this.debugImageLogs) {
-            console.warn('[MY-COUPONS][IMG] no se pudo cargar fallback de imágenes públicas', {
-              missingIds: missingIdsAfterPrivateLoad,
-              error,
-            });
-          }
         }
       }
 
-      if (this.debugImageLogs) {
-        const loadedIds = Array.from(this.couponImageById.keys());
-        const missingIds = uniqueCouponIds.filter((id) => !this.couponImageById.has(id));
-
-        console.info('[MY-COUPONS][IMG] resultado mapeo imágenes', {
-          loadedCount: loadedIds.length,
-          loadedIds,
-          missingCount: missingIds.length,
-          missingIds,
-        });
-      }
     } catch {
-      if (this.debugImageLogs) {
-        console.error('[MY-COUPONS][IMG] error cargando imágenes por lote');
-      }
       return;
     }
   }

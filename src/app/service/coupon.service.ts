@@ -1494,8 +1494,7 @@ export class CouponService {
         rows: data.viajerosv_coupons_acquired,
         total: data.viajerosv_coupons_acquired_aggregate.aggregate.count,
       })),
-      catchError((error) => {
-        console.warn('[COUPONS] getCouponsAcquired fallback to basic coupon payload', error);
+      catchError(() => {
         return this.executeOperation<GetCouponsAcquiredData, typeof safeVariables>(token, queryBasic, safeVariables).pipe(
           map((data) => ({
             rows: data.viajerosv_coupons_acquired,
@@ -1563,8 +1562,7 @@ export class CouponService {
 
     return this.executeOperation<GetCouponsByIdsData, { ids: number[] }>(token, queryWithCompany, { ids: couponIds }).pipe(
       map((data) => data.viajerosv_coupons ?? []),
-      catchError((error) => {
-        console.warn('[COUPONS] getCouponsByIds fallback to basic query', error);
+      catchError(() => {
         return this.executeOperation<GetCouponsByIdsData, { ids: number[] }>(token, queryBasic, { ids: couponIds }).pipe(
           map((data) => data.viajerosv_coupons ?? [])
         );
@@ -2023,8 +2021,7 @@ export class CouponService {
       { unique_code: uniqueCode }
     ).pipe(
       map((data) => this.mapCouponAcquiredWithImage(data.viajerosv_coupons_acquired[0] ?? null)),
-      catchError((error) => {
-        console.info('[COUPONS] getCouponWithImageByCode fallback sin campos de detalle', error);
+      catchError(() => {
         return this.executeOperation<GetCouponWithImageByCodeData, { unique_code: string }>(token, queryWithoutImage, {
           unique_code: uniqueCode,
         }).pipe(map((data) => this.mapCouponAcquiredWithImage(data.viajerosv_coupons_acquired[0] ?? null)));
