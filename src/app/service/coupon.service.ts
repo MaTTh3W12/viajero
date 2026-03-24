@@ -1,15 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, catchError, forkJoin, map, of } from 'rxjs';
-
-declare global {
-  interface Window {
-    __ENV__?: {
-      AUTH_DOMAIN?: string;
-      HASURA_GRAPHQL_ENDPOINT?: string;
-    };
-  }
-}
+import { getHasuraGraphqlEndpoint } from './hasura-endpoint';
 
 interface GraphQLError {
   message: string;
@@ -137,7 +129,7 @@ interface AcquireCouponData {
 }
 
 interface GetCouponsAcquiredData {
-  viajerosv_coupons_acquired: CouponAcquired[];
+  viajerosv_coupons_acquired: Array<CouponAcquired & { coupon_public?: CouponAcquired['coupon'] | null }>;
   viajerosv_coupons_acquired_aggregate: {
     aggregate: {
       count: number;
@@ -222,29 +214,27 @@ interface TransferCouponData {
   viajerosv_transfer_coupon: TransferCouponResult | null;
 }
 
-interface CouponStatsWithCompanyRow {
-  coupon_id: number | string;
-  company_id: number | string;
-  title: string | null;
-  stock_total: number | null;
-  stock_available: number | null;
-  total_acquired: number | null;
-  total_redeemed: number | null;
-  total_pending: number | null;
-}
-
 interface GetCouponStatsWithCompanyData {
-  viajerosv_coupon_statistics: CouponStatsWithCompanyRow[];
-}
-
-interface CouponMonthlyRedemptionHistoryRow {
-  month_name: string;
-  redemption_year: number;
-  total_redemptions: number | null;
+  viajerosv_coupons: Array<{
+    id: number | string;
+    user_id: number | string;
+    title: string | null;
+    stock_total: number | null;
+    stock_available: number | null;
+  }>;
+  acquired_total: {
+    aggregate: { count: number } | null;
+  };
+  redeemed_total: {
+    aggregate: { count: number } | null;
+  };
+  pending_total: {
+    aggregate: { count: number } | null;
+  };
 }
 
 interface GetCouponMonthlyRedemptionHistoryData {
-  viajerosv_coupon_redemption_monthly_stats: CouponMonthlyRedemptionHistoryRow[];
+  viajerosv_coupons_acquired: Array<{ redeemed_at: string | null }>;
 }
 
 interface CompanyCouponStatsRow {
@@ -777,7 +767,6 @@ export interface CompanySocialLinks {
   company_website: string | null;
 }
 
-const DEFAULT_HASURA_ENDPOINT = 'https://api.grupoavanza.work/v1/graphql';
 const GET_COUPONS_QUERY = `
   query GetCoupons(
     $limit: Int!,
@@ -982,10 +971,34 @@ export class CouponService {
   };
 
   private get endpoint(): string {
-    if (typeof window === 'undefined') {
-      return DEFAULT_HASURA_ENDPOINT;
+    return getHasuraGraphqlEndpoint();
+  }
+
+  /** Alineado con coupons-list.buildHistoryFromAcquiredRows (etiquetas mes corto ES). */
+  private mapRedeemedAtRowsToMonthlyHistory(rows: Array<{ redeemed_at: string | null }>): CouponMonthlyRedemptionHistory[] {
+    const shortMonths = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+    const grouped = new Map<string, { month: number; year: number; total: number }>();
+
+    for (const row of rows) {
+      if (!row.redeemed_at) continue;
+      const date = new Date(row.redeemed_at);
+      if (Number.isNaN(date.getTime())) continue;
+
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const key = `${year}-${String(month).padStart(2, '0')}`;
+      const current = grouped.get(key) ?? { month, year, total: 0 };
+      current.total += 1;
+      grouped.set(key, current);
     }
-    return window.__ENV__?.HASURA_GRAPHQL_ENDPOINT ?? DEFAULT_HASURA_ENDPOINT;
+
+    return Array.from(grouped.values())
+      .sort((a, b) => a.year - b.year || a.month - b.month)
+      .map((entry) => ({
+        monthName: shortMonths[Math.max(1, Math.min(12, entry.month)) - 1] ?? 'ENE',
+        redemptionYear: entry.year,
+        totalRedemptions: entry.total,
+      }));
   }
 
   private executeOperation<TData, TVariables extends object>(
@@ -1213,11 +1226,6 @@ export class CouponService {
           image_base64
           image_size
           image_mime_type
-          user {
-            company_commercial_name
-            company_address
-            company_map_url
-          }
         }
       }
     `;
@@ -1365,122 +1373,130 @@ export class CouponService {
     token: string,
     variables: GetCouponsAcquiredVariables = { limit: 10, offset: 0, where: { redeemed: { _eq: true } } }
   ): Observable<CouponAcquiredListResult> {
+    const normalizeRows = (
+      rows: Array<CouponAcquired & { coupon_public?: CouponAcquired['coupon'] | null }>
+    ): CouponAcquired[] =>
+      (rows ?? []).map((row) => {
+        const normalizedCoupon = row.coupon ?? row.coupon_public ?? null;
+        const fallbackCouponId = row.coupon_id ?? normalizedCoupon?.id ?? row.id;
+        const fallbackUserId = row.user_id ?? row.user_public?.id ?? row.validated_by ?? row.id;
+
+        return {
+          ...row,
+          coupon: normalizedCoupon,
+          coupon_id: fallbackCouponId,
+          user_id: fallbackUserId,
+        };
+      });
+
     const queryWithCompany = `
       query GetCouponsAcquired(
-        $limit: Int!,
-        $offset: Int!,
-        $where: viajerosv_coupons_acquired_bool_exp!
-      ) {
-        viajerosv_coupons_acquired(
-          limit: $limit,
-          offset: $offset,
-          order_by: { acquired_at: desc },
-          where: $where
-        ) {
-          coupon_id
-          id
-          user_id
-          validated_by
-          redeemed
-          unique_code
-          acquired_at
-          redeemed_at
-          user_public {
-            id
-            first_name
-            last_name
-            email
-          }
-          coupon {
-            id
-            title
-            description
-            price_discount
-            end_date
-            user_public {
-              id
-              company_commercial_name
-              company_address
-              company_map_url
-            }
-          }
-          userPublicByValidatedBy {
-            id
-            first_name
-            last_name
-            company_commercial_name
-            company_address
-            company_map_url
-            company_facebook
-            company_instagram
-            company_youtube
-            company_twitter
-            company_website
-            email
-          }
-        }
-        viajerosv_coupons_acquired_aggregate(where: $where) {
-          aggregate {
-            count
-          }
-        }
-      }
+  $limit: Int!, 
+  $offset: Int!, 
+  $where: viajerosv_coupons_acquired_bool_exp!
+) {
+  viajerosv_coupons_acquired(
+    limit: $limit, 
+    offset: $offset, 
+    order_by: {acquired_at: desc}, 
+    where: $where
+  ) {
+    coupon_id
+    user_id
+    id
+    unique_code
+    acquired_at
+    redeemed
+    redeemed_at
+    validated_by
+    user_public {
+      id
+      first_name
+      last_name
+      email
+    }
+    coupon_public {
+      id
+      title
+      description
+      price_discount
+      end_date
+    }
+    userPublicByValidatedBy {
+      id
+      first_name
+      last_name
+      company_commercial_name
+      company_address
+      company_map_url
+      company_facebook
+      company_instagram
+      company_youtube
+      company_twitter
+      company_website
+    }
+  }
+  viajerosv_coupons_acquired_aggregate(where: $where) {
+    aggregate {
+      count
+    }
+  }
+}
     `;
 
     const queryBasic = `
       query GetCouponsAcquired(
-        $limit: Int!,
-        $offset: Int!,
-        $where: viajerosv_coupons_acquired_bool_exp!
-      ) {
-        viajerosv_coupons_acquired(
-          limit: $limit,
-          offset: $offset,
-          order_by: { acquired_at: desc },
-          where: $where
-        ) {
-          coupon_id
-          id
-          user_id
-          validated_by
-          redeemed
-          unique_code
-          acquired_at
-          redeemed_at
-          user_public {
-            id
-            first_name
-            last_name
-            email
-          }
-          coupon {
-            id
-            title
-            description
-            price_discount
-            end_date
-          }
-          userPublicByValidatedBy {
-            id
-            first_name
-            last_name
-            company_commercial_name
-            company_address
-            company_map_url
-            company_facebook
-            company_instagram
-            company_youtube
-            company_twitter
-            company_website
-            email
-          }
-        }
-        viajerosv_coupons_acquired_aggregate(where: $where) {
-          aggregate {
-            count
-          }
-        }
-      }
+  $limit: Int!, 
+  $offset: Int!, 
+  $where: viajerosv_coupons_acquired_bool_exp!
+) {
+  viajerosv_coupons_acquired(
+    limit: $limit, 
+    offset: $offset, 
+    order_by: {acquired_at: desc}, 
+    where: $where
+  ) {
+    coupon_id
+    user_id
+    id
+    unique_code
+    acquired_at
+    redeemed
+    redeemed_at
+    validated_by
+    user_public {
+      id
+      first_name
+      last_name
+      email
+    }
+    coupon_public {
+      id
+      title
+      description
+      price_discount
+      end_date
+    }
+    userPublicByValidatedBy {
+      id
+      first_name
+      last_name
+      company_commercial_name
+      company_address
+      company_map_url
+      company_facebook
+      company_instagram
+      company_youtube
+      company_twitter
+      company_website
+    }
+  }
+  viajerosv_coupons_acquired_aggregate(where: $where) {
+    aggregate {
+      count
+    }
+  }
+}
     `;
 
     const safeVariables: Required<Pick<GetCouponsAcquiredVariables, 'limit' | 'offset' | 'where'>> = {
@@ -1491,13 +1507,13 @@ export class CouponService {
 
     return this.executeOperation<GetCouponsAcquiredData, typeof safeVariables>(token, queryWithCompany, safeVariables).pipe(
       map((data) => ({
-        rows: data.viajerosv_coupons_acquired,
+        rows: normalizeRows(data.viajerosv_coupons_acquired),
         total: data.viajerosv_coupons_acquired_aggregate.aggregate.count,
       })),
       catchError(() => {
         return this.executeOperation<GetCouponsAcquiredData, typeof safeVariables>(token, queryBasic, safeVariables).pipe(
           map((data) => ({
-            rows: data.viajerosv_coupons_acquired,
+            rows: normalizeRows(data.viajerosv_coupons_acquired),
             total: data.viajerosv_coupons_acquired_aggregate.aggregate.count,
           }))
         );
@@ -1605,33 +1621,51 @@ export class CouponService {
   getCouponStatsWithCompany(token: string, couponId: number): Observable<CouponStatsWithCompany | null> {
     const query = `
       query GetCouponStatsWithCompany($coupon_id: bigint!) {
-        viajerosv_coupon_statistics(where: { coupon_id: { _eq: $coupon_id } }) {
-          coupon_id
-          company_id
+        viajerosv_coupons(where: { id: { _eq: $coupon_id } }, limit: 1) {
+          id
+          user_id
           title
           stock_total
           stock_available
-          total_acquired
-          total_redeemed
-          total_pending
+        }
+        acquired_total: viajerosv_coupons_acquired_aggregate(
+          where: { coupon_id: { _eq: $coupon_id } }
+        ) {
+          aggregate {
+            count
+          }
+        }
+        redeemed_total: viajerosv_coupons_acquired_aggregate(
+          where: { coupon_id: { _eq: $coupon_id }, redeemed: { _eq: true } }
+        ) {
+          aggregate {
+            count
+          }
+        }
+        pending_total: viajerosv_coupons_acquired_aggregate(
+          where: { coupon_id: { _eq: $coupon_id }, redeemed: { _eq: false } }
+        ) {
+          aggregate {
+            count
+          }
         }
       }
     `;
 
     return this.executeOperation<GetCouponStatsWithCompanyData, { coupon_id: number }>(token, query, { coupon_id: couponId }).pipe(
       map((data) => {
-        const row = data.viajerosv_coupon_statistics?.[0];
+        const row = data.viajerosv_coupons?.[0];
         if (!row) return null;
 
         return {
-          couponId: row.coupon_id,
-          companyId: row.company_id,
+          couponId: row.id,
+          companyId: row.user_id,
           title: row.title?.trim() || 'Cupón sin nombre',
           stockTotal: row.stock_total ?? 0,
           stockAvailable: row.stock_available ?? 0,
-          totalAcquired: row.total_acquired ?? 0,
-          totalRedeemed: row.total_redeemed ?? 0,
-          totalPending: row.total_pending ?? 0,
+          totalAcquired: data.acquired_total?.aggregate?.count ?? 0,
+          totalRedeemed: data.redeemed_total?.aggregate?.count ?? 0,
+          totalPending: data.pending_total?.aggregate?.count ?? 0,
         };
       })
     );
@@ -1640,25 +1674,20 @@ export class CouponService {
   getMonthlyRedemptionHistory(token: string, couponId: number): Observable<CouponMonthlyRedemptionHistory[]> {
     const query = `
       query GetMonthlyRedemptionHistory($coupon_id: bigint!) {
-        viajerosv_coupon_redemption_monthly_stats(
-          where: { coupon_id: { _eq: $coupon_id } }
-          order_by: { redemption_year: asc, redemption_month: asc }
+        viajerosv_coupons_acquired(
+          where: {
+            coupon_id: { _eq: $coupon_id }
+            redeemed: { _eq: true }
+            redeemed_at: { _is_null: false }
+          }
         ) {
-          month_name
-          redemption_year
-          total_redemptions
+          redeemed_at
         }
       }
     `;
 
     return this.executeOperation<GetCouponMonthlyRedemptionHistoryData, { coupon_id: number }>(token, query, { coupon_id: couponId }).pipe(
-      map((data) =>
-        (data.viajerosv_coupon_redemption_monthly_stats ?? []).map((row) => ({
-          monthName: row.month_name,
-          redemptionYear: row.redemption_year,
-          totalRedemptions: row.total_redemptions ?? 0,
-        }))
-      )
+      map((data) => this.mapRedeemedAtRowsToMonthlyHistory(data.viajerosv_coupons_acquired ?? []))
     );
   }
 
@@ -1929,34 +1958,18 @@ export class CouponService {
             company_twitter
             company_website
           }
-          coupon {
+          coupon: coupon_public {
             id
-            user_id
-            category_id
-            active
             title
             description
-            price
             price_discount
-            start_date
             end_date
-            user_public {
-              id
-              company_commercial_name
-              company_address
-              company_map_url
-            }
           }
           coupon_with_image_base64 {
             id
             image_base64
             image_mime_type
             image_size
-            user {
-              company_commercial_name
-              company_address
-              company_map_url
-            }
           }
           user_id
           validated_by
@@ -1991,23 +2004,12 @@ export class CouponService {
             company_twitter
             company_website
           }
-          coupon {
+          coupon: coupon_public {
             id
-            user_id
-            category_id
-            active
             title
             description
-            price
             price_discount
-            start_date
             end_date
-            user_public {
-              id
-              company_commercial_name
-              company_address
-              company_map_url
-            }
           }
           user_id
           validated_by

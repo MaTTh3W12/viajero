@@ -3,11 +3,15 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { ContactCenterService } from './contact-center.service';
 
+const TEST_HASURA_ENDPOINT = 'https://test-hasura.example/v1/graphql';
+
 describe('ContactCenterService', () => {
   let service: ContactCenterService;
   let httpMock: HttpTestingController;
 
   beforeEach(() => {
+    window.__ENV__ = { HASURA_GRAPHQL_ENDPOINT: TEST_HASURA_ENDPOINT };
+
     TestBed.configureTestingModule({
       providers: [ContactCenterService, provideHttpClient(), provideHttpClientTesting()],
     });
@@ -33,7 +37,7 @@ describe('ContactCenterService', () => {
         result = response;
       });
 
-    const req = httpMock.expectOne('https://api.grupoavanza.work/v1/graphql');
+    const req = httpMock.expectOne(TEST_HASURA_ENDPOINT);
     expect(req.request.method).toBe('POST');
     expect(req.request.headers.get('Authorization')).toBe('Bearer jwt-token');
     expect(req.request.body.query).toContain('user_public');
@@ -101,7 +105,7 @@ describe('ContactCenterService', () => {
       result = response;
     });
 
-    const req = httpMock.expectOne('https://api.grupoavanza.work/v1/graphql');
+    const req = httpMock.expectOne(TEST_HASURA_ENDPOINT);
     expect(req.request.method).toBe('POST');
     expect(req.request.body.query).toContain('viajerosv_mark_message_as_read_by_admin');
     expect(req.request.body.variables).toEqual({ messageId: 7 });
@@ -135,7 +139,7 @@ describe('ContactCenterService', () => {
         result = response;
       });
 
-    const req = httpMock.expectOne('https://api.grupoavanza.work/v1/graphql');
+    const req = httpMock.expectOne(TEST_HASURA_ENDPOINT);
     expect(req.request.method).toBe('POST');
     expect(req.request.body.query).toContain('insert_viajerosv_message_responses_one');
     expect(req.request.body.variables).toEqual({

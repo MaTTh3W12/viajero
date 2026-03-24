@@ -237,23 +237,34 @@ export class MyCouponsComponent implements OnInit {
   }
 
   getCouponCardLink(item: MyCouponItem): string[] | null {
-    if (this.isCouponActive(item)) return null;
-    if (this.isCouponExpiredForUser(item)) return null;
-    return ['/view-coupons', String(item.coupon.id)];
+    return null;
   }
 
   isCouponCardClickable(item: MyCouponItem): boolean {
-    return this.isCouponActive(item) || !!this.getCouponCardLink(item);
+    return true;
   }
 
   onCouponCardClick(item: MyCouponItem, event: Event): void {
-    if (this.isCouponExpiredForUser(item)) {
-      event.preventDefault();
-      event.stopPropagation();
+    void this.openCouponDetailModal(item, this.getCardImage(item), event);
+  }
+
+  async openCouponDetailModal(item: MyCouponItem, imageSrc: string, event: Event): Promise<void> {
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.qrSelectedItem = item;
+    this.qrSelectedImage = imageSrc;
+    this.qrModalOpen = true;
+
+    if (!this.isCouponActive(item)) {
+      this.qrLoading = false;
+      this.qrError = '';
+      this.qrUniqueCode = '';
+      this.qrDataUrl = '';
       return;
     }
-    if (!this.isCouponActive(item)) return;
-    void this.openQrModal(item, this.getCardImage(item), event);
+
+    await this.generateQrForItem(item);
   }
 
   async openQrModal(item: MyCouponItem, imageSrc: string, event: Event): Promise<void> {
@@ -263,13 +274,32 @@ export class MyCouponsComponent implements OnInit {
 
     this.qrSelectedItem = item;
     this.qrSelectedImage = imageSrc;
+    this.qrModalOpen = true;
+    await this.generateQrForItem(item);
+  }
 
+  isDetailItemActive(): boolean {
+    if (!this.qrSelectedItem) return false;
+    return this.isCouponActive(this.qrSelectedItem);
+  }
+
+  getDetailStatusText(item: MyCouponItem): string {
+    return item.acquired.redeemed ? 'Cupón canjeado' : 'Cupón vencido';
+  }
+
+  getDetailStatusDateText(item: MyCouponItem): string {
+    if (item.acquired.redeemed) {
+      return `Canjeado: ${this.formatDateTime(item.acquired.redeemed_at || item.acquired.acquired_at)}`;
+    }
+    return `Venció: ${this.formatDateTime(this.getCouponEndDate(item), false)}`;
+  }
+
+  private async generateQrForItem(item: MyCouponItem): Promise<void> {
     const uniqueCode = item.acquired.unique_code ?? '';
     const trimmedCode = (uniqueCode ?? '').trim();
     if (!trimmedCode) {
       this.qrError = 'Este cupón no tiene código QR disponible.';
       this.qrDataUrl = '';
-      this.qrModalOpen = true;
       return;
     }
 
@@ -277,7 +307,6 @@ export class MyCouponsComponent implements OnInit {
     this.qrError = '';
     this.qrUniqueCode = trimmedCode;
     this.qrDataUrl = '';
-    this.qrModalOpen = true;
 
     try {
       this.qrDataUrl = await QRCode.toDataURL(trimmedCode, {
@@ -695,6 +724,26 @@ export class MyCouponsComponent implements OnInit {
     return value.toFixed(2).replace(/\.?0+$/, '');
   }
 
+  private formatDateTime(value: string | null | undefined, withTime = true): string {
+    const raw = String(value ?? '').trim();
+    if (!raw) return 'Fecha no disponible';
+
+    const parsed = new Date(raw);
+    if (Number.isNaN(parsed.getTime())) return 'Fecha no disponible';
+
+    const day = String(parsed.getDate()).padStart(2, '0');
+    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+    const year = String(parsed.getFullYear());
+
+    if (!withTime) {
+      return `${day}/${month}/${year}`;
+    }
+
+    const hours = String(parsed.getHours()).padStart(2, '0');
+    const minutes = String(parsed.getMinutes()).padStart(2, '0');
+    return `${day}/${month}/${year} - ${hours}:${minutes}`;
+  }
+
   private normalizeText(value: string): string {
     return value
       .normalize('NFD')
@@ -785,7 +834,7 @@ export class MyCouponsComponent implements OnInit {
       andConditions.push({
         _or: [
           { unique_code: { _ilike: `%${search}%` } },
-          { coupon: { title: { _ilike: `%${search}%` } } },
+          { coupon_public: { title: { _ilike: `%${search}%` } } },
         ],
       });
     }
@@ -906,17 +955,25 @@ export class MyCouponsComponent implements OnInit {
 
   private mergeCouponWithAcquiredSnapshot(coupon: Coupon, acquired: CouponAcquired): Coupon {
     const userPublicSnapshot = this.getCompanySnapshotFromAcquired(acquired);
+    const couponRelationSnapshot = acquired.coupon ?? null;
     const couponImageSnapshot = acquired.coupon_with_image_base64 ?? null;
 
-    const mergedTitle = coupon.title?.trim() || couponImageSnapshot?.title?.trim() || '';
-    const mergedDescription = coupon.description ?? couponImageSnapshot?.description ?? null;
+    const mergedTitle =
+      coupon.title?.trim() ||
+      couponRelationSnapshot?.title?.trim() ||
+      couponImageSnapshot?.title?.trim() ||
+      '';
+    const mergedDescription = coupon.description ?? couponRelationSnapshot?.description ?? couponImageSnapshot?.description ?? null;
     const mergedPrice =
-      coupon.price ?? (couponImageSnapshot?.price != null ? String(couponImageSnapshot.price) : null);
+      coupon.price ??
+      (couponRelationSnapshot?.price != null ? String(couponRelationSnapshot.price) : null) ??
+      (couponImageSnapshot?.price != null ? String(couponImageSnapshot.price) : null);
     const mergedPriceDiscount =
       coupon.price_discount ??
+      (couponRelationSnapshot?.price_discount != null ? String(couponRelationSnapshot.price_discount) : null) ??
       (couponImageSnapshot?.price_discount != null ? String(couponImageSnapshot.price_discount) : null);
-    const mergedStartDate = coupon.start_date || couponImageSnapshot?.start_date || '';
-    const mergedEndDate = coupon.end_date || couponImageSnapshot?.end_date || '';
+    const mergedStartDate = coupon.start_date || couponRelationSnapshot?.start_date || couponImageSnapshot?.start_date || '';
+    const mergedEndDate = coupon.end_date || couponRelationSnapshot?.end_date || couponImageSnapshot?.end_date || '';
 
     if (!userPublicSnapshot && mergedTitle === coupon.title && mergedDescription === coupon.description
       && mergedPrice === coupon.price && mergedPriceDiscount === coupon.price_discount
