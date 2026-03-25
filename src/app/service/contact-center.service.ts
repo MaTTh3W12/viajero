@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
+import { Observable, Subject, map } from 'rxjs';
 import { getHasuraGraphqlEndpoint } from './hasura-endpoint';
 
 interface GraphQLError {
@@ -271,6 +271,9 @@ const INSERT_MESSAGE_RESPONSE_MUTATION = `
   providedIn: 'root',
 })
 export class ContactCenterService {
+  private readonly unreadCountChangedSubject = new Subject<void>();
+  readonly unreadCountChanged$ = this.unreadCountChangedSubject.asObservable();
+
   constructor(private http: HttpClient) {}
 
   private get endpoint(): string {
@@ -378,5 +381,9 @@ export class ContactCenterService {
       INSERT_MESSAGE_RESPONSE_MUTATION,
       variables,
     ).pipe(map((data) => data.insert_viajerosv_message_responses_one ?? null));
+  }
+
+  notifyUnreadCountChanged(): void {
+    this.unreadCountChangedSubject.next();
   }
 }

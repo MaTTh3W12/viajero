@@ -287,6 +287,7 @@ export class ContactCenterComponent {
           this.adminReplyText.set('');
           this.loadMessages();
           this.loadUnreadMessagesCount();
+          this.contactCenterService.notifyUnreadCountChanged();
         },
         error: (error) => {
           this.isSubmittingAdminReply.set(false);
@@ -419,6 +420,7 @@ export class ContactCenterComponent {
         );
 
         this.loadUnreadMessagesCount();
+        this.contactCenterService.notifyUnreadCountChanged();
       },
       error: () => {
         // Si falla el marcado, permitimos responder de todas formas.
@@ -452,6 +454,7 @@ export class ContactCenterComponent {
         },
         error: (error) => {
           this.errorMessage.set(error?.message ?? 'No se pudo cargar el historial de mensajes.');
+          this.contactCenterService.notifyUnreadCountChanged();
           this.messages.set([]);
           this.totalItems.set(0);
           this.isLoading.set(false);
