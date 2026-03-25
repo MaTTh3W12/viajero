@@ -856,7 +856,7 @@ export class CouponsListComponent {
       if (!stats && acquiredRows.length === 0 && historyRows.length === 0 && transactionsRows.length === 0) {
         console.warn('[COUPONS] openStats: sin datos de estadísticas para cupón', {
           couponId: row.id,
-          note: 'Revisar permisos/retorno de viajerosv_coupon_statistics, viajerosv_coupon_redemption_monthly_stats, viajerosv_coupons_acquired y viajerosv_audit_logs.',
+          note: 'Revisar permisos/retorno de viajerosv_coupons, viajerosv_coupons_acquired_aggregate y viajerosv_audit_logs.',
         });
       }
 

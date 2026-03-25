@@ -214,13 +214,18 @@
                 {{ getPriceBadgeLabel(item.coupon) }}
               </span>
 
+              @if (selectedStatus === 'activo') {
               <button type="button" (click)="openQrModal(item, getCardImage(item), $event)"
-                [disabled]="!isCouponCardClickable(item) || selectedStatus === 'vencido'"
-                [ngClass]="(!isCouponCardClickable(item) || selectedStatus === 'vencido') ? 'opacity-40 cursor-not-allowed' : ''"
                 class="h-[30px] px-3 border border-[#9BBCFF] rounded-lg text-[#538CFF] text-[10px] md:text-[13px] font-bold inline-flex items-center gap-1">
                 <img src="assets/icons/qr.svg" class="w-3 h-3 md:w-4 md:h-4" alt="QR" />
                 QR
               </button>
+              } @else {
+              <button type="button" (click)="openCouponDetailModal(item, getCardImage(item), $event)"
+                class="h-[30px] px-3 border border-[#9BBCFF] rounded-lg text-[#538CFF] text-[10px] md:text-[13px] font-bold inline-flex items-center gap-1">
+                Ver detalle
+              </button>
+              }
 
               @if (canTransfer(item)) {
               <button type="button" (click)="openTransferModal(item, $event)"
@@ -305,6 +310,7 @@
           <img [src]="qrSelectedImage" [alt]="qrSelectedItem.coupon.title" class="w-full h-full object-cover" />
         </div>
 
+        @if (isDetailItemActive()) {
         <div
           class="bg-[#E8EEFF] rounded-[16px] md:rounded-[20px] p-2 md:p-4 relative h-[170px] md:min-h-[220px] flex items-center justify-center">
           @if (qrLoading) {
@@ -322,6 +328,25 @@
           </button>
           }
         </div>
+        } @else {
+        <div
+          class="rounded-[16px] md:rounded-[20px] overflow-hidden border border-[#DDE6F7] flex flex-col bg-white">
+          <div
+            [ngClass]="qrSelectedItem.acquired.redeemed ? 'bg-[#0B6A2A]' : 'bg-[#CF1F37]'"
+            class="h-11 text-white flex items-center justify-center gap-2 px-3 rounded-t-[14px] md:rounded-t-[18px]">
+            <svg class="w-5 h-5 shrink-0" aria-hidden="true">
+              <use [attr.href]="qrSelectedItem.acquired.redeemed ? 'assets/icons/sprite.svg#status-check' : 'assets/icons/sprite.svg#alert-hexagon'"></use>
+            </svg>
+            <span class="text-[15px] md:text-[16px] font-medium leading-none">{{ getDetailStatusText(qrSelectedItem) }}</span>
+          </div>
+          <div class="px-3 py-2.5 md:px-4 md:py-3">
+            <div class="flex items-center gap-2 text-[12px] md:text-[13px] text-[#538CFF] font-normal leading-snug">
+              <img src="assets/icons/clock.svg" class="w-3.5 h-3.5 md:w-4 md:h-4 shrink-0" alt="" />
+              <span>{{ getDetailStatusDateText(qrSelectedItem) }}</span>
+            </div>
+          </div>
+        </div>
+        }
       </div>
 
       <div class="min-w-0 rounded-[24px] md:rounded-[28px] border border-[#D8E3FF] p-4 md:p-6">
@@ -362,11 +387,11 @@
         </ul>
         }
 
-        <div class="space-y-2 text-[#0E225C] text-[16px]">
+        <div class="space-y-1.5 text-[12px] md:text-[13px] text-[#538CFF] font-normal">
           <div class="flex items-center gap-2">
-            <img src="assets/icons/location.svg" class="w-5 h-5" alt="Ubicación" />
+            <img src="assets/icons/location.svg" class="w-3.5 h-3.5 md:w-4 md:h-4 shrink-0" alt="Ubicación" />
             @if (getCouponMapUrl(qrSelectedItem.coupon); as mapUrl) {
-            <a [href]="mapUrl" target="_blank" rel="noopener noreferrer" class="break-words">
+            <a [href]="mapUrl" target="_blank" rel="noopener noreferrer" class="break-words hover:underline">
               {{ getCouponAddress(qrSelectedItem.coupon) }}
             </a>
             } @else {
@@ -374,7 +399,7 @@
             }
           </div>
           <div class="flex items-center gap-2">
-            <img src="assets/icons/clock.svg" class="w-5 h-5" alt="Vence" />
+            <img src="assets/icons/clock.svg" class="w-3.5 h-3.5 md:w-4 md:h-4 shrink-0" alt="Vence" />
             <span>{{ formatExpirationDate(qrSelectedItem.coupon.end_date) }}</span>
           </div>
         </div>

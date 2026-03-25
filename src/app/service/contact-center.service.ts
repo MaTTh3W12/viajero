@@ -1,15 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
-
-declare global {
-  interface Window {
-    __ENV__?: {
-      AUTH_DOMAIN?: string;
-      HASURA_GRAPHQL_ENDPOINT?: string;
-    };
-  }
-}
+import { getHasuraGraphqlEndpoint } from './hasura-endpoint';
 
 interface GraphQLError {
   message: string;
@@ -124,8 +116,6 @@ export interface InsertMessageResponseVariables {
   messageId: number;
   responseText: string;
 }
-
-const DEFAULT_HASURA_ENDPOINT = 'https://api.grupoavanza.work/v1/graphql';
 
 const GET_MESSAGES_QUERY = `
   query GetMessagesDynamic(
@@ -284,10 +274,7 @@ export class ContactCenterService {
   constructor(private http: HttpClient) {}
 
   private get endpoint(): string {
-    if (typeof window === 'undefined') {
-      return DEFAULT_HASURA_ENDPOINT;
-    }
-    return window.__ENV__?.HASURA_GRAPHQL_ENDPOINT ?? DEFAULT_HASURA_ENDPOINT;
+    return getHasuraGraphqlEndpoint();
   }
 
   private executeOperation<TData, TVariables extends object>(

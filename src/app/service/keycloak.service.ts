@@ -17,15 +17,6 @@ interface RedirectOptions {
   maxAge?: number;
 }
 
-declare global {
-  interface Window {
-    __ENV__?: {
-      AUTH_DOMAIN?: string;
-      HASURA_GRAPHQL_ENDPOINT?: string;
-    };
-  }
-}
-
 @Injectable({
   providedIn: 'root',
 })
