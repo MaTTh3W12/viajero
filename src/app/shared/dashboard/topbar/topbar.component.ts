@@ -33,6 +33,7 @@ export class TopbarComponent implements OnInit, OnDestroy {
   unreadMessagesCount = 0;
   private sessionExpiredSub?: Subscription;
   private userSub?: Subscription;
+  private unreadCountChangedSub?: Subscription;
   private unreadCountPollingTimer: ReturnType<typeof setInterval> | null = null;
   private isLoadingUnreadCount = false;
 
@@ -64,11 +65,16 @@ export class TopbarComponent implements OnInit, OnDestroy {
       this.loadUnreadMessagesCount();
       this.cdr.detectChanges();
     });
+
+    this.unreadCountChangedSub = this.contactCenterService.unreadCountChanged$.subscribe(() => {
+      this.loadUnreadMessagesCount();
+    });
   }
 
   ngOnDestroy(): void {
     this.sessionExpiredSub?.unsubscribe();
     this.userSub?.unsubscribe();
+    this.unreadCountChangedSub?.unsubscribe();
     this.stopUnreadCountPolling();
   }
 
@@ -256,10 +262,31 @@ export class TopbarComponent implements OnInit, OnDestroy {
       };
     }
 
+    // Admin: contar mensajes "No respondidos" (mismo criterio que ContactCenterComponent.buildAdminStatusWhere('pending'))
     return {
-      status: {
-        _eq: 'SENT',
-      },
+      _and: [
+        {
+          _or: [
+            {
+              status: {
+                _in: ['SENT', 'RECEIVED_BY_ADMIN'],
+              },
+            },
+            {
+              message_status: {
+                value: {
+                  _in: ['SENT', 'RECEIVED_BY_ADMIN'],
+                },
+              },
+            },
+          ],
+        },
+        {
+          _not: {
+            message_responses: {},
+          },
+        },
+      ],
     };
   }
 
