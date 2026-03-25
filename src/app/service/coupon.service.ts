@@ -950,7 +950,7 @@ const GET_LATEST_COUPONS_QUERY = `
   providedIn: 'root',
 })
 export class CouponService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   private getGraphQLErrorMessage(errors: GraphQLError[]): string {
     const messages = errors
@@ -1391,14 +1391,14 @@ export class CouponService {
 
     const queryWithCompany = `
       query GetCouponsAcquired(
-  $limit: Int!, 
-  $offset: Int!, 
+  $limit: Int!,
+  $offset: Int!,
   $where: viajerosv_coupons_acquired_bool_exp!
 ) {
   viajerosv_coupons_acquired(
-    limit: $limit, 
-    offset: $offset, 
-    order_by: {acquired_at: desc}, 
+    limit: $limit,
+    offset: $offset,
+    order_by: {acquired_at: desc},
     where: $where
   ) {
     coupon_id
@@ -1446,14 +1446,14 @@ export class CouponService {
 
     const queryBasic = `
       query GetCouponsAcquired(
-  $limit: Int!, 
-  $offset: Int!, 
+  $limit: Int!,
+  $offset: Int!,
   $where: viajerosv_coupons_acquired_bool_exp!
 ) {
   viajerosv_coupons_acquired(
-    limit: $limit, 
-    offset: $offset, 
-    order_by: {acquired_at: desc}, 
+    limit: $limit,
+    offset: $offset,
+    order_by: {acquired_at: desc},
     where: $where
   ) {
     coupon_id
@@ -1673,17 +1673,16 @@ export class CouponService {
 
   getMonthlyRedemptionHistory(token: string, couponId: number): Observable<CouponMonthlyRedemptionHistory[]> {
     const query = `
-      query GetMonthlyRedemptionHistory($coupon_id: bigint!) {
-        viajerosv_coupons_acquired(
-          where: {
-            coupon_id: { _eq: $coupon_id }
-            redeemed: { _eq: true }
-            redeemed_at: { _is_null: false }
-          }
-        ) {
-          redeemed_at
-        }
-      }
+query GetMonthlyRedemptionHistory($coupon_id: bigint!) {
+  viajerosv_coupon_redemption_monthly_stats(
+    where: { coupon_id: { _eq: $coupon_id } }
+    order_by: { redemption_year: asc, redemption_month: asc }
+  ) {
+    month_name
+    redemption_year
+    total_redemptions
+  }
+}
     `;
 
     return this.executeOperation<GetCouponMonthlyRedemptionHistoryData, { coupon_id: number }>(token, query, { coupon_id: couponId }).pipe(
@@ -1918,11 +1917,11 @@ export class CouponService {
           userId: row.user_id ?? null,
           userPublic: row.user_public
             ? {
-                id: row.user_public.id,
-                firstName: row.user_public.first_name ?? null,
-                lastName: row.user_public.last_name ?? null,
-                email: row.user_public.email ?? null,
-              }
+              id: row.user_public.id,
+              firstName: row.user_public.first_name ?? null,
+              lastName: row.user_public.last_name ?? null,
+              email: row.user_public.email ?? null,
+            }
             : null,
         })),
         total: data.viajerosv_audit_logs_aggregate?.aggregate?.count ?? 0,
@@ -2056,58 +2055,58 @@ export class CouponService {
     const imageSize = imageRow?.image_size ?? null;
     const imageUserPublic = imageRow?.user
       ? {
-          id: String(row.validated_by ?? row.user_id ?? row.id),
-          company_commercial_name: imageRow.user.company_commercial_name ?? null,
-          company_address: imageRow.user.company_address ?? null,
-          company_map_url: imageRow.user.company_map_url ?? null,
-        }
+        id: String(row.validated_by ?? row.user_id ?? row.id),
+        company_commercial_name: imageRow.user.company_commercial_name ?? null,
+        company_address: imageRow.user.company_address ?? null,
+        company_map_url: imageRow.user.company_map_url ?? null,
+      }
       : null;
 
     const normalizedDetails: CouponWithImageDetails | null = couponId != null
       ? {
-          id: couponId,
-          title,
-          description,
-          price,
-          price_discount: priceDiscount,
-          start_date: startDate,
-          end_date: endDate,
-          image_mime_type: imageMime,
-          image_size: imageSize,
-          image: imageBase64,
-          image_base64: imageBase64,
-        }
+        id: couponId,
+        title,
+        description,
+        price,
+        price_discount: priceDiscount,
+        start_date: startDate,
+        end_date: endDate,
+        image_mime_type: imageMime,
+        image_size: imageSize,
+        image: imageBase64,
+        image_base64: imageBase64,
+      }
       : null;
 
     const normalizedCoupon =
       coupon != null
         ? {
-            id: coupon.id ?? null,
-            user_id: coupon.user_id ?? null,
-            category_id: coupon.category_id ?? null,
-            active: coupon.active ?? null,
-            title: coupon.title ?? imageRow?.title ?? null,
-            description: coupon.description ?? imageRow?.description ?? null,
-            price: coupon.price ?? imageRow?.price ?? null,
-            price_discount: coupon.price_discount ?? imageRow?.price_discount ?? null,
-            start_date: coupon.start_date ?? imageRow?.start_date ?? null,
-            end_date: coupon.end_date ?? imageRow?.end_date ?? null,
-            user_public: coupon.user_public ?? imageUserPublic,
-          }
+          id: coupon.id ?? null,
+          user_id: coupon.user_id ?? null,
+          category_id: coupon.category_id ?? null,
+          active: coupon.active ?? null,
+          title: coupon.title ?? imageRow?.title ?? null,
+          description: coupon.description ?? imageRow?.description ?? null,
+          price: coupon.price ?? imageRow?.price ?? null,
+          price_discount: coupon.price_discount ?? imageRow?.price_discount ?? null,
+          start_date: coupon.start_date ?? imageRow?.start_date ?? null,
+          end_date: coupon.end_date ?? imageRow?.end_date ?? null,
+          user_public: coupon.user_public ?? imageUserPublic,
+        }
         : couponId != null
           ? {
-              id: couponId,
-              user_id: row.user_id ?? null,
-              category_id: null,
-              active: null,
-              title: imageRow?.title ?? null,
-              description: imageRow?.description ?? null,
-              price: imageRow?.price ?? null,
-              price_discount: imageRow?.price_discount ?? null,
-              start_date: imageRow?.start_date ?? null,
-              end_date: imageRow?.end_date ?? null,
-              user_public: imageUserPublic,
-            }
+            id: couponId,
+            user_id: row.user_id ?? null,
+            category_id: null,
+            active: null,
+            title: imageRow?.title ?? null,
+            description: imageRow?.description ?? null,
+            price: imageRow?.price ?? null,
+            price_discount: imageRow?.price_discount ?? null,
+            start_date: imageRow?.start_date ?? null,
+            end_date: imageRow?.end_date ?? null,
+            user_public: imageUserPublic,
+          }
           : null;
 
     return {
