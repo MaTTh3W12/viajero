@@ -90,6 +90,22 @@ const FILTER_BG_MAP: Record<UserRole, Record<FilterVariant, string>> = {
   styleUrl: './filter-bar.component.css',
 })
 export class FilterBarComponent implements OnChanges {
+    // --- Métodos para filtros avanzados de historial-canjes ---
+
+    clearHistorialCanjesFilters(): void {
+      this.historialCanjesStartDate = '';
+      this.historialCanjesEndDate = '';
+      this.historialCanjesResponsible = '';
+      this.submitHistorialCanjesFilters();
+    }
+
+    isAnyHistorialCanjesFilterActive(): boolean {
+      return (
+        !!this.historialCanjesStartDate ||
+        !!this.historialCanjesEndDate ||
+        !!this.historialCanjesResponsible
+      );
+    }
   @Input({ required: true }) variant!: FilterVariant;
   @Input({ required: true }) role!: UserRole;
   @Input() companiesCategoryOptions: string[] = [];
