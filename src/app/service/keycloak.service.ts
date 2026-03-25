@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { getAuthDomain } from './hasura-endpoint';
 
 const REALM = 'viajero-realm';
 
@@ -10,7 +11,6 @@ const CLIENTS = {
 
 const KC_CLIENT_KEY = 'kc_client';
 const KC_REDIRECT_URI_KEY = 'kc_redirect_uri';
-const DEFAULT_AUTH_DOMAIN = 'auth.grupoavanza.work';
 
 interface RedirectOptions {
   prompt?: 'login' | 'none' | 'consent' | 'select_account';
@@ -22,7 +22,7 @@ interface RedirectOptions {
 })
 export class KeycloakService {
   private get authBase() {
-    const authDomain = window.__ENV__?.AUTH_DOMAIN ?? DEFAULT_AUTH_DOMAIN;
+    const authDomain = getAuthDomain();
     return `${window.location.protocol}//${authDomain}`;
   }
 

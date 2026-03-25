@@ -7,9 +7,7 @@ declare global {
   }
 }
 
-const MISSING_HASURA_ENDPOINT =
-  'HASURA_GRAPHQL_ENDPOINT no está definido en window.__ENV__. Verifica que config.js esté cargado correctamente.';
-
+// 🔹 Hasura
 export function getHasuraGraphqlEndpoint(): string {
   const url = window.__ENV__?.HASURA_GRAPHQL_ENDPOINT?.trim();
 
@@ -19,4 +17,16 @@ export function getHasuraGraphqlEndpoint(): string {
   }
 
   return url;
+}
+
+// 🔹 Auth
+export function getAuthDomain(): string {
+  const domain = window.__ENV__?.AUTH_DOMAIN?.trim();
+
+  if (!domain) {
+    console.error('AUTH_DOMAIN no definido en window.__ENV__');
+    return '';
+  }
+
+  return domain;
 }
