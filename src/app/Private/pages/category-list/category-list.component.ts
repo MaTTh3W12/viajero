@@ -129,6 +129,7 @@ export class CategoryListComponent implements OnInit, OnDestroy {
   successMessage = '';
   editingOriginalName = '';
   editingOriginalActive = true;
+  editingOriginalDescription = '';
 
   categoryForm = {
     id: '',
@@ -180,7 +181,24 @@ export class CategoryListComponent implements OnInit, OnDestroy {
   }
 
   get canSubmitCategory(): boolean {
-    return this.categoryForm.name.trim().length > 0 && this.modalStep === 'form';
+    // El nombre es obligatorio
+    if (this.categoryForm.name.trim().length === 0 || this.modalStep !== 'form') {
+      return false;
+    }
+    // Si es crear, basta con que el nombre tenga algo
+    if (this.modalMode === 'create') {
+      return true;
+    }
+    // Si es editar, solo habilitar si hay cambios
+    return this.hasCategoryFormChanged();
+  }
+
+  private hasCategoryFormChanged(): boolean {
+    // Comparar nombre, estado y descripción con los valores originales
+    const nameChanged = this.categoryForm.name.trim() !== this.editingOriginalName.trim();
+    const activeChanged = this.categoryForm.active !== this.editingOriginalActive;
+    const descChanged = (this.categoryForm.description?.trim() || '') !== (this.editingOriginalDescription?.trim() || '');
+    return nameChanged || activeChanged || descChanged;
   }
 
   get modalTitle(): string {
@@ -257,6 +275,7 @@ export class CategoryListComponent implements OnInit, OnDestroy {
     };
     this.editingOriginalName = '';
     this.editingOriginalActive = true;
+    this.editingOriginalDescription = '';
   }
 
   openEditModal(row: CategoryTableRow): void {
@@ -275,6 +294,7 @@ export class CategoryListComponent implements OnInit, OnDestroy {
     };
     this.editingOriginalName = row.name;
     this.editingOriginalActive = row.active;
+    this.editingOriginalDescription = row.description === 'Sin comentarios.' ? '' : row.description;
   }
 
   closeModal(): void {
@@ -329,24 +349,35 @@ export class CategoryListComponent implements OnInit, OnDestroy {
         saved?.id != null &&
         this.editingOriginalActive !== this.categoryForm.active
       ) {
-        await firstValueFrom(
-          this.categoryService.changeCategoryStatus(token, {
-            id: String(saved.id),
-            active: this.categoryForm.active,
-          })
-        );
+        const idStr = String(saved.id);
+        // Solo llamar si el id parece un UUID (contiene guion)
+        if (idStr.includes('-')) {
+          await firstValueFrom(
+            this.categoryService.changeCategoryStatus(token, {
+              id: idStr,
+              active: this.categoryForm.active,
+            })
+          );
+        }
       }
 
       await this.reloadCurrentPage();
-      this.successMessage =
-        this.modalMode === 'create'
-          ? 'Categoría creada correctamente.'
-          : 'Categoría creada/actualizada correctamente.';
-      this.modalStep = 'success';
+
+      this.ngZone.run(() => {
+        this.successMessage =
+          this.modalMode === 'create'
+            ? 'Categoría creada correctamente.'
+            : 'Categoría actualizada correctamente.';
+        this.modalStep = 'success';
+        this.cdr.detectChanges();
+      });
     } catch (error) {
       console.error('[CategoryList] Error saving category', error);
-      this.modalStep = 'form';
-      this.modalError = 'No se pudo guardar la categoría en este momento.';
+      this.ngZone.run(() => {
+        this.modalStep = 'form';
+        this.modalError = 'No se pudo guardar la categoría en este momento.';
+        this.cdr.detectChanges();
+      });
     }
   }
 
