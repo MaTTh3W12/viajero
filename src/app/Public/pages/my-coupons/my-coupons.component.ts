@@ -10,6 +10,7 @@ import { RelatedPagesComponent } from '../../../shared/components/related-pages/
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { AuthService } from '../../../service/auth.service';
 import { Coupon, CouponAcquired, CouponService } from '../../../service/coupon.service';
+import { CategoryService, Category as PublicCategory } from '../../../service/category.service';
 
 type CouponStatusFilter = 'activo' | 'canjeado' | 'vencido';
 
@@ -62,6 +63,7 @@ export class MyCouponsComponent implements OnInit {
   transferConfirm = false;
   private couponImageById = new Map<number, string>();
   private latestLoadRequestId = 0;
+  private categoryById = new Map<number, CouponCategoryFilter>();
 
   coupons: MyCouponItem[] = [];
   searchText = '';
@@ -75,12 +77,15 @@ export class MyCouponsComponent implements OnInit {
   currentPage = 1;
   readonly pageSize = 8;
 
-  readonly categories: CouponCategoryFilter[] = [
-    { key: 'all', label: 'Todos los cupones', categoryId: null, icon: 'assets/icons/coupon1.svg', bgColor: '#1438A0', invertIcon: true },
-    { key: 'stay', label: 'Alojamiento', categoryId: 1, icon: 'assets/icons/double-bed.svg', bgColor: '#FFF8D2' },
-    { key: 'food', label: 'Alimentos y bebidas', categoryId: 2, icon: 'assets/icons/dinner.svg', bgColor: '#ABE9FF' },
-    { key: 'fun', label: 'Entretenimiento', categoryId: 4, icon: 'assets/icons/gift-bag1.svg', bgColor: '#FFD5D6' },
-    { key: 'tourism', label: 'Turismo', categoryId: 3, icon: 'assets/icons/sunbed.svg', bgColor: '#D8D7FF' },
+  categories: CouponCategoryFilter[] = [
+    {
+      key: 'all',
+      label: 'Todos los cupones',
+      categoryId: null,
+      icon: 'assets/icons/coupon1.svg',
+      bgColor: '#1438A0',
+      invertIcon: true,
+    },
   ];
 
   private readonly categoryNames: Record<number, string> = {
@@ -122,10 +127,12 @@ export class MyCouponsComponent implements OnInit {
   constructor(
     private readonly couponService: CouponService,
     private readonly auth: AuthService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly categoryService: CategoryService
   ) { }
 
   ngOnInit(): void {
+    void this.loadCategories();
     void this.loadCoupons();
   }
 
@@ -474,14 +481,20 @@ export class MyCouponsComponent implements OnInit {
   }
 
   getCategoryName(categoryId: number): string {
-    return this.categoryNames[categoryId] ?? 'Turismo';
+    const dynamic = this.categoryById.get(Number(categoryId));
+    if (dynamic?.label) return dynamic.label;
+    return this.categoryNames[categoryId] ?? 'Categoría no disponible';
   }
 
   getCategoryIconPath(categoryId: number): string {
+    const dynamic = this.categoryById.get(Number(categoryId));
+    if (dynamic?.icon) return dynamic.icon;
     return this.categoryIcons[categoryId] ?? 'assets/icons/coupon1.svg';
   }
 
   getCategoryBgColor(categoryId: number): string {
+    const dynamic = this.categoryById.get(Number(categoryId));
+    if (dynamic?.bgColor) return dynamic.bgColor;
     return this.categoryBgColors[categoryId] ?? '#E5E7EB';
   }
 
@@ -766,13 +779,19 @@ export class MyCouponsComponent implements OnInit {
     if (!rawMessage) return defaultMessage;
 
     const normalized = rawMessage.toLowerCase();
+    
+    // Primero detectamos errores relacionados con el correo para no confundirlos con "cupón no encontrado".
+    if (
+      normalized.includes('email') ||
+      normalized.includes('correo') ||
+      normalized.includes('user not found') ||
+      normalized.includes('usuario no encontrado')
+    ) {
+      return 'No se encontró el correo electrónico del destinatario.';
+    }
 
     if (normalized.includes('not found') || normalized.includes('no rows')) {
       return 'No se encontró el cupón para transferir.';
-    }
-
-    if (normalized.includes('email') || normalized.includes('correo')) {
-      return 'El correo destino no es válido o no existe.';
     }
 
     if (
@@ -1767,5 +1786,46 @@ export class MyCouponsComponent implements OnInit {
   private normalizeMimeType(mimeType: string | null | undefined): string {
     if (!mimeType) return '';
     return String(mimeType).replace(/^"+|"+$/g, '').trim().toLowerCase();
+  }
+
+  private async loadCategories(): Promise<void> {
+    try {
+      const categories = await firstValueFrom(
+        this.categoryService.getCategories().pipe(take(1), timeout(10000))
+      );
+
+      const activeCategories = (categories ?? []).filter((category) => category.active);
+
+      const dynamicFilters: CouponCategoryFilter[] = [this.categories[0]]; // opción "Todos los cupones"
+      this.categoryById.clear();
+
+      activeCategories.forEach((category: PublicCategory) => {
+        const id = Number(category.id);
+        if (!Number.isFinite(id)) return;
+
+        const theme = {
+          icon: this.categoryIcons[id] ?? 'assets/icons/coupon1.svg',
+          bgColor: this.categoryBgColors[id] ?? '#E5E7EB',
+          invertIcon: false,
+        };
+
+        const filter: CouponCategoryFilter = {
+          key: String(id),
+          label: category.name,
+          categoryId: id,
+          icon: theme.icon,
+          bgColor: theme.bgColor,
+          invertIcon: theme.invertIcon,
+        };
+
+        dynamicFilters.push(filter);
+        this.categoryById.set(id, filter);
+      });
+
+      this.categories = dynamicFilters;
+      this.cdr.detectChanges();
+    } catch {
+      // Si falla la carga de categorías, dejamos la opción "Todos los cupones" y usamos los mapas locales.
+    }
   }
 }
