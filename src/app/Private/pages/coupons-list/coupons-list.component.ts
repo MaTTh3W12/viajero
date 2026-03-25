@@ -1222,9 +1222,8 @@ export class CouponsListComponent {
       const matchesStatus =
         this.adminFilters.status === 'all' || coupon.estado === this.adminFilters.status;
 
-      const couponStart = this.toIsoDate(coupon.fechaInicio);
       const couponEnd = this.toIsoDate(coupon.fechaFin);
-      const matchesDate = !dateFilter || (couponStart <= dateFilter && couponEnd >= dateFilter);
+      const matchesDate = !dateFilter || couponEnd === dateFilter;
 
       return matchesCompany && matchesTitle && matchesCategory && matchesStatus && matchesDate;
     });
@@ -1434,8 +1433,7 @@ export class CouponsListComponent {
 
     const vigenciaFilter = this.toIsoDate(this.adminFilters.vigencia);
     if (/^\d{4}-\d{2}-\d{2}$/.test(vigenciaFilter)) {
-      andConditions.push({ start_date: { _lte: vigenciaFilter } });
-      andConditions.push({ end_date: { _gte: vigenciaFilter } });
+      andConditions.push({ end_date: { _eq: vigenciaFilter } });
     }
 
     if (this.adminFilters.category !== 'all') {

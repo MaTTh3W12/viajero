@@ -1,6 +1,7 @@
 import { Component, CUSTOM_ELEMENTS_SCHEMA, Input, ChangeDetectorRef, OnDestroy, OnInit } from '@angular/core';
 import { AuthService, AuthUser } from '../../../service/auth.service';
 import { CommonModule } from '@angular/common';
+import { CompanyNameEllipsisPipe } from './company-name-ellipsis.pipe';
 import { RouterModule, Router } from '@angular/router';
 import { UiService } from '../../../service/ui.service';
 import { Subscription } from 'rxjs';
@@ -14,7 +15,7 @@ type TopbarVariant =
 
 @Component({
   selector: 'app-topbar',
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, CompanyNameEllipsisPipe],
   standalone: true,
    schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './topbar.component.html',

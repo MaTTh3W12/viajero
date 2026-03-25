@@ -1,11 +1,12 @@
 <!-- Contenedor Principal Blanco -->
-  <div class="flex flex-col md:flex-row bg-[#F4F7FD] w-full min-h-screen">
+<div class="flex flex-col md:flex-row bg-[#F4F7FD] w-full min-h-screen">
 
-    <!-- LADO IZQUIERDO: Hero con Imagen de Fondo -->
-    <div class="relative flex w-full md:w-1/2 h-[45vh] md:h-auto p-0 md:p-10">
-      <div class="relative w-full h-full overflow-hidden rounded-b-[40px] md:rounded-[40px] shadow-lg">
+  <!-- LADO IZQUIERDO: Hero con Imagen de Fondo -->
+  <div class="relative flex w-full md:w-1/2 h-[45vh] md:h-auto p-0 md:p-10">
+    <div class="relative w-full h-full overflow-hidden rounded-b-[40px] md:rounded-[40px] shadow-lg">
       <!-- Imagen de fondo -->
-      <img src="assets/img/fondo_register.png" alt="Fondo" class="absolute inset-0 w-full h-full object-cover object-[80%_center]" />
+      <img src="assets/img/fondo_register.png" alt="Fondo"
+        class="absolute inset-0 w-full h-full object-cover object-[80%_center]" />
 
       <!-- Overlay Azul con bg-opacity-80 -->
       <div class="absolute inset-0 bg-[#2563EB] bg-opacity-80"></div>
@@ -13,23 +14,28 @@
       <!-- Contenido sobre la imagen -->
       <div class="relative flex flex-col items-center h-full pt-10 px-6 md:pt-20 md:px-14">
         <h2 class="text-2xl lg:text-4xl font-normal text-white text-center mb-6">
-        Adquiere cupones exclusivos y disfruta de la belleza de tu país.
+          Adquiere cupones exclusivos y disfruta de la belleza de tu país.
         </h2>
 
         <!-- Logo Central en Pill Blanca -->
-        <button type="button" routerLink="/" class="mt-auto mb-auto bg-white rounded-[60px] px-8 py-6 shadow-xl flex items-center justify-center cursor-pointer scale-75 md:scale-100 origin-center" aria-label="Ir al inicio">
+        <button type="button" routerLink="/"
+          class="mt-auto mb-auto bg-white rounded-[60px] px-8 py-6 shadow-xl flex items-center justify-center cursor-pointer scale-75 md:scale-100 origin-center"
+          aria-label="Ir al inicio">
           <img src="assets/img/logo.png" alt="ViajeroSV" class="h-16 md:h-20 w-auto" />
-        </button>   </div>
+        </button>
       </div>
     </div>
+  </div>
 
-    <!-- LADO DERECHO: Formulario -->
-    <div class="w-full md:w-1/2 flex flex-col justify-center pl-4 pr-6 md:pl-8 md:pr-16 lg:pr-24 py-12 relative">
+  <!-- LADO DERECHO: Formulario -->
+  <div class="w-full md:w-1/2 flex flex-col justify-center pl-4 pr-6 md:pl-8 md:pr-16 lg:pr-24 py-12 relative">
 
-      <div class="transition-opacity duration-300" [class.opacity-40]="registering" [class.pointer-events-none]="registering">
+    <div class="transition-opacity duration-300" [class.opacity-40]="registering"
+      [class.pointer-events-none]="registering">
       <!-- Encabezado -->
       <div class="mb-10">
-        <h1 class="text-[40px] md:text-[50px] font-normal text-[#538CFF] leading-tight mb-0">Finalización de registro</h1>
+        <h1 class="text-[40px] md:text-[50px] font-normal text-[#538CFF] leading-tight mb-0">Finalización de registro
+        </h1>
         <h2 class="text-2xl md:text-[32px] font-bold text-[#111E60] leading-tight">
           {{ isCompany ? 'Configuración del perfil empresarial' : 'Configuración del perfil de usuario' }}
         </h2>
@@ -39,332 +45,336 @@
 
         <!-- --- REGISTRO DE EMPRESA --- -->
         @if (isCompany) {
-          <div>
-            <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Nombre comercial</label>
-            <input
-              type="text"
-              [(ngModel)]="nombreComercial" (input)="onInputChange()" name="nombreComercial" required
-              placeholder="Ingresar nombre"
-              class="w-full rounded-[10px] px-4 py-3 text-sm focus:ring-2 outline-none"
-              [ngClass]="{
+        <div>
+          <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Nombre comercial</label>
+          <input type="text" [(ngModel)]="nombreComercial" (input)="onInputChange()" name="nombreComercial" required
+            placeholder="Ingresar nombre" class="w-full rounded-[10px] px-4 py-3 text-sm focus:ring-2 outline-none"
+            [ngClass]="{
                   'border border-rose-500 focus:ring-rose-500': showValidation && !nombreComercial,
                   'border-none bg-white shadow-sm focus:ring-blue-400': !(showValidation && !nombreComercial)
-                }"
-            />
-            <div *ngIf="showValidation && !nombreComercial" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-1">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-              </svg>
-              Este campo es obligatorio.
-            </div>
+                }" />
+          <div *ngIf="showValidation && !nombreComercial"
+            class="flex items-center text-rose-600 text-xs font-semibold mt-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+              stroke="currentColor" class="w-3.5 h-3.5 mr-1">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            Este campo es obligatorio.
           </div>
+        </div>
 
-          <div>
-            <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Razón social</label>
-            <input
-              type="text"
-              [(ngModel)]="razonSocial" (input)="onInputChange()" name="razonSocial" required
-              placeholder="Ingresar razón social"
-              class="w-full rounded-[10px] px-4 py-3 text-sm focus:ring-2 outline-none"
-              [ngClass]="{
+        <div>
+          <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Razón social</label>
+          <input type="text" [(ngModel)]="razonSocial" (input)="onInputChange()" name="razonSocial" required
+            placeholder="Ingresar razón social"
+            class="w-full rounded-[10px] px-4 py-3 text-sm focus:ring-2 outline-none" [ngClass]="{
                   'border border-rose-500 focus:ring-rose-500': showValidation && !razonSocial,
                   'border-none bg-white shadow-sm focus:ring-blue-400': !(showValidation && !razonSocial)
-                }"
-            />
-            <div *ngIf="showValidation && !razonSocial" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-1">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-              </svg>
-              Este campo es obligatorio.
-            </div>
+                }" />
+          <div *ngIf="showValidation && !razonSocial"
+            class="flex items-center text-rose-600 text-xs font-semibold mt-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+              stroke="currentColor" class="w-3.5 h-3.5 mr-1">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            Este campo es obligatorio.
           </div>
+        </div>
 
-          <div>
-            <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Correo empresarial</label>
-            <input
-              type="email"
-              [(ngModel)]="email" (input)="onInputChange()" name="email" required
-              placeholder="Ingresar correo"
-              class="w-full rounded-[10px] px-4 py-3 text-sm focus:ring-2 outline-none"
-              [ngClass]="{
+        <div>
+          <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Correo empresarial</label>
+          <input type="email" [(ngModel)]="email" (input)="onInputChange()" name="email" required
+            placeholder="Ingresar correo" class="w-full rounded-[10px] px-4 py-3 text-sm focus:ring-2 outline-none"
+            [ngClass]="{
                   'border border-rose-500 focus:ring-rose-500': showValidation && (!email || emailFormatInvalid),
                   'border-none bg-white shadow-sm focus:ring-blue-400': !(showValidation && (!email || emailFormatInvalid))
-                }"
-            />
-            <div *ngIf="showValidation && (!email || emailFormatInvalid)" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-1">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-              </svg>
-              {{ !email ? 'Este campo es obligatorio.' : 'Ingrese un correo válido.' }}
-            </div>
+                }" />
+          <div *ngIf="showValidation && (!email || emailFormatInvalid)"
+            class="flex items-center text-rose-600 text-xs font-semibold mt-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+              stroke="currentColor" class="w-3.5 h-3.5 mr-1">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            {{ !email ? 'Este campo es obligatorio.' : 'Ingrese un correo válido.' }}
           </div>
+        </div>
 
-          <div>
-            <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Teléfono</label>
-            <div
-              class="flex w-full rounded-[10px] overflow-hidden focus-within:ring-2"
-              [ngClass]="{
+        <div>
+          <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Teléfono</label>
+          <div class="flex w-full rounded-[10px] overflow-hidden focus-within:ring-2" [ngClass]="{
                 'border border-rose-500': showValidation && !telefono,
                 'shadow-sm focus-within:ring-blue-400': !(showValidation && !telefono)
-              }"
-            >
-              <div class="flex items-center gap-2 bg-[#E5EDFF] px-3 py-3 min-w-[100px] cursor-pointer">
-                <img src="assets/icons/banderaSalvador.png" alt="SV" class="w-6 h-4 rounded-sm object-cover" />
-                <span class="text-[#538CFF] font-bold text-sm">+503</span>
-                <svg class="w-4 h-4 text-[#538CFF]" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
-              </div>
-              <input
-                type="tel"
-                [(ngModel)]="telefono" (input)="onPhoneInput($event)" name="telefono" required
-                [placeholder]="phonePlaceholder"
-                class="flex-1 border-none bg-white px-4 py-3 text-sm outline-none text-gray-700"
-              />
-            </div>
-            <div *ngIf="showValidation && !telefono" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-1">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              }">
+            <div class="flex items-center gap-2 bg-[#E5EDFF] px-3 py-3 min-w-[100px] cursor-pointer">
+              <svg class="w-6 h-4 rounded-sm overflow-hidden" role="img" focusable="false"
+                [attr.aria-label]="selectedCountryName">
+                <use [attr.href]="selectedCountryFlagHref" [attr.xlink:href]="selectedCountryFlagHref"></use>
               </svg>
-              Este campo es obligatorio.
-            </div>
-            <div *ngIf="showValidation && telefono && phoneFormatInvalid" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-1">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              <span class="text-[#538CFF] font-bold text-sm">{{ selectedCountryPhoneCode }}</span>
+              <svg class="w-4 h-4 text-[#538CFF]" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
               </svg>
-              {{ phoneValidationMessage }}
             </div>
+            <input type="tel" [(ngModel)]="telefono" (input)="onPhoneInput($event)" name="telefono" required
+              [placeholder]="phonePlaceholder"
+              class="flex-1 border-none bg-white px-4 py-3 text-sm outline-none text-gray-700" />
           </div>
+          <div *ngIf="showValidation && !telefono" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+              stroke="currentColor" class="w-3.5 h-3.5 mr-1">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            Este campo es obligatorio.
+          </div>
+          <div *ngIf="showValidation && telefono && phoneFormatInvalid"
+            class="flex items-center text-rose-600 text-xs font-semibold mt-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+              stroke="currentColor" class="w-3.5 h-3.5 mr-1">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            {{ phoneValidationMessage }}
+          </div>
+        </div>
 
-          <div>
-            <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Dirección</label>
-            <input
-              type="text"
-              [(ngModel)]="direccion" (input)="onInputChange()" name="direccion" required
-              placeholder="Ingresar dirección"
-              class="w-full rounded-[10px] px-4 py-3 text-sm focus:ring-2 outline-none"
-              [ngClass]="{
+        <div>
+          <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Dirección</label>
+          <input type="text" [(ngModel)]="direccion" (input)="onInputChange()" name="direccion" required
+            placeholder="Ingresar dirección" class="w-full rounded-[10px] px-4 py-3 text-sm focus:ring-2 outline-none"
+            [ngClass]="{
                   'border border-rose-500 focus:ring-rose-500': showValidation && !direccion,
                   'border-none bg-white shadow-sm focus:ring-blue-400': !(showValidation && !direccion)
-                }"
-            />
-            <div *ngIf="showValidation && !direccion" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-1">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-              </svg>
-              Este campo es obligatorio.
-            </div>
+                }" />
+          <div *ngIf="showValidation && !direccion" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+              stroke="currentColor" class="w-3.5 h-3.5 mr-1">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            Este campo es obligatorio.
           </div>
+        </div>
 
-          <div>
-            <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">NIT</label>
-            <input
-              type="text"
-              [(ngModel)]="nit" (input)="onNitInput($event)" name="nit" required
-              placeholder="0000-000000-000-0"
-              class="w-full rounded-[10px] px-4 py-3 text-sm focus:ring-2 outline-none"
-              [ngClass]="{
+        <div>
+          <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">NIT</label>
+          <input type="text" [(ngModel)]="nit" (input)="onNitInput($event)" name="nit" required
+            placeholder="0000-000000-000-0" class="w-full rounded-[10px] px-4 py-3 text-sm focus:ring-2 outline-none"
+            [ngClass]="{
                   'border border-rose-500 focus:ring-rose-500': showValidation && !nit,
                   'border-none bg-white shadow-sm focus:ring-blue-400': !(showValidation && !nit)
-                }"
-            />
-            <div *ngIf="showValidation && !nit" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-1">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-              </svg>
-              Este campo es obligatorio.
-            </div>
+                }" />
+          <div *ngIf="showValidation && !nit" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+              stroke="currentColor" class="w-3.5 h-3.5 mr-1">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            Este campo es obligatorio.
           </div>
+        </div>
 
 
         } @else {
-          <!-- --- REGISTRO DE USUARIO --- -->
-          <div class="grid grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Nombres</label>
-              <input
-                type="text"
-                [(ngModel)]="nombres" (input)="onInputChange()" name="nombres" required
-                placeholder="Ingresar nombres"
-                class="w-full rounded-[10px] px-4 py-3 text-sm focus:ring-2 outline-none"
-                [ngClass]="{
+        <!-- --- REGISTRO DE USUARIO --- -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Nombres</label>
+            <input type="text" [(ngModel)]="nombres" (input)="onInputChange()" name="nombres" required
+              placeholder="Ingresar nombres" class="w-full rounded-[10px] px-4 py-3 text-sm focus:ring-2 outline-none"
+              [ngClass]="{
                   'border border-rose-500 focus:ring-rose-500': showValidation && !nombres,
                   'border-none bg-white shadow-sm focus:ring-blue-400': !(showValidation && !nombres)
-                }"
-              />
-              <div *ngIf="showValidation && !nombres" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-1">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                </svg>
-                Este campo es obligatorio.
-              </div>
+                }" />
+            <div *ngIf="showValidation && !nombres" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                stroke="currentColor" class="w-3.5 h-3.5 mr-1">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              </svg>
+              Este campo es obligatorio.
             </div>
-            <div>
-              <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Apellidos</label>
-              <input
-                type="text"
-                [(ngModel)]="apellidos" (input)="onInputChange()" name="apellidos" required
-                placeholder="Ingresar apellidos"
-                class="w-full rounded-[10px] px-4 py-3 text-sm focus:ring-2 outline-none"
-                [ngClass]="{
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Apellidos</label>
+            <input type="text" [(ngModel)]="apellidos" (input)="onInputChange()" name="apellidos" required
+              placeholder="Ingresar apellidos" class="w-full rounded-[10px] px-4 py-3 text-sm focus:ring-2 outline-none"
+              [ngClass]="{
                   'border border-rose-500 focus:ring-rose-500': showValidation && !apellidos,
                   'border-none bg-white shadow-sm focus:ring-blue-400': !(showValidation && !apellidos)
-                }"
-              />
-              <div *ngIf="showValidation && !apellidos" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-1">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                </svg>
-                Este campo es obligatorio.
-              </div>
+                }" />
+            <div *ngIf="showValidation && !apellidos"
+              class="flex items-center text-rose-600 text-xs font-semibold mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                stroke="currentColor" class="w-3.5 h-3.5 mr-1">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              </svg>
+              Este campo es obligatorio.
             </div>
           </div>
+        </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Correo electrónico</label>
-              <input
-                type="email"
-                [(ngModel)]="email" (input)="onInputChange()" name="email" required
-                placeholder="Ingresar correo"
-                class="w-full rounded-[10px] px-4 py-3 text-sm focus:ring-2 outline-none"
-                [ngClass]="{
-                  'border border-rose-500 focus:ring-rose-500': showValidation && (!email || emailFormatInvalid),
-                  'border-none bg-white shadow-sm focus:ring-blue-400': !(showValidation && (!email || emailFormatInvalid))
-                }"
-              />
-              <div *ngIf="showValidation && (!email || emailFormatInvalid)" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-1">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                </svg>
-                {{ !email ? 'Este campo es obligatorio.' : 'Ingrese un correo válido.' }}
-              </div>
-            </div>
-            <div>
-              <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Teléfono</label>
-              <div
-                class="flex w-full rounded-[10px] overflow-hidden focus-within:ring-2"
-                [ngClass]="{
-                  'border border-rose-500': showValidation && !telefono,
-                  'shadow-sm focus-within:ring-blue-400': !(showValidation && !telefono)
-                }"
-              >
-                <div class="flex items-center gap-2 bg-[#E5EDFF] px-3 py-3 min-w-[85px] cursor-pointer">
-                  <img src="assets/icons/banderaSalvador.png" alt="SV" class="w-5 h-3 object-cover rounded-sm" />
-                  <span class="text-[#538CFF] font-bold text-xs">{{ selectedCountryPhoneCode }}</span>
-                  <svg class="w-5 h-5 text-[#538CFF]" fill="currentColor" viewBox="0 0 20 20"><path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" /></svg>
-                </div>
-                <input
-                  type="tel"
-                  [(ngModel)]="telefono" (input)="onPhoneInput($event)" name="telefono" required
-                  [placeholder]="phonePlaceholder"
-                  class="flex-1 border-none bg-white px-3 py-3 text-sm outline-none text-gray-700"
-                />
-              </div>
-              <div *ngIf="showValidation && !telefono" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-1">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                </svg>
-                Este campo es obligatorio.
-              </div>
-              <div *ngIf="showValidation && telefono && phoneFormatInvalid" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-1">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                </svg>
-                {{ phoneValidationMessage }}
-              </div>
-            </div>
-          </div>
-
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">País de residencia</label>
             <div class="relative">
-              <select
-                [(ngModel)]="pais" (change)="onCountryChange()" name="pais" required
+              <select [(ngModel)]="pais" (change)="onCountryChange()" name="pais" required
                 class="w-full appearance-none rounded-[10px] px-4 py-3 text-sm text-[#B3B3B3] font-medium focus:ring-2 outline-none"
                 [ngClass]="{
                   'border border-rose-500 focus:ring-rose-500': showValidation && !pais,
                   'border-none bg-white shadow-sm focus:ring-blue-400': !(showValidation && !pais)
-                }"
-              >
+                }">
                 <option [ngValue]="''" disabled>Elegir el pais de residencia...</option>
                 <option *ngFor="let country of countries" [value]="country.code">
                   {{ country.name }}
                 </option>
               </select>
-              <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none" [class.text-rose-600]="showValidation && !pais" [class.text-[#538CFF]]="!(showValidation && !pais)">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
+              <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none"
+                [class.text-rose-600]="showValidation && !pais" [class.text-[#538CFF]]="!(showValidation && !pais)">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                  stroke="currentColor" class="w-5 h-5">
                   <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
                 </svg>
               </div>
             </div>
-             <div *ngIf="showValidation && !pais" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-1">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                </svg>
-                Debes seleccionar el país de residencia.
-              </div>
-          </div>
-
-          <div>
-            <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Tipo de documento</label>
-            <div class="relative">
-              <select
-                [(ngModel)]="tipoDoc" (change)="onDocumentTypeChange()" name="tipoDoc" required
-                class="w-full appearance-none rounded-[10px] px-4 py-3 text-sm text-[#B3B3B3] font-medium focus:ring-2 outline-none"
-                [ngClass]="{
-                  'border border-rose-500 focus:ring-rose-500': showValidation && !tipoDoc,
-                  'border-none bg-white shadow-sm focus:ring-blue-400': !(showValidation && !tipoDoc)
-                }"
-              >
-                <option [ngValue]="''" disabled>Elegir tipo de documento...</option>
-                <option *ngFor="let doc of documentTypes" [value]="doc.id">
-                  {{ doc.description }}
-                </option>
-              </select>
-              <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none" [class.text-rose-600]="showValidation && !tipoDoc" [class.text-[#538CFF]]="!(showValidation && !tipoDoc)">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-5 h-5">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
-                </svg>
-              </div>
+            <div *ngIf="showValidation && !pais" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                stroke="currentColor" class="w-3.5 h-3.5 mr-1">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              </svg>
+              Debes seleccionar el país de residencia.
             </div>
-             <div *ngIf="showValidation && !tipoDoc" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-1">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                </svg>
-                Debes seleccionar el tipo de documento.
-              </div>
           </div>
-
           <div>
-            <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Documento de identidad</label>
-            <input
-              type="text"
-              [(ngModel)]="numDoc" (input)="onDuiInput($event)" name="numDoc" required
-              [placeholder]="documentPlaceholder"
-              class="w-full rounded-[10px] px-4 py-3 text-sm focus:ring-2 outline-none"
-              [ngClass]="{
-                  'border border-rose-500 focus:ring-rose-500': showValidation && !numDoc,
-                  'border-none bg-white shadow-sm focus:ring-blue-400': !(showValidation && !numDoc)
-                }"
-            />
-            <div *ngIf="showValidation && !numDoc" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-1">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Teléfono</label>
+            <div class="flex w-full rounded-[10px] overflow-hidden focus-within:ring-2" [ngClass]="{
+                  'border border-rose-500': showValidation && !telefono,
+                  'shadow-sm focus-within:ring-blue-400': !(showValidation && !telefono)
+                }">
+              <div class="flex items-center gap-2 bg-[#E5EDFF] px-3 py-3 min-w-[85px] cursor-pointer">
+                <svg class="w-5 h-3 rounded-sm overflow-hidden" role="img" focusable="false"
+                  [attr.aria-label]="selectedCountryName">
+                  <use [attr.href]="selectedCountryFlagHref" [attr.xlink:href]="selectedCountryFlagHref"></use>
+                </svg>
+                <span class="text-[#538CFF] font-bold text-xs">{{ selectedCountryPhoneCode }}</span>
+                <svg class="w-5 h-5 text-[#538CFF]" fill="currentColor" viewBox="0 0 20 20">
+                  <path
+                    d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                </svg>
+              </div>
+              <input type="tel" [(ngModel)]="telefono" (input)="onPhoneInput($event)" name="telefono" required
+                [placeholder]="phonePlaceholder"
+                class="flex-1 border-none bg-white px-3 py-3 text-sm outline-none text-gray-700" />
+            </div>
+            <div *ngIf="showValidation && !telefono" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                stroke="currentColor" class="w-3.5 h-3.5 mr-1">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
               </svg>
               Este campo es obligatorio.
             </div>
-            <div *ngIf="showValidation && numDoc && documentFormatInvalid" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-3.5 h-3.5 mr-1">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            <div *ngIf="showValidation && telefono && phoneFormatInvalid"
+              class="flex items-center text-rose-600 text-xs font-semibold mt-1">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+                stroke="currentColor" class="w-3.5 h-3.5 mr-1">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
               </svg>
-              {{ documentValidationMessage }}
+              {{ phoneValidationMessage }}
             </div>
           </div>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Correo electrónico</label>
+          <input type="email" [(ngModel)]="email" (input)="onInputChange()" name="email" required
+            placeholder="Ingresar correo" class="w-full rounded-[10px] px-4 py-3 text-sm focus:ring-2 outline-none"
+            [ngClass]="{
+                  'border border-rose-500 focus:ring-rose-500': showValidation && (!email || emailFormatInvalid),
+                  'border-none bg-white shadow-sm focus:ring-blue-400': !(showValidation && (!email || emailFormatInvalid))
+                }" />
+          <div *ngIf="showValidation && (!email || emailFormatInvalid)"
+            class="flex items-center text-rose-600 text-xs font-semibold mt-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+              stroke="currentColor" class="w-3.5 h-3.5 mr-1">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            {{ !email ? 'Este campo es obligatorio.' : 'Ingrese un correo válido.' }}
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Tipo de documento</label>
+          <div class="relative">
+            <select [(ngModel)]="tipoDoc" (change)="onDocumentTypeChange()" name="tipoDoc" required
+              class="w-full appearance-none rounded-[10px] px-4 py-3 text-sm text-[#B3B3B3] font-medium focus:ring-2 outline-none"
+              [ngClass]="{
+                  'border border-rose-500 focus:ring-rose-500': showValidation && !tipoDoc,
+                  'border-none bg-white shadow-sm focus:ring-blue-400': !(showValidation && !tipoDoc)
+                }">
+              <option [ngValue]="''" disabled>Elegir tipo de documento...</option>
+              <option *ngFor="let doc of documentTypes" [value]="doc.id">
+                {{ doc.description }}
+              </option>
+            </select>
+            <div class="absolute inset-y-0 right-4 flex items-center pointer-events-none"
+              [class.text-rose-600]="showValidation && !tipoDoc" [class.text-[#538CFF]]="!(showValidation && !tipoDoc)">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5"
+                stroke="currentColor" class="w-5 h-5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+              </svg>
+            </div>
+          </div>
+          <div *ngIf="showValidation && !tipoDoc" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+              stroke="currentColor" class="w-3.5 h-3.5 mr-1">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            Debes seleccionar el tipo de documento.
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-semibold text-[#1A2440] mb-1.5">Documento de identidad</label>
+          <input type="text" [(ngModel)]="numDoc" (input)="onDuiInput($event)" name="numDoc" required
+            [placeholder]="documentPlaceholder"
+            class="w-full rounded-[10px] px-4 py-3 text-sm focus:ring-2 outline-none" [ngClass]="{
+                  'border border-rose-500 focus:ring-rose-500': showValidation && !numDoc,
+                  'border-none bg-white shadow-sm focus:ring-blue-400': !(showValidation && !numDoc)
+                }" />
+          <div *ngIf="showValidation && !numDoc" class="flex items-center text-rose-600 text-xs font-semibold mt-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+              stroke="currentColor" class="w-3.5 h-3.5 mr-1">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            Este campo es obligatorio.
+          </div>
+          <div *ngIf="showValidation && numDoc && documentFormatInvalid"
+            class="flex items-center text-rose-600 text-xs font-semibold mt-1">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2"
+              stroke="currentColor" class="w-3.5 h-3.5 mr-1">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            {{ documentValidationMessage }}
+          </div>
+        </div>
 
         }
 
         <!-- Botón Registrar -->
         <div class="pt-4 flex justify-center">
-          <button type="submit" [disabled]="registering" class="w-3/4 rounded-full bg-[#538CFF] py-4 text-base font-bold text-white shadow-lg shadow-blue-500/30 hover:bg-[#3A78F0] transition-all transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed">
+          <button type="submit" [disabled]="registering"
+            class="w-3/4 rounded-full bg-[#538CFF] py-4 text-base font-bold text-white shadow-lg shadow-blue-500/30 hover:bg-[#3A78F0] transition-all transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed">
             {{ isCompany ? 'Registrar empresa' : 'Registrar' }}
           </button>
         </div>
@@ -373,45 +383,49 @@
       <!-- Enlace Login -->
       <p class="mt-8 text-sm text-center text-gray-500">
         ¿Ya tiene una cuenta?
-        <button type="button" (click)="goToLogin()" class="font-bold text-[#538CFF] hover:underline">Iniciar sesión</button>
+        <button type="button" (click)="goToLogin()" class="font-bold text-[#538CFF] hover:underline">Iniciar
+          sesión</button>
       </p>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div *ngIf="registering" class="absolute inset-0 flex flex-col items-center justify-center z-50 bg-[#F4F7FD]/90">
+      <svg class="animate-spin h-10 w-10 text-black mb-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+        viewBox="0 0 24 24">
+        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+          d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"></path>
+      </svg>
+      <div class="text-center">
+        <h3 class="text-2xl font-normal text-[#1A2440] mb-2">Creando cuenta...</h3>
+        <p class="text-base font-normal text-[#1A2440]">Por favor no cierres esta ventana.</p>
+      </div>
+    </div>
+
+    <!-- Success Overlay -->
+    <div *ngIf="registerSuccess"
+      class="absolute inset-0 flex flex-col items-center justify-center z-10 px-8 bg-[#F4F7FD]/90">
+      <!-- Green Check Circle Icon -->
+      <div class="mb-2 text-[#155724]">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"
+          stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M8 12l2.5 2.5 5.5 -5.5" />
+        </svg>
       </div>
 
-      <!-- Loading Overlay -->
-      <div *ngIf="registering" class="absolute inset-0 flex flex-col items-center justify-center z-50 bg-[#F4F7FD]/90">
-        <svg class="animate-spin h-10 w-10 text-black mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8m0-5v5h-5"></path>
-          </svg>
-        <div class="text-center">
-          <h3 class="text-2xl font-normal text-[#1A2440] mb-2">Creando cuenta...</h3>
-          <p class="text-base font-normal text-[#1A2440]">Por favor no cierres esta ventana.</p>
-        </div>
-      </div>
+      <h3 class="text-2xl md:text-3xl font-normal text-[#1A2440] mb-4 text-center">
+        {{ isCompany ? 'Empresa registrada exitosamente.' : 'Cuenta creada exitosamente.' }}
+      </h3>
 
-      <!-- Success Overlay -->
-      <div *ngIf="registerSuccess" class="absolute inset-0 flex flex-col items-center justify-center z-10 px-8 bg-[#F4F7FD]/90">
-          <!-- Green Check Circle Icon -->
-          <div class="mb-2 text-[#155724]">
-             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="w-10 h-10">
-              <circle cx="12" cy="12" r="9" />
-              <path d="M8 12l2.5 2.5 5.5 -5.5" />
-            </svg>
-          </div>
+      <p class="text-base md:text-lg text-[#1A2440] mb-8 text-center font-normal max-w-md">
+        {{ isCompany ? 'Tu cuenta está pendiente de aprobación administrativa. Recibirás una notificación cuando sea
+        validada.' : 'Se te ha enviado un correo de bienvenida.' }}
+      </p>
 
-          <h3 class="text-2xl md:text-3xl font-normal text-[#1A2440] mb-4 text-center">
-            {{ isCompany ? 'Empresa registrada exitosamente.' : 'Cuenta creada exitosamente.' }}
-          </h3>
-
-          <p class="text-base md:text-lg text-[#1A2440] mb-8 text-center font-normal max-w-md">
-            {{ isCompany ? 'Tu cuenta está pendiente de aprobación administrativa. Recibirás una notificación cuando sea validada.' : 'Se te ha enviado un correo de bienvenida.' }}
-          </p>
-
-          <button
-            (click)="onGoToPortal()"
-            class="w-full max-w-md bg-[#538CFF] hover:bg-[#3A78F0] text-white rounded-full py-3.5 font-bold text-lg shadow-lg shadow-blue-500/30 transition-all transform active:scale-95"
-          >
-           {{ isCompany ? 'Ir al dashboard de empresa' : 'Ir al portal' }}
-          </button>
-        </div>
+      <button (click)="onGoToPortal()"
+        class="w-full max-w-md bg-[#538CFF] hover:bg-[#3A78F0] text-white rounded-full py-3.5 font-bold text-lg shadow-lg shadow-blue-500/30 transition-all transform active:scale-95">
+        {{ isCompany ? 'Ir al dashboard de empresa' : 'Ir al portal' }}
+      </button>
     </div>
   </div>
+</div>

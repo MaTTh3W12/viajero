@@ -30,6 +30,18 @@ const PHONE_RULES_BY_COUNTRY: Record<string, PhoneDigitsRule> = {
   CA: { min: 10, max: 10, placeholder: '0000000000' },
 };
 
+const FLAG_SPRITE_PATH = 'assets/icons/sprite.svg';
+const DEFAULT_FLAG_SYMBOL_ID = 'flag-generic';
+const FLAG_SYMBOL_BY_COUNTRY: Record<string, string> = {
+  CR: 'flag-cr',
+  SV: 'flag-sv',
+  US: 'flag-us',
+  GT: 'flag-gt',
+  HN: 'flag-hn',
+  NI: 'flag-ni',
+  PA: 'flag-pa',
+};
+
 @Component({
   selector: 'app-register',
   standalone: true,
@@ -365,6 +377,16 @@ export class RegisterComponent implements OnInit {
     return selectedCountry?.phone_code ?? '+503';
   }
 
+  get selectedCountryName(): string {
+    const selectedCountry = this.countries.find((country) => country.code === this.selectedCountryCode);
+    return selectedCountry?.name ?? 'El Salvador';
+  }
+
+  get selectedCountryFlagHref(): string {
+    const symbolId = this.getFlagSymbolId(this.selectedCountryCode);
+    return `${FLAG_SPRITE_PATH}#${symbolId}`;
+  }
+
   get phonePlaceholder(): string {
     return this.getPhoneRule().placeholder;
   }
@@ -501,5 +523,10 @@ export class RegisterComponent implements OnInit {
       .replace(/[\u0300-\u036f]/g, '')
       .trim()
       .toUpperCase();
+  }
+
+  private getFlagSymbolId(countryCode: string): string {
+    const normalized = (countryCode ?? '').trim().toUpperCase();
+    return FLAG_SYMBOL_BY_COUNTRY[normalized] ?? DEFAULT_FLAG_SYMBOL_ID;
   }
 }

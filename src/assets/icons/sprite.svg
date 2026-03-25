@@ -457,5 +457,72 @@
   <path d="M14.6398 9.91417C14.5998 10.7008 13.9465 11.3342 13.1465 11.3342C12.3198 11.3342 11.6465 10.6608 11.6465 9.83417V7.6875L12.9998 7.9875C13.8798 8.18083 14.5998 8.63417 14.6398 9.91417Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
 </symbol>
 
+  <!-- Banderas dinámicas -->
+  <symbol id="flag-generic" viewBox="0 0 24 16" fill="none">
+    <rect width="24" height="16" rx="2" fill="#CBD5F5" />
+    <path d="M2 4H22" stroke="#94A3B8" stroke-width="1.2" />
+    <path d="M2 12H22" stroke="#94A3B8" stroke-width="1.2" />
+  </symbol>
+
+  <symbol id="flag-sv" viewBox="0 0 24 16" fill="none">
+    <rect width="24" height="16" rx="1.5" fill="#0F62C9" />
+    <rect y="5.333" width="24" height="5.334" fill="#FFFFFF" />
+    <circle cx="12" cy="8" r="1.2" fill="#F7C948" />
+  </symbol>
+
+  <symbol id="flag-cr" viewBox="0 0 24 16" fill="none">
+    <rect width="24" height="16" rx="1.5" fill="#002B7F" />
+    <rect y="3" width="24" height="2.5" fill="#FFFFFF" />
+    <rect y="5.5" width="24" height="5" fill="#CE1126" />
+    <rect y="10.5" width="24" height="2.5" fill="#FFFFFF" />
+  </symbol>
+
+  <symbol id="flag-us" viewBox="0 0 24 16" fill="none">
+    <rect width="24" height="16" rx="1.5" fill="#B22234" />
+    <rect y="2" width="24" height="1.5" fill="#FFFFFF" />
+    <rect y="5" width="24" height="1.5" fill="#FFFFFF" />
+    <rect y="8" width="24" height="1.5" fill="#FFFFFF" />
+    <rect y="11" width="24" height="1.5" fill="#FFFFFF" />
+    <rect width="10.5" height="7.5" fill="#3C3B6E" />
+    <circle cx="2.8" cy="1.8" r="0.5" fill="#FFFFFF" />
+    <circle cx="4.8" cy="3.1" r="0.5" fill="#FFFFFF" />
+    <circle cx="6.8" cy="1.8" r="0.5" fill="#FFFFFF" />
+    <circle cx="2.8" cy="4.4" r="0.5" fill="#FFFFFF" />
+    <circle cx="4.8" cy="5.7" r="0.5" fill="#FFFFFF" />
+  </symbol>
+
+  <symbol id="flag-gt" viewBox="0 0 24 16" fill="none">
+    <rect width="24" height="16" rx="1.5" fill="#5CAFE4" />
+    <rect x="8" width="8" height="16" fill="#FFFFFF" />
+    <circle cx="12" cy="8" r="1.4" fill="#8FD19E" />
+    <path d="M12 6.2L12.9 9.5H11.1L12 6.2Z" fill="#008751" />
+  </symbol>
+
+  <symbol id="flag-hn" viewBox="0 0 24 16" fill="none">
+    <rect width="24" height="16" rx="1.5" fill="#0073CF" />
+    <rect y="5" width="24" height="6" fill="#FFFFFF" />
+    <circle cx="10" cy="6.8" r="0.55" fill="#0073CF" />
+    <circle cx="14" cy="6.8" r="0.55" fill="#0073CF" />
+    <circle cx="12" cy="8" r="0.6" fill="#0073CF" />
+    <circle cx="10" cy="9.2" r="0.55" fill="#0073CF" />
+    <circle cx="14" cy="9.2" r="0.55" fill="#0073CF" />
+  </symbol>
+
+  <symbol id="flag-ni" viewBox="0 0 24 16" fill="none">
+    <rect width="24" height="16" rx="1.5" fill="#115BCB" />
+    <rect y="5" width="24" height="6" fill="#FFFFFF" />
+    <path d="M12 6.5L13.2 9.5H10.8L12 6.5Z" fill="#F4C542" />
+    <path d="M12 7.5L12.6 9H11.4L12 7.5Z" fill="#198754" />
+  </symbol>
+
+  <symbol id="flag-pa" viewBox="0 0 24 16" fill="none">
+    <rect width="12" height="8" fill="#FFFFFF" />
+    <rect x="12" width="12" height="8" fill="#CE1126" />
+    <rect y="8" width="12" height="8" fill="#0052B4" />
+    <rect x="12" y="8" width="12" height="8" fill="#FFFFFF" />
+    <path d="M4 2.5L4.6 4.3H2.9L4.4 5.4L3.8 7.2L5.3 6.1L6.8 7.2L6.2 5.4L7.7 4.3H6L6.6 2.5L5.3 3.6L4 2.5Z" fill="#0052B4" />
+    <path d="M17.5 10.5L18.1 12.3H16.4L17.9 13.4L17.3 15.2L18.8 14.1L20.3 15.2L19.7 13.4L21.2 12.3H19.5L20.1 10.5L18.8 11.6L17.5 10.5Z" fill="#CE1126" />
+  </symbol>
+
 
 </svg>

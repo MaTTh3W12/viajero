@@ -63,7 +63,7 @@
         <div class="hidden lg:flex flex-col items-start leading-tight">
           <span class="text-sm font-medium text-white">{{ displayFullName }}</span>
           @if (displayCompanyName) {
-            <span class="text-xs text-[#1A2440]">{{ displayCompanyName }}</span>
+            <span class="text-xs text-[#1A2440]">{{ displayCompanyName | companyNameEllipsis:30 }}</span>
           }
         </div>
       }
