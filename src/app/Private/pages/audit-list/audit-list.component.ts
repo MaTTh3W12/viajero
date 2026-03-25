@@ -66,6 +66,7 @@ export class AuditListComponent implements OnInit, OnDestroy {
   userSearch = '';
 
   loading = false;
+  filtersApplied = false;
   rows: AuditTableRow[] = [];
   totalRows = 0;
   currentPage = 1;
@@ -145,7 +146,18 @@ export class AuditListComponent implements OnInit, OnDestroy {
     return String(page);
   }
 
+  clearFilters(): void {
+    this.startDate = '';
+    this.endDate = '';
+    this.selectedActionType = '';
+    this.selectedEntity = '';
+    this.userSearch = '';
+    this.filtersApplied = false;
+    this.loadAuditLogs();
+  }
+
   onSearch(): void {
+    this.filtersApplied = !!(this.startDate || this.endDate || this.selectedActionType || this.selectedEntity || this.userSearch);
     this.currentPage = 1;
     this.loadAuditLogs();
   }

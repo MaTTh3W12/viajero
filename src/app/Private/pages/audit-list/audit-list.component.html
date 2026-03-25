@@ -96,6 +96,11 @@
             </svg>
             Buscar
           </button>
+          <button *ngIf="filtersApplied" type="button" class="audit-clear-button rounded-full bg-white p-2 shadow-md" (click)="clearFilters()">
+            <svg class="h-8 w-8 text-gray-500" aria-hidden="true">
+              <use href="assets/icons/sprite.svg#broom"></use>
+            </svg>
+          </button>
         </div>
       </div>
     </section>
