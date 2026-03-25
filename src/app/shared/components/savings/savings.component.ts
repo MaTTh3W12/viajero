@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { Coupon, CouponListResult, CouponService } from '../../../service/coupon.service';
-import { finalize, map, Observable, take, timeout } from 'rxjs';
+import { CategoryService } from '../../../service/category.service';
+import { catchError, finalize, map, Observable, of, take, timeout } from 'rxjs';
 
 @Component({
   selector: 'app-savings',
@@ -27,48 +28,32 @@ export class SavingsComponent implements OnInit, OnChanges {
   error = '';
   readonly fixedAddress = 'San Salvador, El Salvador';
   readonly defaultCommercialName = 'Comercio participante';
+  readonly fallbackCategoryName = 'Categoria';
   private couponsFoundEmitVersion = 0;
   private couponImageById = new Map<number, string>();
-  private readonly categoryNames: Record<number, string> = {
-    1: 'Alojamiento',
-    2: 'Alimentos y bebidas',
-    3: 'Turismo',
-    4: 'Entretenimiento',
-    5: 'Cuidado personal',
-    6: 'Productos nostálgicos',
-    7: 'Productos y servicios',
-    8: 'Tour operadores',
-    9: 'Transporte',
-  };
-  private readonly categoryIcons: Record<number, string> = {
-    1: 'assets/icons/double-bed.svg', // Alojamiento
-    2: 'assets/icons/dinner.svg', // Alimentos y bebidas
-    3: 'assets/icons/sunbed.svg', // Turismo
-    4: 'assets/icons/gift-bag1.svg', // Entretenimiento
-    5: 'assets/icons/lotus1.svg', // Cuidado personal
-    6: 'assets/icons/product-quality1.svg', // Productos nostálgicos
-    7: 'assets/icons/gift-bag1.svg', // Productos y servicios
-    8: 'assets/icons/traveler1.svg', // Tour operadores
-    9: 'assets/icons/bus1.svg', // Transporte
-  };
-  private readonly categoryBgColors: Record<number, string> = {
-    1: '#FFF8D2', // Alojamiento
-    2: '#ABE9FF', // Alimentos y bebidas
-    3: '#D8D7FF', // Turismo
-    4: '#FFD5D6', // Entretenimiento
-    5: '#D3F6D2', // Cuidado personal
-    6: '#FFD5D6', // Productos nostálgicos
-    7: '#FFC6B3', // Productos y servicios
-    8: '#CAFFFB', // Tour operadores
-    9: '#CAFFDC', // Transporte
+  private categoryNameById = new Map<number, string>();
+  private categoryIconById = new Map<number, string>();
+  private categoryBgColorById = new Map<number, string>();
+  private readonly categoryVisualBySlug: Record<string, { icon: string; bgColor: string }> = {
+    alojamiento: { icon: 'assets/icons/double-bed.svg', bgColor: '#FFF8D2' },
+    'alimentos-y-bebidas': { icon: 'assets/icons/dinner.svg', bgColor: '#ABE9FF' },
+    turismo: { icon: 'assets/icons/sunbed.svg', bgColor: '#D8D7FF' },
+    entretenimiento: { icon: 'assets/icons/gift-bag1.svg', bgColor: '#FFD5D6' },
+    'cuidado-personal': { icon: 'assets/icons/lotus1.svg', bgColor: '#D3F6D2' },
+    'productos-nostalgicos': { icon: 'assets/icons/product-quality1.svg', bgColor: '#FFD5D6' },
+    'productos-y-servicios': { icon: 'assets/icons/gift-bag1.svg', bgColor: '#FFC6B3' },
+    'tour-operadores': { icon: 'assets/icons/traveler1.svg', bgColor: '#CAFFFB' },
+    transporte: { icon: 'assets/icons/bus1.svg', bgColor: '#CAFFDC' },
   };
 
   constructor(
     private couponService: CouponService,
+    private categoryService: CategoryService,
     private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
+    this.loadCategoryMetadata();
     this.loadCoupons();
   }
 
@@ -149,15 +134,15 @@ export class SavingsComponent implements OnInit, OnChanges {
   }
 
   getCategoryName(categoryId: number): string {
-    return this.categoryNames[categoryId] ?? 'Turismo';
+    return this.categoryNameById.get(Number(categoryId)) ?? this.fallbackCategoryName;
   }
 
   getCategoryIconPath(categoryId: number): string {
-    return this.categoryIcons[categoryId] ?? 'assets/icons/coupon1.svg';
+    return this.categoryIconById.get(Number(categoryId)) ?? 'assets/icons/coupon1.svg';
   }
 
   getCategoryBgColor(categoryId: number): string {
-    return this.categoryBgColors[categoryId] ?? '#E5E7EB';
+    return this.categoryBgColorById.get(Number(categoryId)) ?? '#E5E7EB';
   }
 
   getStockLabel(coupon: Coupon): string {
@@ -355,6 +340,56 @@ export class SavingsComponent implements OnInit, OnChanges {
     }
 
     return new Date(year, month - 1, day, 0, 0, 0, 0).getTime();
+  }
+
+  private loadCategoryMetadata(): void {
+    this.categoryService.getCategoriesPaged(undefined, {
+      limit: 500,
+      offset: 0,
+      where: {
+        _and: [
+          { active: { _eq: true } },
+          { name: { _ilike: '%%' } },
+        ],
+      },
+    }).pipe(
+      take(1),
+      timeout(15000),
+      catchError(() => of({ rows: [], total: 0 }))
+    ).subscribe((result) => {
+      this.categoryNameById.clear();
+      this.categoryIconById.clear();
+      this.categoryBgColorById.clear();
+
+      result.rows.forEach((category) => {
+        const categoryId = Number(category.id);
+        if (!Number.isFinite(categoryId)) return;
+
+        const categoryName = (category.name ?? '').trim() || this.fallbackCategoryName;
+        const visual = this.resolveCategoryVisual(categoryName);
+
+        this.categoryNameById.set(categoryId, categoryName);
+        this.categoryIconById.set(categoryId, visual.icon);
+        this.categoryBgColorById.set(categoryId, visual.bgColor);
+      });
+
+      this.cdr.detectChanges();
+    });
+  }
+
+  private resolveCategoryVisual(categoryName: string): { icon: string; bgColor: string } {
+    const slug = this.toCategorySlug(categoryName);
+    return this.categoryVisualBySlug[slug] ?? { icon: 'assets/icons/coupon1.svg', bgColor: '#E5E7EB' };
+  }
+
+  private toCategorySlug(value: string): string {
+    return value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/&/g, ' y ')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
   }
 
 }

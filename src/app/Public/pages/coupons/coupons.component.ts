@@ -7,6 +7,8 @@ import { ContacUsComponent } from '../../../shared/components/contac-us/contac-u
 import { RelatedPagesComponent } from '../../../shared/components/related-pages/related-pages.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { SavingsComponent } from '../../../shared/components/savings/savings.component';
+import { CategoryService } from '../../../service/category.service';
+import { catchError, of, take, timeout } from 'rxjs';
 
 interface CouponCategoryFilter {
   key: string;
@@ -44,83 +46,32 @@ export class CouponsComponent implements OnInit {
   pendingDateFrom = '';
   pendingDateTo = '';
   foundCoupons = 0;
-  readonly categoryFilters: CouponCategoryFilter[] = [
-    {
-      key: 'all',
-      label: 'Todos los cupones',
-      categoryId: null,
-      icon: 'assets/icons/coupon1.svg',
-      bgColor: '#1438A0',
-      activeIcon: true,
-    },
-    {
-      key: 'alojamiento',
-      label: 'Alojamiento',
-      categoryId: 1,
-      icon: 'assets/icons/double-bed.svg',
-      bgColor: '#FFF8D2',
-    },
-    {
-      key: 'alimentos',
-      label: 'Alimentos y bebidas',
-      categoryId: 2,
-      icon: 'assets/icons/dinner.svg',
-      bgColor: '#ABE9FF',
-    },
-    {
-      key: 'turismo',
-      label: 'Turismo',
-      categoryId: 3,
-      icon: 'assets/icons/sunbed.svg',
-      bgColor: '#D8D7FF',
-    },
-    {
-      key: 'entretenimiento',
-      label: 'Entretenimiento',
-      categoryId: 4,
-      icon: 'assets/icons/gift-bag1.svg',
-      bgColor: '#FFD5D6',
-    },
-    {
-      key: 'cuidado-personal',
-      label: 'Cuidado personal',
-      categoryId: 5,
-      icon: 'assets/icons/lotus1.svg',
-      bgColor: '#D3F6D2',
-    },
-    {
-      key: 'productos-nostalgicos',
-      label: 'Productos nostálgicos',
-      categoryId: 6,
-      icon: 'assets/icons/product-quality1.svg',
-      bgColor: '#FFD5D6',
-    },
-    {
-      key: 'productos-servicios',
-      label: 'Productos y servicios',
-      categoryId: 7,
-      icon: 'assets/icons/gift-bag1.svg',
-      bgColor: '#FFC6B3',
-    },
-    {
-      key: 'tour-operadores',
-      label: 'Tour operadores',
-      categoryId: 8,
-      icon: 'assets/icons/traveler1.svg',
-      bgColor: '#CAFFFB',
-    },
-    {
-      key: 'transporte',
-      label: 'Transporte',
-      categoryId: 9,
-      icon: 'assets/icons/bus1.svg',
-      bgColor: '#CAFFDC',
-    },
-  ];
+  private requestedCategoryKey = 'all';
+  private readonly categoryVisualBySlug: Record<string, { icon: string; bgColor: string; activeIcon?: boolean }> = {
+    alojamiento: { icon: 'assets/icons/double-bed.svg', bgColor: '#FFF8D2' },
+    'alimentos-y-bebidas': { icon: 'assets/icons/dinner.svg', bgColor: '#ABE9FF' },
+    turismo: { icon: 'assets/icons/sunbed.svg', bgColor: '#D8D7FF' },
+    entretenimiento: { icon: 'assets/icons/gift-bag1.svg', bgColor: '#FFD5D6' },
+    'cuidado-personal': { icon: 'assets/icons/lotus1.svg', bgColor: '#D3F6D2' },
+    'productos-nostalgicos': { icon: 'assets/icons/product-quality1.svg', bgColor: '#FFD5D6' },
+    'productos-y-servicios': { icon: 'assets/icons/gift-bag1.svg', bgColor: '#FFC6B3' },
+    'tour-operadores': { icon: 'assets/icons/traveler1.svg', bgColor: '#CAFFFB' },
+    transporte: { icon: 'assets/icons/bus1.svg', bgColor: '#CAFFDC' },
+  };
+  private readonly allCategoryFilter: CouponCategoryFilter = {
+    key: 'all',
+    label: 'Todos los cupones',
+    categoryId: null,
+    icon: 'assets/icons/coupon1.svg',
+    bgColor: '#1438A0',
+    activeIcon: true,
+  };
+  categoryFilters: CouponCategoryFilter[] = [this.allCategoryFilter];
 
   constructor(
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private categoryService: CategoryService
   ) { }
 
   isActive(cat: string) {
@@ -204,11 +155,81 @@ export class CouponsComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.loadCategoryFilters();
     this.route.queryParamMap.subscribe((params) => {
-      const requestedCategory = params.get('category') ?? 'all';
-      const hasCategory = this.categoryFilters.some((item) => item.key === requestedCategory);
-      this.selectCategory(hasCategory ? requestedCategory : 'all', false);
+      this.requestedCategoryKey = params.get('category') ?? 'all';
+      this.applyRequestedCategory();
     });
+  }
+
+  private loadCategoryFilters(): void {
+    this.categoryService.getCategoriesPaged(undefined, {
+      limit: 500,
+      offset: 0,
+      where: {
+        _and: [
+          { active: { _eq: true } },
+          { name: { _ilike: '%%' } },
+        ],
+      },
+    }).pipe(
+      take(1),
+      timeout(15000),
+      catchError(() => of({ rows: [], total: 0 }))
+    ).subscribe((result) => {
+      const usedKeys = new Set<string>();
+      const dynamicFilters = result.rows
+        .map((category) => {
+          const categoryId = Number(category.id);
+          if (!Number.isFinite(categoryId)) return null;
+
+          const categoryName = (category.name ?? '').trim();
+          if (!categoryName) return null;
+
+          const slug = this.toCategorySlug(categoryName);
+          const keyBase = slug || `category-${categoryId}`;
+          const key = usedKeys.has(keyBase) ? `${keyBase}-${categoryId}` : keyBase;
+          usedKeys.add(key);
+
+          const visual = this.resolveCategoryVisual(categoryName);
+
+          return {
+            key,
+            label: categoryName,
+            categoryId,
+            icon: visual.icon,
+            bgColor: visual.bgColor,
+            activeIcon: visual.activeIcon,
+          } as CouponCategoryFilter;
+        })
+        .filter((item): item is CouponCategoryFilter => item !== null);
+
+      this.categoryFilters = [this.allCategoryFilter, ...dynamicFilters];
+      this.applyRequestedCategory();
+    });
+  }
+
+  private applyRequestedCategory(): void {
+    const hasCategory = this.categoryFilters.some((item) => item.key === this.requestedCategoryKey);
+    this.selectCategory(hasCategory ? this.requestedCategoryKey : 'all', false);
+  }
+
+  private resolveCategoryVisual(categoryName: string): { icon: string; bgColor: string; activeIcon?: boolean } {
+    const slug = this.toCategorySlug(categoryName);
+    return this.categoryVisualBySlug[slug] ?? {
+      icon: 'assets/icons/coupon1.svg',
+      bgColor: '#E5E7EB',
+    };
+  }
+
+  private toCategorySlug(value: string): string {
+    return value
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/&/g, ' y ')
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '');
   }
 
 }

@@ -74,14 +74,17 @@ export class CategoryService {
   }
 
   private executeOperation<TData, TVariables extends object>(
-    token: string,
+    token: string | null | undefined,
     query: string,
     variables: TVariables
   ): Observable<TData> {
-    const headers = new HttpHeaders({
+    let headers = new HttpHeaders({
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
     });
+
+    if (token?.trim()) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
 
     return this.http
       .post<GraphQLResponse<TData>>(this.endpoint, { query, variables }, { headers })
@@ -100,7 +103,7 @@ export class CategoryService {
       );
   }
 
-  getCategories(token: string): Observable<Category[]> {
+  getCategories(token?: string): Observable<Category[]> {
     return this.getCategoriesPaged(token, {
       limit: 500,
       offset: 0,
@@ -109,7 +112,7 @@ export class CategoryService {
   }
 
   getCategoriesPaged(
-    token: string,
+    token: string | null | undefined,
     variables: GetCategoriesPagedVariables
   ): Observable<GetCategoriesPagedResult> {
     const query = `
