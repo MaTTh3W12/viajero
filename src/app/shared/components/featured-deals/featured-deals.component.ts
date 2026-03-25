@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, ElementRef, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { finalize, forkJoin, take, timeout } from 'rxjs';
+import { catchError, finalize, forkJoin, of, take, timeout } from 'rxjs';
 import { Coupon, CouponService } from '../../../service/coupon.service';
+import { CategoryService } from '../../../service/category.service';
 
 @Component({
   selector: 'app-featured-deals',
@@ -24,16 +25,19 @@ export class FeaturedDealsComponent implements OnInit, OnDestroy {
   error = '';
   readonly defaultCommercialName = 'Comercio participante';
   private couponImageById = new Map<number, string>();
+  private categoryNameById = new Map<number, string>();
 
   private autoScrollInterval: ReturnType<typeof setInterval> | null = null;
   private initTimeout: ReturnType<typeof setTimeout> | null = null;
 
   constructor(
     private couponService: CouponService,
+    private categoryService: CategoryService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    this.loadCategoryNames();
     this.loadCoupons();
   }
 
@@ -89,19 +93,7 @@ export class FeaturedDealsComponent implements OnInit, OnDestroy {
   }
 
   getCategoryName(categoryId: number): string {
-    const categories: Record<number, string> = {
-      1: 'Alojamiento',
-      2: 'Alimentos y bebidas',
-      3: 'Turismo',
-      4: 'Entretenimiento',
-      5: 'Cuidado personal',
-      6: 'Productos nostálgicos',
-      7: 'Productos y servicios',
-      8: 'Tour operadores',
-      9: 'Transporte',
-    };
-
-    return categories[categoryId] ?? 'Cupón';
+    return this.categoryNameById.get(Number(categoryId)) ?? 'Categoria';
   }
 
   getCouponAddress(coupon: Coupon): string {
@@ -273,5 +265,34 @@ export class FeaturedDealsComponent implements OnInit, OnDestroy {
   private normalizeMimeType(mimeType: string | null | undefined): string {
     if (!mimeType) return '';
     return String(mimeType).replace(/^"+|"+$/g, '').trim().toLowerCase();
+  }
+
+  private loadCategoryNames(): void {
+    this.categoryService.getCategoriesPaged(undefined, {
+      limit: 500,
+      offset: 0,
+      where: {
+        _and: [
+          { active: { _eq: true } },
+          { name: { _ilike: '%%' } },
+        ],
+      },
+    }).pipe(
+      take(1),
+      timeout(15000),
+      catchError(() => of({ rows: [], total: 0 }))
+    ).subscribe((result) => {
+      this.categoryNameById.clear();
+
+      result.rows.forEach((category) => {
+        const categoryId = Number(category.id);
+        if (!Number.isFinite(categoryId)) return;
+
+        const categoryName = (category.name ?? '').trim() || 'Categoria';
+        this.categoryNameById.set(categoryId, categoryName);
+      });
+
+      this.cdr.detectChanges();
+    });
   }
 }
