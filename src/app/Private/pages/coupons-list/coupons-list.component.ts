@@ -447,7 +447,12 @@ export class CouponsListComponent {
       }
 
       const currentCoupon = this.allCoupons.find((coupon) => coupon.id === payload.id) ?? null;
-      if (currentCoupon && payload.disponibles !== undefined) {
+      if (!currentCoupon) {
+        payload.onError('No se encontró la información actual del cupón.');
+        return;
+      }
+
+      if (payload.disponibles !== undefined) {
         const total = currentCoupon.disponiblesTotal ?? currentCoupon.disponibles ?? 0;
         const available = currentCoupon.disponibles ?? 0;
         const acquired = Math.max(total - available, 0);
@@ -464,6 +469,9 @@ export class CouponsListComponent {
         return;
       }
 
+      const totalAntes = currentCoupon.disponiblesTotal ?? currentCoupon.disponibles ?? 0;
+      const disponiblesAntes = currentCoupon.disponibles ?? 0;
+
       const variables: UpdateCouponVariables = {
         id: payload.id,
         title: payload.titulo,
@@ -476,8 +484,8 @@ export class CouponsListComponent {
         price_discount: payload.descuento ?? null,
         auto_published: payload.autoPublicado ?? false,
         published: payload.estado === 'Publicado',
-        ...(payload.cantidad !== undefined ? { stock_total: payload.cantidad } : {}),
-        ...(payload.disponibles !== undefined ? { stock_available: payload.disponibles } : {}),
+        stock_total: payload.cantidad !== undefined ? payload.cantidad : totalAntes,
+        stock_available: payload.disponibles !== undefined ? payload.disponibles : disponiblesAntes,
         ...(payload.image ? { image: payload.image } : {}),
       };
 
