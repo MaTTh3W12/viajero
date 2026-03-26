@@ -11,7 +11,7 @@
     </button>
 
     <div #sliderContainer
-      class="flex gap-4 md:gap-8 overflow-x-auto md:overflow-hidden pb-4 md:pb-0 no-scrollbar md:w-[1080px]"
+      class="flex gap-4 md:gap-8 overflow-x-auto pb-4 md:pb-0 no-scrollbar md:w-[1080px]"
       (mouseenter)="pauseAutoplay()" (mouseleave)="resumeAutoplay()" (touchstart)="pauseAutoplay()">
       @for (category of categories; track category.key) {
       <button type="button" (click)="openCategory(category.key)"
@@ -20,6 +20,7 @@
           class="w-[60px] h-[60px] md:w-[86px] md:h-[86px] rounded-full flex items-center justify-center flex-shrink-0"
           [style.background-color]="category.bgColor">
           <img [src]="category.icon"
+            (error)="onIconError($event)"
             [class.brightness-0]="category.activeIcon"
             [class.invert]="category.activeIcon"
             class="w-[35px] h-[35px] md:w-[50px] md:h-[50px] object-contain" />

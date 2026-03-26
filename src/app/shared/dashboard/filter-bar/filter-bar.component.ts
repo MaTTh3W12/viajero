@@ -6,6 +6,7 @@ import { FilterVariant } from '../../../service/filter-bar.types';
 import { AuthService, UserRole } from '../../../service/auth.service';
 import { Category, CategoryService } from '../../../service/category.service';
 import { CouponService } from '../../../service/coupon.service';
+import { UserCompanyProfile, UserProfileService } from '../../../service/user-profile.service';
 import { CommonModule } from '@angular/common';
 import { ZXingScannerModule } from '@zxing/ngx-scanner';
 import { firstValueFrom } from 'rxjs';
@@ -212,6 +213,11 @@ export class FilterBarComponent implements OnChanges {
 
   // Estado para el modal de crear cupón
   createCouponOpen = false;
+  incompleteCompanyProfileOpen = false;
+  incompleteCompanyProfileLoading = false;
+  incompleteCompanyProfileError = '';
+  incompleteCompanyProfileMissingFields: string[] = [];
+  private companyProfileValidationPromise: Promise<boolean> | null = null;
   // Estados de overlay dentro del modal (similar a login)
   creatingCoupon = false;
   couponCreateSuccess = false;
@@ -444,11 +450,21 @@ export class FilterBarComponent implements OnChanges {
     input.focus();
   }
 
-  openQrModal(): void {
-    this.scannedCouponCode = '';
-    this.showConfirmRedeemModal = false;
-    this.scannerError = null;
-    this.showQrModal = true;
+  async openQrModal(): Promise<void> {
+    if (this.role === 'empresa') {
+      const canOpen = await this.canOpenCreateCouponModal();
+      if (!canOpen) {
+        return;
+      }
+    }
+
+    this.ngZone.run(() => {
+      this.scannedCouponCode = '';
+      this.showConfirmRedeemModal = false;
+      this.scannerError = null;
+      this.showQrModal = true;
+      this.cdr.detectChanges();
+    });
   }
 
   closeQrModal(): void {
@@ -841,11 +857,31 @@ export class FilterBarComponent implements OnChanges {
   }
 
   openCreateCoupon(): void {
-    this.resetCreateFlow();
-    this.ensureCategoriesLoaded();
-    this.syncCreatePromotionTypeFromForm();
-    this.createCouponOpen = true;
-    this.setBodyModalLock(true);
+    void this.openCreateCouponWithValidation();
+  }
+
+  closeIncompleteCompanyProfileModal(): void {
+    this.incompleteCompanyProfileOpen = false;
+    this.incompleteCompanyProfileLoading = false;
+    this.incompleteCompanyProfileError = '';
+    this.incompleteCompanyProfileMissingFields = [];
+  }
+
+  goToCompanyProfile(): void {
+    this.closeIncompleteCompanyProfileModal();
+
+    const currentUrl = this.router.url;
+    if (currentUrl.startsWith('/company/')) {
+      this.router.navigate(['/company/dashboard/perfil-empresa']);
+      return;
+    }
+
+    this.router.navigate(['/companies/dashboard/perfil-empresa']);
+  }
+
+  retryCompanyProfileValidation(): void {
+    this.closeIncompleteCompanyProfileModal();
+    void this.openCreateCouponWithValidation();
   }
 
   closeCreateCoupon(): void {
@@ -2075,10 +2111,155 @@ export class FilterBarComponent implements OnChanges {
     @Inject(DOCUMENT) private document: Document,
     private auth: AuthService,
     private categoryService: CategoryService,
+    private userProfileService: UserProfileService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
     private couponService: CouponService
   ) { }
+
+  private async openCreateCouponWithValidation(): Promise<void> {
+    if (this.role === 'empresa') {
+      const canOpen = await this.canOpenCreateCouponModal();
+      if (!canOpen) {
+        return;
+      }
+    }
+
+    this.ngZone.run(() => {
+      this.resetCreateFlow();
+      this.ensureCategoriesLoaded();
+      this.syncCreatePromotionTypeFromForm();
+      this.createCouponOpen = true;
+      this.setBodyModalLock(true);
+      this.cdr.detectChanges();
+    });
+  }
+
+  private async canOpenCreateCouponModal(): Promise<boolean> {
+    if (this.companyProfileValidationPromise) {
+      return this.companyProfileValidationPromise;
+    }
+
+    this.companyProfileValidationPromise = this.validateCompanyProfileForCouponCreation()
+      .finally(() => {
+        this.companyProfileValidationPromise = null;
+        this.cdr.detectChanges();
+      });
+
+    return this.companyProfileValidationPromise;
+  }
+
+  private async validateCompanyProfileForCouponCreation(): Promise<boolean> {
+    const token = this.auth.token;
+    if (!token) {
+      return true;
+    }
+
+    this.incompleteCompanyProfileLoading = true;
+    this.incompleteCompanyProfileOpen = false;
+    this.incompleteCompanyProfileError = '';
+    this.incompleteCompanyProfileMissingFields = [];
+
+    const email =
+      this.auth.user?.email ??
+      this.auth.getCurrentUser()?.email ??
+      this.auth.getKeycloakUser()?.email ??
+      null;
+    const companyName =
+      this.auth.user?.companyName ??
+      this.auth.getCurrentUser()?.companyName ??
+      null;
+
+    try {
+      const profile = await firstValueFrom(
+        this.userProfileService
+          .getCurrentCompanyProfile(token, email, companyName)
+          .pipe(take(1), timeout(12000))
+      );
+
+      const profileMissing = await this.getMissingCompanyProfileFields(token, profile);
+      if (profileMissing.length > 0) {
+        this.incompleteCompanyProfileMissingFields = profileMissing;
+        this.incompleteCompanyProfileOpen = true;
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error('[FILTER-BAR] Error validando perfil de empresa para crear cupón', error);
+      this.incompleteCompanyProfileError = 'No se pudo validar el perfil de empresa. Completa tu perfil antes de crear cupones.';
+      this.incompleteCompanyProfileOpen = true;
+      return false;
+    } finally {
+      this.incompleteCompanyProfileLoading = false;
+    }
+  }
+
+  private async getMissingCompanyProfileFields(
+    token: string,
+    profile: UserCompanyProfile | null
+  ): Promise<string[]> {
+    const missing: string[] = [];
+
+    if (!profile) {
+      return ['Información general del perfil de empresa'];
+    }
+
+    const hasCategory = profile.company_category != null;
+    if (!hasCategory) {
+      missing.push('Categoría');
+    }
+
+    if (!this.hasText(profile.company_map_url)) {
+      missing.push('Google Maps URL');
+    }
+
+    const hasLogoUrl = this.hasText(profile.company_logo_url);
+    const hasLogoBase64 = await this.hasUploadedCompanyLogo(token, profile.id);
+    if (!hasLogoUrl && !hasLogoBase64) {
+      missing.push('Logo de empresa');
+    }
+
+    const hasAtLeastOneSocial = [
+      profile.company_facebook,
+      profile.company_instagram,
+      profile.company_twitter,
+      profile.company_youtube,
+    ].some((value) => this.hasText(value));
+
+    if (!hasAtLeastOneSocial) {
+      missing.push('Al menos una red social');
+    }
+
+    return missing;
+  }
+
+  private async hasUploadedCompanyLogo(
+    token: string,
+    userId: number | string | null | undefined
+  ): Promise<boolean> {
+    const profileId = String(userId ?? '').trim();
+    if (!this.isUuid(profileId)) {
+      return false;
+    }
+
+    try {
+      const logo = await firstValueFrom(
+        this.userProfileService.getUserCompanyLogo(token, profileId).pipe(take(1), timeout(6000))
+      );
+      return this.hasText(logo?.company_logo_base64);
+    } catch {
+      return false;
+    }
+  }
+
+  private hasText(value: unknown): boolean {
+    return String(value ?? '').trim().length > 0;
+  }
+
+  private isUuid(value: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+  }
 
   private setBodyModalLock(on: boolean): void {
     const body = this.document.body;

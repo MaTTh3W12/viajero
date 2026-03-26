@@ -11,6 +11,7 @@ import { FooterComponent } from '../../../shared/components/footer/footer.compon
 import { AuthService } from '../../../service/auth.service';
 import { Coupon, CouponAcquired, CouponService } from '../../../service/coupon.service';
 import { CategoryService, Category as PublicCategory } from '../../../service/category.service';
+import { ALL_CATEGORY_VISUAL, normalizeCategoryIcon, resolveCategoryVisual, toCategorySlug } from '../../../service/category-visuals';
 
 type CouponStatusFilter = 'activo' | 'canjeado' | 'vencido';
 
@@ -69,6 +70,7 @@ export class MyCouponsComponent implements OnInit {
   private couponImageById = new Map<number, string>();
   private latestLoadRequestId = 0;
   private categoryById = new Map<number, CouponCategoryFilter>();
+  private categoryBySlug = new Map<string, CouponCategoryFilter>();
 
   coupons: MyCouponItem[] = [];
   searchText = '';
@@ -87,9 +89,9 @@ export class MyCouponsComponent implements OnInit {
       key: 'all',
       label: 'Todos los cupones',
       categoryId: null,
-      icon: 'assets/icons/coupon1.svg',
-      bgColor: '#1438A0',
-      invertIcon: true,
+      icon: ALL_CATEGORY_VISUAL.icon,
+      bgColor: ALL_CATEGORY_VISUAL.bgColor,
+      invertIcon: ALL_CATEGORY_VISUAL.invertIcon,
     },
   ];
 
@@ -498,17 +500,35 @@ export class MyCouponsComponent implements OnInit {
     return this.categoryNames[normalizedId] ?? 'Categoría no disponible';
   }
 
-  getCategoryIconPath(categoryId: number | string | null | undefined, fallbackIcon?: string | null): string {
-    if (fallbackIcon?.trim()) {
-      return fallbackIcon.trim();
-    }
+  getCategoryIconPath(
+    categoryId: number | string | null | undefined,
+    fallbackIcon?: string | null,
+    fallbackName?: string | null
+  ): string {
     const normalizedId = this.normalizeCategoryId(categoryId);
     if (normalizedId != null) {
       const dynamic = this.categoryById.get(normalizedId);
       if (dynamic?.icon) return dynamic.icon;
+
+      const normalizedFallbackIconById = this.normalizeCategoryIcon(fallbackIcon);
+      if (normalizedFallbackIconById) return normalizedFallbackIconById;
+
       return this.categoryIcons[normalizedId] ?? 'assets/icons/coupon1.svg';
     }
+
+    const dynamicByName = this.getCategoryByName(fallbackName);
+    if (dynamicByName?.icon) return dynamicByName.icon;
+
+    const normalizedFallbackIcon = this.normalizeCategoryIcon(fallbackIcon);
+    if (normalizedFallbackIcon) return normalizedFallbackIcon;
+
     return 'assets/icons/coupon1.svg';
+  }
+
+  onCategoryIconError(event: Event): void {
+    const image = event.target as HTMLImageElement | null;
+    if (!image) return;
+    image.src = 'assets/icons/coupon1.svg';
   }
 
   getCategoryBgColor(categoryId: number | string | null | undefined): string {
@@ -1882,20 +1902,24 @@ export class MyCouponsComponent implements OnInit {
 
       const dynamicFilters: CouponCategoryFilter[] = [this.categories[0]]; // opción "Todos los cupones"
       this.categoryById.clear();
+      this.categoryBySlug.clear();
 
       activeCategories.forEach((category: PublicCategory) => {
         const id = Number(category.id);
         if (!Number.isFinite(id)) return;
 
+        const categoryName = String(category.name ?? '').trim();
+        const visual = resolveCategoryVisual(categoryName, category.icon);
+
         const theme = {
-          icon: ((category.icon ?? '').trim()) || this.categoryIcons[id] || 'assets/icons/coupon1.svg',
-          bgColor: this.categoryBgColors[id] ?? '#E5E7EB',
+          icon: visual.icon || this.categoryIcons[id] || 'assets/icons/coupon1.svg',
+          bgColor: visual.bgColor,
           invertIcon: false,
         };
 
         const filter: CouponCategoryFilter = {
           key: String(id),
-          label: category.name,
+          label: categoryName,
           categoryId: id,
           icon: theme.icon,
           bgColor: theme.bgColor,
@@ -1904,6 +1928,7 @@ export class MyCouponsComponent implements OnInit {
 
         dynamicFilters.push(filter);
         this.categoryById.set(id, filter);
+        this.categoryBySlug.set(this.toCategorySlug(categoryName), filter);
       });
 
       this.categories = dynamicFilters;
@@ -1911,5 +1936,19 @@ export class MyCouponsComponent implements OnInit {
     } catch {
       // Si falla la carga de categorías, dejamos la opción "Todos los cupones" y usamos los mapas locales.
     }
+  }
+
+  private normalizeCategoryIcon(icon: string | null | undefined): string | null {
+    return normalizeCategoryIcon(icon);
+  }
+
+  private getCategoryByName(name: string | null | undefined): CouponCategoryFilter | null {
+    const slug = this.toCategorySlug(name);
+    if (!slug) return null;
+    return this.categoryBySlug.get(slug) ?? null;
+  }
+
+  private toCategorySlug(value: string | null | undefined): string {
+    return toCategorySlug(value);
   }
 }

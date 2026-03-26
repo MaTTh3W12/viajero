@@ -266,22 +266,24 @@
           <span class="hidden md:block">Buscar</span>
         </button>
 
-        <button class="hidden md:flex items-center gap-2 bg-[#0E225C] text-white px-6 h-11 rounded-full shrink-0 transition-all duration-300 hover:bg-[#0B1B4B] hover:shadow-md active:scale-95"
+        <button class="hidden md:flex items-center gap-2 bg-[#0E225C] text-white px-6 h-11 rounded-full shrink-0 transition-all duration-300 hover:bg-[#0B1B4B] hover:shadow-md active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+          [disabled]="incompleteCompanyProfileLoading"
           (click)="openCreateCoupon()">
           <svg class="w-6 h-6">
             <use href="assets/icons/sprite.svg#add"></use>
           </svg>
-          Crear cupón
+          {{ incompleteCompanyProfileLoading ? 'Validando perfil...' : 'Crear cupón' }}
         </button>
       </div>
 
       <div class="mt-4 px-3 md:px-0 md:hidden">
-        <button class="w-full flex items-center justify-center gap-2 bg-[#0E225C] text-white px-6 py-3 rounded-full transition-all duration-300 hover:bg-[#0B1B4B] hover:shadow-md active:scale-95"
+        <button class="w-full flex items-center justify-center gap-2 bg-[#0E225C] text-white px-6 py-3 rounded-full transition-all duration-300 hover:bg-[#0B1B4B] hover:shadow-md active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+          [disabled]="incompleteCompanyProfileLoading"
           (click)="openCreateCoupon()">
           <svg class="w-6 h-6">
             <use href="assets/icons/sprite.svg#add"></use>
           </svg>
-          Crear cupón
+          {{ incompleteCompanyProfileLoading ? 'Validando perfil...' : 'Crear cupón' }}
         </button>
       </div>
     }
@@ -729,14 +731,14 @@
            focus:ring-2 focus:ring-[#538CFF]/40" />
 
       <!-- Botón Escanear QR -->
-      <button type="button" (click)="openQrModal()" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#538CFF] text-white transition hover:bg-[#3976e6]
-           md:h-auto md:w-auto md:gap-2 md:px-6 md:py-3">
+       <button type="button" (click)="openQrModal()" [disabled]="incompleteCompanyProfileLoading" class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#538CFF] text-white transition hover:bg-[#3976e6] disabled:opacity-60 disabled:cursor-not-allowed
+         md:h-auto md:w-auto md:gap-2 md:px-6 md:py-3">
 
         <svg class="w-5 h-5">
           <use href="assets/icons/sprite.svg#scan-qr"></use>
         </svg>
 
-        <span class="hidden md:inline">Escanear QR</span>
+        <span class="hidden md:inline">{{ incompleteCompanyProfileLoading ? 'Validando perfil...' : 'Escanear QR' }}</span>
       </button>
 
     </div>
@@ -1172,6 +1174,70 @@
       </button>
     </div>
     }
+  </div>
+</div>
+}
+
+@if (incompleteCompanyProfileOpen) {
+<div class="fixed inset-0 bg-black/40 z-[70]" (click)="closeIncompleteCompanyProfileModal()"></div>
+
+<div class="fixed inset-0 z-[71] flex items-center justify-center p-4">
+  <div class="w-full max-w-xl bg-white rounded-2xl shadow-xl ring-1 ring-black/5 p-6 md:p-8">
+    <div class="flex items-start justify-between gap-4">
+      <h3 class="text-2xl font-semibold text-[#1A2440]">Completa tu perfil de empresa</h3>
+      <button
+        type="button"
+        class="w-9 h-9 flex items-center justify-center rounded-full hover:bg-black/5"
+        (click)="closeIncompleteCompanyProfileModal()"
+        aria-label="Cerrar"
+      >
+        <svg class="w-5 h-5 text-[#1A2440]" aria-hidden="true">
+          <use href="assets/icons/sprite.svg#close-circle"></use>
+        </svg>
+      </button>
+    </div>
+
+    @if (incompleteCompanyProfileError) {
+      <p class="mt-4 text-sm text-[#C82333]">{{ incompleteCompanyProfileError }}</p>
+    } @else {
+      <p class="mt-4 text-[#1A2440] opacity-90">
+        Para continuar debes completar primero esta información en tu perfil:
+      </p>
+
+      <ul class="mt-3 list-disc pl-5 text-[#1A2440] space-y-1">
+        @for (field of incompleteCompanyProfileMissingFields; track field) {
+          <li>{{ field }}</li>
+        }
+      </ul>
+    }
+
+    <div class="mt-6 flex flex-col sm:flex-row gap-3 sm:justify-end">
+      @if (incompleteCompanyProfileError) {
+        <button
+          type="button"
+          class="px-6 py-2.5 rounded-full border border-[#1A2440] text-[#1A2440] hover:bg-gray-50 transition"
+          (click)="retryCompanyProfileValidation()"
+        >
+          Reintentar
+        </button>
+      }
+
+      <button
+        type="button"
+        class="px-6 py-2.5 rounded-full border border-[#1A2440] text-[#1A2440] hover:bg-gray-50 transition"
+        (click)="closeIncompleteCompanyProfileModal()"
+      >
+        Cancelar
+      </button>
+
+      <button
+        type="button"
+        class="px-6 py-2.5 rounded-full bg-[#538CFF] text-white hover:bg-blue-600 transition"
+        (click)="goToCompanyProfile()"
+      >
+        Ir a perfil de empresa
+      </button>
+    </div>
   </div>
 </div>
 }

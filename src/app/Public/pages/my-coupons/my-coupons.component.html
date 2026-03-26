@@ -36,6 +36,7 @@
               <span class="inline-flex w-6 h-6 rounded-full items-center justify-center"
                 [style.background-color]="selectedCategory.bgColor">
                 <img [src]="selectedCategory.icon" alt="Categoría" [class.brightness-0]="selectedCategory.invertIcon"
+                  (error)="onCategoryIconError($event)"
                   [class.invert]="selectedCategory.invertIcon" class="w-4 h-4 object-contain" />
               </span>
               <span>{{ selectedCategory.label }}</span>
@@ -55,6 +56,7 @@
                 <span class="inline-flex w-6 h-6 rounded-full items-center justify-center"
                   [style.background-color]="category.bgColor">
                   <img [src]="category.icon" alt="Categoría" [class.brightness-0]="category.invertIcon"
+                    (error)="onCategoryIconError($event)"
                     [class.invert]="category.invertIcon" class="w-4 h-4 object-contain" />
                 </span>
                 <span>{{ category.label }}</span>
@@ -193,7 +195,8 @@
           <div class="flex items-center justify-center gap-2 mb-3 text-center">
             <span class="inline-flex items-center justify-center w-6 h-6 rounded-full"
               [style.background-color]="getCategoryBgColor(cardCategoryId)">
-              <img [src]="getCategoryIconPath(cardCategoryId, item.category?.icon)" [alt]="getCategoryName(cardCategoryId, item.category?.name)"
+              <img [src]="getCategoryIconPath(cardCategoryId, item.category?.icon, item.category?.name)" [alt]="getCategoryName(cardCategoryId, item.category?.name)"
+                (error)="onCategoryIconError($event)"
                 class="w-4 h-4 object-contain" />
             </span>
             <span class="text-[12px] md:text-[16px] text-[#1A2440] font-medium truncate max-w-[20ch]">{{
@@ -356,7 +359,8 @@
           <div class="flex items-center gap-2">
             <span class="inline-flex items-center justify-center w-10 h-10 rounded-full"
               [style.background-color]="getCategoryBgColor(modalCategoryId)">
-              <img [src]="getCategoryIconPath(modalCategoryId, qrSelectedItem.category?.icon)"
+              <img [src]="getCategoryIconPath(modalCategoryId, qrSelectedItem.category?.icon, qrSelectedItem.category?.name)"
+                (error)="onCategoryIconError($event)"
                 [alt]="getCategoryName(modalCategoryId, qrSelectedItem.category?.name)" class="w-6 h-6 object-contain" />
             </span>
             <span class="text-[#1A2440] text-[16px] md:text-[20px]">{{

@@ -23,7 +23,7 @@
             <div class="flex items-center justify-center gap-2 mb-3">
               <span class="inline-flex items-center justify-center w-7 h-7 rounded-full"
                 [style.background-color]="getCategoryBgColor(coupon.category_id)">
-                <img [src]="getCategoryIconPath(coupon.category_id)" [alt]="getCategoryName(coupon.category_id)" class="w-4 h-4 object-contain" />
+                <img [src]="getCategoryIconPath(coupon.category_id)" [alt]="getCategoryName(coupon.category_id)" (error)="onCategoryIconError($event)" class="w-4 h-4 object-contain" />
               </span>
               <span class="text-[#1A2440] text-[30px] font-medium">{{ getCategoryName(coupon.category_id) }}</span>
             </div>
@@ -136,7 +136,7 @@
           <div class="mt-7 mb-6 flex items-center justify-center gap-3">
             <span class="inline-flex items-center justify-center w-12 h-12 rounded-full"
               [style.background-color]="getCategoryBgColor(coupon.category_id)">
-              <img [src]="getCategoryIconPath(coupon.category_id)" [alt]="getCategoryName(coupon.category_id)" class="w-6 h-6 object-contain" />
+              <img [src]="getCategoryIconPath(coupon.category_id)" [alt]="getCategoryName(coupon.category_id)" (error)="onCategoryIconError($event)" class="w-6 h-6 object-contain" />
             </span>
             <span class="text-[#1A2440] text-2xl md:text-[30px] font-medium">{{ getCategoryName(coupon.category_id) }}</span>
           </div>
@@ -202,7 +202,7 @@
               <div class="flex items-center justify-center gap-2 mb-3">
                 <span class="inline-flex items-center justify-center w-7 h-7 rounded-full"
                   [style.background-color]="getCategoryBgColor(coupon.category_id)">
-                  <img [src]="getCategoryIconPath(coupon.category_id)" [alt]="getCategoryName(coupon.category_id)" class="w-4 h-4 object-contain" />
+                  <img [src]="getCategoryIconPath(coupon.category_id)" [alt]="getCategoryName(coupon.category_id)" (error)="onCategoryIconError($event)" class="w-4 h-4 object-contain" />
                 </span>
                 <span class="text-[#1A2440] text-lg md:text-xl font-medium">{{ getCategoryName(coupon.category_id) }}</span>
               </div>

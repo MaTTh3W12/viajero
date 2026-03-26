@@ -1,5 +1,8 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { Router } from '@angular/router';
+import { firstValueFrom, timeout } from 'rxjs';
+import { Category, CategoryService } from '../../../service/category.service';
+import { ALL_CATEGORY_VISUAL, resolveCategoryVisual, toCategorySlug } from '../../../service/category-visuals';
 
 interface SliderCategoryItem {
   key: string;
@@ -19,97 +22,38 @@ interface SliderCategoryItem {
 export class CategoriesSliderComponent implements OnInit, AfterViewInit, OnDestroy {
 
   @ViewChild('sliderContainer', { static: true }) sliderContainer!: ElementRef<HTMLDivElement>;
-  readonly categories: SliderCategoryItem[] = [
-    {
-      key: 'all',
-      label: 'Todos los cupones',
-      categoryId: null,
-      icon: 'assets/icons/coupon1.svg',
-      bgColor: '#1438A0',
-      activeIcon: true,
-    },
-    {
-      key: 'alojamiento',
-      label: 'Alojamiento',
-      categoryId: 1,
-      icon: 'assets/icons/double-bed.svg',
-      bgColor: '#FFF8D2',
-    },
-    {
-      key: 'alimentos',
-      label: 'Alimentos y bebidas',
-      categoryId: 2,
-      icon: 'assets/icons/dinner.svg',
-      bgColor: '#ABE9FF',
-    },
-    {
-      key: 'turismo',
-      label: 'Turismo',
-      categoryId: 3,
-      icon: 'assets/icons/sunbed.svg',
-      bgColor: '#D8D7FF',
-    },
-    {
-      key: 'entretenimiento',
-      label: 'Entretenimiento',
-      categoryId: 4,
-      icon: 'assets/icons/gift-bag1.svg',
-      bgColor: '#FFD5D6',
-    },
-    {
-      key: 'cuidado-personal',
-      label: 'Cuidado personal',
-      categoryId: 5,
-      icon: 'assets/icons/lotus1.svg',
-      bgColor: '#D3F6D2',
-    },
-    {
-      key: 'productos-nostalgicos',
-      label: 'Productos nostálgicos',
-      categoryId: 6,
-      icon: 'assets/icons/product-quality1.svg',
-      bgColor: '#FFD5D6',
-    },
-    {
-      key: 'productos-servicios',
-      label: 'Productos y servicios',
-      categoryId: 7,
-      icon: 'assets/icons/gift-bag1.svg',
-      bgColor: '#FFC6B3',
-    },
-    {
-      key: 'tour-operadores',
-      label: 'Tour operadores',
-      categoryId: 8,
-      icon: 'assets/icons/traveler1.svg',
-      bgColor: '#CAFFFB',
-    },
-    {
-      key: 'transporte',
-      label: 'Transporte',
-      categoryId: 9,
-      icon: 'assets/icons/bus1.svg',
-      bgColor: '#CAFFDC',
-    },
-  ];
+  private readonly allCategory: SliderCategoryItem = {
+    key: 'all',
+    label: 'Todos los cupones',
+    categoryId: null,
+    icon: ALL_CATEGORY_VISUAL.icon,
+    bgColor: ALL_CATEGORY_VISUAL.bgColor,
+    activeIcon: ALL_CATEGORY_VISUAL.activeIcon,
+  };
+  categories: SliderCategoryItem[] = [this.allCategory];
 
   private items: HTMLElement[] = [];
   private currentIndex = 0;
   private autoplayTimer: any = null;
+  private viewReady = false;
+  private categoriesLoaded = false;
   private readonly AUTOPLAY_INTERVAL = 3000; // ms
+  private readonly CATEGORY_PAGE_SIZE = 200;
 
-  constructor(private router: Router) { }
+  constructor(
+    private router: Router,
+    private categoryService: CategoryService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngOnInit(): void {
+    void this.loadCategories();
   }
 
   ngAfterViewInit(): void {
-    // collect direct children as items
-    const el = this.sliderContainer.nativeElement;
-    this.items = Array.from(el.querySelectorAll(':scope > button')) as HTMLElement[];
-
-    // start autoplay
-    this.startAutoplay();
+    this.viewReady = true;
+    this.collectItems();
+    this.syncAutoplayState();
   }
 
   ngOnDestroy(): void {
@@ -176,12 +120,126 @@ export class CategoriesSliderComponent implements OnInit, AfterViewInit, OnDestr
       return;
     }
 
-    // center the item inside the visible container (works for desktop width-limited carousel)
-    const containerWidth = el.clientWidth;
-    const itemWidth = item.clientWidth;
-    const itemLeft = item.offsetLeft;
-    const left = Math.max(0, itemLeft - (containerWidth - itemWidth) / 2);
+    const maxLeft = Math.max(0, el.scrollWidth - el.clientWidth);
+    const left = Math.min(maxLeft, Math.max(0, item.offsetLeft - 16));
     el.scrollTo({ left, behavior: 'smooth' });
+  }
+
+  private async loadCategories(): Promise<void> {
+    const rows = await this.fetchAllCategories();
+    const usedKeys = new Set<string>();
+
+    const dynamicCategories = rows
+      .map((category) => {
+        const categoryId = Number(category.id);
+        if (!Number.isFinite(categoryId)) return null;
+
+        const categoryName = this.normalizeCategoryName(category.name ?? '');
+        if (!categoryName) return null;
+
+        const slug = this.toCategorySlug(categoryName);
+        const keyBase = slug || `category-${categoryId}`;
+        const key = usedKeys.has(keyBase) ? `${keyBase}-${categoryId}` : keyBase;
+        usedKeys.add(key);
+
+        const visual = this.resolveCategoryVisual(categoryName, category.icon);
+
+        return {
+          key,
+          label: categoryName,
+          categoryId,
+          icon: visual.icon,
+          bgColor: visual.bgColor,
+          activeIcon: visual.activeIcon,
+        } as SliderCategoryItem;
+      })
+      .filter((category): category is SliderCategoryItem => category !== null);
+
+    this.categories = [this.allCategory, ...dynamicCategories];
+    this.categoriesLoaded = true;
+    this.currentIndex = 0;
+    this.cdr.detectChanges();
+    this.sliderContainer?.nativeElement?.scrollTo({ left: 0, behavior: 'auto' });
+    this.collectItems();
+    this.syncAutoplayState();
+  }
+
+  private async fetchAllCategories(): Promise<Category[]> {
+    const categories: Category[] = [];
+    let offset = 0;
+    let total = Number.POSITIVE_INFINITY;
+
+    while (offset < total) {
+      const result = await firstValueFrom(
+        this.categoryService.getCategoriesPaged(undefined, {
+          limit: this.CATEGORY_PAGE_SIZE,
+          offset,
+          where: {
+            _and: [
+              { active: { _eq: true } },
+              { name: { _ilike: '%%' } },
+            ],
+          },
+        }).pipe(timeout(15000))
+      ).catch(() => ({ rows: [], total: 0 }));
+
+      if (!result.rows.length) break;
+
+      categories.push(...result.rows);
+      total = result.total ?? categories.length;
+      offset += result.rows.length;
+    }
+
+    return categories;
+  }
+
+  private collectItems(): void {
+    if (!this.viewReady) return;
+
+    requestAnimationFrame(() => {
+      const el = this.sliderContainer.nativeElement;
+      this.items = Array.from(el.querySelectorAll(':scope > button')) as HTMLElement[];
+      if (this.currentIndex >= this.items.length) {
+        this.currentIndex = 0;
+      }
+      this.syncAutoplayState();
+    });
+  }
+
+  private syncAutoplayState(): void {
+    const shouldAutoplay = this.viewReady && this.categoriesLoaded && this.items.length > 1;
+    if (shouldAutoplay && !this.autoplayTimer) {
+      this.startAutoplay();
+      return;
+    }
+
+    if (!shouldAutoplay) {
+      this.stopAutoplay();
+    }
+  }
+
+  onIconError(event: Event): void {
+    const image = event.target as HTMLImageElement | null;
+    if (!image) return;
+    image.src = 'assets/icons/coupon1.svg';
+  }
+
+  private resolveCategoryVisual(
+    categoryName: string,
+    endpointIcon?: string | null
+  ): { icon: string; bgColor: string; activeIcon?: boolean } {
+    return resolveCategoryVisual(categoryName, endpointIcon);
+  }
+
+  private normalizeCategoryName(value: string): string {
+    return value
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private toCategorySlug(value: string): string {
+    return toCategorySlug(value);
   }
 
 }

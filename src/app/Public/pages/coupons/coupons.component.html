@@ -43,6 +43,7 @@
               class="w-[54px] h-[54px] md:w-[64px] md:h-[64px] rounded-full flex items-center justify-center flex-shrink-0"
               [style.background-color]="category.bgColor">
               <img [src]="category.icon"
+                (error)="onCategoryIconError($event)"
                 [ngClass]="{ 'brightness-0 invert': category.activeIcon && isActive(category.key) }"
                 class="w-[28px] h-[28px] md:w-[32px] md:h-[32px] object-contain" alt="Icon" />
             </div>

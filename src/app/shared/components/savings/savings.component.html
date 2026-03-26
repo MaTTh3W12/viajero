@@ -29,6 +29,7 @@
           <span class="inline-flex items-center justify-center w-6 h-6 rounded-full text-[#1A2440]"
             [style.background-color]="getCategoryBgColor(coupon.category_id)">
             <img [src]="getCategoryIconPath(coupon.category_id)" [alt]="getCategoryName(coupon.category_id)"
+              (error)="onCategoryIconError($event)"
               class="w-4 h-4 object-contain" />
           </span>
           <span class="text-[12px] md:text-[16px] text-[#1A2440] font-medium font-museo truncate max-w-[20ch]">
