@@ -253,6 +253,7 @@ export class FilterBarComponent implements OnChanges {
   editCouponImageLoading = false;
   editPromotionType: '' | 'descuento' | 'precio' = '';
   editMinAvailableQuantity = 0;
+  private pendingEditCategoryName: string | null = null;
   editForm = {
     id: null as number | null,
     titulo: '',
@@ -841,6 +842,8 @@ export class FilterBarComponent implements OnChanges {
           .filter((category) => Number.isFinite(category.id));
         this.categoriesLoaded = true;
         this.categoriesLoading = false;
+        this.syncPendingEditCategorySelection();
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('[FILTER-BAR] Error cargando categorías', error);
@@ -848,6 +851,7 @@ export class FilterBarComponent implements OnChanges {
         this.categoriesLoaded = true;
         this.categoriesLoading = false;
         this.categoryLoadError = true;
+        this.cdr.detectChanges();
       },
     });
   }
@@ -1196,7 +1200,7 @@ export class FilterBarComponent implements OnChanges {
     titulo: string;
     descripcion: string;
     categoria: string;
-    categoriaId?: number;
+    categoriaId?: number | string;
     fechaInicio: string;
     fechaFin: string;
     disponibles: number;
@@ -1212,13 +1216,8 @@ export class FilterBarComponent implements OnChanges {
   }): void {
     this.resetEditFlow();
     this.ensureCategoriesLoaded();
-    const categoriaId =
-      coupon.categoriaId ??
-      ((): number | null => {
-        const category = this.categories.find((item) => item.name === coupon.categoria);
-        return category ? Number(category.id) : null;
-      })() ??
-      null;
+    this.pendingEditCategoryName = (coupon.categoria ?? '').trim() || null;
+    const categoriaId = this.resolveCategoryId(coupon.categoriaId, coupon.categoria);
 
     this.editForm = {
       id: coupon.id,
@@ -1243,6 +1242,7 @@ export class FilterBarComponent implements OnChanges {
     this.editCouponImageError = '';
     this.editCouponOpen = true;
     this.setBodyModalLock(true);
+    this.cdr.detectChanges();
   }
 
   closeEditCoupon(): void {
@@ -1422,8 +1422,42 @@ export class FilterBarComponent implements OnChanges {
     this.editCouponImageError = '';
     this.editCouponImageLoading = false;
     this.editMinAvailableQuantity = 0;
+    this.pendingEditCategoryName = null;
     this.originalEditCantidad = null;
     this.clearEditCouponImageLoadingTimeout();
+  }
+
+  private resolveCategoryId(categoryId: number | string | null | undefined, categoryName: string): number | null {
+    const numericCategoryId = Number(categoryId);
+    if (Number.isFinite(numericCategoryId) && numericCategoryId > 0) {
+      return numericCategoryId;
+    }
+
+    const normalizedName = String(categoryName ?? '').trim();
+    if (!normalizedName) return null;
+
+    const comparableName = normalizedName.toLowerCase();
+
+    const category = this.categories.find(
+      (item) => String(item.name ?? '').trim().toLowerCase() === comparableName
+    );
+    const resolvedId = Number(category?.id);
+    return Number.isFinite(resolvedId) ? resolvedId : null;
+  }
+
+  private syncPendingEditCategorySelection(): void {
+    if (!this.editCouponOpen) return;
+    if (this.editForm.categoria != null) return;
+    if (!this.pendingEditCategoryName) return;
+
+    const resolvedId = this.resolveCategoryId(null, this.pendingEditCategoryName);
+    if (resolvedId == null) return;
+
+    this.editForm = {
+      ...this.editForm,
+      categoria: resolvedId,
+    };
+    this.pendingEditCategoryName = null;
   }
 
   private syncCreatePromotionTypeFromForm(): void {
