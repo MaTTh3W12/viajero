@@ -26,6 +26,11 @@ interface CouponCategoryFilter {
 interface MyCouponItem {
   coupon: Coupon;
   acquired: CouponAcquired;
+  category?: {
+    id?: number | null;
+    name?: string | null;
+    icon?: string | null;
+  } | null;
 }
 
 @Component({
@@ -480,22 +485,59 @@ export class MyCouponsComponent implements OnInit {
     return !!this.getCardImage(item);
   }
 
-  getCategoryName(categoryId: number): string {
-    const dynamic = this.categoryById.get(Number(categoryId));
+  getCategoryName(categoryId: number | string | null | undefined, fallbackName?: string | null): string {
+    if (fallbackName?.trim()) {
+      return fallbackName.trim();
+    }
+    const normalizedId = this.normalizeCategoryId(categoryId);
+    if (normalizedId == null) {
+      return 'Categoría no disponible';
+    }
+    const dynamic = this.categoryById.get(normalizedId);
     if (dynamic?.label) return dynamic.label;
-    return this.categoryNames[categoryId] ?? 'Categoría no disponible';
+    return this.categoryNames[normalizedId] ?? 'Categoría no disponible';
   }
 
-  getCategoryIconPath(categoryId: number): string {
-    const dynamic = this.categoryById.get(Number(categoryId));
-    if (dynamic?.icon) return dynamic.icon;
-    return this.categoryIcons[categoryId] ?? 'assets/icons/coupon1.svg';
+  getCategoryIconPath(categoryId: number | string | null | undefined, fallbackIcon?: string | null): string {
+    if (fallbackIcon?.trim()) {
+      return fallbackIcon.trim();
+    }
+    const normalizedId = this.normalizeCategoryId(categoryId);
+    if (normalizedId != null) {
+      const dynamic = this.categoryById.get(normalizedId);
+      if (dynamic?.icon) return dynamic.icon;
+      return this.categoryIcons[normalizedId] ?? 'assets/icons/coupon1.svg';
+    }
+    return 'assets/icons/coupon1.svg';
   }
 
-  getCategoryBgColor(categoryId: number): string {
-    const dynamic = this.categoryById.get(Number(categoryId));
-    if (dynamic?.bgColor) return dynamic.bgColor;
-    return this.categoryBgColors[categoryId] ?? '#E5E7EB';
+  getCategoryBgColor(categoryId: number | string | null | undefined): string {
+    const normalizedId = this.normalizeCategoryId(categoryId);
+    if (normalizedId != null) {
+      const dynamic = this.categoryById.get(normalizedId);
+      if (dynamic?.bgColor) return dynamic.bgColor;
+      return this.categoryBgColors[normalizedId] ?? '#E5E7EB';
+    }
+    return '#E5E7EB';
+  }
+
+  getCategoryIdFromItem(item: MyCouponItem | null): number | null {
+    if (!item) return null;
+    const couponCategory = this.normalizeCategoryId(item.coupon?.category_id ?? null);
+    if (couponCategory != null) {
+      return couponCategory;
+    }
+    return this.normalizeCategoryId(item.category?.id ?? null);
+  }
+
+  private normalizeCategoryId(categoryId: number | string | null | undefined): number | null {
+    if (categoryId == null) return null;
+    if (typeof categoryId === 'string') {
+      const trimmed = categoryId.trim();
+      if (!trimmed) return null;
+      return this.parseNumeric(trimmed);
+    }
+    return this.parseNumeric(categoryId);
   }
 
   getCouponCommercialName(coupon: Coupon): string {
@@ -710,7 +752,11 @@ export class MyCouponsComponent implements OnInit {
             : this.createCouponFallbackFromAcquired(normalizedAcquired);
           if (!coupon) return null;
           couponById.set(couponId, coupon);
-          return { coupon, acquired: normalizedAcquired } as MyCouponItem;
+          return {
+            coupon,
+            acquired: normalizedAcquired,
+            category: acquired.coupon_public?.category ?? null,
+          } as MyCouponItem;
         })
         .filter((item): item is MyCouponItem => item !== null);
       if (currentRequestId !== this.latestLoadRequestId) return;
@@ -779,7 +825,7 @@ export class MyCouponsComponent implements OnInit {
     if (!rawMessage) return defaultMessage;
 
     const normalized = rawMessage.toLowerCase();
-    
+
     // Primero detectamos errores relacionados con el correo para no confundirlos con "cupón no encontrado".
     if (
       normalized.includes('email') ||
@@ -837,33 +883,71 @@ export class MyCouponsComponent implements OnInit {
     const currentUserId = this.getCurrentUserId();
     const ownerCondition = currentUserId ? { user_id: { _eq: currentUserId } } : null;
 
-    if (this.selectedStatus === 'activo' || this.selectedStatus === 'vencido') {
-      const andConditions: Record<string, unknown>[] = [{ redeemed: { _eq: false } }];
-      if (ownerCondition) andConditions.push(ownerCondition);
-      return { _and: andConditions };
-    }
+    const andConditions: Record<string, unknown>[] = [
+      { redeemed: { _eq: this.selectedStatus === 'canjeado' } },
+    ];
 
-    const andConditions: Record<string, unknown>[] = [{ redeemed: { _eq: true } }];
     if (ownerCondition) {
       andConditions.push(ownerCondition);
     }
-    const search = this.searchText.trim();
 
-    if (search) {
-      andConditions.push({
-        _or: [
-          { unique_code: { _ilike: `%${search}%` } },
-          { coupon_public: { title: { _ilike: `%${search}%` } } },
-        ],
-      });
+    const categoryCondition = this.buildCategoryFilter();
+    if (categoryCondition) {
+      andConditions.push(categoryCondition);
     }
 
-    const redeemedRange = this.buildDateRange(this.canjeadoDateFrom, this.canjeadoDateTo);
-    if (redeemedRange) {
-      andConditions.push({ redeemed_at: redeemedRange });
+    const searchCondition = this.buildSearchFilter();
+    if (searchCondition) {
+      andConditions.push(searchCondition);
+    }
+
+    if (this.selectedStatus === 'canjeado') {
+      const redeemedRange = this.buildDateRange(this.canjeadoDateFrom, this.canjeadoDateTo);
+      if (redeemedRange) {
+        andConditions.push({ redeemed_at: redeemedRange });
+      }
+    } else if (this.selectedStatus === 'vencido') {
+      const expirationRange = this.buildDateRange(this.canjeadoDateFrom, this.canjeadoDateTo);
+      if (expirationRange) {
+        andConditions.push({
+          _or: [
+            { coupon_public: { end_date: expirationRange } },
+            { coupon: { end_date: expirationRange } },
+          ],
+        });
+      }
     }
 
     return { _and: andConditions };
+  }
+
+  private buildCategoryFilter(): Record<string, unknown> | null {
+    if (this.selectedCategoryId == null) return null;
+    const categoryId = Number(this.selectedCategoryId);
+    if (!Number.isFinite(categoryId)) return null;
+
+    return {
+      _or: [
+        { coupon_public: { category_id: { _eq: categoryId } } },
+        { coupon: { category_id: { _eq: categoryId } } },
+      ],
+    };
+  }
+
+  private buildSearchFilter(): Record<string, unknown> | null {
+    const trimmed = this.searchText.trim();
+    if (!trimmed) return null;
+    const likePattern = `%${trimmed}%`;
+
+    return {
+      _or: [
+        { unique_code: { _ilike: likePattern } },
+        { coupon_public: { title: { _ilike: likePattern } } },
+        { coupon_public: { description: { _ilike: likePattern } } },
+        { coupon: { title: { _ilike: likePattern } } },
+        { coupon: { description: { _ilike: likePattern } } },
+      ],
+    };
   }
 
   private getCurrentUserId(): string {
@@ -1804,7 +1888,7 @@ export class MyCouponsComponent implements OnInit {
         if (!Number.isFinite(id)) return;
 
         const theme = {
-          icon: this.categoryIcons[id] ?? 'assets/icons/coupon1.svg',
+          icon: ((category.icon ?? '').trim()) || this.categoryIcons[id] || 'assets/icons/coupon1.svg',
           bgColor: this.categoryBgColors[id] ?? '#E5E7EB',
           invertIcon: false,
         };

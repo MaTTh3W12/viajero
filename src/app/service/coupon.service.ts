@@ -517,6 +517,30 @@ export interface CouponAcquired {
       company_map_url: string | null;
     } | null;
   } | null;
+  coupon_public?: {
+    id?: number | string | null;
+    title?: string | null;
+    description?: string | null;
+    price?: string | number | null;
+    price_discount?: string | number | null;
+    end_date?: string | null;
+    category_id?: number | null;
+    category?: {
+      id?: number | null;
+      name?: string | null;
+      icon?: string | null;
+    } | null;
+    user_public?: {
+      company_commercial_name?: string | null;
+      company_address?: string | null;
+      company_map_url?: string | null;
+      company_facebook?: string | null;
+      company_instagram?: string | null;
+      company_youtube?: string | null;
+      company_twitter?: string | null;
+      company_website?: string | null;
+    } | null;
+  } | null;
   coupon_with_image_base64?: {
     id?: number | string | null;
     title?: string | null;
@@ -1389,20 +1413,8 @@ export class CouponService {
         };
       });
 
-    const queryWithCompany = `
-      query GetCouponsAcquired(
-  $limit: Int!,
-  $offset: Int!,
-  $where: viajerosv_coupons_acquired_bool_exp!
-) {
-  viajerosv_coupons_acquired(
-    limit: $limit,
-    offset: $offset,
-    order_by: {acquired_at: desc},
-    where: $where
-  ) {
-    coupon_id
-    user_id
+    const queryWithCompany = `query GetCouponsAcquired($limit: Int!, $offset: Int!, $where: viajerosv_coupons_acquired_bool_exp!) {
+  viajerosv_coupons_acquired(limit: $limit, offset: $offset, order_by: {acquired_at: desc}, where: $where) {
     id
     unique_code
     acquired_at
@@ -1419,8 +1431,25 @@ export class CouponService {
       id
       title
       description
+      price
       price_discount
       end_date
+      category_id
+      category {
+        name
+        id
+        icon
+      }
+      user_public {
+        company_commercial_name
+        company_address
+        company_map_url
+        company_facebook
+        company_instagram
+        company_youtube
+        company_twitter
+        company_website
+      }
     }
     userPublicByValidatedBy {
       id
@@ -1445,19 +1474,8 @@ export class CouponService {
     `;
 
     const queryBasic = `
-      query GetCouponsAcquired(
-  $limit: Int!,
-  $offset: Int!,
-  $where: viajerosv_coupons_acquired_bool_exp!
-) {
-  viajerosv_coupons_acquired(
-    limit: $limit,
-    offset: $offset,
-    order_by: {acquired_at: desc},
-    where: $where
-  ) {
-    coupon_id
-    user_id
+      query GetCouponsAcquired($limit: Int!, $offset: Int!, $where: viajerosv_coupons_acquired_bool_exp!) {
+  viajerosv_coupons_acquired(limit: $limit, offset: $offset, order_by: {acquired_at: desc}, where: $where) {
     id
     unique_code
     acquired_at
@@ -1474,8 +1492,25 @@ export class CouponService {
       id
       title
       description
+      price
       price_discount
       end_date
+      category_id
+      category {
+        name
+        id
+        icon
+      }
+      user_public {
+        company_commercial_name
+        company_address
+        company_map_url
+        company_facebook
+        company_instagram
+        company_youtube
+        company_twitter
+        company_website
+      }
     }
     userPublicByValidatedBy {
       id
