@@ -447,7 +447,7 @@ export class MyCouponsComponent implements OnInit {
       const notifToken = this.auth.token;
       if (notifToken) {
         const couponTitle = this.transferTarget?.coupon?.title ?? uniqueCode;
-        const senderEmail = currentUser?.email ?? currentUser?.name ?? '';
+        const senderEmail = currentUser?.email ?? currentUser?.username ?? '';
         this.notificationService
           .sendNotification(notifToken, email, 'Cupón transferido', 'transfer-coupon', {
             name: couponTitle,
