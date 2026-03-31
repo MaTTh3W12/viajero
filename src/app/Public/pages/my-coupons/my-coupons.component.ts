@@ -12,6 +12,7 @@ import { AuthService } from '../../../service/auth.service';
 import { Coupon, CouponAcquired, CouponService } from '../../../service/coupon.service';
 import { CategoryService, Category as PublicCategory } from '../../../service/category.service';
 import { ALL_CATEGORY_VISUAL, normalizeCategoryIcon, resolveCategoryVisual, toCategorySlug } from '../../../service/category-visuals';
+import { NotificationService } from '../../../service/notification.service';
 
 type CouponStatusFilter = 'activo' | 'canjeado' | 'vencido';
 
@@ -135,7 +136,8 @@ export class MyCouponsComponent implements OnInit {
     private readonly couponService: CouponService,
     private readonly auth: AuthService,
     private readonly cdr: ChangeDetectorRef,
-    private readonly categoryService: CategoryService
+    private readonly categoryService: CategoryService,
+    private readonly notificationService: NotificationService
   ) { }
 
   ngOnInit(): void {
@@ -441,6 +443,19 @@ export class MyCouponsComponent implements OnInit {
       this.coupons = this.coupons.filter((item) => String(item.acquired.id) !== transferredId);
 
       this.transferSuccess = true;
+
+      const notifToken = this.auth.token;
+      if (notifToken) {
+        const couponTitle = this.transferTarget?.coupon?.title ?? uniqueCode;
+        const senderEmail = currentUser?.email ?? currentUser?.name ?? '';
+        this.notificationService
+          .sendNotification(notifToken, email, 'Cupón transferido', 'transfer-coupon', {
+            name: couponTitle,
+            sender: senderEmail,
+            coupon: uniqueCode,
+          })
+          .subscribe({ error: () => {} });
+      }
     } catch (error) {
       const transferMessage = this.getTransferErrorMessage(error);
 

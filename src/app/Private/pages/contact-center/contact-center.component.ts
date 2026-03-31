@@ -9,6 +9,7 @@ import {
   ContactCenterUserPublicRow,
 } from '../../../service/contact-center.service';
 import { AuthService } from '../../../service/auth.service';
+import { NotificationService } from '../../../service/notification.service';
 
 interface Message {
   id: number;
@@ -87,6 +88,7 @@ export class ContactCenterComponent {
   constructor(
     private readonly contactCenterService: ContactCenterService,
     private readonly authService: AuthService,
+    private readonly notificationService: NotificationService,
   ) {
     this.initializeRole();
     this.loadMessages();
@@ -288,6 +290,16 @@ export class ContactCenterComponent {
           this.loadMessages();
           this.loadUnreadMessagesCount();
           this.contactCenterService.notifyUnreadCountChanged();
+
+          const senderEmail = selectedMessage.senderEmail?.trim();
+          if (senderEmail && token) {
+            this.notificationService
+              .sendNotification(token, senderEmail, 'Respuesta a tu consulta', 'response-message', {
+                name: selectedMessage.senderName ?? senderEmail,
+                response: responseText,
+              })
+              .subscribe({ error: () => {} });
+          }
         },
         error: (error) => {
           this.isSubmittingAdminReply.set(false);

@@ -3,6 +3,7 @@ import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject, firstValueFrom, timeout } from 'rxjs';
 import { KeycloakService } from './keycloak.service';
 import { UpsertCompanyVariables, UpsertUserVariables, UserCompanyProfile, UserProfileService } from './user-profile.service';
+import { NotificationService } from './notification.service';
 
 export type UserRole = 'admin' | 'empresa' | 'usuario';
 
@@ -107,7 +108,8 @@ export class AuthService {
 
   constructor(
     private kc: KeycloakService,
-    private profile: UserProfileService
+    private profile: UserProfileService,
+    private notificationService: NotificationService
   ) {
     if (this.isBrowser()) {
       this._user.next(this.loadFromStorage());
@@ -437,6 +439,15 @@ export class AuthService {
 
       await firstValueFrom(this.profile.upsertUser(token, variables).pipe(timeout(20000)));
 
+      const email = formData.email || user?.email || user?.username || '';
+      if (email) {
+        this.notificationService
+          .sendNotification(token, email, 'Cuenta creada', 'user-created', {
+            name: formData.first_name || user?.firstName || '',
+          })
+          .subscribe({ error: () => {} });
+      }
+
       const current = this._user.value;
       if (current) {
         const nextUser: AuthUser = {
@@ -521,6 +532,15 @@ export class AuthService {
       };
 
       await firstValueFrom(this.profile.upsertCompany(token, variables).pipe(timeout(20000)));
+
+      const companyEmail = formData.company_email || user?.email || '';
+      if (companyEmail) {
+        this.notificationService
+          .sendNotification(token, companyEmail, 'Solicitud recibida', 'company-created', {
+            company: formData.company_commercial_name || '',
+          })
+          .subscribe({ error: () => {} });
+      }
 
       const current = this._user.value;
       if (current) {

@@ -25,6 +25,7 @@ import {
   UserProfileService,
 } from '../../../service/user-profile.service';
 import { CategoryService } from '../../../service/category.service';
+import { NotificationService } from '../../../service/notification.service';
 
 type CompanyModalMode = 'approve' | 'reject' | 'deactivate' | 'reactivate';
 type CompanyModalPhase = 'form' | 'processing' | 'result';
@@ -118,7 +119,8 @@ export class CompaniesComponent implements OnDestroy {
     private profileService: UserProfileService,
     private categoryService: CategoryService,
     private ngZone: NgZone,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private notificationService: NotificationService
   ) {}
 
   ngOnInit(): void {
@@ -716,6 +718,7 @@ export class CompaniesComponent implements OnDestroy {
           this.applyCompanyActionLocally(target, actionMode);
           this.approvingCompany = false;
           this.showCompanyActionResult('success', actionMode);
+          this.sendCompanyActionNotification(token, target, actionMode);
           this.loadCompaniesForCurrentMode();
           this.cdr.detectChanges();
         });
@@ -860,5 +863,26 @@ export class CompaniesComponent implements OnDestroy {
     const bUserId = String(b.userId ?? '').trim();
     if (aUserId && bUserId) return aUserId === bUserId;
     return a.id === b.id;
+  }
+
+  private sendCompanyActionNotification(token: string, target: Company, mode: CompanyModalMode): void {
+    const email = String(target.coreo ?? '').trim();
+    const company = String(target.empresa ?? '').trim();
+    if (!email) return;
+
+    if (mode === 'approve') {
+      this.notificationService
+        .sendNotification(token, email, 'Cuenta aprobada', 'company-approved', { company })
+        .subscribe({ error: () => {} });
+    } else if (mode === 'deactivate') {
+      const reason = this.approvalReason.trim();
+      this.notificationService
+        .sendNotification(token, email, 'Cuenta desactivada', 'account-disabled', { company, reason })
+        .subscribe({ error: () => {} });
+    } else if (mode === 'reactivate') {
+      this.notificationService
+        .sendNotification(token, email, 'Cuenta activada', 'company-active', { company })
+        .subscribe({ error: () => {} });
+    }
   }
 }
