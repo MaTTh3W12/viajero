@@ -3,6 +3,7 @@ import { ContacUsComponent } from '../../../shared/components/contac-us/contac-u
 import { RelatedPagesComponent } from '../../../shared/components/related-pages/related-pages.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
 import { NavbarComponent } from '../../../shared/components/navbar/navbar.component';
+import { SeoService } from '../../../service/seo.service';
 
 @Component({
   selector: 'app-contact',
@@ -18,9 +19,14 @@ import { NavbarComponent } from '../../../shared/components/navbar/navbar.compon
 })
 export class ContactComponent implements OnInit {
 
-  constructor() { }
+  constructor(private seo: SeoService) { }
 
   ngOnInit(): void {
+    this.seo.setPage({
+      title: 'Contacto',
+      description: 'Contáctanos para más información sobre ViajeroSV y los cupones exclusivos para la diáspora salvadoreña.',
+      canonical: '/contact'
+    });
   }
 
 }

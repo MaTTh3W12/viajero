@@ -9,6 +9,7 @@ import { AboutUsComponent } from '../../../shared/components/about-us/about-us.c
 import { ContacUsComponent } from '../../../shared/components/contac-us/contac-us.component';
 import { RelatedPagesComponent } from '../../../shared/components/related-pages/related-pages.component';
 import { FooterComponent } from '../../../shared/components/footer/footer.component';
+import { SeoService } from '../../../service/seo.service';
 
 @Component({
   selector: 'app-home',
@@ -30,9 +31,14 @@ import { FooterComponent } from '../../../shared/components/footer/footer.compon
 })
 export class HomeComponent implements OnInit {
 
-  constructor() { }
+  constructor(private seo: SeoService) { }
 
   ngOnInit(): void {
+    this.seo.setPage({
+      title: 'Inicio',
+      description: 'Descubre y adquiere cupones exclusivos para la diáspora salvadoreña. Ahorra en tours, restaurantes y experiencias únicas en El Salvador.',
+      canonical: '/'
+    });
   }
 
 }

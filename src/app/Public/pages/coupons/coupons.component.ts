@@ -10,6 +10,7 @@ import { SavingsComponent } from '../../../shared/components/savings/savings.com
 import { Category, CategoryService } from '../../../service/category.service';
 import { ALL_CATEGORY_VISUAL, resolveCategoryVisual, toCategorySlug } from '../../../service/category-visuals';
 import { catchError, firstValueFrom, of, take, timeout } from 'rxjs';
+import { SeoService } from '../../../service/seo.service';
 
 interface CouponCategoryFilter {
   key: string;
@@ -62,7 +63,8 @@ export class CouponsComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private categoryService: CategoryService
+    private categoryService: CategoryService,
+    private seo: SeoService
   ) { }
 
   isActive(cat: string) {
@@ -146,6 +148,11 @@ export class CouponsComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.seo.setPage({
+      title: 'Cupones',
+      description: 'Explora todos los cupones exclusivos para la diáspora salvadoreña. Filtra por categoría, fecha y más.',
+      canonical: '/coupons'
+    });
     this.loadCategoryFilters();
     this.route.queryParamMap.subscribe((params) => {
       this.requestedCategoryKey = params.get('category') ?? 'all';

@@ -1,4 +1,4 @@
-@import "@fortawesome/fontawesome-free/css/all.min.css";
+/* FontAwesome se carga desde angular.json > styles para evitar bloqueo del CSS parser */
 
 /* Bloqueo de scroll del body cuando hay modal de edición abierto */
 body.modal-open-lock {

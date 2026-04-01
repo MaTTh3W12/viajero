@@ -5,6 +5,7 @@ import { FooterComponent } from '../../../shared/components/footer/footer.compon
 import { RelatedPagesComponent } from '../../../shared/components/related-pages/related-pages.component';
 import { FeaturedDealsComponent } from '../../../shared/components/featured-deals/featured-deals.component';
 import { ContacUsComponent } from '../../../shared/components/contac-us/contac-us.component';
+import { SeoService } from '../../../service/seo.service';
 
 @Component({
   selector: 'app-about-us',
@@ -21,9 +22,14 @@ import { ContacUsComponent } from '../../../shared/components/contac-us/contac-u
 })
 export class AboutUsComponent implements OnInit {
 
-  constructor(private router: Router) { }
+  constructor(private router: Router, private seo: SeoService) { }
 
   ngOnInit(): void {
+    this.seo.setPage({
+      title: 'Quiénes Somos',
+      description: 'Conoce el programa ViajeroSV, la plataforma de cupones exclusivos del Ministerio de Turismo para la diáspora salvadoreña.',
+      canonical: '/about-us'
+    });
   }
 
   goToCoupons(): void {

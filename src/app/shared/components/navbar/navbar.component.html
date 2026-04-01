@@ -58,6 +58,8 @@
               Registrarse
             </button>
             <button (click)="isRegisterDropdownOpen = !isRegisterDropdownOpen"
+                    [attr.aria-expanded]="isRegisterDropdownOpen"
+                    aria-label="Mostrar opciones de registro"
                     class="pr-4 pl-2 py-2 text-white hover:bg-[#3A78F0] rounded-r-full transition-colors flex items-center h-full">
               <svg xmlns="http://www.w3.org/2000/svg"
                    class="w-4 h-4 transition-transform duration-200"
@@ -65,7 +67,8 @@
                    fill="none"
                    viewBox="0 0 24 24"
                    stroke="currentColor"
-                   stroke-width="2">
+                   stroke-width="2"
+                   aria-hidden="true">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
@@ -107,6 +110,8 @@
         <div class="relative ml-2">
           <button
             (click)="toggleUserDropdown()"
+            [attr.aria-expanded]="isUserDropdownOpen"
+            aria-label="Menú de usuario"
             class="px-5 py-2 rounded-full bg-[#4F8CFF] text-white hover:bg-[#3f7ff3] transition-colors text-sm font-medium font-museo uppercase inline-flex items-center gap-2">
             <span>{{ displayUserName }}</span>
             <svg xmlns="http://www.w3.org/2000/svg"
@@ -115,7 +120,8 @@
                  fill="none"
                  viewBox="0 0 24 24"
                  stroke="currentColor"
-                 stroke-width="2">
+                 stroke-width="2"
+                 aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
             </svg>
           </button>
@@ -146,8 +152,11 @@
       <button
         class="md:hidden text-[#0F2A56] p-2 rounded-md hover:bg-gray-100 transition-opacity duration-200"
         [class.opacity-0]="open"
+        [attr.aria-expanded]="open"
+        aria-controls="mobile-menu"
+        aria-label="Abrir menú de navegación"
         (click)="open = !open">
-        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
           <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
@@ -156,7 +165,7 @@
 
   <!-- Mobile Menu Overlay -->
   @if (open) {
-  <div class="fixed inset-0 z-50 md:hidden">
+  <div id="mobile-menu" class="fixed inset-0 z-50 md:hidden" role="dialog" aria-modal="true" aria-label="Menú de navegación móvil">
     <div class="absolute inset-0 bg-black/20 backdrop-blur-[2px] transition-opacity" (click)="open = false"></div>
 
     <div class="relative h-auto overflow-hidden transition-all duration-300 ease-out border-b shadow-2xl border-white/20">
@@ -168,8 +177,9 @@
           </div>
           <button
             class="p-2 rounded-xl border border-[#4F8CFF] text-[#4F8CFF] bg-transparent hover:bg-[#F4F7FD] transition-colors"
+            aria-label="Cerrar menú de navegación"
             (click)="open = false">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
