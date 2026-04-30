@@ -1042,8 +1042,14 @@ export class MyCouponsComponent implements OnInit {
   }
 
   private isCouponExpiredForUser(item: MyCouponItem, nowTime = Date.now()): boolean {
-    if (item.coupon.active === false) return true;
-    return this.getCouponEndDateTime(item) < nowTime;
+    const endDateTime = this.getCouponEndDateTime(item);
+    if (endDateTime === Number.POSITIVE_INFINITY) {
+      // Cuando no hay fecha válida, mantendremos el comportamiento "placeholder"
+      // para cupones faltantes/inactivos.
+      return item.coupon.active === false;
+    }
+
+    return endDateTime < nowTime;
   }
 
   private createCouponFallbackFromAcquired(acquired: CouponAcquired): Coupon {
