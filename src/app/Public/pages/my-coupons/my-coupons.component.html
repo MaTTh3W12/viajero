@@ -239,6 +239,15 @@
                 </svg>
               </button>
               }
+              @if (hasUniqueCode(item)) {
+              <button type="button" (click)="copyCouponCode(item, $event)"
+                class="h-[30px] w-[30px] border border-[#9BBCFF] rounded-lg text-[#538CFF] inline-flex items-center justify-center">
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <rect x="9" y="9" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.5" />
+                  <rect x="5" y="5" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.5" />
+                </svg>
+              </button>
+              }
             </div>
 
             <div class="space-y-2 text-[10px] md:text-[13px] text-gray-500">
@@ -317,22 +326,34 @@
 
         @if (isDetailItemActive()) {
         <div
-          class="bg-[#E8EEFF] rounded-[16px] md:rounded-[20px] p-2 md:p-4 relative h-[170px] md:min-h-[220px] flex items-center justify-center">
-          @if (qrLoading) {
-          <div class="text-[#1A2440] text-center">Generando QR...</div>
-          } @else if (qrError) {
-          <div class="text-red-600 text-center px-4">{{ qrError }}</div>
-          } @else {
-          <img [src]="qrDataUrl" alt="QR del cupón"
-            class="w-[150px] h-[150px] md:w-[190px] md:h-[190px] object-contain bg-white p-2" />
-          <button type="button" (click)="openQrImageZoom($event)"
-            class="absolute right-2 bottom-2 md:right-3 md:bottom-3 w-8 h-8 md:w-10 md:h-10 rounded-xl bg-[#1F273D] text-white inline-flex items-center justify-center">
-            <svg class="w-4 h-4 md:w-5 md:h-5" aria-hidden="true">
-              <use href="assets/icons/sprite.svg#maximize-4"></use>
-            </svg>
-          </button>
-          }
+          class="bg-[#E8EEFF] rounded-[16px] md:rounded-[20px] p-3 md:p-4 h-[170px] md:min-h-[220px] flex flex-col gap-3">
+          <div class="relative flex-1 flex items-center justify-center">
+            @if (qrLoading) {
+            <div class="text-[#1A2440] text-center">Generando QR...</div>
+            } @else if (qrError) {
+            <div class="text-red-600 text-center px-4">{{ qrError }}</div>
+            } @else {
+            <img [src]="qrDataUrl" alt="QR del cupón"
+              class="w-[150px] h-[150px] md:w-[190px] md:h-[190px] object-contain bg-white p-2" />
+            <button type="button" (click)="openQrImageZoom($event)"
+              class="absolute right-2 bottom-2 md:right-3 md:bottom-3 w-8 h-8 md:w-10 md:h-10 rounded-xl bg-[#1F273D] text-white inline-flex items-center justify-center">
+              <svg class="w-4 h-4 md:w-5 md:h-5" aria-hidden="true">
+                <use href="assets/icons/sprite.svg#maximize-4"></use>
+              </svg>
+            </button>
+            }
+          </div>
         </div>
+        @if (qrUniqueCode) {
+        <button type="button" (click)="copyQrCode($event)"
+          class="col-span-2 lg:col-span-1 w-full h-11 md:h-12 rounded-xl bg-white border border-[#CFE0FF] text-[#1A2440] text-[14px] md:text-[15px] font-semibold inline-flex items-center justify-center gap-2.5 hover:bg-[#F7F9FF] transition-colors">
+          <svg class="w-5 h-5 md:w-6 md:h-6 text-[#538CFF]" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <rect x="9" y="9" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.5" />
+            <rect x="5" y="5" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.5" />
+          </svg>
+          Copiar código único
+        </button>
+        }
         } @else {
         <div
           class="rounded-[16px] md:rounded-[20px] overflow-hidden border border-[#DDE6F7] flex flex-col bg-white">
@@ -542,6 +563,19 @@
 
     }
 
+  </div>
+</div>
+}
+
+@if (copyToastVisible) {
+<div class="fixed bottom-6 left-1/2 -translate-x-1/2 z-[120]">
+  <div class="copy-toast-body rounded-2xl bg-[#1A2440] px-4 py-3 text-[14px] md:text-[15px] font-medium text-white shadow-2xl inline-flex items-center gap-2">
+    <span class="inline-flex w-6 h-6 rounded-full bg-white/15 items-center justify-center">
+      <svg class="w-4 h-4 text-white" aria-hidden="true">
+        <use href="assets/icons/sprite.svg#status-check"></use>
+      </svg>
+    </span>
+    {{ copyToastMessage }}
   </div>
 </div>
 }

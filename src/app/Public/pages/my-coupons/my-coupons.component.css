@@ -55,3 +55,29 @@
 .custom-date-input::-webkit-clear-button {
   display: none;
 }
+
+.copy-toast-body {
+  animation: copy-toast-in 200ms ease-out, copy-toast-out 220ms ease-in 2.1s forwards;
+}
+
+@keyframes copy-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes copy-toast-out {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}

@@ -59,6 +59,9 @@ export class MyCouponsComponent implements OnInit {
   qrImageZoomOpen = false;
   qrDataUrl = '';
   qrUniqueCode = '';
+  copyToastVisible = false;
+  copyToastMessage = '';
+  private copyToastTimer: number | null = null;
   qrSelectedItem: MyCouponItem | null = null;
   qrSelectedImage = '';
   transferModalOpen = false;
@@ -336,6 +339,89 @@ export class MyCouponsComponent implements OnInit {
       this.qrLoading = false;
       this.cdr.detectChanges();
     }
+  }
+
+  copyQrCode(event?: Event): void {
+    this.preventCopyEvent(event);
+    this.copyCode(this.qrUniqueCode);
+  }
+
+  copyCouponCode(item: MyCouponItem, event: Event): void {
+    this.preventCopyEvent(event);
+    this.copyCode(this.getUniqueCode(item));
+  }
+
+  hasUniqueCode(item: MyCouponItem): boolean {
+    return !!this.getUniqueCode(item);
+  }
+
+  private getUniqueCode(item: MyCouponItem | null): string {
+    if (!item) return '';
+    return (item.acquired.unique_code ?? '').trim();
+  }
+
+  private preventCopyEvent(event?: Event): void {
+    event?.preventDefault();
+    event?.stopPropagation();
+  }
+
+  private copyCode(rawCode: string): void {
+    const code = rawCode.trim();
+    if (!code) return;
+
+    if (this.execCommandCopy(code)) {
+      this.showCopyToast('Código copiado');
+      return;
+    }
+
+    if (navigator.clipboard?.writeText && window.isSecureContext) {
+      navigator.clipboard
+        .writeText(code)
+        .then(() => this.showCopyToast('Código copiado'))
+        .catch(() => {});
+    }
+  }
+
+  private execCommandCopy(text: string): boolean {
+    const scrollX = window.scrollX;
+    const scrollY = window.scrollY;
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.top = '0';
+    textarea.style.left = '0';
+    textarea.style.width = '1px';
+    textarea.style.height = '1px';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    textarea.setSelectionRange(0, textarea.value.length);
+
+    try {
+      return document.execCommand('copy');
+    } catch {
+      return false;
+    } finally {
+      document.body.removeChild(textarea);
+      window.scrollTo(scrollX, scrollY);
+    }
+  }
+
+  private showCopyToast(message: string): void {
+    this.copyToastMessage = message;
+    this.copyToastVisible = true;
+
+    if (this.copyToastTimer != null) {
+      window.clearTimeout(this.copyToastTimer);
+    }
+
+    this.copyToastTimer = window.setTimeout(() => {
+      this.copyToastVisible = false;
+      this.copyToastTimer = null;
+      this.cdr.detectChanges();
+    }, 2500);
   }
 
   closeQrModal(): void {
